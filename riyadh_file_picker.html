@@ -24,7 +24,7 @@
         .file-status.loaded { color: #34a853; }
         
         .stats { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
-        .stat { background: #f5f5f5; padding: 10px; border-radius: 6px; text-align: center; flex: 1; }
+        .stat { background: #f5f5f5; padding: 10px; border-radius: 6px; text-align: center; flex: 1; min-width: 80px; }
         .stat b { display: block; font-size: 16px; }
         .stat small { color: #666; font-size: 10px; }
         
@@ -54,6 +54,14 @@
             <div id="dataStatus" class="file-status">No file loaded</div>
         </div>
         
+        <div class="file-section" style="background: #e8f0fe;">
+            <label>🎨 Color By:</label>
+            <select id="colorMode" style="width:100%; padding:5px; border-radius:4px; border:1px solid #ccc;">
+                <option value="land_use">Land Use Code</option>
+                <option value="district">District</option>
+            </select>
+        </div>
+        
         <div id="stats" class="stats"></div>
         
         <div id="filters" class="filters"></div>
@@ -65,11 +73,11 @@
     
     <div id="loadingMsg" class="loading-msg">
         <p>📂 Load your CSV file using the panel on the left</p>
-        <p style="font-size:12px;color:#666;margin-top:10px;">CSV must contain: latitude, longitude, and land_use_code columns</p>
+        <p style="font-size:12px;color:#666;margin-top:10px;">Required: latitude, longitude, land_use_code<br>Optional: district (for district coloring)</p>
     </div>
 
     <script>
-        let map, landUseData = {};
+        let map, landUseData = {}, districtData = {}, currentMode = 'land_use';
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
@@ -82,7 +90,7 @@
             '4010': { color: '#9334e6', name: 'Government', emoji: '🏛️' }
         };
         
-        // Generate color for unknown codes
+        // Generate color for unknown codes or districts
         function getColorForCode(code) {
             if (landUseColors[code]) {
                 return landUseColors[code].color;
@@ -92,6 +100,13 @@
             const hue = (numCode * 137) % 360;
             return `hsl(${hue}, 70%, 55%)`;
         }
+        
+        // Color mode change listener
+        document.getElementById('colorMode').addEventListener('change', function(e) {
+            currentMode = e.target.value;
+            updateStatsAndFilters();
+            render();
+        });
         
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
@@ -143,6 +158,7 @@
                     const latIndex = headers.findIndex(h => h === 'lat' || h === 'latitude');
                     const lngIndex = headers.findIndex(h => h === 'lng' || h === 'lon' || h === 'longitude');
                     const codeIndex = headers.findIndex(h => h === 'land_use_code' || h === 'landusecode' || h === 'code');
+                    const districtIndex = headers.findIndex(h => h === 'district');
                     
                     if (latIndex === -1 || lngIndex === -1) {
                         throw new Error('CSV must contain latitude and longitude columns');
@@ -152,8 +168,9 @@
                         throw new Error('CSV must contain land_use_code column');
                     }
                     
-                    // Parse data rows and group by land_use_code
+                    // Parse data rows and group by land_use_code and district
                     landUseData = {};
+                    districtData = {};
                     let totalCount = 0;
                     
                     for (let i = 1; i < lines.length; i++) {
@@ -164,6 +181,7 @@
                         const lat = parseFloat(values[latIndex]);
                         const lng = parseFloat(values[lngIndex]);
                         const code = values[codeIndex];
+                        const district = districtIndex !== -1 ? values[districtIndex] : null;
                         
                         // Validate coordinates
                         if (isNaN(lat) || isNaN(lng)) {
@@ -186,6 +204,15 @@
                             landUseData[code] = [];
                         }
                         landUseData[code].push([lat, lng]);
+                        
+                        // Group by district (if available)
+                        if (district) {
+                            if (!districtData[district]) {
+                                districtData[district] = [];
+                            }
+                            districtData[district].push([lat, lng]);
+                        }
+                        
                         totalCount++;
                     }
                     
@@ -194,7 +221,9 @@
                     }
                     
                     // Update UI
-                    document.getElementById('dataStatus').textContent = `✅ Loaded ${totalCount.toLocaleString()} points (${Object.keys(landUseData).length} types)`;
+                    const landUseCount = Object.keys(landUseData).length;
+                    const districtCount = Object.keys(districtData).length;
+                    document.getElementById('dataStatus').textContent = `✅ Loaded ${totalCount.toLocaleString()} points (${landUseCount} land uses, ${districtCount} districts)`;
                     document.getElementById('dataStatus').className = 'file-status loaded';
                     
                     // Generate stats and filters
@@ -216,47 +245,80 @@
             statsDiv.innerHTML = '';
             filtersDiv.innerHTML = '';
             
-            // Sort codes to show known ones first
-            const codes = Object.keys(landUseData).sort((a, b) => {
-                const aKnown = landUseColors[a] ? 0 : 1;
-                const bKnown = landUseColors[b] ? 0 : 1;
-                if (aKnown !== bKnown) return aKnown - bKnown;
-                return landUseData[b].length - landUseData[a].length;
-            });
+            const dataSource = currentMode === 'land_use' ? landUseData : districtData;
             
-            codes.forEach(code => {
-                const count = landUseData[code].length;
-                const color = getColorForCode(code);
-                const info = landUseColors[code];
-                const label = info ? `${info.emoji} ${info.name}` : `Code ${code}`;
+            if (currentMode === 'land_use') {
+                // Sort codes to show known ones first
+                const codes = Object.keys(dataSource).sort((a, b) => {
+                    const aKnown = landUseColors[a] ? 0 : 1;
+                    const bKnown = landUseColors[b] ? 0 : 1;
+                    if (aKnown !== bKnown) return aKnown - bKnown;
+                    return dataSource[b].length - dataSource[a].length;
+                });
                 
-                // Add stat
-                const statDiv = document.createElement('div');
-                statDiv.className = 'stat';
-                statDiv.style.borderLeft = `3px solid ${color}`;
-                statDiv.innerHTML = `
-                    <b>${count.toLocaleString()}</b>
-                    <small>${label}</small>
-                `;
-                statsDiv.appendChild(statDiv);
+                codes.forEach(code => {
+                    const count = dataSource[code].length;
+                    const color = getColorForCode(code);
+                    const info = landUseColors[code];
+                    const label = info ? `${info.emoji} ${info.name}` : `Code ${code}`;
+                    
+                    // Add stat
+                    const statDiv = document.createElement('div');
+                    statDiv.className = 'stat';
+                    statDiv.style.borderLeft = `3px solid ${color}`;
+                    statDiv.innerHTML = `
+                        <b>${count.toLocaleString()}</b>
+                        <small>${label}</small>
+                    `;
+                    statsDiv.appendChild(statDiv);
+                    
+                    // Add filter
+                    const filterLabel = document.createElement('label');
+                    filterLabel.innerHTML = `
+                        <input type="checkbox" class="data-filter" data-code="${code}" checked>
+                        <span class="dot" style="background:${color}"></span> ${label}
+                    `;
+                    filtersDiv.appendChild(filterLabel);
+                });
+            } else {
+                // District mode - sort by count
+                const districts = Object.keys(dataSource).sort((a, b) => {
+                    return dataSource[b].length - dataSource[a].length;
+                });
                 
-                // Add filter
-                const filterLabel = document.createElement('label');
-                filterLabel.innerHTML = `
-                    <input type="checkbox" class="land-use-filter" data-code="${code}" checked>
-                    <span class="dot" style="background:${color}"></span> ${label}
-                `;
-                filtersDiv.appendChild(filterLabel);
-            });
+                districts.forEach(district => {
+                    const count = dataSource[district].length;
+                    const color = getColorForCode(district);
+                    const label = `District ${district}`;
+                    
+                    // Add stat
+                    const statDiv = document.createElement('div');
+                    statDiv.className = 'stat';
+                    statDiv.style.borderLeft = `3px solid ${color}`;
+                    statDiv.innerHTML = `
+                        <b>${count.toLocaleString()}</b>
+                        <small>${label}</small>
+                    `;
+                    statsDiv.appendChild(statDiv);
+                    
+                    // Add filter
+                    const filterLabel = document.createElement('label');
+                    filterLabel.innerHTML = `
+                        <input type="checkbox" class="data-filter" data-code="${district}" checked>
+                        <span class="dot" style="background:${color}"></span> ${label}
+                    `;
+                    filtersDiv.appendChild(filterLabel);
+                });
+            }
             
             // Add event listeners to filters
-            document.querySelectorAll('.land-use-filter').forEach(checkbox => {
+            document.querySelectorAll('.data-filter').forEach(checkbox => {
                 checkbox.addEventListener('change', render);
             });
         }
         
         function checkReady() {
-            if (Object.keys(landUseData).length > 0) {
+            if (Object.keys(landUseData).length > 0 || Object.keys(districtData).length > 0) {
                 document.getElementById('loadingMsg').style.display = 'none';
             }
         }
@@ -301,12 +363,14 @@
                 return lat >= sw.lat() && lat <= ne.lat() && lng >= sw.lng() && lng <= ne.lng();
             }
             
-            // Draw each land use type
-            document.querySelectorAll('.land-use-filter').forEach(checkbox => {
+            // Draw each category (land use or district)
+            const dataSource = currentMode === 'land_use' ? landUseData : districtData;
+            
+            document.querySelectorAll('.data-filter').forEach(checkbox => {
                 if (!checkbox.checked) return;
                 
                 const code = checkbox.dataset.code;
-                const points = landUseData[code];
+                const points = dataSource[code];
                 if (!points || points.length === 0) return;
                 
                 const color = getColorForCode(code);
