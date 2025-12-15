@@ -136,7 +136,7 @@
                     }
                     
                     // Parse header
-                    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                    const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
                     
                     // Validate required columns
                     const latIndex = headers.findIndex(h => h === 'lat' || h === 'latitude');
@@ -159,10 +159,10 @@
                         const line = lines[i].trim();
                         if (!line) continue;
                         
-                        const values = line.split(',');
+                        const values = line.split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
                         const lat = parseFloat(values[latIndex]);
                         const lng = parseFloat(values[lngIndex]);
-                        const code = values[codeIndex].trim();
+                        const code = values[codeIndex];
                         
                         // Validate coordinates
                         if (isNaN(lat) || isNaN(lng)) {
