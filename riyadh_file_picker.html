@@ -60,6 +60,12 @@
             <div id="aptsStatus" class="file-status">No file loaded</div>
         </div>
         
+        <div class="file-section">
+            <label>📦 Blocks CSV:</label>
+            <input type="file" id="blocksFile" accept=".csv">
+            <div id="blocksStatus" class="file-status">No file loaded</div>
+        </div>
+        
         <div class="stats">
             <div class="stat" style="border-left:3px solid #34a853">
                 <b id="villa-count">0</b>
@@ -69,11 +75,16 @@
                 <b id="apt-count">0</b>
                 <small>🏢 Apartments</small>
             </div>
+            <div class="stat" style="border-left:3px solid #ea4335">
+                <b id="block-count">0</b>
+                <small>📦 Blocks</small>
+            </div>
         </div>
         
         <div class="filters">
             <label><input type="checkbox" id="showV" checked><span class="dot" style="background:#34a853"></span> Villas</label>
             <label><input type="checkbox" id="showA" checked><span class="dot" style="background:#4285f4"></span> Apartments</label>
+            <label><input type="checkbox" id="showB" checked><span class="dot" style="background:#ea4335"></span> Blocks</label>
         </div>
         
         <div style="margin-top:10px;font-size:11px;color:#888;">
@@ -82,12 +93,12 @@
     </div>
     
     <div id="loadingMsg" class="loading-msg">
-        <p>📂 Load your JSON files using the panel on the left</p>
-        <p style="font-size:12px;color:#666;margin-top:10px;">Select villas_geo.json and apartments_geo.json</p>
+        <p>📂 Load your files using the panel on the left</p>
+        <p style="font-size:12px;color:#666;margin-top:10px;">Select villas_geo.json, apartments_geo.json, and blocks.csv</p>
     </div>
 
     <script>
-        let map, villas = [], apts = [];
+        let map, villas = [], apts = [], blocks = [];
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
@@ -150,8 +161,90 @@
             reader.readAsText(file);
         });
         
+        // File loader for blocks (CSV)
+        document.getElementById('blocksFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // Validate file extension
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                document.getElementById('blocksStatus').textContent = '❌ Error: File must be a CSV';
+                document.getElementById('blocksStatus').className = 'file-status';
+                return;
+            }
+            
+            document.getElementById('blocksStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const csvText = e.target.result;
+                    
+                    // Validate CSV content
+                    if (!csvText || csvText.trim().length === 0) {
+                        throw new Error('CSV file is empty');
+                    }
+                    
+                    // Parse CSV
+                    const lines = csvText.trim().split('\n');
+                    if (lines.length === 0) {
+                        throw new Error('No data in CSV file');
+                    }
+                    
+                    // Parse header
+                    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                    
+                    // Validate required columns (lat, lng or latitude, longitude)
+                    const latIndex = headers.findIndex(h => h === 'lat' || h === 'latitude');
+                    const lngIndex = headers.findIndex(h => h === 'lng' || h === 'lon' || h === 'longitude');
+                    
+                    if (latIndex === -1 || lngIndex === -1) {
+                        throw new Error('CSV must contain latitude and longitude columns');
+                    }
+                    
+                    // Parse data rows
+                    blocks = [];
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (!line) continue; // Skip empty lines
+                        
+                        const values = line.split(',');
+                        const lat = parseFloat(values[latIndex]);
+                        const lng = parseFloat(values[lngIndex]);
+                        
+                        // Validate coordinates
+                        if (isNaN(lat) || isNaN(lng)) {
+                            console.warn(`Skipping row ${i+1}: invalid coordinates`);
+                            continue;
+                        }
+                        
+                        if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+                            console.warn(`Skipping row ${i+1}: coordinates out of range`);
+                            continue;
+                        }
+                        
+                        blocks.push([lat, lng]);
+                    }
+                    
+                    if (blocks.length === 0) {
+                        throw new Error('No valid data points found in CSV');
+                    }
+                    
+                    document.getElementById('block-count').textContent = blocks.length.toLocaleString();
+                    document.getElementById('blocksStatus').textContent = '✅ Loaded ' + blocks.length.toLocaleString() + ' blocks';
+                    document.getElementById('blocksStatus').className = 'file-status loaded';
+                    checkReady();
+                    render();
+                } catch (err) {
+                    document.getElementById('blocksStatus').textContent = '❌ Error: ' + err.message;
+                    document.getElementById('blocksStatus').className = 'file-status';
+                }
+            };
+            reader.readAsText(file);
+        });
+        
         function checkReady() {
-            if (villas.length > 0 || apts.length > 0) {
+            if (villas.length > 0 || apts.length > 0 || blocks.length > 0) {
                 document.getElementById('loadingMsg').style.display = 'none';
             }
         }
@@ -226,11 +319,27 @@
                 }
             }
             
+            // Draw blocks (red)
+            if (document.getElementById('showB').checked && blocks.length > 0) {
+                ctx.fillStyle = 'rgba(234, 67, 53, 0.7)';
+                for (let i = 0; i < blocks.length; i += sample) {
+                    const [lat, lng] = blocks[i];
+                    if (inBounds(lat, lng)) {
+                        const p = toPixel(lat, lng);
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, ps, 0, Math.PI * 2);
+                        ctx.fill();
+                        visible++;
+                    }
+                }
+            }
+            
             document.getElementById('visible').textContent = visible.toLocaleString();
         }
         
         document.getElementById('showV').addEventListener('change', render);
         document.getElementById('showA').addEventListener('change', render);
+        document.getElementById('showB').addEventListener('change', render);
     </script>
     <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
 </body>
