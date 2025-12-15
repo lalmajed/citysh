@@ -13,7 +13,7 @@
             position: absolute; top: 10px; left: 60px;
             background: white; padding: 15px; border-radius: 10px;
             box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 1000;
-            max-width: 320px; font-size: 13px;
+            max-width: 400px; max-height: 90vh; overflow-y: auto; font-size: 13px;
         }
         .panel h2 { color: #1a73e8; margin-bottom: 10px; font-size: 16px; }
         
@@ -23,13 +23,13 @@
         .file-status { font-size: 11px; color: #666; margin-top: 5px; }
         .file-status.loaded { color: #34a853; }
         
-        .stats { display: flex; gap: 10px; margin: 10px 0; }
+        .stats { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
         .stat { background: #f5f5f5; padding: 10px; border-radius: 6px; text-align: center; flex: 1; }
         .stat b { display: block; font-size: 16px; }
         .stat small { color: #666; font-size: 10px; }
         
-        .filters { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
-        .filters label { display: inline-flex; align-items: center; gap: 5px; margin-right: 15px; cursor: pointer; }
+        .filters { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; display: flex; flex-wrap: wrap; gap: 10px; }
+        .filters label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font-size: 12px; }
         .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
         
         #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 450; }
@@ -49,43 +49,14 @@
         <h2>🏙️ Riyadh Map</h2>
         
         <div class="file-section">
-            <label>🏠 Villas JSON:</label>
-            <input type="file" id="villasFile" accept=".json">
-            <div id="villasStatus" class="file-status">No file loaded</div>
+            <label>📊 Land Use Data CSV:</label>
+            <input type="file" id="dataFile" accept=".csv">
+            <div id="dataStatus" class="file-status">No file loaded</div>
         </div>
         
-        <div class="file-section">
-            <label>🏢 Apartments JSON:</label>
-            <input type="file" id="aptsFile" accept=".json">
-            <div id="aptsStatus" class="file-status">No file loaded</div>
-        </div>
+        <div id="stats" class="stats"></div>
         
-        <div class="file-section">
-            <label>📦 Blocks CSV:</label>
-            <input type="file" id="blocksFile" accept=".csv">
-            <div id="blocksStatus" class="file-status">No file loaded</div>
-        </div>
-        
-        <div class="stats">
-            <div class="stat" style="border-left:3px solid #34a853">
-                <b id="villa-count">0</b>
-                <small>🏠 Villas</small>
-            </div>
-            <div class="stat" style="border-left:3px solid #4285f4">
-                <b id="apt-count">0</b>
-                <small>🏢 Apartments</small>
-            </div>
-            <div class="stat" style="border-left:3px solid #ea4335">
-                <b id="block-count">0</b>
-                <small>📦 Blocks</small>
-            </div>
-        </div>
-        
-        <div class="filters">
-            <label><input type="checkbox" id="showV" checked><span class="dot" style="background:#34a853"></span> Villas</label>
-            <label><input type="checkbox" id="showA" checked><span class="dot" style="background:#4285f4"></span> Apartments</label>
-            <label><input type="checkbox" id="showB" checked><span class="dot" style="background:#ea4335"></span> Blocks</label>
-        </div>
+        <div id="filters" class="filters"></div>
         
         <div style="margin-top:10px;font-size:11px;color:#888;">
             Showing: <span id="visible">0</span> points | Zoom: <span id="zoom">0</span>
@@ -93,14 +64,33 @@
     </div>
     
     <div id="loadingMsg" class="loading-msg">
-        <p>📂 Load your files using the panel on the left</p>
-        <p style="font-size:12px;color:#666;margin-top:10px;">Select villas_geo.json, apartments_geo.json, and blocks.csv</p>
+        <p>📂 Load your CSV file using the panel on the left</p>
+        <p style="font-size:12px;color:#666;margin-top:10px;">CSV must contain: latitude, longitude, and land_use_code columns</p>
     </div>
 
     <script>
-        let map, villas = [], apts = [], blocks = [];
+        let map, landUseData = {};
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        
+        // Define colors for known land use codes
+        const landUseColors = {
+            '1000': { color: '#34a853', name: 'Villas', emoji: '🏠' },
+            '1012': { color: '#4285f4', name: 'Apartments', emoji: '🏢' },
+            '7510': { color: '#fbbc04', name: 'Vacant Land', emoji: '🏞️' },
+            '2000': { color: '#ea4335', name: 'Commercial', emoji: '🏪' },
+            '4010': { color: '#9334e6', name: 'Government', emoji: '🏛️' }
+        };
+        
+        // Generate color for unknown codes
+        function getColorForCode(code) {
+            if (landUseColors[code]) {
+                return landUseColors[code].color;
+            }
+            // Generate a consistent color based on code
+            const hue = (parseInt(code) * 137) % 360;
+            return `hsl(${hue}, 60%, 50%)`;
+        }
         
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
@@ -115,65 +105,19 @@
             window.addEventListener('resize', render);
         }
         
-        // File loader for villas
-        document.getElementById('villasFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            document.getElementById('villasStatus').textContent = 'Loading...';
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    villas = JSON.parse(e.target.result);
-                    document.getElementById('villa-count').textContent = villas.length.toLocaleString();
-                    document.getElementById('villasStatus').textContent = '✅ Loaded ' + villas.length.toLocaleString() + ' villas';
-                    document.getElementById('villasStatus').className = 'file-status loaded';
-                    checkReady();
-                    render();
-                } catch (err) {
-                    document.getElementById('villasStatus').textContent = '❌ Error: ' + err.message;
-                }
-            };
-            reader.readAsText(file);
-        });
-        
-        // File loader for apartments
-        document.getElementById('aptsFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            document.getElementById('aptsStatus').textContent = 'Loading...';
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    apts = JSON.parse(e.target.result);
-                    document.getElementById('apt-count').textContent = apts.length.toLocaleString();
-                    document.getElementById('aptsStatus').textContent = '✅ Loaded ' + apts.length.toLocaleString() + ' apartments';
-                    document.getElementById('aptsStatus').className = 'file-status loaded';
-                    checkReady();
-                    render();
-                } catch (err) {
-                    document.getElementById('aptsStatus').textContent = '❌ Error: ' + err.message;
-                }
-            };
-            reader.readAsText(file);
-        });
-        
-        // File loader for blocks (CSV)
-        document.getElementById('blocksFile').addEventListener('change', function(e) {
+        // File loader for CSV with land_use_code
+        document.getElementById('dataFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
             
             // Validate file extension
             if (!file.name.toLowerCase().endsWith('.csv')) {
-                document.getElementById('blocksStatus').textContent = '❌ Error: File must be a CSV';
-                document.getElementById('blocksStatus').className = 'file-status';
+                document.getElementById('dataStatus').textContent = '❌ Error: File must be a CSV';
+                document.getElementById('dataStatus').className = 'file-status';
                 return;
             }
             
-            document.getElementById('blocksStatus').textContent = 'Loading...';
+            document.getElementById('dataStatus').textContent = 'Loading...';
             
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -194,23 +138,31 @@
                     // Parse header
                     const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
                     
-                    // Validate required columns (lat, lng or latitude, longitude)
+                    // Validate required columns
                     const latIndex = headers.findIndex(h => h === 'lat' || h === 'latitude');
                     const lngIndex = headers.findIndex(h => h === 'lng' || h === 'lon' || h === 'longitude');
+                    const codeIndex = headers.findIndex(h => h === 'land_use_code' || h === 'landusecode' || h === 'code');
                     
                     if (latIndex === -1 || lngIndex === -1) {
                         throw new Error('CSV must contain latitude and longitude columns');
                     }
                     
-                    // Parse data rows
-                    blocks = [];
+                    if (codeIndex === -1) {
+                        throw new Error('CSV must contain land_use_code column');
+                    }
+                    
+                    // Parse data rows and group by land_use_code
+                    landUseData = {};
+                    let totalCount = 0;
+                    
                     for (let i = 1; i < lines.length; i++) {
                         const line = lines[i].trim();
-                        if (!line) continue; // Skip empty lines
+                        if (!line) continue;
                         
                         const values = line.split(',');
                         const lat = parseFloat(values[latIndex]);
                         const lng = parseFloat(values[lngIndex]);
+                        const code = values[codeIndex].trim();
                         
                         // Validate coordinates
                         if (isNaN(lat) || isNaN(lng)) {
@@ -223,28 +175,87 @@
                             continue;
                         }
                         
-                        blocks.push([lat, lng]);
+                        if (!code) {
+                            console.warn(`Skipping row ${i+1}: missing land_use_code`);
+                            continue;
+                        }
+                        
+                        // Group by land_use_code
+                        if (!landUseData[code]) {
+                            landUseData[code] = [];
+                        }
+                        landUseData[code].push([lat, lng]);
+                        totalCount++;
                     }
                     
-                    if (blocks.length === 0) {
+                    if (totalCount === 0) {
                         throw new Error('No valid data points found in CSV');
                     }
                     
-                    document.getElementById('block-count').textContent = blocks.length.toLocaleString();
-                    document.getElementById('blocksStatus').textContent = '✅ Loaded ' + blocks.length.toLocaleString() + ' blocks';
-                    document.getElementById('blocksStatus').className = 'file-status loaded';
+                    // Update UI
+                    document.getElementById('dataStatus').textContent = `✅ Loaded ${totalCount.toLocaleString()} points (${Object.keys(landUseData).length} types)`;
+                    document.getElementById('dataStatus').className = 'file-status loaded';
+                    
+                    // Generate stats and filters
+                    updateStatsAndFilters();
                     checkReady();
                     render();
                 } catch (err) {
-                    document.getElementById('blocksStatus').textContent = '❌ Error: ' + err.message;
-                    document.getElementById('blocksStatus').className = 'file-status';
+                    document.getElementById('dataStatus').textContent = '❌ Error: ' + err.message;
+                    document.getElementById('dataStatus').className = 'file-status';
                 }
             };
             reader.readAsText(file);
         });
         
+        function updateStatsAndFilters() {
+            const statsDiv = document.getElementById('stats');
+            const filtersDiv = document.getElementById('filters');
+            
+            statsDiv.innerHTML = '';
+            filtersDiv.innerHTML = '';
+            
+            // Sort codes to show known ones first
+            const codes = Object.keys(landUseData).sort((a, b) => {
+                const aKnown = landUseColors[a] ? 0 : 1;
+                const bKnown = landUseColors[b] ? 0 : 1;
+                if (aKnown !== bKnown) return aKnown - bKnown;
+                return landUseData[b].length - landUseData[a].length;
+            });
+            
+            codes.forEach(code => {
+                const count = landUseData[code].length;
+                const color = getColorForCode(code);
+                const info = landUseColors[code];
+                const label = info ? `${info.emoji} ${info.name}` : `Code ${code}`;
+                
+                // Add stat
+                const statDiv = document.createElement('div');
+                statDiv.className = 'stat';
+                statDiv.style.borderLeft = `3px solid ${color}`;
+                statDiv.innerHTML = `
+                    <b>${count.toLocaleString()}</b>
+                    <small>${label}</small>
+                `;
+                statsDiv.appendChild(statDiv);
+                
+                // Add filter
+                const filterLabel = document.createElement('label');
+                filterLabel.innerHTML = `
+                    <input type="checkbox" class="land-use-filter" data-code="${code}" checked>
+                    <span class="dot" style="background:${color}"></span> ${label}
+                `;
+                filtersDiv.appendChild(filterLabel);
+            });
+            
+            // Add event listeners to filters
+            document.querySelectorAll('.land-use-filter').forEach(checkbox => {
+                checkbox.addEventListener('change', render);
+            });
+        }
+        
         function checkReady() {
-            if (villas.length > 0 || apts.length > 0 || blocks.length > 0) {
+            if (Object.keys(landUseData).length > 0) {
                 document.getElementById('loadingMsg').style.display = 'none';
             }
         }
@@ -289,11 +300,20 @@
                 return lat >= sw.lat() && lat <= ne.lat() && lng >= sw.lng() && lng <= ne.lng();
             }
             
-            // Draw villas (green)
-            if (document.getElementById('showV').checked && villas.length > 0) {
-                ctx.fillStyle = 'rgba(52, 168, 83, 0.6)';
-                for (let i = 0; i < villas.length; i += sample) {
-                    const [lat, lng] = villas[i];
+            // Draw each land use type
+            document.querySelectorAll('.land-use-filter').forEach(checkbox => {
+                if (!checkbox.checked) return;
+                
+                const code = checkbox.dataset.code;
+                const points = landUseData[code];
+                if (!points || points.length === 0) return;
+                
+                const color = getColorForCode(code);
+                const rgb = color.startsWith('#') ? hexToRgb(color) : color;
+                ctx.fillStyle = rgb.startsWith('rgb') ? rgb.replace('rgb', 'rgba').replace(')', ', 0.7)') : `${rgb}`;
+                
+                for (let i = 0; i < points.length; i += sample) {
+                    const [lat, lng] = points[i];
                     if (inBounds(lat, lng)) {
                         const p = toPixel(lat, lng);
                         ctx.beginPath();
@@ -302,44 +322,17 @@
                         visible++;
                     }
                 }
-            }
-            
-            // Draw apartments (blue)
-            if (document.getElementById('showA').checked && apts.length > 0) {
-                ctx.fillStyle = 'rgba(66, 133, 244, 0.7)';
-                for (let i = 0; i < apts.length; i += sample) {
-                    const [lat, lng] = apts[i];
-                    if (inBounds(lat, lng)) {
-                        const p = toPixel(lat, lng);
-                        ctx.beginPath();
-                        ctx.arc(p.x, p.y, ps, 0, Math.PI * 2);
-                        ctx.fill();
-                        visible++;
-                    }
-                }
-            }
-            
-            // Draw blocks (red)
-            if (document.getElementById('showB').checked && blocks.length > 0) {
-                ctx.fillStyle = 'rgba(234, 67, 53, 0.7)';
-                for (let i = 0; i < blocks.length; i += sample) {
-                    const [lat, lng] = blocks[i];
-                    if (inBounds(lat, lng)) {
-                        const p = toPixel(lat, lng);
-                        ctx.beginPath();
-                        ctx.arc(p.x, p.y, ps, 0, Math.PI * 2);
-                        ctx.fill();
-                        visible++;
-                    }
-                }
-            }
+            });
             
             document.getElementById('visible').textContent = visible.toLocaleString();
         }
         
-        document.getElementById('showV').addEventListener('change', render);
-        document.getElementById('showA').addEventListener('change', render);
-        document.getElementById('showB').addEventListener('change', render);
+        function hexToRgb(hex) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, 0.7)`;
+        }
     </script>
     <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
 </body>
