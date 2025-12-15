@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Riyadh Map - Fast Version</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, width=device-width">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; }
+        #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+        
+        .panel {
+            position: absolute;
+            top: 10px;
+            left: 60px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            max-width: 300px;
+            font-size: 13px;
+        }
+        
+        .panel h2 { color: #1a73e8; margin-bottom: 10px; font-size: 16px; }
+        
+        .stats { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
+        .stat { background: #f5f5f5; padding: 8px 12px; border-radius: 6px; text-align: center; }
+        .stat-num { font-weight: bold; font-size: 14px; }
+        .stat-label { font-size: 10px; color: #666; }
+        
+        .filters { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
+        .filter-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 5px 0; }
+        .filter-row label { display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 12px; }
+        
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        
+        .loading {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px 50px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 2000;
+            text-align: center;
+        }
+        
+        .spinner {
+            width: 40px; height: 40px;
+            border: 4px solid #eee;
+            border-top-color: #4285f4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        #canvas {
+            position: absolute;
+            top: 0; left: 0;
+            pointer-events: none;
+            z-index: 450;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <div id="status">Loading...</div>
+    </div>
+    
+    <div id="map"></div>
+    <canvas id="canvas"></canvas>
+    
+    <div class="panel">
+        <h2>🏙️ Riyadh Map</h2>
+        <div class="stats">
+            <div class="stat"><div class="stat-num" id="villa-count">0</div><div class="stat-label">🏠 Villas</div></div>
+            <div class="stat"><div class="stat-num" id="apt-count">0</div><div class="stat-label">🏢 Apts</div></div>
+            <div class="stat"><div class="stat-num" id="biz-count">0</div><div class="stat-label">🏪 Biz</div></div>
+        </div>
+        <div class="filters">
+            <div class="filter-row">
+                <label><input type="checkbox" id="showVillas" checked><span class="dot" style="background:#34a853"></span>Villas</label>
+                <label><input type="checkbox" id="showApts" checked><span class="dot" style="background:#4285f4"></span>Apts</label>
+            </div>
+            <div class="filter-row">
+                <label><input type="checkbox" id="showBiz" checked><span class="dot" style="background:#ea4335"></span>Businesses</label>
+            </div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:#888;">
+            Showing: <span id="visible-count">0</span> points
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let villaData = [], aptData = [], bizData = [];
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        const URLS = {
+            villa: 'https://raw.githubusercontent.com/lalmajed/citysh/main/villas_geo.json',
+            apt: 'https://raw.githubusercontent.com/lalmajed/citysh/main/apartments_geo.json',
+            biz: 'https://raw.githubusercontent.com/lalmajed/citysh/main/businesses_geo.json'
+        };
+        
+        function status(msg) {
+            document.getElementById('status').textContent = msg;
+        }
+        
+        function initMap() {
+            status('Initializing map...');
+            
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 24.7136, lng: 46.6753 },
+                zoom: 12,
+                mapTypeControl: true,
+                streetViewControl: true
+            });
+            
+            map.addListener('idle', render);
+            window.addEventListener('resize', render);
+            
+            loadData();
+        }
+        
+        async function loadData() {
+            try {
+                status('Loading villas...');
+                const v = await fetch(URLS.villa);
+                villaData = await v.json();
+                document.getElementById('villa-count').textContent = villaData.length.toLocaleString();
+                
+                status('Loading apartments...');
+                const a = await fetch(URLS.apt);
+                aptData = await a.json();
+                document.getElementById('apt-count').textContent = aptData.length.toLocaleString();
+                
+                status('Loading businesses...');
+                const b = await fetch(URLS.biz);
+                bizData = await b.json();
+                document.getElementById('biz-count').textContent = bizData.length.toLocaleString();
+                
+                document.getElementById('loading').style.display = 'none';
+                render();
+                
+            } catch (e) {
+                status('Error: ' + e.message);
+            }
+        }
+        
+        function render() {
+            if (!map) return;
+            
+            const bounds = map.getBounds();
+            if (!bounds) return;
+            
+            const proj = map.getProjection();
+            if (!proj) return;
+            
+            // Resize canvas
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const zoom = map.getZoom();
+            const ne = bounds.getNorthEast();
+            const sw = bounds.getSouthWest();
+            
+            // Sample rate based on zoom (show fewer points when zoomed out)
+            let sampleRate = 1;
+            if (zoom <= 10) sampleRate = 20;
+            else if (zoom <= 11) sampleRate = 10;
+            else if (zoom <= 12) sampleRate = 5;
+            else if (zoom <= 13) sampleRate = 2;
+            
+            const pointSize = Math.max(1, Math.min(zoom - 10, 4));
+            let visibleCount = 0;
+            
+            // Convert lat/lng to pixel
+            function toPixel(lat, lng) {
+                const worldPoint = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
+                const topRight = proj.fromLatLngToPoint(ne);
+                const bottomLeft = proj.fromLatLngToPoint(sw);
+                const scale = Math.pow(2, zoom);
+                
+                return {
+                    x: (worldPoint.x - bottomLeft.x) * scale,
+                    y: (worldPoint.y - topRight.y) * scale
+                };
+            }
+            
+            // Check if in bounds
+            function inBounds(lat, lng) {
+                return lat >= sw.lat() && lat <= ne.lat() && lng >= sw.lng() && lng <= ne.lng();
+            }
+            
+            // Draw villas
+            if (document.getElementById('showVillas').checked) {
+                ctx.fillStyle = 'rgba(52, 168, 83, 0.6)';
+                for (let i = 0; i < villaData.length; i += sampleRate) {
+                    const [lat, lng] = villaData[i];
+                    if (inBounds(lat, lng)) {
+                        const p = toPixel(lat, lng);
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, pointSize, 0, Math.PI * 2);
+                        ctx.fill();
+                        visibleCount++;
+                    }
+                }
+            }
+            
+            // Draw apartments
+            if (document.getElementById('showApts').checked) {
+                ctx.fillStyle = 'rgba(66, 133, 244, 0.7)';
+                for (let i = 0; i < aptData.length; i += sampleRate) {
+                    const [lat, lng] = aptData[i];
+                    if (inBounds(lat, lng)) {
+                        const p = toPixel(lat, lng);
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, pointSize, 0, Math.PI * 2);
+                        ctx.fill();
+                        visibleCount++;
+                    }
+                }
+            }
+            
+            // Draw businesses (always show all - they're fewer)
+            if (document.getElementById('showBiz').checked) {
+                ctx.fillStyle = 'rgba(234, 67, 53, 0.8)';
+                for (let i = 0; i < bizData.length; i++) {
+                    const [lat, lng] = bizData[i];
+                    if (inBounds(lat, lng)) {
+                        const p = toPixel(lat, lng);
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, pointSize + 1, 0, Math.PI * 2);
+                        ctx.fill();
+                        visibleCount++;
+                    }
+                }
+            }
+            
+            document.getElementById('visible-count').textContent = visibleCount.toLocaleString();
+        }
+        
+        // Filter change handlers
+        ['showVillas', 'showApts', 'showBiz'].forEach(id => {
+            document.getElementById(id).addEventListener('change', render);
+        });
+        
+        // Click for business info
+        document.getElementById('map').addEventListener('click', function(e) {
+            // This is handled by Google Maps
+        });
+        
+        map?.addListener('click', function(e) {
+            const lat = e.latLng.lat();
+            const lng = e.latLng.lng();
+            const tol = 0.0003;
+            
+            for (const b of bizData) {
+                if (Math.abs(b[0] - lat) < tol && Math.abs(b[1] - lng) < tol) {
+                    new google.maps.InfoWindow({
+                        content: `<b>${b[2]}</b><br>${b[3]}/${b[4]}<br><a href="https://www.google.com/maps/dir/?api=1&destination=${b[0]},${b[1]}" target="_blank">Directions</a>`,
+                        position: {lat: b[0], lng: b[1]}
+                    }).open(map);
+                    break;
+                }
+            }
+        });
+    </script>
+    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
+</body>
+</html>
