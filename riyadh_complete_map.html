@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Riyadh Complete Map - 336K Locations</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; }
+        
+        #map { 
+            position: absolute; 
+            top: 0; bottom: 0; left: 0; right: 0;
+        }
+        
+        .info-panel {
+            position: absolute;
+            top: 10px;
+            left: 50px;
+            background: rgba(255,255,255,0.95);
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-width: 320px;
+        }
+        
+        .info-panel h2 {
+            color: #1a5f2a;
+            margin-bottom: 8px;
+            font-size: 17px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        
+        .stat-box {
+            background: #f8f9fa;
+            padding: 10px 8px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-box.villa { border-left: 3px solid #22c55e; }
+        .stat-box.apt { border-left: 3px solid #3b82f6; }
+        .stat-box.biz { border-left: 3px solid #f59e0b; }
+        
+        .stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        .controls {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+        }
+        
+        .control-section {
+            margin-bottom: 10px;
+        }
+        
+        .control-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #888;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        
+        .control-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 6px 0;
+        }
+        
+        .control-row label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+        
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .dot.villa { background: #22c55e; }
+        .dot.apt { background: #3b82f6; }
+        .dot.shop { background: #ef4444; }
+        .dot.amenity { background: #f59e0b; }
+        .dot.office { background: #8b5cf6; }
+        .dot.tourism { background: #ec4899; }
+        .dot.leisure { background: #14b8a6; }
+        .dot.healthcare { background: #f43f5e; }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #e0e0e0;
+            border-top-color: #1a5f2a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #333;
+            text-align: center;
+        }
+        
+        .progress {
+            width: 300px;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #1a5f2a, #22c55e);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        
+        #canvas-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 400;
+        }
+        
+        .popup-content {
+            font-size: 13px;
+        }
+        .popup-content h4 {
+            margin: 0 0 5px 0;
+            color: #1a5f2a;
+        }
+        .popup-content p {
+            margin: 2px 0;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loading-text" class="loading-text">Initializing...</div>
+        <div class="progress"><div id="progress-bar" class="progress-bar" style="width: 0%"></div></div>
+    </div>
+    
+    <div id="map"></div>
+    <canvas id="canvas-overlay"></canvas>
+    
+    <div class="info-panel">
+        <h2>🏙️ Riyadh Complete Map</h2>
+        <p style="font-size: 12px; color: #666;"><span id="total-count">0</span> total locations</p>
+        
+        <div class="stats-grid">
+            <div class="stat-box villa">
+                <div class="stat-value" id="villa-count">0</div>
+                <div class="stat-label">🏠 Villas</div>
+            </div>
+            <div class="stat-box apt">
+                <div class="stat-value" id="apt-count">0</div>
+                <div class="stat-label">🏢 Apartments</div>
+            </div>
+            <div class="stat-box biz">
+                <div class="stat-value" id="biz-count">0</div>
+                <div class="stat-label">🏪 Businesses</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-section">
+                <div class="control-section-title">Residential</div>
+                <div class="control-row">
+                    <label><input type="checkbox" id="showVillas" checked> <span class="dot villa"></span> Villas</label>
+                    <label><input type="checkbox" id="showApts" checked> <span class="dot apt"></span> Apartments</label>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <div class="control-section-title">Businesses</div>
+                <div class="control-row">
+                    <label><input type="checkbox" id="showShop" checked> <span class="dot shop"></span> Shops</label>
+                    <label><input type="checkbox" id="showAmenity" checked> <span class="dot amenity"></span> Amenities</label>
+                    <label><input type="checkbox" id="showOffice" checked> <span class="dot office"></span> Offices</label>
+                </div>
+                <div class="control-row">
+                    <label><input type="checkbox" id="showTourism" checked> <span class="dot tourism"></span> Tourism</label>
+                    <label><input type="checkbox" id="showLeisure" checked> <span class="dot leisure"></span> Leisure</label>
+                    <label><input type="checkbox" id="showHealthcare" checked> <span class="dot healthcare"></span> Health</label>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <div class="control-row">
+                    <label style="width: 100%;">
+                        Point Size: <input type="range" id="pointSize" min="1" max="8" value="3" style="flex: 1; margin-left: 10px;">
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        const map = L.map('map', { preferCanvas: true }).setView([24.7136, 46.6753], 11);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap',
+            maxZoom: 19
+        }).addTo(map);
+        
+        // Canvas
+        const canvas = document.getElementById('canvas-overlay');
+        const ctx = canvas.getContext('2d');
+        
+        // Data
+        let villaData = [];
+        let aptData = [];
+        let bizData = [];
+        
+        // GitHub URLs
+        const VILLA_URL = 'https://raw.githubusercontent.com/lalmajed/citysh/main/villas_geo.json';
+        const APT_URL = 'https://raw.githubusercontent.com/lalmajed/citysh/main/apartments_geo.json';
+        const BIZ_URL = 'https://raw.githubusercontent.com/lalmajed/citysh/main/businesses_geo.json';
+        
+        // Business colors
+        const bizColors = {
+            shop: '#ef4444',
+            amenity: '#f59e0b',
+            office: '#8b5cf6',
+            tourism: '#ec4899',
+            leisure: '#14b8a6',
+            healthcare: '#f43f5e'
+        };
+        
+        function updateProgress(text, percent) {
+            document.getElementById('loading-text').textContent = text;
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        function renderCanvas() {
+            resizeCanvas();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const bounds = map.getBounds();
+            const pointSize = parseInt(document.getElementById('pointSize').value);
+            
+            // Helper to check if in bounds
+            function inBounds(lat, lng) {
+                return lat >= bounds.getSouth() && lat <= bounds.getNorth() &&
+                       lng >= bounds.getWest() && lng <= bounds.getEast();
+            }
+            
+            // Draw villas (green)
+            if (document.getElementById('showVillas').checked) {
+                ctx.fillStyle = 'rgba(34, 197, 94, 0.5)';
+                villaData.forEach(coord => {
+                    if (inBounds(coord[0], coord[1])) {
+                        const pt = map.latLngToContainerPoint([coord[0], coord[1]]);
+                        ctx.beginPath();
+                        ctx.arc(pt.x, pt.y, pointSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+            }
+            
+            // Draw apartments (blue)
+            if (document.getElementById('showApts').checked) {
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.6)';
+                aptData.forEach(coord => {
+                    if (inBounds(coord[0], coord[1])) {
+                        const pt = map.latLngToContainerPoint([coord[0], coord[1]]);
+                        ctx.beginPath();
+                        ctx.arc(pt.x, pt.y, pointSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+            }
+            
+            // Draw businesses (colored by type)
+            const bizFilters = {
+                shop: document.getElementById('showShop').checked,
+                amenity: document.getElementById('showAmenity').checked,
+                office: document.getElementById('showOffice').checked,
+                tourism: document.getElementById('showTourism').checked,
+                leisure: document.getElementById('showLeisure').checked,
+                healthcare: document.getElementById('showHealthcare').checked
+            };
+            
+            bizData.forEach(b => {
+                const [lat, lng, name, type, subtype] = b;
+                if (bizFilters[type] && inBounds(lat, lng)) {
+                    ctx.fillStyle = bizColors[type] || '#666';
+                    const pt = map.latLngToContainerPoint([lat, lng]);
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, pointSize + 1, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+        }
+        
+        // Click handler for business info
+        map.on('click', function(e) {
+            const clickLat = e.latlng.lat;
+            const clickLng = e.latlng.lng;
+            const tolerance = 0.001; // ~100m
+            
+            // Find nearby business
+            for (const b of bizData) {
+                const [lat, lng, name, type, subtype] = b;
+                if (Math.abs(lat - clickLat) < tolerance && Math.abs(lng - clickLng) < tolerance) {
+                    L.popup()
+                        .setLatLng([lat, lng])
+                        .setContent(`
+                            <div class="popup-content">
+                                <h4>${name}</h4>
+                                <p><strong>Type:</strong> ${type} / ${subtype}</p>
+                                <p><strong>Location:</strong> ${lat.toFixed(5)}, ${lng.toFixed(5)}</p>
+                            </div>
+                        `)
+                        .openOn(map);
+                    return;
+                }
+            }
+        });
+        
+        async function loadData() {
+            try {
+                updateProgress('Loading villas...', 10);
+                const villaResp = await fetch(VILLA_URL);
+                villaData = await villaResp.json();
+                
+                updateProgress('Loading apartments...', 35);
+                const aptResp = await fetch(APT_URL);
+                aptData = await aptResp.json();
+                
+                updateProgress('Loading businesses...', 60);
+                const bizResp = await fetch(BIZ_URL);
+                bizData = await bizResp.json();
+                
+                updateProgress('Rendering map...', 85);
+                
+                // Update counts
+                document.getElementById('villa-count').textContent = villaData.length.toLocaleString();
+                document.getElementById('apt-count').textContent = aptData.length.toLocaleString();
+                document.getElementById('biz-count').textContent = bizData.length.toLocaleString();
+                document.getElementById('total-count').textContent = 
+                    (villaData.length + aptData.length + bizData.length).toLocaleString();
+                
+                console.log('Loaded:', villaData.length, 'villas,', aptData.length, 'apartments,', bizData.length, 'businesses');
+                
+                setTimeout(() => {
+                    renderCanvas();
+                    document.getElementById('loading').style.display = 'none';
+                }, 100);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading-text').innerHTML = 
+                    '<span style="color: red;">Error: ' + error.message + '</span>';
+            }
+        }
+        
+        // Events
+        map.on('move', renderCanvas);
+        map.on('zoom', renderCanvas);
+        window.addEventListener('resize', renderCanvas);
+        
+        // Checkbox events
+        ['showVillas', 'showApts', 'showShop', 'showAmenity', 'showOffice', 'showTourism', 'showLeisure', 'showHealthcare', 'pointSize']
+            .forEach(id => document.getElementById(id).addEventListener('change', renderCanvas));
+        document.getElementById('pointSize').addEventListener('input', renderCanvas);
+        
+        // Start
+        resizeCanvas();
+        loadData();
+    </script>
+</body>
+</html>
