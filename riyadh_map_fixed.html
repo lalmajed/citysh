@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riyadh Businesses Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { height: 100vh; width: 100%; }
+        .info-box {
+            position: absolute;
+            top: 10px;
+            left: 50px;
+            z-index: 1000;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            font-family: Arial, sans-serif;
+        }
+        .info-box h2 { margin: 0 0 5px 0; font-size: 18px; }
+        .info-box p { margin: 0; color: #666; }
+        .legend {
+            position: absolute;
+            bottom: 30px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+        }
+        .legend div { margin: 5px 0; }
+        .dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        #status {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2000;
+            background: white;
+            padding: 20px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <div class="info-box">
+        <h2>🏪 Riyadh Businesses</h2>
+        <p><span id="count">Loading...</span> locations</p>
+    </div>
+    
+    <div class="legend">
+        <strong>Categories:</strong>
+        <div><span class="dot" style="background:#e74c3c"></span>Shops</div>
+        <div><span class="dot" style="background:#3498db"></span>Amenities</div>
+        <div><span class="dot" style="background:#9b59b6"></span>Offices</div>
+        <div><span class="dot" style="background:#f39c12"></span>Tourism</div>
+        <div><span class="dot" style="background:#1abc9c"></span>Leisure</div>
+        <div><span class="dot" style="background:#e91e63"></span>Healthcare</div>
+    </div>
+    
+    <div id="status">Loading map data...</div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        var map = L.map('map').setView([24.7136, 46.6753], 11);
+        
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+        
+        // Colors for each type
+        var colors = {
+            'shop': '#e74c3c',
+            'amenity': '#3498db', 
+            'office': '#9b59b6',
+            'tourism': '#f39c12',
+            'leisure': '#1abc9c',
+            'healthcare': '#e91e63'
+        };
+        
+        // Load data
+        document.getElementById('status').innerHTML = 'Fetching business data...';
+        
+        fetch('riyadh_businesses.json')
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Failed to load data: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                document.getElementById('status').innerHTML = 'Adding ' + data.length + ' markers...';
+                document.getElementById('count').textContent = data.length.toLocaleString();
+                
+                var count = 0;
+                
+                // Add markers
+                data.forEach(function(biz) {
+                    var color = colors[biz.business_type] || '#666666';
+                    
+                    var marker = L.circleMarker([biz.latitude, biz.longitude], {
+                        radius: 6,
+                        fillColor: color,
+                        color: '#fff',
+                        weight: 1,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
+                    
+                    var popup = '<strong>' + (biz.name || 'Unnamed') + '</strong><br>' +
+                                '<em>' + biz.business_type + ' / ' + biz.business_subtype + '</em><br>' +
+                                '📍 ' + biz.latitude.toFixed(5) + ', ' + biz.longitude.toFixed(5);
+                    
+                    if (biz.phone) popup += '<br>📞 ' + biz.phone;
+                    if (biz.website) popup += '<br>🌐 <a href="' + biz.website + '" target="_blank">Website</a>';
+                    
+                    marker.bindPopup(popup);
+                    marker.addTo(map);
+                    count++;
+                });
+                
+                document.getElementById('status').style.display = 'none';
+                console.log('Added ' + count + ' markers to map');
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                document.getElementById('status').innerHTML = 
+                    '<span style="color:red">Error: ' + error.message + '</span><br><br>' +
+                    '<small>Make sure riyadh_businesses.json exists.<br>' +
+                    'Run: python3 riyadh_businesses.py</small>';
+            });
+    </script>
+</body>
+</html>
