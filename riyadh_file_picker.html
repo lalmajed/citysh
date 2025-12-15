@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Riyadh Map - Load Your Files</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, width=device-width">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; }
+        #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+        
+        .panel {
+            position: absolute; top: 10px; left: 60px;
+            background: white; padding: 15px; border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 1000;
+            max-width: 320px; font-size: 13px;
+        }
+        .panel h2 { color: #1a73e8; margin-bottom: 10px; font-size: 16px; }
+        
+        .file-section { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; }
+        .file-section label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 12px; }
+        .file-section input[type="file"] { font-size: 11px; width: 100%; }
+        .file-status { font-size: 11px; color: #666; margin-top: 5px; }
+        .file-status.loaded { color: #34a853; }
+        
+        .stats { display: flex; gap: 10px; margin: 10px 0; }
+        .stat { background: #f5f5f5; padding: 10px; border-radius: 6px; text-align: center; flex: 1; }
+        .stat b { display: block; font-size: 16px; }
+        .stat small { color: #666; font-size: 10px; }
+        
+        .filters { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; }
+        .filters label { display: inline-flex; align-items: center; gap: 5px; margin-right: 15px; cursor: pointer; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+        
+        #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 450; }
+        
+        .loading-msg {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 30px; border-radius: 10px; text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 2000;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <canvas id="canvas"></canvas>
+    
+    <div class="panel">
+        <h2>🏙️ Riyadh Map</h2>
+        
+        <div class="file-section">
+            <label>🏠 Villas JSON:</label>
+            <input type="file" id="villasFile" accept=".json">
+            <div id="villasStatus" class="file-status">No file loaded</div>
+        </div>
+        
+        <div class="file-section">
+            <label>🏢 Apartments JSON:</label>
+            <input type="file" id="aptsFile" accept=".json">
+            <div id="aptsStatus" class="file-status">No file loaded</div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat" style="border-left:3px solid #34a853">
+                <b id="villa-count">0</b>
+                <small>🏠 Villas</small>
+            </div>
+            <div class="stat" style="border-left:3px solid #4285f4">
+                <b id="apt-count">0</b>
+                <small>🏢 Apartments</small>
+            </div>
+        </div>
+        
+        <div class="filters">
+            <label><input type="checkbox" id="showV" checked><span class="dot" style="background:#34a853"></span> Villas</label>
+            <label><input type="checkbox" id="showA" checked><span class="dot" style="background:#4285f4"></span> Apartments</label>
+        </div>
+        
+        <div style="margin-top:10px;font-size:11px;color:#888;">
+            Showing: <span id="visible">0</span> points | Zoom: <span id="zoom">0</span>
+        </div>
+    </div>
+    
+    <div id="loadingMsg" class="loading-msg">
+        <p>📂 Load your JSON files using the panel on the left</p>
+        <p style="font-size:12px;color:#666;margin-top:10px;">Select villas_geo.json and apartments_geo.json</p>
+    </div>
+
+    <script>
+        let map, villas = [], apts = [];
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 24.7136, lng: 46.6753 },
+                zoom: 11,
+                mapTypeControl: true,
+                streetViewControl: true,
+                fullscreenControl: true
+            });
+            
+            map.addListener('idle', render);
+            window.addEventListener('resize', render);
+        }
+        
+        // File loader for villas
+        document.getElementById('villasFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('villasStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    villas = JSON.parse(e.target.result);
+                    document.getElementById('villa-count').textContent = villas.length.toLocaleString();
+                    document.getElementById('villasStatus').textContent = '✅ Loaded ' + villas.length.toLocaleString() + ' villas';
+                    document.getElementById('villasStatus').className = 'file-status loaded';
+                    checkReady();
+                    render();
+                } catch (err) {
+                    document.getElementById('villasStatus').textContent = '❌ Error: ' + err.message;
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        // File loader for apartments
+        document.getElementById('aptsFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('aptsStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    apts = JSON.parse(e.target.result);
+                    document.getElementById('apt-count').textContent = apts.length.toLocaleString();
+                    document.getElementById('aptsStatus').textContent = '✅ Loaded ' + apts.length.toLocaleString() + ' apartments';
+                    document.getElementById('aptsStatus').className = 'file-status loaded';
+                    checkReady();
+                    render();
+                } catch (err) {
+                    document.getElementById('aptsStatus').textContent = '❌ Error: ' + err.message;
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        function checkReady() {
+            if (villas.length > 0 || apts.length > 0) {
+                document.getElementById('loadingMsg').style.display = 'none';
+            }
+        }
+        
+        function render() {
+            if (!map) return;
+            
+            const bounds = map.getBounds();
+            const proj = map.getProjection();
+            if (!bounds || !proj) return;
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const zoom = map.getZoom();
+            const ne = bounds.getNorthEast(), sw = bounds.getSouthWest();
+            
+            document.getElementById('zoom').textContent = zoom;
+            
+            // Sample rate - show fewer points when zoomed out
+            let sample = 1;
+            if (zoom <= 9) sample = 100;
+            else if (zoom <= 10) sample = 50;
+            else if (zoom <= 11) sample = 20;
+            else if (zoom <= 12) sample = 10;
+            else if (zoom <= 13) sample = 5;
+            else if (zoom <= 14) sample = 2;
+            
+            const ps = Math.max(1, Math.min(zoom - 9, 5));
+            let visible = 0;
+            
+            function toPixel(lat, lng) {
+                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
+                const tr = proj.fromLatLngToPoint(ne);
+                const bl = proj.fromLatLngToPoint(sw);
+                const scale = Math.pow(2, zoom);
+                return { x: (w.x - bl.x) * scale, y: (w.y - tr.y) * scale };
+            }
+            
+            function inBounds(lat, lng) {
+                return lat >= sw.lat() && lat <= ne.lat() && lng >= sw.lng() && lng <= ne.lng();
+            }
+            
+            // Draw villas (green)
+            if (document.getElementById('showV').checked && villas.length > 0) {
+                ctx.fillStyle = 'rgba(52, 168, 83, 0.6)';
+                for (let i = 0; i < villas.length; i += sample) {
+                    const [lat, lng] = villas[i];
+                    if (inBounds(lat, lng)) {
+                        const p = toPixel(lat, lng);
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, ps, 0, Math.PI * 2);
+                        ctx.fill();
+                        visible++;
+                    }
+                }
+            }
+            
+            // Draw apartments (blue)
+            if (document.getElementById('showA').checked && apts.length > 0) {
+                ctx.fillStyle = 'rgba(66, 133, 244, 0.7)';
+                for (let i = 0; i < apts.length; i += sample) {
+                    const [lat, lng] = apts[i];
+                    if (inBounds(lat, lng)) {
+                        const p = toPixel(lat, lng);
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, ps, 0, Math.PI * 2);
+                        ctx.fill();
+                        visible++;
+                    }
+                }
+            }
+            
+            document.getElementById('visible').textContent = visible.toLocaleString();
+        }
+        
+        document.getElementById('showV').addEventListener('change', render);
+        document.getElementById('showA').addEventListener('change', render);
+    </script>
+    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
+</body>
+</html>
