@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Riyadh Residential Map - 322K Parcels</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; }
+        
+        #map { 
+            position: absolute; 
+            top: 0; bottom: 0; left: 0; right: 0;
+        }
+        
+        .info-panel {
+            position: absolute;
+            top: 10px;
+            left: 50px;
+            background: rgba(255,255,255,0.95);
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-width: 350px;
+        }
+        
+        .info-panel h2 {
+            color: #1a5f2a;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .stat-box {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-box.villa { border-left: 4px solid #22c55e; }
+        .stat-box.apt { border-left: 4px solid #3b82f6; }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        .controls {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .control-row {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            gap: 10px;
+        }
+        
+        .control-row label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+        
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .dot.villa { background: #22c55e; }
+        .dot.apt { background: #3b82f6; }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #e0e0e0;
+            border-top-color: #1a5f2a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+        
+        .progress {
+            width: 300px;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #1a5f2a, #22c55e);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loading-text" class="loading-text">Loading map data...</div>
+        <div class="progress"><div id="progress-bar" class="progress-bar" style="width: 0%"></div></div>
+    </div>
+    
+    <div id="map"></div>
+    
+    <div class="info-panel">
+        <h2>🏙️ Riyadh Residential Map</h2>
+        <p style="font-size: 13px; color: #666;"><span id="total-count">322,323</span> residential parcels</p>
+        
+        <div class="stats-grid">
+            <div class="stat-box villa">
+                <div class="stat-value" id="villa-count">244,573</div>
+                <div class="stat-label">🏠 Villas (فلل)</div>
+            </div>
+            <div class="stat-box apt">
+                <div class="stat-value" id="apt-count">77,750</div>
+                <div class="stat-label">🏢 Apartments (عمائر)</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <strong style="font-size: 13px;">Display Options:</strong>
+            <div class="control-row">
+                <label><input type="checkbox" id="showVillas" checked> <span class="dot villa"></span> Villas</label>
+                <label><input type="checkbox" id="showApts" checked> <span class="dot apt"></span> Apartments</label>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map centered on Riyadh
+        const map = L.map('map').setView([24.7136, 46.6753], 11);
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap',
+            maxZoom: 19
+        }).addTo(map);
+        
+        // Layer groups
+        let villaLayer = L.layerGroup().addTo(map);
+        let aptLayer = L.layerGroup().addTo(map);
+        
+        // Data storage
+        let villaData = [];
+        let aptData = [];
+        
+        // GitHub raw URLs for the data
+        const VILLA_URL = 'https://raw.githubusercontent.com/lalmajed/citysh/main/villas_geo.json';
+        const APT_URL = 'https://raw.githubusercontent.com/lalmajed/citysh/main/apartments_geo.json';
+        
+        function updateProgress(text, percent) {
+            document.getElementById('loading-text').textContent = text;
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+        
+        function renderPoints() {
+            villaLayer.clearLayers();
+            aptLayer.clearLayers();
+            
+            const showVillas = document.getElementById('showVillas').checked;
+            const showApts = document.getElementById('showApts').checked;
+            
+            // Render villas (green)
+            if (showVillas && villaData.length > 0) {
+                villaData.forEach(coord => {
+                    L.circleMarker([coord[0], coord[1]], {
+                        radius: 2,
+                        fillColor: '#22c55e',
+                        color: '#22c55e',
+                        weight: 0,
+                        fillOpacity: 0.6
+                    }).addTo(villaLayer);
+                });
+            }
+            
+            // Render apartments (blue)
+            if (showApts && aptData.length > 0) {
+                aptData.forEach(coord => {
+                    L.circleMarker([coord[0], coord[1]], {
+                        radius: 2,
+                        fillColor: '#3b82f6',
+                        color: '#3b82f6',
+                        weight: 0,
+                        fillOpacity: 0.6
+                    }).addTo(aptLayer);
+                });
+            }
+        }
+        
+        async function loadData() {
+            try {
+                // Load villas
+                updateProgress('Loading villas data...', 20);
+                const villaResp = await fetch(VILLA_URL);
+                if (!villaResp.ok) throw new Error('Failed to load villas: ' + villaResp.status);
+                villaData = await villaResp.json();
+                updateProgress('Loaded ' + villaData.length.toLocaleString() + ' villas', 50);
+                
+                // Load apartments
+                updateProgress('Loading apartments data...', 60);
+                const aptResp = await fetch(APT_URL);
+                if (!aptResp.ok) throw new Error('Failed to load apartments: ' + aptResp.status);
+                aptData = await aptResp.json();
+                updateProgress('Loaded ' + aptData.length.toLocaleString() + ' apartments', 80);
+                
+                // Update counts
+                document.getElementById('villa-count').textContent = villaData.length.toLocaleString();
+                document.getElementById('apt-count').textContent = aptData.length.toLocaleString();
+                document.getElementById('total-count').textContent = (villaData.length + aptData.length).toLocaleString();
+                
+                // Render
+                updateProgress('Rendering ' + (villaData.length + aptData.length).toLocaleString() + ' points...', 90);
+                
+                console.log('Data loaded:', villaData.length, 'villas,', aptData.length, 'apartments');
+                
+                // Use setTimeout to allow UI update
+                setTimeout(() => {
+                    renderPoints();
+                    document.getElementById('loading').style.display = 'none';
+                }, 100);
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('loading-text').innerHTML = 
+                    '<span style="color: red;">Error: ' + error.message + '</span><br>' +
+                    '<small style="color: #666;">Check console for details</small>';
+            }
+        }
+        
+        // Event listeners for checkboxes
+        document.getElementById('showVillas').addEventListener('change', renderPoints);
+        document.getElementById('showApts').addEventListener('change', renderPoints);
+        
+        // Start loading
+        loadData();
+    </script>
+</body>
+</html>
