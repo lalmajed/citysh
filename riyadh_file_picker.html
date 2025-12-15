@@ -88,8 +88,9 @@
                 return landUseColors[code].color;
             }
             // Generate a consistent color based on code
-            const hue = (parseInt(code) * 137) % 360;
-            return `hsl(${hue}, 60%, 50%)`;
+            const numCode = parseInt(code) || 0;
+            const hue = (numCode * 137) % 360;
+            return `hsl(${hue}, 70%, 55%)`;
         }
         
         function initMap() {
@@ -309,8 +310,7 @@
                 if (!points || points.length === 0) return;
                 
                 const color = getColorForCode(code);
-                const rgb = color.startsWith('#') ? hexToRgb(color) : color;
-                ctx.fillStyle = rgb.startsWith('rgb') ? rgb.replace('rgb', 'rgba').replace(')', ', 0.7)') : `${rgb}`;
+                ctx.fillStyle = colorWithAlpha(color, 0.7);
                 
                 for (let i = 0; i < points.length; i += sample) {
                     const [lat, lng] = points[i];
@@ -327,11 +327,18 @@
             document.getElementById('visible').textContent = visible.toLocaleString();
         }
         
-        function hexToRgb(hex) {
-            const r = parseInt(hex.slice(1, 3), 16);
-            const g = parseInt(hex.slice(3, 5), 16);
-            const b = parseInt(hex.slice(5, 7), 16);
-            return `rgba(${r}, ${g}, ${b}, 0.7)`;
+        function colorWithAlpha(color, alpha) {
+            if (color.startsWith('#')) {
+                // Hex color
+                const r = parseInt(color.slice(1, 3), 16);
+                const g = parseInt(color.slice(3, 5), 16);
+                const b = parseInt(color.slice(5, 7), 16);
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            } else if (color.startsWith('hsl')) {
+                // HSL color - convert to HSLA
+                return color.replace('hsl', 'hsla').replace(')', `, ${alpha})`);
+            }
+            return color;
         }
     </script>
     <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
