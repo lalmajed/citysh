@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riyadh Businesses - Google Maps</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        #map {
+            height: calc(100vh - 60px);
+            width: 100%;
+        }
+        
+        .header {
+            height: 60px;
+            background: linear-gradient(135deg, #4285f4 0%, #34a853 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        
+        .header .stats {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.15);
+            max-width: 300px;
+            max-height: calc(100vh - 150px);
+            overflow-y: auto;
+        }
+        
+        .controls h3 {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 0.95rem;
+        }
+        
+        .filter-group {
+            margin-bottom: 8px;
+        }
+        
+        .filter-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: #555;
+        }
+        
+        .filter-group input[type="checkbox"] {
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+        }
+        
+        .filter-group .count {
+            margin-left: auto;
+            color: #888;
+            font-size: 0.8rem;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: #4285f4;
+        }
+        
+        .legend {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            z-index: 1000;
+            background: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            font-size: 0.8rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 4px 0;
+        }
+        
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            margin-right: 8px;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2000;
+            background: white;
+            padding: 30px 50px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e8f5e9;
+            border-top-color: #4285f4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .info-window {
+            max-width: 280px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        
+        .info-window h4 {
+            color: #1a73e8;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        
+        .info-window p {
+            margin: 4px 0;
+            font-size: 0.85rem;
+            color: #555;
+        }
+        
+        .info-window .type-badge {
+            display: inline-block;
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            margin-top: 5px;
+        }
+        
+        .info-window a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+        
+        .info-window a:hover {
+            text-decoration: underline;
+        }
+        
+        .btn-directions {
+            display: inline-block;
+            background: #4285f4;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            text-decoration: none;
+        }
+        
+        .btn-directions:hover {
+            background: #3367d6;
+            color: white;
+            text-decoration: none;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                top: 70px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+            
+            .legend {
+                bottom: 10px;
+                left: 10px;
+                right: 10px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📍 Riyadh Businesses - Google Maps</h1>
+        <div class="stats">
+            <span id="totalCount">Loading...</span> businesses | 
+            <span id="updateDate"></span>
+        </div>
+    </div>
+    
+    <div id="map"></div>
+    
+    <div class="controls" id="controls">
+        <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search businesses...">
+        <h3>Filter by Category</h3>
+        <div id="filterGroups"></div>
+    </div>
+    
+    <div class="legend">
+        <div class="legend-item"><div class="legend-color" style="background: #ea4335;"></div> Shops</div>
+        <div class="legend-item"><div class="legend-color" style="background: #4285f4;"></div> Amenities</div>
+        <div class="legend-item"><div class="legend-color" style="background: #9c27b0;"></div> Offices</div>
+        <div class="legend-item"><div class="legend-color" style="background: #fbbc04;"></div> Tourism</div>
+        <div class="legend-item"><div class="legend-color" style="background: #34a853;"></div> Leisure</div>
+        <div class="legend-item"><div class="legend-color" style="background: #e91e63;"></div> Healthcare</div>
+    </div>
+    
+    <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <p>Loading businesses...</p>
+    </div>
+
+    <script>
+        // Configuration - Replace with your Google Maps API key
+        // Get your API key at: https://console.cloud.google.com/google/maps-apis
+        const GOOGLE_MAPS_API_KEY = 'YOUR_API_KEY_HERE';
+        
+        // Color mapping for business types (Google Maps colors)
+        const typeColors = {
+            shop: '#ea4335',      // Red
+            amenity: '#4285f4',   // Blue
+            office: '#9c27b0',    // Purple
+            tourism: '#fbbc04',   // Yellow
+            leisure: '#34a853',   // Green
+            healthcare: '#e91e63' // Pink
+        };
+        
+        // Store data and markers
+        let map;
+        let allData = [];
+        let markers = [];
+        let markerClusterer;
+        let activeFilters = new Set(['shop', 'amenity', 'office', 'tourism', 'leisure', 'healthcare']);
+        let searchTerm = '';
+        let infoWindow;
+        
+        // Initialize map
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 24.7136, lng: 46.6753 },
+                zoom: 11,
+                mapTypeControl: true,
+                mapTypeControlOptions: {
+                    style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+                    position: google.maps.ControlPosition.TOP_LEFT
+                },
+                streetViewControl: true,
+                fullscreenControl: true,
+                styles: [
+                    {
+                        featureType: 'poi.business',
+                        stylers: [{ visibility: 'off' }]
+                    }
+                ]
+            });
+            
+            infoWindow = new google.maps.InfoWindow();
+            
+            // Load business data
+            loadBusinessData();
+        }
+        
+        // Load GeoJSON data
+        function loadBusinessData() {
+            fetch('riyadh_businesses.geojson')
+                .then(response => response.json())
+                .then(data => {
+                    allData = data.features;
+                    
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('totalCount').textContent = allData.length.toLocaleString();
+                    document.getElementById('updateDate').textContent = 'Updated: ' + new Date().toLocaleDateString();
+                    
+                    createFilters();
+                    updateMarkers();
+                })
+                .catch(error => {
+                    console.error('Error loading data:', error);
+                    document.getElementById('loading').innerHTML = `
+                        <p style="color: #ea4335;">Error loading data.</p>
+                        <p style="font-size: 0.8rem; color: #666; margin-top: 10px;">
+                            Make sure riyadh_businesses.geojson exists.<br>
+                            Run: python3 riyadh_businesses.py
+                        </p>
+                    `;
+                });
+        }
+        
+        // Create info window content
+        function createInfoContent(props) {
+            let content = `<div class="info-window">`;
+            content += `<h4>${props.name || 'Unnamed Business'}</h4>`;
+            
+            if (props.name_ar) {
+                content += `<p><strong>Arabic:</strong> ${props.name_ar}</p>`;
+            }
+            
+            content += `<span class="type-badge">${props.business_type} / ${props.business_subtype}</span>`;
+            
+            if (props.street) {
+                content += `<p><strong>📍</strong> ${props.street}${props.housenumber ? ' ' + props.housenumber : ''}</p>`;
+            }
+            
+            if (props.phone) {
+                content += `<p><strong>📞</strong> <a href="tel:${props.phone}">${props.phone}</a></p>`;
+            }
+            
+            if (props.website) {
+                content += `<p><strong>🌐</strong> <a href="${props.website}" target="_blank">Website</a></p>`;
+            }
+            
+            if (props.opening_hours) {
+                content += `<p><strong>🕐</strong> ${props.opening_hours}</p>`;
+            }
+            
+            if (props.brand) {
+                content += `<p><strong>Brand:</strong> ${props.brand}</p>`;
+            }
+            
+            // Google Maps directions link
+            content += `<a class="btn-directions" href="https://www.google.com/maps/dir/?api=1&destination=${props.latitude},${props.longitude}" target="_blank">
+                🚗 Get Directions
+            </a>`;
+            
+            content += `</div>`;
+            return content;
+        }
+        
+        // Update markers based on filters
+        function updateMarkers() {
+            // Clear existing markers
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+            
+            if (markerClusterer) {
+                markerClusterer.clearMarkers();
+            }
+            
+            const filtered = allData.filter(item => {
+                const props = item.properties;
+                const matchesFilter = activeFilters.has(props.business_type);
+                const matchesSearch = !searchTerm || 
+                    (props.name && props.name.toLowerCase().includes(searchTerm)) ||
+                    (props.name_ar && props.name_ar.includes(searchTerm)) ||
+                    (props.business_subtype && props.business_subtype.toLowerCase().includes(searchTerm));
+                return matchesFilter && matchesSearch;
+            });
+            
+            filtered.forEach(item => {
+                const coords = item.geometry.coordinates;
+                const props = item.properties;
+                
+                const marker = new google.maps.Marker({
+                    position: { lat: coords[1], lng: coords[0] },
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        fillColor: typeColors[props.business_type] || '#666',
+                        fillOpacity: 1,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2,
+                        scale: 8
+                    },
+                    title: props.name || 'Unnamed'
+                });
+                
+                marker.addListener('click', () => {
+                    infoWindow.setContent(createInfoContent(props));
+                    infoWindow.open(map, marker);
+                });
+                
+                markers.push(marker);
+            });
+            
+            // Add marker clusterer
+            if (typeof MarkerClusterer !== 'undefined') {
+                markerClusterer = new MarkerClusterer(map, markers, {
+                    imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m',
+                    maxZoom: 15
+                });
+            } else {
+                // If MarkerClusterer not available, add markers directly
+                markers.forEach(marker => marker.setMap(map));
+            }
+            
+            document.getElementById('totalCount').textContent = 
+                `${filtered.length.toLocaleString()} of ${allData.length.toLocaleString()}`;
+        }
+        
+        // Create filter checkboxes
+        function createFilters() {
+            const counts = {};
+            allData.forEach(item => {
+                const type = item.properties.business_type;
+                counts[type] = (counts[type] || 0) + 1;
+            });
+            
+            const container = document.getElementById('filterGroups');
+            container.innerHTML = '';
+            
+            Object.entries(counts)
+                .sort((a, b) => b[1] - a[1])
+                .forEach(([type, count]) => {
+                    const div = document.createElement('div');
+                    div.className = 'filter-group';
+                    div.innerHTML = `
+                        <label>
+                            <input type="checkbox" value="${type}" checked>
+                            <span style="color: ${typeColors[type]}">●</span> ${type.charAt(0).toUpperCase() + type.slice(1)}
+                            <span class="count">${count.toLocaleString()}</span>
+                        </label>
+                    `;
+                    
+                    div.querySelector('input').addEventListener('change', (e) => {
+                        if (e.target.checked) {
+                            activeFilters.add(type);
+                        } else {
+                            activeFilters.delete(type);
+                        }
+                        updateMarkers();
+                    });
+                    
+                    container.appendChild(div);
+                });
+        }
+        
+        // Search functionality
+        document.getElementById('searchBox').addEventListener('input', (e) => {
+            searchTerm = e.target.value.toLowerCase();
+            updateMarkers();
+        });
+        
+        // Load Google Maps API
+        function loadGoogleMaps() {
+            // Check if API key is set
+            if (GOOGLE_MAPS_API_KEY === 'YOUR_API_KEY_HERE') {
+                document.getElementById('loading').innerHTML = `
+                    <div style="text-align: left; max-width: 400px;">
+                        <h3 style="color: #ea4335; margin-bottom: 15px;">⚠️ Google Maps API Key Required</h3>
+                        <p style="margin-bottom: 10px;">To use Google Maps, you need an API key:</p>
+                        <ol style="margin-left: 20px; font-size: 0.9rem; color: #555;">
+                            <li>Go to <a href="https://console.cloud.google.com/google/maps-apis" target="_blank">Google Cloud Console</a></li>
+                            <li>Create a project and enable "Maps JavaScript API"</li>
+                            <li>Create credentials (API key)</li>
+                            <li>Replace <code>YOUR_API_KEY_HERE</code> in this file</li>
+                        </ol>
+                        <p style="margin-top: 15px; font-size: 0.85rem; color: #888;">
+                            Or use <a href="riyadh_map.html">riyadh_map.html</a> for a free alternative with OpenStreetMap.
+                        </p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&callback=initMap&libraries=visualization`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+            
+            // Load MarkerClusterer
+            const clustererScript = document.createElement('script');
+            clustererScript.src = 'https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js';
+            document.head.appendChild(clustererScript);
+        }
+        
+        // Start loading
+        loadGoogleMaps();
+    </script>
+</body>
+</html>
