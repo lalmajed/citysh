@@ -1,0 +1,14 @@
+Category,Count,Color,Description
+Sports & Recreation,3055,#4CAF50,"Parks, pitches, swimming pools, playgrounds, gardens, stadiums"
+Parking,2107,#9E9E9E,"Parking lots, parking spaces, parking entrances"
+Religious,1966,#9C27B0,"Mosques, places of worship, churches, temples"
+Other,1651,#795548,"Miscellaneous buildings and facilities"
+Food & Dining,1248,#FF5722,"Restaurants, cafes, fast food, bakeries"
+Fuel & Transport,1014,#FF9800,"Fuel stations, car repair, car wash, car rental"
+Shopping,663,#2196F3,"Supermarkets, malls, shops, convenience stores"
+Education,572,#00BCD4,"Schools, colleges, universities, libraries"
+Government & Office,464,#607D8B,"Government buildings, offices, diplomatic, police, fire stations"
+Hotels & Lodging,303,#E91E63,"Hotels, chalets, lodging facilities"
+Financial,291,#FFC107,"Banks, ATMs"
+Healthcare,283,#F44336,"Hospitals, clinics, pharmacies"
+TOTAL,13617,,All buildings and places in Riyadh
