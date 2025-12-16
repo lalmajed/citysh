@@ -74,7 +74,7 @@
     <canvas id="canvas"></canvas>
     
     <div class="panel">
-        <h2>🏙️ Riyadh Map <span style="font-size:10px;color:#999;">v2.0</span></h2>
+        <h2>🏙️ Riyadh Map <span style="font-size:10px;color:#999;">v2.1</span></h2>
         
         <div class="file-section">
             <label>📊 Land Use Data CSV:</label>
@@ -85,6 +85,10 @@
         <div class="file-section">
             <label>🏪 Businesses Layer:</label>
             <div id="businessStatus" class="file-status">Loading businesses...</div>
+            <div style="font-size:10px;color:#888;margin-top:5px;">
+                💡 To get more businesses, run:<br>
+                <code style="font-size:9px;">python google_places_riyadh.py [API_KEY]</code>
+            </div>
         </div>
         
         <div class="file-section" style="background: #e8f0fe;">
@@ -98,8 +102,14 @@
         <div style="margin: 10px 0; padding: 8px; background: #fff3cd; border-radius: 6px;">
             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                 <input type="checkbox" id="showBusinesses" checked>
-                <span style="font-weight: 600; font-size: 12px;">🏪 Show Business Markers</span>
+                <span style="font-weight: 600; font-size: 12px;">
+                    <span style="display:inline-block;width:12px;height:12px;background:#800020;border-radius:50%;border:1px solid white;"></span>
+                    Show Business Markers
+                </span>
             </label>
+            <div style="font-size:10px;color:#666;margin-top:4px;margin-left:28px;">
+                Burgundy dots = Restaurants, shops, banks, etc.
+            </div>
         </div>
         
         <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 6px;">
@@ -517,55 +527,37 @@
             const bizChecked = showBizCheckbox ? showBizCheckbox.checked : false;
             
             if (bizChecked && businesses.length > 0) {
-                const businessSample = zoom <= 11 ? 10 : (zoom <= 12 ? 5 : (zoom <= 13 ? 2 : 1));
-                const baseBusinessSize = Math.max(2, Math.min(zoom - 8, 6));
+                // Less aggressive sampling to show more businesses
+                const businessSample = zoom <= 10 ? 5 : (zoom <= 11 ? 3 : (zoom <= 12 ? 2 : 1));
+                const baseBusinessSize = Math.max(3, Math.min(zoom - 7, 7)); // Slightly larger
                 const businessSize = baseBusinessSize * (dotSizeMultiplier / 3);
                 
                 console.log(`🏪 Drawing businesses: checkbox=${bizChecked}, total=${businesses.length}, zoom=${zoom}, sample=${businessSample}, size=${businessSize}`);
                 
-                // Business type colors
-                const businessColors = {
-                    'restaurant': '#ea4335',    // Red
-                    'fast_food': '#ff5722',     // Deep Orange
-                    'cafe': '#795548',          // Brown
-                    'hotel': '#e91e63',         // Pink
-                    'supermarket': '#fbbc04',   // Yellow
-                    'fuel': '#ff9800',          // Orange
-                    'bank': '#9c27b0',          // Purple
-                    'hospital': '#f44336',      // Red
-                    'clinic': '#ff7043',        // Deep Orange
-                    'pharmacy': '#4caf50',      // Green
-                    'mall': '#673ab7',          // Deep Purple
-                    'shop': '#3f51b5',          // Indigo
-                    'car': '#607d8b',           // Blue Grey
-                    'car_repair': '#78909c'     // Blue Grey Light
-                };
+                // All businesses get burgundy color
+                const burgundy = '#800020';
                 
                 let businessCount = 0;
                 for (let i = 0; i < businesses.length; i += businessSample) {
                     const business = businesses[i];
                     const lat = business[0];
                     const lng = business[1];
-                    const type = business[3] || 'other';
                     
                     if (inBounds(lat, lng)) {
                         const p = toPixel(lat, lng);
                         
-                        // Get color based on business type
-                        const color = businessColors[type] || '#ff5722';
-                        
-                        // Draw business marker with colored fill and white border
+                        // Draw business marker in burgundy with white border
                         try {
-                            ctx.fillStyle = colorWithAlpha(color, 0.9);
+                            ctx.fillStyle = 'rgba(128, 0, 32, 0.9)'; // Burgundy with transparency
                             ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-                            ctx.lineWidth = 1;
+                            ctx.lineWidth = 1.5;
                             ctx.beginPath();
                             ctx.arc(p.x, p.y, businessSize, 0, Math.PI * 2);
                             ctx.fill();
                             ctx.stroke();
                             businessCount++;
                         } catch (e) {
-                            console.error('Error drawing business:', e, 'color:', color);
+                            console.error('Error drawing business:', e);
                         }
                     }
                 }
