@@ -216,6 +216,24 @@
     <div class="agent-panel">
         <h2>🤖 Smart Mislabel Detector</h2>
         
+        <div id="changeTracker" style="display:none; padding:12px; background:linear-gradient(135deg,#667eea,#764ba2); border-radius:8px; margin-bottom:10px; color:white;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                    <span style="font-size:20px;">📝</span>
+                    <b id="totalChanges">0</b> changes tracked
+                    <span style="font-size:10px; opacity:0.8;">(auto-saved)</span>
+                </div>
+                <div style="display:flex; gap:5px;">
+                    <button onclick="exportAllChanges()" style="padding:8px 15px; background:#4caf50; color:#fff; border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:12px;">
+                        💾 Export All
+                    </button>
+                    <button onclick="clearAllChanges()" style="padding:8px 10px; background:rgba(255,255,255,0.2); color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:11px;" title="Clear all tracked changes">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+        </div>
+        
         <div class="instructions">
             <strong>3 Categories:</strong> Villa, Apartment, Business<br>
             <strong>How it works:</strong><br>
@@ -285,6 +303,100 @@
         let allPoints = []; // All points with their original data
         let detectedPlaces = [];
         let currentPolygon = null;
+        
+        // ========== GLOBAL CHANGE TRACKER ==========
+        let allChanges = []; // Stores ALL changes across all scans
+        
+        function trackChange(place, oldCategory, newCategory, oldCode, newCode) {
+            // Check if we already have this place in changes (update it instead of duplicating)
+            const existingIdx = allChanges.findIndex(c => c.lat === place.lat && c.lng === place.lng);
+            
+            const changeRecord = {
+                lat: place.lat,
+                lng: place.lng,
+                name: place.name,
+                source: place.source,
+                oldCode: oldCode,
+                newCode: newCode,
+                oldCategory: oldCategory,
+                newCategory: newCategory,
+                district: place.district || '',
+                timestamp: new Date().toISOString()
+            };
+            
+            if (existingIdx !== -1) {
+                // Update existing change
+                allChanges[existingIdx] = changeRecord;
+            } else {
+                // Add new change
+                allChanges.push(changeRecord);
+            }
+            
+            updateChangeTracker();
+            saveChangesToStorage(); // Auto-save to localStorage
+        }
+        
+        function updateChangeTracker() {
+            const tracker = document.getElementById('changeTracker');
+            const countEl = document.getElementById('totalChanges');
+            
+            if (allChanges.length > 0) {
+                tracker.style.display = 'block';
+                countEl.textContent = allChanges.length;
+            } else {
+                tracker.style.display = 'none';
+            }
+        }
+        
+        function saveChangesToStorage() {
+            try {
+                localStorage.setItem('riyadh_changes', JSON.stringify(allChanges));
+            } catch (e) {
+                console.log('Could not save to localStorage');
+            }
+        }
+        
+        function loadChangesFromStorage() {
+            try {
+                const saved = localStorage.getItem('riyadh_changes');
+                if (saved) {
+                    allChanges = JSON.parse(saved);
+                    updateChangeTracker();
+                }
+            } catch (e) {
+                console.log('Could not load from localStorage');
+            }
+        }
+        
+        function exportAllChanges() {
+            if (allChanges.length === 0) {
+                alert('No changes to export yet!');
+                return;
+            }
+            
+            let csv = 'latitude,longitude,name,new_category,new_code,old_category,old_code,district,source,timestamp\n';
+            
+            for (const c of allChanges) {
+                const safeName = `"${(c.name || '').replace(/"/g, '""')}"`;
+                csv += `${c.lat},${c.lng},${safeName},${c.newCategory},${c.newCode},${c.oldCategory},${c.oldCode},${c.district},${c.source},${c.timestamp}\n`;
+            }
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `riyadh_ALL_changes_${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+            
+            alert(`✅ Exported ALL ${allChanges.length} changes!\n\nThis includes changes from all your polygon scans.`);
+        }
+        
+        function clearAllChanges() {
+            if (confirm(`Are you sure you want to clear all ${allChanges.length} tracked changes?`)) {
+                allChanges = [];
+                localStorage.removeItem('riyadh_changes');
+                updateChangeTracker();
+            }
+        }
         
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -402,6 +514,7 @@
             window.addEventListener('resize', render);
             
             loadBusinesses();
+            loadChangesFromStorage(); // Restore previous changes
         }
         
         // ========== CSV LOADER (same format as original) ==========
@@ -865,12 +978,24 @@
         
         function changeCategory(idx, cat, bulkMode = false) {
             const place = detectedPlaces[idx];
+            
+            // Save old values before changing
+            const oldCategory = place.assignedCategory;
+            const oldCode = place.code;
+            
+            // Skip if no actual change
+            if (oldCategory === cat) return;
+            
             place.assignedCategory = cat;
             
             // UPDATE THE UNDERLYING DATA - this is the key part!
             // Change the code in the original data
             const newCode = categoryToCodes[cat];
             place.code = newCode;
+            
+            // TRACK THIS CHANGE GLOBALLY
+            trackChange(place, oldCategory, cat, oldCode, newCode);
+            
             place.originalCategory = cat; // Mark as corrected
             place.isMislabeled = false; // No longer mislabeled after correction
             
