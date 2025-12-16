@@ -185,10 +185,30 @@
         <!-- Land Use Codes Section -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                🏷️ Land Use Codes <span>▼</span>
+                🏷️ Land Use Codes (<span id="codeCount">0</span>) <span>▼</span>
             </div>
             <div class="section-content">
-                <div id="landCodeFilters" style="max-height:150px;overflow-y:auto;"></div>
+                <div style="display:flex; gap:5px; margin-bottom:5px;">
+                    <button onclick="selectAllCodes()" style="flex:1; padding:4px; font-size:10px; cursor:pointer;">Select All</button>
+                    <button onclick="clearAllCodes()" style="flex:1; padding:4px; font-size:10px; cursor:pointer;">Clear All</button>
+                </div>
+                <div style="font-size:10px; color:#666; margin-bottom:5px;">
+                    Selected: <span id="selectedCodeCount">0</span> codes | <span id="selectedCodeTotal">0</span> parcels
+                </div>
+                <input type="text" class="search-box" id="codeSearch" placeholder="Search codes...">
+                <div id="landCodeFilters" style="max-height:200px;overflow-y:auto;"></div>
+            </div>
+        </div>
+        
+        <!-- Dynamic Counts Section -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                📊 Dynamic Counts <span>▼</span>
+            </div>
+            <div class="section-content">
+                <div id="dynamicCounts" style="font-size:11px;">
+                    <div style="color:#666;">Select districts to see counts</div>
+                </div>
             </div>
         </div>
         
@@ -212,7 +232,8 @@
         let map;
         let apartments = [], businesses = [], parcels = [], districts = [];
         let districtCounts = {};
-        let activeCodeFilters = {};
+        let allCodeCounts = {};  // All codes with counts
+        let selectedCodes = new Set();  // Track selected codes
         let selectedDistricts = new Set();  // Track selected districts
         let dotSize = 3;
         
@@ -327,10 +348,11 @@
                 });
             }
             
-            // Draw land use
+            // Draw land use (only selected codes)
             if (showLand && parcels.length > 0) {
                 parcels.forEach(p => {
-                    if (Object.keys(activeCodeFilters).length > 0 && !activeCodeFilters[p.code]) return;
+                    // Only show if code is selected (or all if none selected)
+                    if (selectedCodes.size > 0 && !selectedCodes.has(p.code)) return;
                     if (!inBounds(p, bounds)) return;
                     
                     const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lon));
@@ -437,18 +459,21 @@
             }
             updateDistrictList();
             render();
+            updateDynamicCounts();
         }
         
         function selectAllDistricts() {
             districts.forEach(d => selectedDistricts.add(d.name_en));
             updateDistrictList();
             render();
+            updateDynamicCounts();
         }
         
         function clearAllDistricts() {
             selectedDistricts.clear();
             updateDistrictList();
             render();
+            updateDynamicCounts();
         }
         
         function zoomToDistrict(name) {
@@ -466,6 +491,7 @@
             });
             map.fitBounds(bounds);
             render();
+            updateDynamicCounts();
         }
         
         function parseCSVLine(line) {
@@ -584,7 +610,8 @@
                 const codeI = headers.findIndex(h => h.includes('code') || h.includes('land_use'));
                 
                 parcels = [];
-                const codeCounts = {};
+                allCodeCounts = {};
+                selectedCodes.clear();
                 
                 for (let i = 1; i < lines.length; i++) {
                     const vals = parseCSVLine(lines[i]);
@@ -593,30 +620,57 @@
                     const code = vals[codeI];
                     if (!isNaN(lat) && !isNaN(lon) && code) {
                         parcels.push({ lat, lon, code });
-                        codeCounts[code] = (codeCounts[code] || 0) + 1;
+                        allCodeCounts[code] = (allCodeCounts[code] || 0) + 1;
                     }
                 }
                 
-                // Update code filters
-                const filterDiv = document.getElementById('landCodeFilters');
-                filterDiv.innerHTML = '';
-                Object.entries(codeCounts).sort((a,b) => b[1] - a[1]).slice(0, 20).forEach(([code, count]) => {
-                    const info = landUseCodes[code] || { name: code, color: getCodeColor(code) };
-                    filterDiv.innerHTML += `<label class="toggle-row">
-                        <input type="checkbox" checked onchange="toggleCode('${code}', this.checked)">
-                        <span class="toggle-dot" style="background:${info.color};"></span>
-                        <span>${code}: ${info.name} (${count.toLocaleString()})</span>
-                    </label>`;
-                });
+                // Select all codes by default
+                Object.keys(allCodeCounts).forEach(code => selectedCodes.add(code));
+                
+                updateCodeFilters();
                 
                 document.getElementById('landStatus').textContent = `✓ ${parcels.length.toLocaleString()}`;
                 document.getElementById('landStatus').classList.add('loaded');
                 document.getElementById('landCount').textContent = parcels.length.toLocaleString();
+                document.getElementById('codeCount').textContent = Object.keys(allCodeCounts).length;
                 document.getElementById('countsRow').style.display = 'flex';
                 render();
+                updateDynamicCounts();
             };
             reader.readAsText(file);
         });
+        
+        function updateCodeFilters() {
+            const filterDiv = document.getElementById('landCodeFilters');
+            const search = (document.getElementById('codeSearch')?.value || '').toLowerCase();
+            
+            let html = '';
+            const sorted = Object.entries(allCodeCounts).sort((a,b) => b[1] - a[1]);
+            
+            sorted.forEach(([code, count]) => {
+                const info = landUseCodes[code] || { name: code, color: getCodeColor(code) };
+                const label = `${code}: ${info.name}`;
+                if (search && !label.toLowerCase().includes(search) && !code.includes(search)) return;
+                
+                const isSelected = selectedCodes.has(code);
+                html += `<label class="toggle-row" style="${isSelected ? 'background:#e3f2fd;' : ''}">
+                    <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleCode('${code}')">
+                    <span class="toggle-dot" style="background:${info.color};"></span>
+                    <span style="flex:1;">${code}: ${info.name}</span>
+                    <span style="color:#666;">(${count.toLocaleString()})</span>
+                </label>`;
+            });
+            
+            filterDiv.innerHTML = html || '<div style="color:#999;padding:5px;">No codes found</div>';
+            
+            // Update selected counts
+            let selectedTotal = 0;
+            selectedCodes.forEach(code => { selectedTotal += allCodeCounts[code] || 0; });
+            document.getElementById('selectedCodeCount').textContent = selectedCodes.size;
+            document.getElementById('selectedCodeTotal').textContent = selectedTotal.toLocaleString();
+        }
+        
+        document.getElementById('codeSearch')?.addEventListener('input', updateCodeFilters);
         
         document.getElementById('distFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -634,15 +688,127 @@
             reader.readAsText(file);
         });
         
-        function toggleCode(code, checked) {
-            if (checked) delete activeCodeFilters[code];
-            else activeCodeFilters[code] = false;
-            
-            // If all unchecked, show all
-            const allUnchecked = Object.values(activeCodeFilters).every(v => v === false);
-            if (allUnchecked) activeCodeFilters = {};
-            
+        function toggleCode(code) {
+            if (selectedCodes.has(code)) {
+                selectedCodes.delete(code);
+            } else {
+                selectedCodes.add(code);
+            }
+            updateCodeFilters();
             render();
+            updateDynamicCounts();
+        }
+        
+        function selectAllCodes() {
+            Object.keys(allCodeCounts).forEach(code => selectedCodes.add(code));
+            updateCodeFilters();
+            render();
+            updateDynamicCounts();
+        }
+        
+        function clearAllCodes() {
+            selectedCodes.clear();
+            updateCodeFilters();
+            render();
+            updateDynamicCounts();
+        }
+        
+        // Point in polygon check
+        function pointInPolygon(lat, lon, polygon) {
+            let inside = false;
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                const xi = polygon[i][0], yi = polygon[i][1];
+                const xj = polygon[j][0], yj = polygon[j][1];
+                if (((yi > lon) !== (yj > lon)) && (lat < (xj - xi) * (lon - yi) / (yj - yi) + xi)) {
+                    inside = !inside;
+                }
+            }
+            return inside;
+        }
+        
+        function updateDynamicCounts() {
+            const container = document.getElementById('dynamicCounts');
+            
+            if (selectedDistricts.size === 0) {
+                // Show total counts for all data
+                let html = '<div style="font-weight:600; margin-bottom:5px;">📊 Total (All Areas)</div>';
+                html += `<div>🏢 Apartments: ${apartments.length.toLocaleString()}</div>`;
+                html += `<div>🏪 Businesses: ${businesses.length.toLocaleString()}</div>`;
+                
+                if (parcels.length > 0) {
+                    html += '<div style="margin-top:8px; font-weight:600;">Land Use Codes:</div>';
+                    const sorted = Object.entries(allCodeCounts).sort((a,b) => b[1] - a[1]).slice(0, 10);
+                    sorted.forEach(([code, count]) => {
+                        const info = landUseCodes[code] || { name: code, color: getCodeColor(code) };
+                        const isSelected = selectedCodes.has(code);
+                        html += `<div style="opacity:${isSelected ? 1 : 0.4};">
+                            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${info.color};"></span>
+                            ${code}: ${count.toLocaleString()}
+                        </div>`;
+                    });
+                }
+                container.innerHTML = html;
+                return;
+            }
+            
+            // Count items in selected districts
+            let html = '<div style="font-weight:600; margin-bottom:5px;">📊 Selected Districts (' + selectedDistricts.size + ')</div>';
+            
+            let aptCount = 0, bizCount = 0;
+            const codeCounts = {};
+            
+            selectedDistricts.forEach(distName => {
+                const dist = districts.find(d => d.name_en === distName);
+                if (!dist || !dist.boundaries?.[0]) return;
+                const boundary = dist.boundaries[0];
+                
+                // Get bounding box for quick check
+                const lats = boundary.map(p => p[0]);
+                const lons = boundary.map(p => p[1]);
+                const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+                const minLon = Math.min(...lons), maxLon = Math.max(...lons);
+                
+                // Count apartments
+                apartments.forEach(a => {
+                    if (a.lat >= minLat && a.lat <= maxLat && a.lon >= minLon && a.lon <= maxLon) {
+                        if (pointInPolygon(a.lat, a.lon, boundary)) aptCount++;
+                    }
+                });
+                
+                // Count businesses
+                businesses.forEach(b => {
+                    if (b.lat >= minLat && b.lat <= maxLat && b.lon >= minLon && b.lon <= maxLon) {
+                        if (pointInPolygon(b.lat, b.lon, boundary)) bizCount++;
+                    }
+                });
+                
+                // Count parcels by code
+                parcels.forEach(p => {
+                    if (p.lat >= minLat && p.lat <= maxLat && p.lon >= minLon && p.lon <= maxLon) {
+                        if (pointInPolygon(p.lat, p.lon, boundary)) {
+                            codeCounts[p.code] = (codeCounts[p.code] || 0) + 1;
+                        }
+                    }
+                });
+            });
+            
+            html += `<div>🏢 Apartments: ${aptCount.toLocaleString()}</div>`;
+            html += `<div>🏪 Businesses: ${bizCount.toLocaleString()}</div>`;
+            
+            if (Object.keys(codeCounts).length > 0) {
+                html += '<div style="margin-top:8px; font-weight:600;">Land Use in Selection:</div>';
+                const sorted = Object.entries(codeCounts).sort((a,b) => b[1] - a[1]);
+                sorted.forEach(([code, count]) => {
+                    const info = landUseCodes[code] || { name: code, color: getCodeColor(code) };
+                    const isSelected = selectedCodes.has(code);
+                    html += `<div style="opacity:${isSelected ? 1 : 0.4};">
+                        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${info.color};"></span>
+                        ${code} (${info.name}): ${count.toLocaleString()}
+                    </div>`;
+                });
+            }
+            
+            container.innerHTML = html;
         }
         
         window.initMap = function() {
