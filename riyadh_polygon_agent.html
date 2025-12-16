@@ -13,7 +13,7 @@
             position: absolute; top: 10px; left: 60px;
             background: white; padding: 15px; border-radius: 10px;
             box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 1000;
-            max-width: 340px; max-height: 50vh; overflow-y: auto; font-size: 13px;
+            max-width: 360px; max-height: 90vh; overflow-y: auto; font-size: 13px;
         }
         .panel h2 { color: #1a73e8; margin-bottom: 10px; font-size: 16px; }
         
@@ -23,9 +23,25 @@
         .file-status { font-size: 11px; color: #666; margin-top: 5px; }
         .file-status.loaded { color: #34a853; }
         
-        .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; vertical-align: middle; }
+        .stats { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; }
+        .stat { background: #f5f5f5; padding: 8px; border-radius: 6px; text-align: center; flex: 1; min-width: 70px; }
+        .stat b { display: block; font-size: 14px; }
+        .stat small { color: #666; font-size: 10px; }
+        
+        .filters { margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee; display: flex; flex-wrap: wrap; gap: 8px; }
+        .filters label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font-size: 11px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
         
         #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 450; }
+        
+        input[type="range"] {
+            -webkit-appearance: none; appearance: none;
+            height: 6px; background: #ddd; border-radius: 3px; outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 16px; height: 16px; background: #1a73e8; border-radius: 50%; cursor: pointer;
+        }
         
         .agent-panel {
             position: absolute; top: 10px; right: 10px;
@@ -68,132 +84,97 @@
         .export-btn { background: #1a73e8; color: white; }
         .clear-btn { background: #ea4335; color: white; }
         
-        .results-section {
-            margin-top: 10px; border-top: 2px solid #9c27b0; padding-top: 10px;
-        }
-        .results-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 10px; flex-wrap: wrap; gap: 5px;
-        }
+        .results-section { margin-top: 10px; border-top: 2px solid #9c27b0; padding-top: 10px; }
+        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 5px; }
         .results-count { font-weight: bold; color: #9c27b0; }
         
-        .results-list {
-            max-height: 320px; overflow-y: auto;
-            border: 1px solid #e0e0e0; border-radius: 8px;
-        }
+        .results-list { max-height: 300px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 8px; }
         
-        .result-item {
-            padding: 10px; border-bottom: 1px solid #eee;
-            display: flex; flex-direction: column; gap: 5px;
-        }
+        .result-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; gap: 5px; }
         .result-item:last-child { border-bottom: none; }
         .result-item:hover { background: #fafafa; }
         .result-item.approved { background: #e8f5e9; }
         .result-item.rejected { background: #ffebee; opacity: 0.6; }
         .result-item.mislabeled { border-left: 4px solid #ff9800; }
         
-        .result-header {
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .result-name {
-            font-weight: 600; font-size: 12px;
-            max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        }
+        .result-header { display: flex; justify-content: space-between; align-items: center; }
+        .result-name { font-weight: 600; font-size: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .result-coords { font-size: 10px; color: #666; }
         
-        .result-category {
-            display: flex; align-items: center; gap: 8px;
-        }
-        .category-select {
-            flex: 1; padding: 6px; border-radius: 6px;
-            border: 1px solid #ddd; font-size: 12px;
-        }
+        .result-category { display: flex; align-items: center; gap: 8px; }
+        .category-select { flex: 1; padding: 6px; border-radius: 6px; border: 1px solid #ddd; font-size: 12px; }
         
-        .result-actions {
-            display: flex; gap: 5px;
-        }
-        .result-actions button {
-            padding: 5px 12px; border: none; border-radius: 4px;
-            font-size: 11px; cursor: pointer;
-        }
+        .result-actions { display: flex; gap: 5px; }
+        .result-actions button { padding: 5px 12px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; }
         .btn-approve { background: #34a853; color: white; }
         .btn-reject { background: #ea4335; color: white; }
         
-        .mislabel-badge {
-            font-size: 9px; padding: 2px 6px; border-radius: 10px;
-            background: #ff9800; color: white; font-weight: bold;
-        }
-        .correct-badge {
-            font-size: 9px; padding: 2px 6px; border-radius: 10px;
-            background: #4caf50; color: white;
-        }
+        .mislabel-badge { font-size: 9px; padding: 2px 6px; border-radius: 10px; background: #ff9800; color: white; font-weight: bold; }
+        .correct-badge { font-size: 9px; padding: 2px 6px; border-radius: 10px; background: #4caf50; color: white; }
         
-        .original-label {
-            font-size: 10px; color: #888; display: flex; align-items: center; gap: 5px;
-        }
+        .original-label { font-size: 10px; color: #666; }
         .original-label .arrow { color: #9c27b0; font-weight: bold; }
         
-        .stats-bar {
-            display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap;
-        }
-        .stat-item {
-            padding: 6px 12px; background: #f5f5f5; border-radius: 8px;
-            font-size: 12px; display: flex; align-items: center; gap: 6px;
-        }
+        .stats-bar { display: flex; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
+        .stat-item { padding: 6px 12px; background: #f5f5f5; border-radius: 8px; font-size: 12px; display: flex; align-items: center; gap: 6px; }
         .stat-item b { font-size: 16px; }
         
-        .filter-bar {
-            display: flex; gap: 5px; margin: 10px 0; flex-wrap: wrap;
-        }
-        .filter-btn {
-            padding: 6px 12px; border: 1px solid #ddd; border-radius: 15px;
-            background: white; font-size: 11px; cursor: pointer;
-        }
+        .filter-bar { display: flex; gap: 5px; margin: 10px 0; flex-wrap: wrap; }
+        .filter-btn { padding: 6px 12px; border: 1px solid #ddd; border-radius: 15px; background: white; font-size: 11px; cursor: pointer; }
         .filter-btn.active { background: #9c27b0; color: white; border-color: #9c27b0; }
-        
-        .legend {
-            margin: 10px 0; padding: 10px; background: #fff8e1; border-radius: 8px;
-            font-size: 11px;
-        }
-        .legend-item { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <canvas id="canvas"></canvas>
     
-    <!-- Left Panel: Data Loaders -->
+    <!-- Left Panel: Data Loaders (same as original) -->
     <div class="panel">
-        <h2>🗺️ Riyadh Data Sources</h2>
+        <h2>🏙️ Riyadh Map <span style="font-size:10px;color:#999;">+ Agent</span></h2>
         
         <div class="file-section">
-            <label>📊 Land Use CSV (with lat, lng, category):</label>
-            <input type="file" id="landUseFile" accept=".csv">
-            <div id="landUseStatus" class="file-status">No file loaded</div>
+            <label>📊 Land Use Data CSV:</label>
+            <input type="file" id="dataFile" accept=".csv">
+            <div id="dataStatus" class="file-status">No file loaded</div>
+            <div style="font-size:10px;color:#888;margin-top:4px;">
+                Format: latitude, longitude, land_use_code, district
+            </div>
         </div>
         
         <div class="file-section">
-            <label>🏪 Embedded Businesses:</label>
+            <label>🏪 Businesses Layer:</label>
             <div id="businessStatus" class="file-status">Loading...</div>
         </div>
         
-        <div class="legend">
-            <strong>3 Categories:</strong>
-            <div class="legend-item"><span class="dot" style="background:#34a853;"></span> Villa (سكني، فيلا)</div>
-            <div class="legend-item"><span class="dot" style="background:#4285f4;"></span> Apartment (شقق، فندق)</div>
-            <div class="legend-item"><span class="dot" style="background:#ea4335;"></span> Business (كل شيء آخر)</div>
+        <div class="file-section" style="background: #e8f0fe;">
+            <label>🎨 Color By:</label>
+            <select id="colorMode" style="width:100%; padding:5px; border-radius:4px; border:1px solid #ccc;">
+                <option value="land_use">Land Use Code</option>
+                <option value="district">District</option>
+            </select>
         </div>
         
-        <div style="margin: 10px 0; padding: 8px; background: #e3f2fd; border-radius: 6px;">
+        <div style="margin: 10px 0; padding: 8px; background: #fff3cd; border-radius: 6px;">
             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px;">
-                <input type="checkbox" id="showData" checked>
-                Show data points on map
+                <input type="checkbox" id="showBusinesses" checked>
+                <span class="dot" style="background:#800020;"></span>
+                Show Businesses
             </label>
         </div>
         
-        <div style="font-size:11px;color:#666;margin-top:10px;">
-            Zoom: <span id="zoom">0</span> | 
-            Points: <span id="visible">0</span>
+        <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+            <label style="display: block; font-weight: 600; font-size: 12px; margin-bottom: 8px;">
+                📍 Dot Size: <span id="dotSizeValue">3</span>x
+            </label>
+            <input type="range" id="dotSize" min="1" max="10" value="3" step="0.5" style="width: 100%; cursor: pointer;">
+        </div>
+        
+        <div id="stats" class="stats"></div>
+        <div id="filters" class="filters"></div>
+        
+        <div style="margin-top:10px;font-size:11px;color:#888;">
+            Showing: <span id="visible">0</span> points | Zoom: <span id="zoom">0</span><br>
+            Businesses: <span id="businessVisible">0</span>
         </div>
     </div>
     
@@ -202,12 +183,13 @@
         <h2>🤖 Smart Mislabel Detector</h2>
         
         <div class="instructions">
+            <strong>3 Categories:</strong> Villa, Apartment, Business<br>
             <strong>How it works:</strong><br>
-            1. Load your Land Use CSV (or use embedded data)<br>
+            1. Load your Land Use CSV<br>
             2. Draw a polygon around an area<br>
-            3. Agent scans and detects <b>mislabeled</b> places<br>
-            &nbsp;&nbsp;&nbsp;(e.g., "Tahakom HQ" labeled as Apartment → Business)<br>
-            4. Review, correct, approve, then export
+            3. Agent detects mislabeled places<br>
+            &nbsp;&nbsp;&nbsp;(e.g., HQ with apartment code → Business)<br>
+            4. Review, correct, approve, export
         </div>
         
         <div class="tool-section">
@@ -224,7 +206,7 @@
             <div class="stat-item"><span class="dot" style="background:#34a853;"></span><b id="statVilla">0</b> Villa</div>
             <div class="stat-item"><span class="dot" style="background:#4285f4;"></span><b id="statApartment">0</b> Apt</div>
             <div class="stat-item"><span class="dot" style="background:#ea4335;"></span><b id="statBusiness">0</b> Biz</div>
-            <div class="stat-item" style="background:#fff3e0;"><span class="mislabel-badge">!</span><b id="statMislabeled">0</b> Mislabeled</div>
+            <div class="stat-item" style="background:#fff3e0;"><span class="mislabel-badge">!</span><b id="statMislabeled">0</b></div>
         </div>
         
         <div class="filter-bar" id="filterBar" style="display:none;">
@@ -236,9 +218,9 @@
         
         <div class="results-section" id="resultsSection" style="display:none;">
             <div class="results-header">
-                <span class="results-count">Found: <span id="resultsCount">0</span> places</span>
+                <span class="results-count">Found: <span id="resultsCount">0</span></span>
                 <button class="action-btn" style="width:auto;padding:6px 12px;font-size:11px;background:#34a853;color:white;" onclick="approveAll()">
-                    ✅ Approve All Corrections
+                    ✅ Approve All
                 </button>
             </div>
             
@@ -254,176 +236,94 @@
     </div>
 
     <script>
-        // ========== GLOBAL VARIABLES ==========
-        let map, currentPolygon = null;
-        let businesses = [];      // Embedded business data
-        let landUsePoints = [];   // From loaded CSV
-        let allDataPoints = [];   // Combined for scanning
+        // ========== VARIABLES (same as original) ==========
+        let map, landUseData = {}, districtData = {}, businesses = [], currentMode = 'land_use';
+        let allPoints = []; // All points with their original data
         let detectedPlaces = [];
+        let currentPolygon = null;
         
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
-        // ========== 3 SIMPLE CATEGORIES ==========
-        const categories = {
-            villa: {
-                color: '#34a853',
-                emoji: '🏠',
-                label: 'Villa'
-            },
-            apartment: {
-                color: '#4285f4', 
-                emoji: '🏢',
-                label: 'Apartment'
-            },
-            business: {
-                color: '#ea4335',
-                emoji: '🏪',
-                label: 'Business'
-            }
+        // ========== LAND USE CODES (from original) ==========
+        const landUseColors = {
+            '1000': { color: '#34a853', name: 'Villas', emoji: '🏠', category: 'villa' },
+            '1012': { color: '#34a853', name: 'Villas', emoji: '🏠', category: 'villa' },
+            '7510': { color: '#4285f4', name: 'Apartments', emoji: '🏢', category: 'apartment' },
+            '2000': { color: '#ea4335', name: 'Commercial', emoji: '🏪', category: 'business' },
+            '4010': { color: '#9334e6', name: 'Commercial Buildings', emoji: '🏢', category: 'business' },
+            '1098': { color: '#9334e6', name: 'Muezzin Residence', emoji: '🕌', category: 'apartment' },
+            '1099': { color: '#9334e6', name: 'Imam Residence', emoji: '🕌', category: 'apartment' }
         };
         
-        // ========== SMART CLASSIFICATION RULES ==========
-        // Keywords that indicate BUSINESS (not apartment/villa)
+        // Our 3 simple categories
+        const categories = {
+            villa: { color: '#34a853', emoji: '🏠', label: 'Villa' },
+            apartment: { color: '#4285f4', emoji: '🏢', label: 'Apartment' },
+            business: { color: '#ea4335', emoji: '🏪', label: 'Business' }
+        };
+        
+        // ========== SMART CLASSIFICATION ==========
+        // Keywords that ALWAYS mean BUSINESS (not apartment/villa)
         const businessKeywords = [
-            // English
-            'hq', 'headquarters', 'office', 'company', 'corp', 'inc', 'ltd',
-            'restaurant', 'cafe', 'coffee', 'food', 'grill', 'kitchen',
-            'bank', 'atm', 'pharmacy', 'clinic', 'hospital', 'medical',
-            'shop', 'store', 'market', 'mall', 'supermarket', 'hypermarket',
-            'gas', 'fuel', 'petrol', 'station',
-            'school', 'university', 'college', 'institute', 'academy',
-            'mosque', 'church', 'masjid',
-            'police', 'fire', 'government', 'ministry', 'authority', 'embassy',
-            'gym', 'fitness', 'salon', 'spa', 'barber',
-            'car', 'auto', 'garage', 'repair', 'wash',
-            'hotel', // Note: hotels are businesses, not apartments
-            'tower', 'center', 'centre', 'plaza', 'complex',
-            // Arabic
-            'مقر', 'شركة', 'مؤسسة', 'مكتب',
-            'مطعم', 'مقهى', 'قهوة', 'كافيه', 'مخبز',
-            'بنك', 'صراف', 'صيدلية', 'عيادة', 'مستشفى', 'طبي',
-            'محل', 'متجر', 'سوق', 'مول', 'هايبر', 'سوبر',
-            'محطة', 'بنزين', 'وقود',
-            'مدرسة', 'جامعة', 'كلية', 'معهد', 'أكاديمية',
-            'مسجد', 'جامع',
-            'شرطة', 'إطفاء', 'حكومة', 'وزارة', 'هيئة', 'سفارة',
-            'صالة', 'صالون', 'حلاق',
-            'سيارات', 'ورشة', 'غسيل',
-            'فندق', 'نزل', // Hotels are businesses
-            'برج', 'مركز', 'بلازا', 'مجمع',
-            'تحكم', 'tahakom' // Specific example user mentioned
+            'hq', 'headquarters', 'office', 'company', 'corp', 'مقر', 'شركة', 'مكتب',
+            'restaurant', 'cafe', 'coffee', 'مطعم', 'مقهى', 'قهوة', 'كافيه',
+            'bank', 'بنك', 'atm', 'صراف', 'pharmacy', 'صيدلية',
+            'shop', 'store', 'market', 'mall', 'محل', 'متجر', 'سوق', 'مول',
+            'supermarket', 'hypermarket', 'carrefour', 'بقالة', 'هايبر',
+            'hotel', 'فندق', // Hotels are businesses!
+            'school', 'university', 'مدرسة', 'جامعة',
+            'mosque', 'masjid', 'مسجد', 'جامع',
+            'clinic', 'hospital', 'عيادة', 'مستشفى',
+            'police', 'شرطة', 'fire', 'إطفاء',
+            'gas', 'fuel', 'petrol', 'station', 'محطة', 'بنزين',
+            'government', 'ministry', 'embassy', 'حكومة', 'وزارة', 'سفارة', 'هيئة',
+            'gym', 'salon', 'صالة', 'صالون',
+            'tahakom', 'تحكم', 'tower', 'برج', 'center', 'centre', 'مركز'
         ];
         
-        // Keywords that indicate APARTMENT (residential units, not hotels)
-        const apartmentKeywords = [
-            'apartment', 'apartments', 'flat', 'flats', 'unit', 'units',
-            'furnished', 'residential', 'residence', 'housing',
-            'شقة', 'شقق', 'مفروشة', 'مفروش', 'سكني', 'سكن', 'إقامة',
-            'عمارة', 'وحدات'
-        ];
-        
-        // Keywords that indicate VILLA
-        const villaKeywords = [
-            'villa', 'villas', 'house', 'home', 'duplex', 'mansion', 'palace',
-            'فيلا', 'فلل', 'منزل', 'بيت', 'دوبلكس', 'قصر'
-        ];
-        
-        // Subcategories from data that mean BUSINESS
-        const businessSubcategories = [
-            'restaurant', 'fast_food', 'cafe', 'bar', 'food_court',
-            'bank', 'atm', 'pharmacy', 'clinic', 'hospital', 'doctors',
-            'shop', 'supermarket', 'mall', 'convenience', 'retail',
-            'fuel', 'car_wash', 'car_repair', 'car_rental',
-            'school', 'university', 'college', 'kindergarten',
-            'place_of_worship', 'mosque', 'church',
-            'police', 'fire_station', 'government', 'embassy', 'diplomatic',
-            'gym', 'fitness', 'sports',
-            'hotel', 'hostel', 'motel', 'guest_house', // Hotels = business
-            'office', 'company', 'coworking',
-            'parking', 'bus_station', 'taxi'
-        ];
-        
-        // Subcategories that mean APARTMENT
-        const apartmentSubcategories = [
-            'apartment', 'apartments', 'residential', 'furnished'
-        ];
-        
-        // Subcategories that mean VILLA
-        const villaSubcategories = [
-            'villa', 'villas', 'house', 'detached'
-        ];
-        
-        // ========== SMART CLASSIFICATION FUNCTION ==========
-        function classifyPlace(name, originalCategory, subcategory) {
-            name = (name || '').toLowerCase();
-            originalCategory = (originalCategory || '').toLowerCase();
-            subcategory = (subcategory || '').toLowerCase();
-            
-            const allText = `${name} ${originalCategory} ${subcategory}`;
-            
-            // Check for BUSINESS indicators (strongest signal)
-            for (const keyword of businessKeywords) {
-                if (allText.includes(keyword.toLowerCase())) {
-                    return 'business';
-                }
+        // What category does a land use code mean?
+        function codeToCategory(code) {
+            code = String(code).trim();
+            if (landUseColors[code]) {
+                return landUseColors[code].category;
             }
-            
-            // Check subcategories
-            for (const sub of businessSubcategories) {
-                if (subcategory.includes(sub) || originalCategory.includes(sub)) {
-                    return 'business';
-                }
-            }
-            
-            // Check for VILLA indicators
-            for (const keyword of villaKeywords) {
-                if (allText.includes(keyword.toLowerCase())) {
-                    return 'villa';
-                }
-            }
-            for (const sub of villaSubcategories) {
-                if (subcategory.includes(sub) || originalCategory.includes(sub)) {
-                    return 'villa';
-                }
-            }
-            
-            // Check for APARTMENT indicators
-            for (const keyword of apartmentKeywords) {
-                if (allText.includes(keyword.toLowerCase())) {
-                    return 'apartment';
-                }
-            }
-            for (const sub of apartmentSubcategories) {
-                if (subcategory.includes(sub) || originalCategory.includes(sub)) {
-                    return 'apartment';
-                }
-            }
-            
-            // Default: if can't determine, it's probably a business
-            return 'business';
+            // Default mappings
+            if (code.startsWith('1') && !code.startsWith('10')) return 'villa'; // 1xxx except 10xx
+            if (code === '7510') return 'apartment';
+            return 'business'; // Default
         }
         
-        // Map original labels to our 3 categories
-        function mapOriginalToCategory(originalCategory, subcategory) {
-            originalCategory = (originalCategory || '').toLowerCase();
-            subcategory = (subcategory || '').toLowerCase();
+        // What does the agent think based on name?
+        function classifyByName(name, category, subcategory) {
+            const text = `${name || ''} ${category || ''} ${subcategory || ''}`.toLowerCase();
             
-            // Check for villa
-            if (originalCategory.includes('villa') || subcategory.includes('villa') ||
-                originalCategory.includes('1000') || originalCategory.includes('1012')) {
-                return 'villa';
+            for (const keyword of businessKeywords) {
+                if (text.includes(keyword.toLowerCase())) {
+                    return 'business';
+                }
             }
             
-            // Check for apartment
-            if (originalCategory.includes('apartment') || subcategory.includes('apartment') ||
-                originalCategory.includes('7510') || originalCategory.includes('residential') ||
-                subcategory.includes('furnished')) {
+            // Check for apartment keywords
+            if (text.includes('apartment') || text.includes('شقة') || text.includes('شقق') || 
+                text.includes('furnished') || text.includes('مفروش') || text.includes('residential')) {
                 return 'apartment';
             }
             
-            // Everything else is business
-            return 'business';
+            // Check for villa keywords
+            if (text.includes('villa') || text.includes('فيلا') || text.includes('فلل') || 
+                text.includes('house') || text.includes('منزل')) {
+                return 'villa';
+            }
+            
+            return null; // Can't determine from name
+        }
+        
+        function getColorForCode(code) {
+            if (landUseColors[code]) return landUseColors[code].color;
+            const numCode = parseInt(code) || 0;
+            const hue = (numCode * 137) % 360;
+            return `hsl(${hue}, 70%, 55%)`;
         }
         
         // ========== EMBEDDED BUSINESSES ==========
@@ -432,42 +332,26 @@
 ;
         
         function loadBusinesses() {
-            businesses = EMBEDDED_BUSINESSES.map(biz => ({
-                lat: biz[0],
-                lng: biz[1],
-                name: biz[2] || 'Unnamed',
-                category: biz[3] || '',
-                subcategory: biz[4] || '',
-                source: 'businesses'
-            }));
-            
-            console.log(`Loaded ${businesses.length} embedded businesses`);
+            businesses = EMBEDDED_BUSINESSES;
+            console.log(`Loaded ${businesses.length} businesses`);
             document.getElementById('businessStatus').textContent = `✅ ${businesses.length.toLocaleString()} businesses`;
             document.getElementById('businessStatus').className = 'file-status loaded';
-            
-            updateAllDataPoints();
+            document.getElementById('businessVisible').textContent = businesses.length.toLocaleString();
             if (map) render();
         }
         
-        function updateAllDataPoints() {
-            allDataPoints = [...landUsePoints, ...businesses];
-            console.log(`Total data points: ${allDataPoints.length}`);
-        }
-        
-        // ========== MAP INITIALIZATION ==========
+        // ========== MAP INIT ==========
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
                 center: { lat: 24.7136, lng: 46.6753 },
-                zoom: 12,
+                zoom: 11,
                 mapTypeControl: true,
                 streetViewControl: true,
                 fullscreenControl: true
             });
             
             map.addListener('click', function(e) {
-                if (isDrawingMode) {
-                    addPolygonPoint(e.latLng);
-                }
+                if (isDrawingMode) addPolygonPoint(e.latLng);
             });
             
             map.addListener('idle', render);
@@ -475,6 +359,125 @@
             
             loadBusinesses();
         }
+        
+        // ========== CSV LOADER (same format as original) ==========
+        document.getElementById('dataFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                document.getElementById('dataStatus').textContent = '❌ Must be CSV';
+                return;
+            }
+            
+            document.getElementById('dataStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const lines = e.target.result.trim().split('\n');
+                    const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
+                    
+                    const latIndex = headers.findIndex(h => h === 'lat' || h === 'latitude');
+                    const lngIndex = headers.findIndex(h => h === 'lng' || h === 'lon' || h === 'longitude');
+                    const codeIndex = headers.findIndex(h => h === 'land_use_code' || h === 'landusecode' || h === 'code');
+                    const districtIndex = headers.findIndex(h => h === 'district');
+                    
+                    if (latIndex === -1 || lngIndex === -1) throw new Error('Need lat/lng columns');
+                    if (codeIndex === -1) throw new Error('Need land_use_code column');
+                    
+                    landUseData = {};
+                    districtData = {};
+                    allPoints = [];
+                    let totalCount = 0;
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        const values = lines[i].split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
+                        const lat = parseFloat(values[latIndex]);
+                        const lng = parseFloat(values[lngIndex]);
+                        const code = values[codeIndex];
+                        const district = districtIndex !== -1 ? values[districtIndex] : null;
+                        
+                        if (isNaN(lat) || isNaN(lng) || !code) continue;
+                        
+                        // Store in landUseData
+                        if (!landUseData[code]) landUseData[code] = [];
+                        landUseData[code].push([lat, lng]);
+                        
+                        // Store in districtData
+                        if (district) {
+                            if (!districtData[district]) districtData[district] = [];
+                            districtData[district].push([lat, lng]);
+                        }
+                        
+                        // Store full point data for agent
+                        allPoints.push({
+                            lat, lng, code, district,
+                            source: 'landuse',
+                            name: '', // Land use points don't have names
+                            originalRow: values // Keep original row for export
+                        });
+                        
+                        totalCount++;
+                    }
+                    
+                    document.getElementById('dataStatus').textContent = `✅ ${totalCount.toLocaleString()} points`;
+                    document.getElementById('dataStatus').className = 'file-status loaded';
+                    
+                    updateStatsAndFilters();
+                    render();
+                } catch (err) {
+                    document.getElementById('dataStatus').textContent = '❌ ' + err.message;
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        // ========== STATS AND FILTERS (from original) ==========
+        function updateStatsAndFilters() {
+            const statsDiv = document.getElementById('stats');
+            const filtersDiv = document.getElementById('filters');
+            statsDiv.innerHTML = '';
+            filtersDiv.innerHTML = '';
+            
+            const dataSource = currentMode === 'land_use' ? landUseData : districtData;
+            const codes = Object.keys(dataSource).sort((a, b) => dataSource[b].length - dataSource[a].length);
+            
+            codes.forEach(code => {
+                const count = dataSource[code].length;
+                const color = getColorForCode(code);
+                const info = landUseColors[code];
+                const label = info ? `${info.emoji} ${info.name}` : `Code ${code}`;
+                
+                const statDiv = document.createElement('div');
+                statDiv.className = 'stat';
+                statDiv.style.borderLeft = `3px solid ${color}`;
+                statDiv.innerHTML = `<b>${count.toLocaleString()}</b><small>${label}</small>`;
+                statsDiv.appendChild(statDiv);
+                
+                const filterLabel = document.createElement('label');
+                filterLabel.innerHTML = `<input type="checkbox" class="data-filter" data-code="${code}" checked>
+                    <span class="dot" style="background:${color}"></span> ${label}`;
+                filtersDiv.appendChild(filterLabel);
+            });
+            
+            document.querySelectorAll('.data-filter').forEach(cb => cb.addEventListener('change', render));
+        }
+        
+        document.getElementById('colorMode').addEventListener('change', function(e) {
+            currentMode = e.target.value;
+            updateStatsAndFilters();
+            render();
+        });
+        
+        document.getElementById('showBusinesses').addEventListener('change', render);
+        
+        let dotSizeMultiplier = 3;
+        document.getElementById('dotSize').addEventListener('input', function(e) {
+            dotSizeMultiplier = parseFloat(e.target.value);
+            document.getElementById('dotSizeValue').textContent = dotSizeMultiplier;
+            render();
+        });
         
         // ========== POLYGON DRAWING ==========
         let isDrawingMode = false;
@@ -497,14 +500,7 @@
             const marker = new google.maps.Marker({
                 position: latLng,
                 map: map,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 8,
-                    fillColor: '#9c27b0',
-                    fillOpacity: 1,
-                    strokeColor: '#ffffff',
-                    strokeWeight: 2
-                },
+                icon: { path: google.maps.SymbolPath.CIRCLE, scale: 8, fillColor: '#9c27b0', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 },
                 draggable: true,
                 zIndex: 2000
             });
@@ -518,25 +514,19 @@
             polygonMarkers.push(marker);
             updatePolygonLines();
             
-            if (polygonPoints.length >= 3) {
-                document.getElementById('scanBtn').disabled = false;
-            }
+            if (polygonPoints.length >= 3) document.getElementById('scanBtn').disabled = false;
         }
         
         function updatePolygonLines() {
-            polygonLines.forEach(line => line.setMap(null));
+            polygonLines.forEach(l => l.setMap(null));
             polygonLines = [];
             
             if (polygonPoints.length < 2) return;
             
             for (let i = 0; i < polygonPoints.length; i++) {
-                const nextIdx = (i + 1) % polygonPoints.length;
                 const line = new google.maps.Polyline({
-                    path: [polygonPoints[i], polygonPoints[nextIdx]],
-                    strokeColor: '#9c27b0',
-                    strokeWeight: 3,
-                    strokeOpacity: 0.8,
-                    map: map
+                    path: [polygonPoints[i], polygonPoints[(i + 1) % polygonPoints.length]],
+                    strokeColor: '#9c27b0', strokeWeight: 3, strokeOpacity: 0.8, map: map
                 });
                 polygonLines.push(line);
             }
@@ -544,11 +534,7 @@
             if (currentPolygon) currentPolygon.setMap(null);
             if (polygonPoints.length >= 3) {
                 currentPolygon = new google.maps.Polygon({
-                    paths: polygonPoints,
-                    fillColor: '#9c27b0',
-                    fillOpacity: 0.15,
-                    strokeWeight: 0,
-                    map: map
+                    paths: polygonPoints, fillColor: '#9c27b0', fillOpacity: 0.15, strokeWeight: 0, map: map
                 });
             }
         }
@@ -568,10 +554,7 @@
             polygonMarkers = [];
             polygonLines.forEach(l => l.setMap(null));
             polygonLines = [];
-            if (currentPolygon) {
-                currentPolygon.setMap(null);
-                currentPolygon = null;
-            }
+            if (currentPolygon) { currentPolygon.setMap(null); currentPolygon = null; }
             document.getElementById('drawBtn').classList.remove('active');
             document.getElementById('drawBtn').textContent = '✏️ Draw Polygon';
             document.getElementById('finishBtn').style.display = 'none';
@@ -580,130 +563,123 @@
             clearResults();
         }
         
-        // ========== POINT IN POLYGON ==========
         function isPointInPolygon(lat, lng) {
             if (polygonPoints.length < 3) return false;
-            
             let inside = false;
             const n = polygonPoints.length;
-            
             for (let i = 0, j = n - 1; i < n; j = i++) {
                 const xi = polygonPoints[i].lat(), yi = polygonPoints[i].lng();
                 const xj = polygonPoints[j].lat(), yj = polygonPoints[j].lng();
-                
-                if (((yi > lng) !== (yj > lng)) && (lat < (xj - xi) * (lng - yi) / (yj - yi) + xi)) {
-                    inside = !inside;
-                }
+                if (((yi > lng) !== (yj > lng)) && (lat < (xj - xi) * (lng - yi) / (yj - yi) + xi)) inside = !inside;
             }
-            
             return inside;
         }
         
-        // ========== SCAN & DETECT MISLABELS ==========
+        // ========== SCAN ==========
         function scanPolygon() {
-            if (polygonPoints.length < 3) {
-                alert('Please draw a polygon with at least 3 points!');
-                return;
-            }
+            if (polygonPoints.length < 3) { alert('Draw a polygon first!'); return; }
             
             clearResultMarkers();
             detectedPlaces = [];
             
-            let found = 0;
-            let mislabelCount = 0;
-            
-            for (const point of allDataPoints) {
+            // Scan land use points
+            for (const point of allPoints) {
                 if (isPointInPolygon(point.lat, point.lng)) {
-                    // What does the original data say?
-                    const originalLabel = mapOriginalToCategory(point.category, point.subcategory);
+                    const codeCategory = codeToCategory(point.code);
+                    const nameCategory = classifyByName(point.name, '', '');
+                    const agentCategory = nameCategory || codeCategory;
+                    const isMislabeled = nameCategory && nameCategory !== codeCategory;
                     
-                    // What does the agent think based on the name and context?
-                    const agentLabel = classifyPlace(point.name, point.category, point.subcategory);
-                    
-                    // Is it mislabeled?
-                    const isMislabeled = originalLabel !== agentLabel;
-                    if (isMislabeled) mislabelCount++;
-                    
-                    // Use agent's suggestion as the assigned category
-                    const assignedCategory = agentLabel;
-                    
-                    const marker = new google.maps.Marker({
-                        position: { lat: point.lat, lng: point.lng },
-                        map: map,
-                        icon: {
-                            path: google.maps.SymbolPath.CIRCLE,
-                            scale: isMislabeled ? 14 : 10,
-                            fillColor: categories[assignedCategory].color,
-                            fillOpacity: 0.9,
-                            strokeColor: isMislabeled ? '#ff9800' : '#ffffff',
-                            strokeWeight: isMislabeled ? 3 : 2
-                        },
-                        zIndex: isMislabeled ? 1600 : 1500
-                    });
-                    
-                    const infoContent = `
-                        <div style="padding:8px;max-width:280px;">
-                            <strong>${point.name}</strong><br>
-                            <small>Source: ${point.source}</small><br>
-                            <small>Original Data: ${point.category}/${point.subcategory}</small><br>
-                            <hr style="margin:5px 0;">
-                            <small>Original Label: <b>${originalLabel}</b></small><br>
-                            <small>Agent Suggests: <b>${agentLabel}</b></small><br>
-                            ${isMislabeled ? '<span style="color:#ff9800;font-weight:bold;">⚠️ MISLABELED</span>' : '<span style="color:#4caf50;">✓ Correct</span>'}
-                        </div>
-                    `;
-                    const infoWindow = new google.maps.InfoWindow({ content: infoContent });
-                    marker.addListener('click', () => infoWindow.open(map, marker));
+                    const marker = createResultMarker(point.lat, point.lng, agentCategory, isMislabeled);
                     
                     detectedPlaces.push({
-                        lat: point.lat,
-                        lng: point.lng,
-                        name: point.name,
-                        source: point.source,
-                        originalCategory: point.category,
-                        originalSubcategory: point.subcategory,
-                        originalLabel: originalLabel,
-                        agentLabel: agentLabel,
-                        assignedCategory: assignedCategory,
+                        lat: point.lat, lng: point.lng,
+                        name: point.name || `Code ${point.code}`,
+                        code: point.code,
+                        district: point.district,
+                        source: 'landuse',
+                        originalCategory: codeCategory,
+                        agentCategory: agentCategory,
+                        assignedCategory: agentCategory,
                         isMislabeled: isMislabeled,
                         status: 'pending',
-                        marker
+                        marker: marker,
+                        originalRow: point.originalRow
                     });
-                    
-                    found++;
                 }
             }
             
-            console.log(`Found ${found} places, ${mislabelCount} mislabeled`);
+            // Scan businesses
+            for (const biz of businesses) {
+                const [lat, lng, name, cat, subcat] = biz;
+                if (isPointInPolygon(lat, lng)) {
+                    const nameCategory = classifyByName(name, cat, subcat);
+                    const agentCategory = nameCategory || 'business';
+                    
+                    // For businesses, check if it looks residential but is a business
+                    const isMislabeled = (cat === 'tourism' && subcat === 'hotel') ? false : 
+                                         (nameCategory === 'apartment' || nameCategory === 'villa') && agentCategory === 'business';
+                    
+                    const marker = createResultMarker(lat, lng, agentCategory, isMislabeled);
+                    
+                    detectedPlaces.push({
+                        lat, lng,
+                        name: name || 'Unnamed',
+                        code: '', // Businesses don't have land use codes
+                        district: '',
+                        source: 'business',
+                        originalCategory: `${cat}/${subcat}`,
+                        agentCategory: agentCategory,
+                        assignedCategory: agentCategory,
+                        isMislabeled: isMislabeled,
+                        status: 'pending',
+                        marker: marker,
+                        businessData: biz
+                    });
+                }
+            }
             
-            if (found === 0) {
-                alert('No places found inside the polygon. Try a larger area or different location.');
+            if (detectedPlaces.length === 0) {
+                alert('No places found in polygon. Try a larger area.');
                 return;
             }
             
             showResults();
         }
         
-        // ========== RESULTS DISPLAY ==========
+        function createResultMarker(lat, lng, category, isMislabeled) {
+            return new google.maps.Marker({
+                position: { lat, lng },
+                map: map,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: isMislabeled ? 14 : 10,
+                    fillColor: categories[category].color,
+                    fillOpacity: 0.9,
+                    strokeColor: isMislabeled ? '#ff9800' : '#fff',
+                    strokeWeight: isMislabeled ? 3 : 2
+                },
+                zIndex: isMislabeled ? 1600 : 1500
+            });
+        }
+        
+        // ========== RESULTS ==========
         function showResults() {
             document.getElementById('resultsSection').style.display = 'block';
             document.getElementById('statsBar').style.display = 'flex';
             document.getElementById('filterBar').style.display = 'flex';
-            
-            updateStats();
+            updateAgentStats();
             renderResultsList('all');
         }
         
-        function updateStats() {
+        function updateAgentStats() {
             const counts = { villa: 0, apartment: 0, business: 0, mislabeled: 0 };
-            
-            for (const place of detectedPlaces) {
-                if (place.status !== 'rejected') {
-                    counts[place.assignedCategory]++;
-                    if (place.isMislabeled) counts.mislabeled++;
+            for (const p of detectedPlaces) {
+                if (p.status !== 'rejected') {
+                    counts[p.assignedCategory]++;
+                    if (p.isMislabeled) counts.mislabeled++;
                 }
             }
-            
             document.getElementById('statVilla').textContent = counts.villa;
             document.getElementById('statApartment').textContent = counts.apartment;
             document.getElementById('statBusiness').textContent = counts.business;
@@ -713,120 +689,91 @@
         
         function renderResultsList(filter) {
             const listEl = document.getElementById('resultsList');
-            
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-                const btnText = btn.textContent.toLowerCase();
-                if ((filter === 'all' && btnText.includes('all')) ||
-                    (filter === 'mislabeled' && btnText.includes('mislabel')) ||
-                    (filter === 'approved' && btnText.includes('approved')) ||
-                    (filter === 'rejected' && btnText.includes('rejected'))) {
-                    btn.classList.add('active');
-                }
+                if (btn.textContent.toLowerCase().includes(filter) || (filter === 'all' && btn.textContent === 'All')) btn.classList.add('active');
             });
             
             let filtered = detectedPlaces;
-            if (filter === 'mislabeled') {
-                filtered = detectedPlaces.filter(p => p.isMislabeled && p.status !== 'rejected');
-            } else if (filter === 'approved') {
-                filtered = detectedPlaces.filter(p => p.status === 'approved');
-            } else if (filter === 'rejected') {
-                filtered = detectedPlaces.filter(p => p.status === 'rejected');
-            }
+            if (filter === 'mislabeled') filtered = detectedPlaces.filter(p => p.isMislabeled && p.status !== 'rejected');
+            else if (filter === 'approved') filtered = detectedPlaces.filter(p => p.status === 'approved');
+            else if (filter === 'rejected') filtered = detectedPlaces.filter(p => p.status === 'rejected');
             
-            if (filtered.length === 0) {
-                listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">No places to show</div>';
-                return;
-            }
+            if (filtered.length === 0) { listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">No places</div>'; return; }
             
             let html = '';
-            filtered.forEach((place) => {
-                const realIdx = detectedPlaces.indexOf(place);
-                const catInfo = categories[place.assignedCategory];
-                const statusClass = place.status === 'approved' ? 'approved' : (place.status === 'rejected' ? 'rejected' : '');
-                const mislabelClass = place.isMislabeled ? 'mislabeled' : '';
-                
+            filtered.forEach(place => {
+                const idx = detectedPlaces.indexOf(place);
+                const cat = categories[place.assignedCategory];
                 html += `
-                    <div class="result-item ${statusClass} ${mislabelClass}" id="result-${realIdx}">
+                    <div class="result-item ${place.status} ${place.isMislabeled ? 'mislabeled' : ''}" id="result-${idx}">
                         <div class="result-header">
-                            <span class="result-name" title="${place.name}">${catInfo.emoji} ${place.name}</span>
-                            ${place.isMislabeled ? '<span class="mislabel-badge">⚠️ Mislabeled</span>' : '<span class="correct-badge">✓</span>'}
+                            <span class="result-name">${cat.emoji} ${place.name}</span>
+                            ${place.isMislabeled ? '<span class="mislabel-badge">⚠️</span>' : '<span class="correct-badge">✓</span>'}
                         </div>
                         <div class="original-label">
-                            Was: <b>${place.originalLabel}</b> 
-                            <span class="arrow">→</span> 
-                            Now: <b>${place.assignedCategory}</b>
-                            <span style="color:#888;margin-left:5px;">(${place.originalCategory}/${place.originalSubcategory})</span>
+                            ${place.code ? `Code: <b>${place.code}</b> → ` : ''}
+                            Was: <b>${place.originalCategory}</b> <span class="arrow">→</span> Now: <b>${place.assignedCategory}</b>
                         </div>
                         <div class="result-coords">${place.lat.toFixed(5)}, ${place.lng.toFixed(5)} | ${place.source}</div>
                         <div class="result-category">
-                            <select class="category-select" onchange="changeCategory(${realIdx}, this.value)">
+                            <select class="category-select" onchange="changeCategory(${idx}, this.value)">
                                 <option value="villa" ${place.assignedCategory === 'villa' ? 'selected' : ''}>🏠 Villa</option>
                                 <option value="apartment" ${place.assignedCategory === 'apartment' ? 'selected' : ''}>🏢 Apartment</option>
                                 <option value="business" ${place.assignedCategory === 'business' ? 'selected' : ''}>🏪 Business</option>
                             </select>
                             <div class="result-actions">
-                                <button class="btn-approve" onclick="setStatus(${realIdx}, 'approved')" ${place.status === 'approved' ? 'disabled' : ''}>✓</button>
-                                <button class="btn-reject" onclick="setStatus(${realIdx}, 'rejected')" ${place.status === 'rejected' ? 'disabled' : ''}>✗</button>
+                                <button class="btn-approve" onclick="setStatus(${idx}, 'approved')" ${place.status === 'approved' ? 'disabled' : ''}>✓</button>
+                                <button class="btn-reject" onclick="setStatus(${idx}, 'rejected')" ${place.status === 'rejected' ? 'disabled' : ''}>✗</button>
                             </div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
-            
             listEl.innerHTML = html;
         }
         
-        function filterResults(filter) { renderResultsList(filter); }
+        function filterResults(f) { renderResultsList(f); }
         
-        function changeCategory(idx, newCategory) {
-            detectedPlaces[idx].assignedCategory = newCategory;
-            const catInfo = categories[newCategory];
+        function changeCategory(idx, cat) {
+            detectedPlaces[idx].assignedCategory = cat;
             detectedPlaces[idx].marker.setIcon({
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 12,
-                fillColor: catInfo.color,
-                fillOpacity: 0.9,
-                strokeColor: '#ffffff',
-                strokeWeight: 2
+                path: google.maps.SymbolPath.CIRCLE, scale: 12,
+                fillColor: categories[cat].color, fillOpacity: 0.9, strokeColor: '#fff', strokeWeight: 2
             });
-            updateStats();
+            updateAgentStats();
         }
         
         function setStatus(idx, status) {
             detectedPlaces[idx].status = status;
             detectedPlaces[idx].marker.setOpacity(status === 'rejected' ? 0.3 : 1);
-            
             const item = document.getElementById(`result-${idx}`);
             if (item) {
                 item.className = `result-item ${status} ${detectedPlaces[idx].isMislabeled ? 'mislabeled' : ''}`;
                 item.querySelector('.btn-approve').disabled = (status === 'approved');
                 item.querySelector('.btn-reject').disabled = (status === 'rejected');
             }
-            updateStats();
+            updateAgentStats();
         }
         
         function approveAll() {
-            detectedPlaces.forEach((place, idx) => {
-                if (place.status !== 'rejected') setStatus(idx, 'approved');
-            });
+            detectedPlaces.forEach((p, i) => { if (p.status !== 'rejected') setStatus(i, 'approved'); });
             renderResultsList('all');
         }
         
         // ========== EXPORT ==========
         function exportCSV() {
             const approved = detectedPlaces.filter(p => p.status === 'approved');
+            if (approved.length === 0) { alert('Approve some places first!'); return; }
             
-            if (approved.length === 0) {
-                alert('No approved places to export. Please approve some places first.');
-                return;
-            }
+            // Separate land use and business exports
+            const landUseApproved = approved.filter(p => p.source === 'landuse');
+            const businessApproved = approved.filter(p => p.source === 'business');
             
-            let csv = 'latitude,longitude,name,category,original_label,was_mislabeled,source\n';
+            let csv = 'latitude,longitude,name,category,original_code,original_category,was_mislabeled,district,source\n';
             
-            for (const place of approved) {
-                const safeName = `"${(place.name || '').replace(/"/g, '""')}"`;
-                csv += `${place.lat},${place.lng},${safeName},${place.assignedCategory},${place.originalLabel},${place.isMislabeled},${place.source}\n`;
+            for (const p of approved) {
+                const safeName = `"${(p.name || '').replace(/"/g, '""')}"`;
+                csv += `${p.lat},${p.lng},${safeName},${p.assignedCategory},${p.code},${p.originalCategory},${p.isMislabeled},${p.district || ''},${p.source}\n`;
             }
             
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -835,16 +782,11 @@
             link.download = `riyadh_corrected_${new Date().toISOString().slice(0,10)}.csv`;
             link.click();
             
-            const mislabeledCount = approved.filter(p => p.isMislabeled).length;
-            alert(`✅ Exported ${approved.length} places (${mislabeledCount} were mislabeled and corrected)`);
+            const mislabeled = approved.filter(p => p.isMislabeled).length;
+            alert(`✅ Exported ${approved.length} places\n${mislabeled} were mislabeled and corrected\n${landUseApproved.length} from land use, ${businessApproved.length} from businesses`);
         }
         
-        // ========== CLEAR ==========
-        function clearResultMarkers() {
-            for (const place of detectedPlaces) {
-                if (place.marker) place.marker.setMap(null);
-            }
-        }
+        function clearResultMarkers() { detectedPlaces.forEach(p => { if (p.marker) p.marker.setMap(null); }); }
         
         function clearResults() {
             clearResultMarkers();
@@ -854,12 +796,9 @@
             document.getElementById('filterBar').style.display = 'none';
         }
         
-        // ========== CANVAS RENDERING ==========
-        document.getElementById('showData').addEventListener('change', render);
-        
+        // ========== RENDER (from original) ==========
         function render() {
             if (!map) return;
-            
             const bounds = map.getBounds();
             const proj = map.getProjection();
             if (!bounds || !proj) return;
@@ -870,20 +809,18 @@
             
             const zoom = map.getZoom();
             const ne = bounds.getNorthEast(), sw = bounds.getSouthWest();
-            
             document.getElementById('zoom').textContent = zoom;
             
-            if (!document.getElementById('showData').checked) {
-                document.getElementById('visible').textContent = '0';
-                return;
-            }
-            
             let sample = 1;
-            if (zoom <= 10) sample = 30;
+            if (zoom <= 9) sample = 100;
+            else if (zoom <= 10) sample = 50;
+            else if (zoom <= 11) sample = 20;
             else if (zoom <= 12) sample = 10;
-            else if (zoom <= 14) sample = 3;
+            else if (zoom <= 13) sample = 5;
+            else if (zoom <= 14) sample = 2;
             
-            const baseSize = Math.max(3, Math.min(zoom - 9, 8));
+            const baseSize = Math.max(1, Math.min(zoom - 9, 5));
+            const ps = baseSize * (dotSizeMultiplier / 3);
             let visible = 0;
             
             function toPixel(lat, lng) {
@@ -898,81 +835,59 @@
                 return lat >= sw.lat() && lat <= ne.lat() && lng >= sw.lng() && lng <= ne.lng();
             }
             
-            // Draw all data points
-            for (let i = 0; i < allDataPoints.length; i += sample) {
-                const point = allDataPoints[i];
-                if (inBounds(point.lat, point.lng)) {
-                    const p = toPixel(point.lat, point.lng);
-                    
-                    // Color based on what category we'd assign
-                    const cat = classifyPlace(point.name, point.category, point.subcategory);
-                    const color = categories[cat].color;
-                    
-                    ctx.fillStyle = color + 'cc';
-                    ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, baseSize, 0, Math.PI * 2);
-                    ctx.fill();
-                    ctx.stroke();
-                    visible++;
+            function colorWithAlpha(color, alpha) {
+                if (color.startsWith('#')) {
+                    const r = parseInt(color.slice(1, 3), 16);
+                    const g = parseInt(color.slice(3, 5), 16);
+                    const b = parseInt(color.slice(5, 7), 16);
+                    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                }
+                return color.replace('hsl', 'hsla').replace(')', `, ${alpha})`);
+            }
+            
+            // Draw land use data
+            const dataSource = currentMode === 'land_use' ? landUseData : districtData;
+            document.querySelectorAll('.data-filter').forEach(cb => {
+                if (!cb.checked) return;
+                const code = cb.dataset.code;
+                const points = dataSource[code];
+                if (!points) return;
+                
+                const color = getColorForCode(code);
+                ctx.fillStyle = colorWithAlpha(color, 0.7);
+                
+                for (let i = 0; i < points.length; i += sample) {
+                    const [lat, lng] = points[i];
+                    if (inBounds(lat, lng)) {
+                        const p = toPixel(lat, lng);
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, ps, 0, Math.PI * 2);
+                        ctx.fill();
+                        visible++;
+                    }
+                }
+            });
+            
+            // Draw businesses
+            if (document.getElementById('showBusinesses').checked && businesses.length > 0) {
+                const bizSize = Math.max(6, Math.min(zoom - 4, 12)) * (dotSizeMultiplier / 3);
+                for (let i = 0; i < businesses.length; i++) {
+                    const [lat, lng] = businesses[i];
+                    if (inBounds(lat, lng)) {
+                        const p = toPixel(lat, lng);
+                        ctx.fillStyle = 'rgba(220, 20, 60, 1.0)';
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 1.0)';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, bizSize, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                    }
                 }
             }
             
             document.getElementById('visible').textContent = visible.toLocaleString();
         }
-        
-        // ========== LAND USE CSV LOADER ==========
-        document.getElementById('landUseFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            document.getElementById('landUseStatus').textContent = 'Loading...';
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const lines = e.target.result.trim().split('\n');
-                    const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
-                    
-                    const latIdx = headers.findIndex(h => h.includes('lat'));
-                    const lngIdx = headers.findIndex(h => h.includes('lng') || h.includes('lon'));
-                    const catIdx = headers.findIndex(h => h.includes('category') || h.includes('land_use') || h.includes('type'));
-                    const nameIdx = headers.findIndex(h => h.includes('name'));
-                    
-                    if (latIdx === -1 || lngIdx === -1) {
-                        throw new Error('CSV must have latitude and longitude columns');
-                    }
-                    
-                    landUsePoints = [];
-                    for (let i = 1; i < lines.length; i++) {
-                        const vals = lines[i].split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
-                        const lat = parseFloat(vals[latIdx]);
-                        const lng = parseFloat(vals[lngIdx]);
-                        
-                        if (!isNaN(lat) && !isNaN(lng)) {
-                            landUsePoints.push({
-                                lat, lng,
-                                name: nameIdx !== -1 ? vals[nameIdx] : 'Unnamed',
-                                category: catIdx !== -1 ? vals[catIdx] : '',
-                                subcategory: '',
-                                source: 'landuse_csv'
-                            });
-                        }
-                    }
-                    
-                    document.getElementById('landUseStatus').textContent = `✅ ${landUsePoints.length.toLocaleString()} points loaded`;
-                    document.getElementById('landUseStatus').className = 'file-status loaded';
-                    
-                    updateAllDataPoints();
-                    render();
-                    
-                } catch (err) {
-                    document.getElementById('landUseStatus').textContent = '❌ ' + err.message;
-                }
-            };
-            reader.readAsText(file);
-        });
     </script>
     <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
 </body>
