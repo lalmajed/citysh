@@ -1,0 +1,1713 @@
+{
+  "summary": {
+    "total_districts": 189,
+    "total_villas": 610642,
+    "total_apartments_landuse": 79768,
+    "total_apartments_csv": 3134,
+    "overlap_count": 1951,
+    "overlap_percentage": 62.25271218889598
+  },
+  "districts": {
+    "Al Amal Dist.": {
+      "name_ar": "حي العمل",
+      "villas": 341,
+      "apartments_landuse": 161,
+      "apartments_csv": 70,
+      "overlap": 36,
+      "villa_percentage": 67.92828685258964,
+      "total_residential": 502
+    },
+    "Al Namudhajiyah Dist.": {
+      "name_ar": "حي النموذجية",
+      "villas": 323,
+      "apartments_landuse": 77,
+      "apartments_csv": 27,
+      "overlap": 12,
+      "villa_percentage": 80.75,
+      "total_residential": 400
+    },
+    "Al Jarradiyah Dist.": {
+      "name_ar": "حي الجرادية",
+      "villas": 1002,
+      "apartments_landuse": 122,
+      "apartments_csv": 52,
+      "overlap": 20,
+      "villa_percentage": 89.1459074733096,
+      "total_residential": 1124
+    },
+    "Al Sinaiyah Dist.": {
+      "name_ar": "حي الصناعية",
+      "villas": 340,
+      "apartments_landuse": 37,
+      "apartments_csv": 16,
+      "overlap": 2,
+      "villa_percentage": 90.18567639257294,
+      "total_residential": 377
+    },
+    "Manfuha Al Jadidah Dist.": {
+      "name_ar": "حي منفوحة الجديدة",
+      "villas": 743,
+      "apartments_landuse": 244,
+      "apartments_csv": 74,
+      "overlap": 16,
+      "villa_percentage": 75.27862208713273,
+      "total_residential": 987
+    },
+    "Al Fakhiriyah Dist.": {
+      "name_ar": "حي الفاخرية",
+      "villas": 595,
+      "apartments_landuse": 55,
+      "apartments_csv": 14,
+      "overlap": 3,
+      "villa_percentage": 91.53846153846153,
+      "total_residential": 650
+    },
+    "Al Dirah Dist.": {
+      "name_ar": "حي الديرة",
+      "villas": 351,
+      "apartments_landuse": 15,
+      "apartments_csv": 37,
+      "overlap": 2,
+      "villa_percentage": 95.90163934426229,
+      "total_residential": 366
+    },
+    "East Umm Al Hamam Dist.": {
+      "name_ar": "حي ام الحمام الشرقي",
+      "villas": 2085,
+      "apartments_landuse": 113,
+      "apartments_csv": 53,
+      "overlap": 8,
+      "villa_percentage": 94.8589626933576,
+      "total_residential": 2198
+    },
+    "Al Sharafiyah Dist.": {
+      "name_ar": "حي الشرفية",
+      "villas": 1226,
+      "apartments_landuse": 130,
+      "apartments_csv": 41,
+      "overlap": 18,
+      "villa_percentage": 90.41297935103245,
+      "total_residential": 1356
+    },
+    "Al Hada Dist.": {
+      "name_ar": "حي الهدا",
+      "villas": 1223,
+      "apartments_landuse": 15,
+      "apartments_csv": 30,
+      "overlap": 3,
+      "villa_percentage": 98.78836833602584,
+      "total_residential": 1238
+    },
+    "North Mathar Dist.": {
+      "name_ar": "حي المعذر الشمالي",
+      "villas": 1539,
+      "apartments_landuse": 157,
+      "apartments_csv": 30,
+      "overlap": 22,
+      "villa_percentage": 90.74292452830188,
+      "total_residential": 1696
+    },
+    "West Umm Al Hamam Dist.": {
+      "name_ar": "حي ام الحمام الغربي",
+      "villas": 2736,
+      "apartments_landuse": 253,
+      "apartments_csv": 83,
+      "overlap": 34,
+      "villa_percentage": 91.5356306457009,
+      "total_residential": 2989
+    },
+    "Ar Rahmaniyah Dist.": {
+      "name_ar": "حي الرحمانية",
+      "villas": 1542,
+      "apartments_landuse": 232,
+      "apartments_csv": 49,
+      "overlap": 26,
+      "villa_percentage": 86.92220969560316,
+      "total_residential": 1774
+    },
+    "Laban Dist.": {
+      "name_ar": "حي لبن",
+      "villas": 2684,
+      "apartments_landuse": 778,
+      "apartments_csv": 88,
+      "overlap": 62,
+      "villa_percentage": 77.52744078567302,
+      "total_residential": 3462
+    },
+    "Ar Rafiah Dist.": {
+      "name_ar": "حي الرفيعة",
+      "villas": 1833,
+      "apartments_landuse": 87,
+      "apartments_csv": 47,
+      "overlap": 13,
+      "villa_percentage": 95.46875,
+      "total_residential": 1920
+    },
+    "Al Shohda Dist.": {
+      "name_ar": "حي الشهداء",
+      "villas": 1645,
+      "apartments_landuse": 610,
+      "apartments_csv": 100,
+      "overlap": 84,
+      "villa_percentage": 72.9490022172949,
+      "total_residential": 2255
+    },
+    "King Fahd Dist.": {
+      "name_ar": "حي الملك فهد",
+      "villas": 3086,
+      "apartments_landuse": 414,
+      "apartments_csv": 56,
+      "overlap": 35,
+      "villa_percentage": 88.17142857142856,
+      "total_residential": 3500
+    },
+    "Al Suwaidi Dist.": {
+      "name_ar": "حي السويدي",
+      "villas": 4942,
+      "apartments_landuse": 1247,
+      "apartments_csv": 79,
+      "overlap": 64,
+      "villa_percentage": 79.8513491678785,
+      "total_residential": 6189
+    },
+    "Al Hazm Dist.": {
+      "name_ar": "حي الحزم",
+      "villas": 7292,
+      "apartments_landuse": 1290,
+      "apartments_csv": 122,
+      "overlap": 84,
+      "villa_percentage": 84.96853880214402,
+      "total_residential": 8582
+    },
+    "Utayqah Dist.": {
+      "name_ar": "حي عتيقة",
+      "villas": 1041,
+      "apartments_landuse": 84,
+      "apartments_csv": 39,
+      "overlap": 8,
+      "villa_percentage": 92.53333333333333,
+      "total_residential": 1125
+    },
+    "Al Murabba Dist.": {
+      "name_ar": "حي المربع",
+      "villas": 1285,
+      "apartments_landuse": 553,
+      "apartments_csv": 104,
+      "overlap": 79,
+      "villa_percentage": 69.91294885745376,
+      "total_residential": 1838
+    },
+    "Al Falah Dist.": {
+      "name_ar": "حي الفلاح",
+      "villas": 2404,
+      "apartments_landuse": 354,
+      "apartments_csv": 94,
+      "overlap": 85,
+      "villa_percentage": 87.1646120377085,
+      "total_residential": 2758
+    },
+    "Al Nada Dist.": {
+      "name_ar": "حي الندى",
+      "villas": 2939,
+      "apartments_landuse": 244,
+      "apartments_csv": 61,
+      "overlap": 31,
+      "villa_percentage": 92.33427584040214,
+      "total_residential": 3183
+    },
+    "Al Mursalat Dist.": {
+      "name_ar": "حي المرسلات",
+      "villas": 1535,
+      "apartments_landuse": 421,
+      "apartments_csv": 47,
+      "overlap": 34,
+      "villa_percentage": 78.47648261758691,
+      "total_residential": 1956
+    },
+    "Al Nuzha Dist.": {
+      "name_ar": "حي النزهة",
+      "villas": 1988,
+      "apartments_landuse": 653,
+      "apartments_csv": 77,
+      "overlap": 71,
+      "villa_percentage": 75.27451722832261,
+      "total_residential": 2641
+    },
+    "Al Woroud Dist.": {
+      "name_ar": "حي الورود",
+      "villas": 2831,
+      "apartments_landuse": 516,
+      "apartments_csv": 110,
+      "overlap": 82,
+      "villa_percentage": 84.58320884374066,
+      "total_residential": 3347
+    },
+    "King Faisal Dist.": {
+      "name_ar": "حي الملك فيصل",
+      "villas": 3210,
+      "apartments_landuse": 1236,
+      "apartments_csv": 73,
+      "overlap": 65,
+      "villa_percentage": 72.19973009446694,
+      "total_residential": 4446
+    },
+    "2nd Industrial City": {
+      "name_ar": "المدينة الصناعية الثانية",
+      "villas": 1151,
+      "apartments_landuse": 566,
+      "apartments_csv": 90,
+      "overlap": 30,
+      "villa_percentage": 67.03552708211997,
+      "total_residential": 1717
+    },
+    "Al Aziziyah Dist.": {
+      "name_ar": "حي العزيزية",
+      "villas": 11631,
+      "apartments_landuse": 2462,
+      "apartments_csv": 194,
+      "overlap": 131,
+      "villa_percentage": 82.53033420847228,
+      "total_residential": 14093
+    },
+    "Al Mansurah Dist.": {
+      "name_ar": "حي المنصورة",
+      "villas": 2928,
+      "apartments_landuse": 1295,
+      "apartments_csv": 125,
+      "overlap": 111,
+      "villa_percentage": 69.33459625858394,
+      "total_residential": 4223
+    },
+    "Ghobairah Dist.": {
+      "name_ar": "حي غبيرة",
+      "villas": 1513,
+      "apartments_landuse": 246,
+      "apartments_csv": 80,
+      "overlap": 29,
+      "villa_percentage": 86.01478112563957,
+      "total_residential": 1759
+    },
+    "Al Farooq Dist.": {
+      "name_ar": "حي الفاروق",
+      "villas": 1979,
+      "apartments_landuse": 73,
+      "apartments_csv": 23,
+      "overlap": 4,
+      "villa_percentage": 96.44249512670565,
+      "total_residential": 2052
+    },
+    "Al Faisaliyah Dist.": {
+      "name_ar": "حي الفيصلية",
+      "villas": 1471,
+      "apartments_landuse": 406,
+      "apartments_csv": 53,
+      "overlap": 18,
+      "villa_percentage": 78.3697389451252,
+      "total_residential": 1877
+    },
+    "Al Khalidiyah Dist.": {
+      "name_ar": "حي الخالدية",
+      "villas": 1702,
+      "apartments_landuse": 526,
+      "apartments_csv": 120,
+      "overlap": 43,
+      "villa_percentage": 76.39138240574506,
+      "total_residential": 2228
+    },
+    "Al Jazeerah Dist.": {
+      "name_ar": "حي الجزيرة",
+      "villas": 3874,
+      "apartments_landuse": 114,
+      "apartments_csv": 55,
+      "overlap": 8,
+      "villa_percentage": 97.14142427281845,
+      "total_residential": 3988
+    },
+    "Al Saadah Dist.": {
+      "name_ar": "حي السعادة",
+      "villas": 4488,
+      "apartments_landuse": 1416,
+      "apartments_csv": 148,
+      "overlap": 124,
+      "villa_percentage": 76.01626016260163,
+      "total_residential": 5904
+    },
+    "Al Nasiriyah Dist.": {
+      "name_ar": "حي الناصرية",
+      "villas": 433,
+      "apartments_landuse": 52,
+      "apartments_csv": 19,
+      "overlap": 2,
+      "villa_percentage": 89.27835051546393,
+      "total_residential": 485
+    },
+    "Al Manakh Dist.": {
+      "name_ar": "حي المناخ",
+      "villas": 2823,
+      "apartments_landuse": 376,
+      "apartments_csv": 87,
+      "overlap": 25,
+      "villa_percentage": 88.24632697718037,
+      "total_residential": 3199
+    },
+    "Al Difaa Dist.": {
+      "name_ar": "حي الدفاع",
+      "villas": 0,
+      "apartments_landuse": 13,
+      "apartments_csv": 12,
+      "overlap": 0,
+      "villa_percentage": 0.0,
+      "total_residential": 13
+    },
+    "Al Noor Dist.": {
+      "name_ar": "حي النور",
+      "villas": 86,
+      "apartments_landuse": 112,
+      "apartments_csv": 20,
+      "overlap": 1,
+      "villa_percentage": 43.43434343434344,
+      "total_residential": 198
+    },
+    "King Abdullah Dist.": {
+      "name_ar": "حي الملك عبدالله",
+      "villas": 2206,
+      "apartments_landuse": 107,
+      "apartments_csv": 16,
+      "overlap": 5,
+      "villa_percentage": 95.37397319498487,
+      "total_residential": 2313
+    },
+    "Al Wahah Dist.": {
+      "name_ar": "حي الواحة",
+      "villas": 2450,
+      "apartments_landuse": 180,
+      "apartments_csv": 20,
+      "overlap": 10,
+      "villa_percentage": 93.15589353612167,
+      "total_residential": 2630
+    },
+    "Salahuddin Dist.": {
+      "name_ar": "حي صلاح الدين",
+      "villas": 1222,
+      "apartments_landuse": 142,
+      "apartments_csv": 25,
+      "overlap": 12,
+      "villa_percentage": 89.58944281524927,
+      "total_residential": 1364
+    },
+    "King Abdulaziz Dist.": {
+      "name_ar": "حي الملك عبدالعزيز",
+      "villas": 890,
+      "apartments_landuse": 75,
+      "apartments_csv": 19,
+      "overlap": 7,
+      "villa_percentage": 92.2279792746114,
+      "total_residential": 965
+    },
+    "Al Wizarat Dist.": {
+      "name_ar": "حي الوزارات",
+      "villas": 1591,
+      "apartments_landuse": 760,
+      "apartments_csv": 73,
+      "overlap": 57,
+      "villa_percentage": 67.67333049766057,
+      "total_residential": 2351
+    },
+    "Skirinah Dist.": {
+      "name_ar": "حي سكيرينة",
+      "villas": 149,
+      "apartments_landuse": 5,
+      "apartments_csv": 19,
+      "overlap": 0,
+      "villa_percentage": 96.75324675324676,
+      "total_residential": 154
+    },
+    "Ar Rabwah Dist.": {
+      "name_ar": "حي الربوة",
+      "villas": 6008,
+      "apartments_landuse": 676,
+      "apartments_csv": 63,
+      "overlap": 35,
+      "villa_percentage": 89.88629563135846,
+      "total_residential": 6684
+    },
+    "Jareer Dist.": {
+      "name_ar": "حي جرير",
+      "villas": 2175,
+      "apartments_landuse": 354,
+      "apartments_csv": 49,
+      "overlap": 29,
+      "villa_percentage": 86.0023724792408,
+      "total_residential": 2529
+    },
+    "Al Mathar Dist.": {
+      "name_ar": "حي المعذر",
+      "villas": 784,
+      "apartments_landuse": 40,
+      "apartments_csv": 74,
+      "overlap": 15,
+      "villa_percentage": 95.14563106796116,
+      "total_residential": 824
+    },
+    "As Salhiyah Dist.": {
+      "name_ar": "حي الصالحية",
+      "villas": 350,
+      "apartments_landuse": 26,
+      "apartments_csv": 19,
+      "overlap": 1,
+      "villa_percentage": 93.08510638297872,
+      "total_residential": 376
+    },
+    "Al Malaz Dist.": {
+      "name_ar": "حي الملز",
+      "villas": 3484,
+      "apartments_landuse": 1007,
+      "apartments_csv": 173,
+      "overlap": 111,
+      "villa_percentage": 77.57737697617458,
+      "total_residential": 4491
+    },
+    "Manfuhah Dist.": {
+      "name_ar": "حي منفوحة",
+      "villas": 1824,
+      "apartments_landuse": 127,
+      "apartments_csv": 83,
+      "overlap": 23,
+      "villa_percentage": 93.49051768323936,
+      "total_residential": 1951
+    },
+    "Olaishah Dist.": {
+      "name_ar": "حي عليشة",
+      "villas": 289,
+      "apartments_landuse": 24,
+      "apartments_csv": 21,
+      "overlap": 4,
+      "villa_percentage": 92.33226837060703,
+      "total_residential": 313
+    },
+    "Al Nahdah Dist.": {
+      "name_ar": "حي النهضة",
+      "villas": 8997,
+      "apartments_landuse": 1186,
+      "apartments_csv": 157,
+      "overlap": 121,
+      "villa_percentage": 88.35313758224493,
+      "total_residential": 10183
+    },
+    "Al Khaleej Dist.": {
+      "name_ar": "حي الخليج",
+      "villas": 7152,
+      "apartments_landuse": 1576,
+      "apartments_csv": 126,
+      "overlap": 104,
+      "villa_percentage": 81.94317140238313,
+      "total_residential": 8728
+    },
+    "Al Dhubbat Dist.": {
+      "name_ar": "حي الضباط",
+      "villas": 887,
+      "apartments_landuse": 136,
+      "apartments_csv": 69,
+      "overlap": 21,
+      "villa_percentage": 86.70576735092864,
+      "total_residential": 1023
+    },
+    "West Suwaidi Dist.": {
+      "name_ar": "حي السويدي الغربي",
+      "villas": 4463,
+      "apartments_landuse": 756,
+      "apartments_csv": 83,
+      "overlap": 63,
+      "villa_percentage": 85.51446637286837,
+      "total_residential": 5219
+    },
+    "Dirab Dist.": {
+      "name_ar": "حي ديراب",
+      "villas": 6740,
+      "apartments_landuse": 1899,
+      "apartments_csv": 54,
+      "overlap": 18,
+      "villa_percentage": 78.01828915383724,
+      "total_residential": 8639
+    },
+    "Ohod Dist.": {
+      "name_ar": "حي احد",
+      "villas": 2390,
+      "apartments_landuse": 319,
+      "apartments_csv": 48,
+      "overlap": 21,
+      "villa_percentage": 88.22443706164637,
+      "total_residential": 2709
+    },
+    "Namar Dist.": {
+      "name_ar": "حي نمار",
+      "villas": 3301,
+      "apartments_landuse": 285,
+      "apartments_csv": 43,
+      "overlap": 20,
+      "villa_percentage": 92.05242610150586,
+      "total_residential": 3586
+    },
+    "Al Shifa Dist.": {
+      "name_ar": "حي الشفا",
+      "villas": 5685,
+      "apartments_landuse": 1257,
+      "apartments_csv": 88,
+      "overlap": 56,
+      "villa_percentage": 81.89282627484874,
+      "total_residential": 6942
+    },
+    "Al Muhammadiyah Dist.": {
+      "name_ar": "حي المحمدية",
+      "villas": 2084,
+      "apartments_landuse": 447,
+      "apartments_csv": 55,
+      "overlap": 44,
+      "villa_percentage": 82.33899644409325,
+      "total_residential": 2531
+    },
+    "Al Sulaimaniyah Dist.": {
+      "name_ar": "حي السليمانية",
+      "villas": 4546,
+      "apartments_landuse": 872,
+      "apartments_csv": 165,
+      "overlap": 105,
+      "villa_percentage": 83.90550018456995,
+      "total_residential": 5418
+    },
+    "Al Marwah Dist.": {
+      "name_ar": "حي المروة",
+      "villas": 1206,
+      "apartments_landuse": 301,
+      "apartments_csv": 55,
+      "overlap": 28,
+      "villa_percentage": 80.02654280026543,
+      "total_residential": 1507
+    },
+    "Okaz Dist.": {
+      "name_ar": "حي عكاظ",
+      "villas": 6764,
+      "apartments_landuse": 700,
+      "apartments_csv": 92,
+      "overlap": 23,
+      "villa_percentage": 90.62165058949626,
+      "total_residential": 7464
+    },
+    "Shubra Dist.": {
+      "name_ar": "حي شبرا",
+      "villas": 4201,
+      "apartments_landuse": 989,
+      "apartments_csv": 24,
+      "overlap": 19,
+      "villa_percentage": 80.94412331406551,
+      "total_residential": 5190
+    },
+    "Al Zahrah Dist.": {
+      "name_ar": "حي الزهرة",
+      "villas": 4919,
+      "apartments_landuse": 998,
+      "apartments_csv": 34,
+      "overlap": 24,
+      "villa_percentage": 83.1333446003042,
+      "total_residential": 5917
+    },
+    "Siyah Dist.": {
+      "name_ar": "حي صياح",
+      "villas": 142,
+      "apartments_landuse": 7,
+      "apartments_csv": 5,
+      "overlap": 1,
+      "villa_percentage": 95.30201342281879,
+      "total_residential": 149
+    },
+    "Sultanah Dist.": {
+      "name_ar": "حي سلطانة",
+      "villas": 1970,
+      "apartments_landuse": 271,
+      "apartments_csv": 20,
+      "overlap": 2,
+      "villa_percentage": 87.90718429272646,
+      "total_residential": 2241
+    },
+    "Al Yamamah Dist.": {
+      "name_ar": "حي اليمامة",
+      "villas": 1950,
+      "apartments_landuse": 283,
+      "apartments_csv": 33,
+      "overlap": 10,
+      "villa_percentage": 87.32646663681146,
+      "total_residential": 2233
+    },
+    "Al Badiah Dist.": {
+      "name_ar": "حي البديعة",
+      "villas": 1033,
+      "apartments_landuse": 98,
+      "apartments_csv": 46,
+      "overlap": 13,
+      "villa_percentage": 91.33510167992927,
+      "total_residential": 1131
+    },
+    "Al Masani Dist.": {
+      "name_ar": "حي المصانع",
+      "villas": 124,
+      "apartments_landuse": 220,
+      "apartments_csv": 35,
+      "overlap": 2,
+      "villa_percentage": 36.04651162790697,
+      "total_residential": 344
+    },
+    "Al Qadisiyah Dist.": {
+      "name_ar": "حي القادسية",
+      "villas": 5097,
+      "apartments_landuse": 713,
+      "apartments_csv": 62,
+      "overlap": 44,
+      "villa_percentage": 87.72805507745267,
+      "total_residential": 5810
+    },
+    "Al Safa Dist.": {
+      "name_ar": "حي الصفا",
+      "villas": 2994,
+      "apartments_landuse": 140,
+      "apartments_csv": 19,
+      "overlap": 9,
+      "villa_percentage": 95.53286534779835,
+      "total_residential": 3134
+    },
+    "Al Olaya Dist.": {
+      "name_ar": "حي العليا",
+      "villas": 7018,
+      "apartments_landuse": 1550,
+      "apartments_csv": 73,
+      "overlap": 60,
+      "villa_percentage": 81.90943043884221,
+      "total_residential": 8568
+    },
+    "Al Duraihemiyah Dist.": {
+      "name_ar": "حي الدريهمية",
+      "villas": 986,
+      "apartments_landuse": 283,
+      "apartments_csv": 25,
+      "overlap": 21,
+      "villa_percentage": 77.698975571316,
+      "total_residential": 1269
+    },
+    "Al Iskan Dist.": {
+      "name_ar": "حي الاسكان",
+      "villas": 1912,
+      "apartments_landuse": 17,
+      "apartments_csv": 49,
+      "overlap": 0,
+      "villa_percentage": 99.1187143597719,
+      "total_residential": 1929
+    },
+    "Al Salam Dist.": {
+      "name_ar": "حي السلام",
+      "villas": 3523,
+      "apartments_landuse": 1112,
+      "apartments_csv": 31,
+      "overlap": 21,
+      "villa_percentage": 76.00862998921252,
+      "total_residential": 4635
+    },
+    "Al Manar Dist.": {
+      "name_ar": "حي المنار",
+      "villas": 2013,
+      "apartments_landuse": 991,
+      "apartments_csv": 41,
+      "overlap": 34,
+      "villa_percentage": 67.01065246338216,
+      "total_residential": 3004
+    },
+    "East Naseem Dist.": {
+      "name_ar": "حي النسيم الشرقي",
+      "villas": 5846,
+      "apartments_landuse": 2270,
+      "apartments_csv": 59,
+      "overlap": 54,
+      "villa_percentage": 72.0305569245934,
+      "total_residential": 8116
+    },
+    "Al Quds Dist.": {
+      "name_ar": "حي القدس",
+      "villas": 3371,
+      "apartments_landuse": 984,
+      "apartments_csv": 56,
+      "overlap": 54,
+      "villa_percentage": 77.4052812858783,
+      "total_residential": 4355
+    },
+    "Al Wadi Dist.": {
+      "name_ar": "حي الوادي",
+      "villas": 3364,
+      "apartments_landuse": 479,
+      "apartments_csv": 58,
+      "overlap": 50,
+      "villa_percentage": 87.53577933905802,
+      "total_residential": 3843
+    },
+    "Al Nafel Dist.": {
+      "name_ar": "حي النفل",
+      "villas": 2993,
+      "apartments_landuse": 474,
+      "apartments_csv": 72,
+      "overlap": 54,
+      "villa_percentage": 86.32823766945485,
+      "total_residential": 3467
+    },
+    "Al Maseef Dist.": {
+      "name_ar": "حي المصيف",
+      "villas": 3345,
+      "apartments_landuse": 631,
+      "apartments_csv": 54,
+      "overlap": 46,
+      "villa_percentage": 84.1297786720322,
+      "total_residential": 3976
+    },
+    "Al Taawun Dist.": {
+      "name_ar": "حي التعاون",
+      "villas": 2422,
+      "apartments_landuse": 734,
+      "apartments_csv": 50,
+      "overlap": 49,
+      "villa_percentage": 76.74271229404309,
+      "total_residential": 3156
+    },
+    "Al Ezdihar Dist.": {
+      "name_ar": "حي الازدهار",
+      "villas": 1972,
+      "apartments_landuse": 701,
+      "apartments_csv": 36,
+      "overlap": 33,
+      "villa_percentage": 73.774784885896,
+      "total_residential": 2673
+    },
+    "Al Andalus Dist.": {
+      "name_ar": "حي الاندلس",
+      "villas": 3522,
+      "apartments_landuse": 514,
+      "apartments_csv": 44,
+      "overlap": 30,
+      "villa_percentage": 87.26461843409317,
+      "total_residential": 4036
+    },
+    "Al Rawdah Dist.": {
+      "name_ar": "حي الروضة",
+      "villas": 5791,
+      "apartments_landuse": 1398,
+      "apartments_csv": 41,
+      "overlap": 37,
+      "villa_percentage": 80.55362359159828,
+      "total_residential": 7189
+    },
+    "Al Rawabi Dist.": {
+      "name_ar": "حي الروابي",
+      "villas": 4005,
+      "apartments_landuse": 1057,
+      "apartments_csv": 73,
+      "overlap": 67,
+      "villa_percentage": 79.11892532595812,
+      "total_residential": 5062
+    },
+    "Al Rayan Dist.": {
+      "name_ar": "حي الريان",
+      "villas": 3384,
+      "apartments_landuse": 882,
+      "apartments_csv": 40,
+      "overlap": 34,
+      "villa_percentage": 79.32489451476793,
+      "total_residential": 4266
+    },
+    "Dhahrat Al Badeah Dist.": {
+      "name_ar": "حي ظهرة البديعة",
+      "villas": 5524,
+      "apartments_landuse": 807,
+      "apartments_csv": 29,
+      "overlap": 12,
+      "villa_percentage": 87.25319854683305,
+      "total_residential": 6331
+    },
+    "Al Nadheem Dist.": {
+      "name_ar": "حي النظيم",
+      "villas": 16556,
+      "apartments_landuse": 1320,
+      "apartments_csv": 9,
+      "overlap": 4,
+      "villa_percentage": 92.6157977176102,
+      "total_residential": 17876
+    },
+    "Al Rimayah Dist.": {
+      "name_ar": "حي الرماية",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_csv": 48,
+      "overlap": 0,
+      "villa_percentage": 0,
+      "total_residential": 0
+    },
+    "Al Bariyah Dist.": {
+      "name_ar": "حي البرية",
+      "villas": 686,
+      "apartments_landuse": 201,
+      "apartments_csv": 11,
+      "overlap": 3,
+      "villa_percentage": 77.33934611048478,
+      "total_residential": 887
+    },
+    "Taybah Dist.": {
+      "name_ar": "حي طيبة",
+      "villas": 5028,
+      "apartments_landuse": 39,
+      "apartments_csv": 13,
+      "overlap": 0,
+      "villa_percentage": 99.23031379514505,
+      "total_residential": 5067
+    },
+    "Mansuriyah Dist.": {
+      "name_ar": "حي المنصورية",
+      "villas": 15,
+      "apartments_landuse": 0,
+      "apartments_csv": 6,
+      "overlap": 0,
+      "villa_percentage": 100.0,
+      "total_residential": 15
+    },
+    "Dahiyat Namar Dist.": {
+      "name_ar": "حي ضاحية نمار",
+      "villas": 26809,
+      "apartments_landuse": 4701,
+      "apartments_csv": 53,
+      "overlap": 10,
+      "villa_percentage": 85.0809266899397,
+      "total_residential": 31510
+    },
+    "Al Misfat Dist.": {
+      "name_ar": "حي المصفاة",
+      "villas": 6312,
+      "apartments_landuse": 517,
+      "apartments_csv": 41,
+      "overlap": 8,
+      "villa_percentage": 92.42934543857079,
+      "total_residential": 6829
+    },
+    "Assafarat Dist.": {
+      "name_ar": "حي السفارات",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_csv": 19,
+      "overlap": 0,
+      "villa_percentage": 0,
+      "total_residential": 0
+    },
+    "Khashm Al An": {
+      "name_ar": "خشم العان",
+      "villas": 0,
+      "apartments_landuse": 1,
+      "apartments_csv": 23,
+      "overlap": 0,
+      "villa_percentage": 0.0,
+      "total_residential": 1
+    },
+    "Qurtubah Dist.": {
+      "name_ar": "حي قرطبة",
+      "villas": 7636,
+      "apartments_landuse": 1391,
+      "apartments_csv": 86,
+      "overlap": 64,
+      "villa_percentage": 84.59067242716296,
+      "total_residential": 9027
+    },
+    "Tuwaiq Dist.": {
+      "name_ar": "حي طويق",
+      "villas": 32323,
+      "apartments_landuse": 5654,
+      "apartments_csv": 83,
+      "overlap": 61,
+      "villa_percentage": 85.1120414988019,
+      "total_residential": 37977
+    },
+    "Al Awaly Dist.": {
+      "name_ar": "حي العوالي",
+      "villas": 6190,
+      "apartments_landuse": 1640,
+      "apartments_csv": 71,
+      "overlap": 57,
+      "villa_percentage": 79.05491698595148,
+      "total_residential": 7830
+    },
+    "Ar Rabie Dist.": {
+      "name_ar": "حي الربيع",
+      "villas": 4229,
+      "apartments_landuse": 593,
+      "apartments_csv": 63,
+      "overlap": 46,
+      "villa_percentage": 87.70219825798424,
+      "total_residential": 4822
+    },
+    "Al Mughrazat Dist.": {
+      "name_ar": "حي المغرزات",
+      "villas": 1183,
+      "apartments_landuse": 425,
+      "apartments_csv": 56,
+      "overlap": 55,
+      "villa_percentage": 73.56965174129353,
+      "total_residential": 1608
+    },
+    "Al Sulay Dist.": {
+      "name_ar": "حي السلي",
+      "villas": 2,
+      "apartments_landuse": 385,
+      "apartments_csv": 33,
+      "overlap": 1,
+      "villa_percentage": 0.516795865633075,
+      "total_residential": 387
+    },
+    "Al Aqeeq Dist.": {
+      "name_ar": "حي العقيق",
+      "villas": 3436,
+      "apartments_landuse": 1357,
+      "apartments_csv": 91,
+      "overlap": 80,
+      "villa_percentage": 71.68787815564365,
+      "total_residential": 4793
+    },
+    "Al Nakheel Dist.": {
+      "name_ar": "حي النخيل",
+      "villas": 4042,
+      "apartments_landuse": 846,
+      "apartments_csv": 28,
+      "overlap": 16,
+      "villa_percentage": 82.6923076923077,
+      "total_residential": 4888
+    },
+    "Al Ghadeer Dist.": {
+      "name_ar": "حي الغدير",
+      "villas": 2060,
+      "apartments_landuse": 263,
+      "apartments_csv": 35,
+      "overlap": 29,
+      "villa_percentage": 88.67843306069737,
+      "total_residential": 2323
+    },
+    "Al Muruj Dist.": {
+      "name_ar": "حي المروج",
+      "villas": 2374,
+      "apartments_landuse": 929,
+      "apartments_csv": 58,
+      "overlap": 53,
+      "villa_percentage": 71.87405389040266,
+      "total_residential": 3303
+    },
+    "Al Oud Dist.": {
+      "name_ar": "حي العود",
+      "villas": 1569,
+      "apartments_landuse": 136,
+      "apartments_csv": 13,
+      "overlap": 8,
+      "villa_percentage": 92.02346041055719,
+      "total_residential": 1705
+    },
+    "Thulaim Dist.": {
+      "name_ar": "حي ثليم",
+      "villas": 220,
+      "apartments_landuse": 25,
+      "apartments_csv": 38,
+      "overlap": 5,
+      "villa_percentage": 89.79591836734694,
+      "total_residential": 245
+    },
+    "Al Shumaisi Dist.": {
+      "name_ar": "حي الشميسي",
+      "villas": 144,
+      "apartments_landuse": 56,
+      "apartments_csv": 46,
+      "overlap": 7,
+      "villa_percentage": 72.0,
+      "total_residential": 200
+    },
+    "Al Wisham Dist.": {
+      "name_ar": "حي الوشام",
+      "villas": 52,
+      "apartments_landuse": 12,
+      "apartments_csv": 28,
+      "overlap": 0,
+      "villa_percentage": 81.25,
+      "total_residential": 64
+    },
+    "Salam Park": {
+      "name_ar": "منتزه سلام",
+      "villas": 71,
+      "apartments_landuse": 18,
+      "apartments_csv": 0,
+      "overlap": 0,
+      "villa_percentage": 79.7752808988764,
+      "total_residential": 89
+    },
+    "Al Dubiyah Dist.": {
+      "name_ar": "حي الدوبية",
+      "villas": 9,
+      "apartments_landuse": 6,
+      "apartments_csv": 5,
+      "overlap": 0,
+      "villa_percentage": 60.0,
+      "total_residential": 15
+    },
+    "Meakal Dist.": {
+      "name_ar": "حي معكال",
+      "villas": 30,
+      "apartments_landuse": 5,
+      "apartments_csv": 1,
+      "overlap": 0,
+      "villa_percentage": 85.71428571428571,
+      "total_residential": 35
+    },
+    "Jabrah Dist.": {
+      "name_ar": "حي جبرة",
+      "villas": 7,
+      "apartments_landuse": 38,
+      "apartments_csv": 11,
+      "overlap": 2,
+      "villa_percentage": 15.555555555555555,
+      "total_residential": 45
+    },
+    "Al Qura Dist.": {
+      "name_ar": "حي القرى",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_csv": 0,
+      "overlap": 0,
+      "villa_percentage": 0,
+      "total_residential": 0
+    },
+    "Al Marqab Dist.": {
+      "name_ar": "حي المرقب",
+      "villas": 60,
+      "apartments_landuse": 10,
+      "apartments_csv": 25,
+      "overlap": 3,
+      "villa_percentage": 85.71428571428571,
+      "total_residential": 70
+    },
+    "Al Futah Dist.": {
+      "name_ar": "حي الفوطة",
+      "villas": 107,
+      "apartments_landuse": 121,
+      "apartments_csv": 40,
+      "overlap": 19,
+      "villa_percentage": 46.92982456140351,
+      "total_residential": 228
+    },
+    "Umm Saleem Dist.": {
+      "name_ar": "حي ام سليم",
+      "villas": 204,
+      "apartments_landuse": 44,
+      "apartments_csv": 24,
+      "overlap": 8,
+      "villa_percentage": 82.25806451612904,
+      "total_residential": 248
+    },
+    "Al Sahafah Dist.": {
+      "name_ar": "حي الصحافة",
+      "villas": 5549,
+      "apartments_landuse": 1307,
+      "apartments_csv": 63,
+      "overlap": 52,
+      "villa_percentage": 80.93640606767795,
+      "total_residential": 6856
+    },
+    "Al Raed Dist.": {
+      "name_ar": "حي الرائد",
+      "villas": 1045,
+      "apartments_landuse": 192,
+      "apartments_csv": 23,
+      "overlap": 21,
+      "villa_percentage": 84.47857720291026,
+      "total_residential": 1237
+    },
+    "West Oraija Dist.": {
+      "name_ar": "حي العريجاء الغربي",
+      "villas": 10608,
+      "apartments_landuse": 1980,
+      "apartments_csv": 56,
+      "overlap": 37,
+      "villa_percentage": 84.27073403241182,
+      "total_residential": 12588
+    },
+    "Al Uraija Dist.": {
+      "name_ar": "حي العريجاء",
+      "villas": 478,
+      "apartments_landuse": 66,
+      "apartments_csv": 15,
+      "overlap": 6,
+      "villa_percentage": 87.86764705882352,
+      "total_residential": 544
+    },
+    "Middle Oraija Dist.": {
+      "name_ar": "حي العريجاء الوسطى",
+      "villas": 5124,
+      "apartments_landuse": 1108,
+      "apartments_csv": 50,
+      "overlap": 33,
+      "villa_percentage": 82.22079589216945,
+      "total_residential": 6232
+    },
+    "Al Hamra Dist.": {
+      "name_ar": "حي الحمراء",
+      "villas": 4165,
+      "apartments_landuse": 698,
+      "apartments_csv": 46,
+      "overlap": 44,
+      "villa_percentage": 85.646720131606,
+      "total_residential": 4863
+    },
+    "Al Dar Al Baida Dist.": {
+      "name_ar": "حي الدار البيضاء",
+      "villas": 10687,
+      "apartments_landuse": 1903,
+      "apartments_csv": 76,
+      "overlap": 60,
+      "villa_percentage": 84.88482922954726,
+      "total_residential": 12590
+    },
+    "Al Butaiha Dist.": {
+      "name_ar": "حي البطيحا",
+      "villas": 9,
+      "apartments_landuse": 2,
+      "apartments_csv": 10,
+      "overlap": 0,
+      "villa_percentage": 81.81818181818183,
+      "total_residential": 11
+    },
+    "Al Zahra Dist.": {
+      "name_ar": "حي الزهراء",
+      "villas": 994,
+      "apartments_landuse": 92,
+      "apartments_csv": 24,
+      "overlap": 13,
+      "villa_percentage": 91.52854511970534,
+      "total_residential": 1086
+    },
+    "Al Fayha Dist.": {
+      "name_ar": "حي الفيحاء",
+      "villas": 3788,
+      "apartments_landuse": 1105,
+      "apartments_csv": 77,
+      "overlap": 61,
+      "villa_percentage": 77.4167177600654,
+      "total_residential": 4893
+    },
+    "Al Mutamarat Dist.": {
+      "name_ar": "حي المؤتمرات",
+      "villas": 295,
+      "apartments_landuse": 90,
+      "apartments_csv": 12,
+      "overlap": 3,
+      "villa_percentage": 76.62337662337663,
+      "total_residential": 385
+    },
+    "Al Wusayta Dist.": {
+      "name_ar": "حي الوسيطاء",
+      "villas": 2,
+      "apartments_landuse": 1,
+      "apartments_csv": 2,
+      "overlap": 0,
+      "villa_percentage": 66.66666666666666,
+      "total_residential": 3
+    },
+    "Al Janadriyah Dist.": {
+      "name_ar": "حي الجنادرية",
+      "villas": 30932,
+      "apartments_landuse": 1808,
+      "apartments_csv": 39,
+      "overlap": 10,
+      "villa_percentage": 94.4777031154551,
+      "total_residential": 32740
+    },
+    "Ishbiliyah Dist.": {
+      "name_ar": "حي اشبيلية",
+      "villas": 6912,
+      "apartments_landuse": 976,
+      "apartments_csv": 76,
+      "overlap": 62,
+      "villa_percentage": 87.62677484787018,
+      "total_residential": 7888
+    },
+    "Al Maizalah Dist.": {
+      "name_ar": "حي المعيزلة",
+      "villas": 2765,
+      "apartments_landuse": 616,
+      "apartments_csv": 49,
+      "overlap": 29,
+      "villa_percentage": 81.78053830227742,
+      "total_residential": 3381
+    },
+    "Al Yarmuk Dist.": {
+      "name_ar": "حي اليرموك",
+      "villas": 5651,
+      "apartments_landuse": 1867,
+      "apartments_csv": 97,
+      "overlap": 91,
+      "villa_percentage": 75.16626762436819,
+      "total_residential": 7518
+    },
+    "Al Munisiyah Dist.": {
+      "name_ar": "حي المونسية",
+      "villas": 10647,
+      "apartments_landuse": 1924,
+      "apartments_csv": 116,
+      "overlap": 95,
+      "villa_percentage": 84.69493278179938,
+      "total_residential": 12571
+    },
+    "Al Khuzama Dist.": {
+      "name_ar": "حي الخزامى",
+      "villas": 1500,
+      "apartments_landuse": 2,
+      "apartments_csv": 21,
+      "overlap": 0,
+      "villa_percentage": 99.86684420772303,
+      "total_residential": 1502
+    },
+    "Irqah": {
+      "name_ar": "عرقة",
+      "villas": 6498,
+      "apartments_landuse": 525,
+      "apartments_csv": 61,
+      "overlap": 27,
+      "villa_percentage": 92.52456215292611,
+      "total_residential": 7023
+    },
+    "Dhahrat Laban Dist.": {
+      "name_ar": "حي ظهرة لبن",
+      "villas": 16980,
+      "apartments_landuse": 7024,
+      "apartments_csv": 112,
+      "overlap": 109,
+      "villa_percentage": 70.73821029828362,
+      "total_residential": 24004
+    },
+    "Hiteen Dist.": {
+      "name_ar": "حي حطين",
+      "villas": 6028,
+      "apartments_landuse": 806,
+      "apartments_csv": 49,
+      "overlap": 38,
+      "villa_percentage": 88.20602868012877,
+      "total_residential": 6834
+    },
+    "Al Malqa Dist.": {
+      "name_ar": "حي الملقا",
+      "villas": 12911,
+      "apartments_landuse": 1956,
+      "apartments_csv": 102,
+      "overlap": 88,
+      "villa_percentage": 86.84334431963408,
+      "total_residential": 14867
+    },
+    "Al Qairawan Dist.": {
+      "name_ar": "حي القيروان",
+      "villas": 13410,
+      "apartments_landuse": 1813,
+      "apartments_csv": 25,
+      "overlap": 9,
+      "villa_percentage": 88.09038954214017,
+      "total_residential": 15223
+    },
+    "Al Yasmeen Dist.": {
+      "name_ar": "حي الياسمين",
+      "villas": 12729,
+      "apartments_landuse": 1325,
+      "apartments_csv": 64,
+      "overlap": 53,
+      "villa_percentage": 90.57207912338124,
+      "total_residential": 14054
+    },
+    "Al Arid Dist.": {
+      "name_ar": "حي العارض",
+      "villas": 25328,
+      "apartments_landuse": 4291,
+      "apartments_csv": 89,
+      "overlap": 68,
+      "villa_percentage": 85.51267767311523,
+      "total_residential": 29619
+    },
+    "King Khalid International Airport": {
+      "name_ar": "مطار الملك خالد",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_csv": 0,
+      "overlap": 0,
+      "villa_percentage": 0,
+      "total_residential": 0
+    },
+    "Al Narjis Dist.": {
+      "name_ar": "حي النرجس",
+      "villas": 22557,
+      "apartments_landuse": 2631,
+      "apartments_csv": 81,
+      "overlap": 19,
+      "villa_percentage": 89.5545497856122,
+      "total_residential": 25188
+    },
+    "Imam Muhammed Bin Saud Islamic University": {
+      "name_ar": "جامعة الامام محمد بن سعود الاسلامية",
+      "villas": 0,
+      "apartments_landuse": 3,
+      "apartments_csv": 24,
+      "overlap": 0,
+      "villa_percentage": 0.0,
+      "total_residential": 3
+    },
+    "Banban Dist.": {
+      "name_ar": "حي بنبان",
+      "villas": 6352,
+      "apartments_landuse": 298,
+      "apartments_csv": 34,
+      "overlap": 0,
+      "villa_percentage": 95.5187969924812,
+      "total_residential": 6650
+    },
+    "Al Rimal Dist.": {
+      "name_ar": "حي الرمال",
+      "villas": 22716,
+      "apartments_landuse": 1657,
+      "apartments_csv": 36,
+      "overlap": 3,
+      "villa_percentage": 93.2014934558733,
+      "total_residential": 24373
+    },
+    "Ghirnatah Dist.": {
+      "name_ar": "حي غرناطة",
+      "villas": 1518,
+      "apartments_landuse": 564,
+      "apartments_csv": 56,
+      "overlap": 49,
+      "villa_percentage": 72.91066282420749,
+      "total_residential": 2082
+    },
+    "Al Dahou Dist.": {
+      "name_ar": "حي الدحو",
+      "villas": 164,
+      "apartments_landuse": 8,
+      "apartments_csv": 1,
+      "overlap": 1,
+      "villa_percentage": 95.34883720930233,
+      "total_residential": 172
+    },
+    "Al Ammajiyah Dist.": {
+      "name_ar": "حي العماجية",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_csv": 8,
+      "overlap": 0,
+      "villa_percentage": 0,
+      "total_residential": 0
+    },
+    "Hyt Dist.": {
+      "name_ar": "حي هيت",
+      "villas": 508,
+      "apartments_landuse": 35,
+      "apartments_csv": 16,
+      "overlap": 0,
+      "villa_percentage": 93.55432780847146,
+      "total_residential": 543
+    },
+    "Al Haer Dist.": {
+      "name_ar": "حي الحائر",
+      "villas": 4534,
+      "apartments_landuse": 0,
+      "apartments_csv": 22,
+      "overlap": 0,
+      "villa_percentage": 100.0,
+      "total_residential": 4534
+    },
+    "Umm Al Shaal Dist.": {
+      "name_ar": "حي ام الشعال",
+      "villas": 0,
+      "apartments_landuse": 54,
+      "apartments_csv": 1,
+      "overlap": 0,
+      "villa_percentage": 0.0,
+      "total_residential": 54
+    },
+    "Al Ghannamiyah Dist.": {
+      "name_ar": "حي الغنامية",
+      "villas": 3966,
+      "apartments_landuse": 117,
+      "apartments_csv": 27,
+      "overlap": 5,
+      "villa_percentage": 97.13445995591476,
+      "total_residential": 4083
+    },
+    "Oraid Dist.": {
+      "name_ar": "حي عريض",
+      "villas": 55635,
+      "apartments_landuse": 2438,
+      "apartments_csv": 40,
+      "overlap": 6,
+      "villa_percentage": 95.8018356206843,
+      "total_residential": 58073
+    },
+    "Badr Dist.": {
+      "name_ar": "حي بدر",
+      "villas": 15570,
+      "apartments_landuse": 3310,
+      "apartments_csv": 99,
+      "overlap": 32,
+      "villa_percentage": 82.46822033898306,
+      "total_residential": 18880
+    },
+    "Al Mahdiyah Dist.": {
+      "name_ar": "حي المهدية",
+      "villas": 13062,
+      "apartments_landuse": 3831,
+      "apartments_csv": 68,
+      "overlap": 59,
+      "villa_percentage": 77.32196767892027,
+      "total_residential": 16893
+    },
+    "King Saud University": {
+      "name_ar": "جامعة الملك سعود",
+      "villas": 0,
+      "apartments_landuse": 13,
+      "apartments_csv": 38,
+      "overlap": 0,
+      "villa_percentage": 0.0,
+      "total_residential": 13
+    },
+    "West Naseem Dist.": {
+      "name_ar": "حي النسيم الغربي",
+      "villas": 10281,
+      "apartments_landuse": 1890,
+      "apartments_csv": 77,
+      "overlap": 68,
+      "villa_percentage": 84.47128420014789,
+      "total_residential": 12171
+    },
+    "Al Mishael Dist.": {
+      "name_ar": "حي المشاعل",
+      "villas": 5,
+      "apartments_landuse": 391,
+      "apartments_csv": 31,
+      "overlap": 10,
+      "villa_percentage": 1.2626262626262625,
+      "total_residential": 396
+    },
+    "Al Nadwah Dist.": {
+      "name_ar": "حي الندوة",
+      "villas": 3301,
+      "apartments_landuse": 441,
+      "apartments_csv": 70,
+      "overlap": 53,
+      "villa_percentage": 88.21485836451096,
+      "total_residential": 3742
+    },
+    "Al Rabiyah Dist.": {
+      "name_ar": "حي الرابية",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_csv": 2,
+      "overlap": 0,
+      "villa_percentage": 0,
+      "total_residential": 0
+    },
+    "Wady Laban Dist.": {
+      "name_ar": "حي وادي لبن",
+      "villas": 25,
+      "apartments_landuse": 0,
+      "apartments_csv": 0,
+      "overlap": 0,
+      "villa_percentage": 100.0,
+      "total_residential": 25
+    },
+    "Al Sidrah Dist.": {
+      "name_ar": "حي السدرة",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_csv": 0,
+      "overlap": 0,
+      "villa_percentage": 0,
+      "total_residential": 0
+    },
+    "Al Tadamun Dist.": {
+      "name_ar": "حي التضامن",
+      "villas": 8656,
+      "apartments_landuse": 0,
+      "apartments_csv": 1,
+      "overlap": 0,
+      "villa_percentage": 100.0,
+      "total_residential": 8656
+    },
+    "King Abdullah City For Energy": {
+      "name_ar": "مدينة الملك عبدالله للطاقة",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_csv": 0,
+      "overlap": 0,
+      "villa_percentage": 0,
+      "total_residential": 0
+    },
+    "Al Basatin Dist.": {
+      "name_ar": "حي البساتين",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_csv": 0,
+      "overlap": 0,
+      "villa_percentage": 0,
+      "total_residential": 0
+    },
+    "Al Rehab Dist.": {
+      "name_ar": "حي الرحاب",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_csv": 0,
+      "overlap": 0,
+      "villa_percentage": 0,
+      "total_residential": 0
+    },
+    "Al Majd Dist.": {
+      "name_ar": "حي المجد",
+      "villas": 1094,
+      "apartments_landuse": 0,
+      "apartments_csv": 0,
+      "overlap": 0,
+      "villa_percentage": 100.0,
+      "total_residential": 1094
+    },
+    "Al Danah Dist.": {
+      "name_ar": "حي الدانة",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_csv": 0,
+      "overlap": 0,
+      "villa_percentage": 0,
+      "total_residential": 0
+    },
+    "Al Risalah Dist.": {
+      "name_ar": "حي الرسالة",
+      "villas": 1833,
+      "apartments_landuse": 0,
+      "apartments_csv": 1,
+      "overlap": 0,
+      "villa_percentage": 100.0,
+      "total_residential": 1833
+    },
+    "Al Khair Dist.": {
+      "name_ar": "حي الخير",
+      "villas": 15482,
+      "apartments_landuse": 69,
+      "apartments_csv": 51,
+      "overlap": 0,
+      "villa_percentage": 99.55629863031317,
+      "total_residential": 15551
+    },
+    "Al Fursan Dist.": {
+      "name_ar": "حي الفرسان",
+      "villas": 1886,
+      "apartments_landuse": 0,
+      "apartments_csv": 2,
+      "overlap": 0,
+      "villa_percentage": 100.0,
+      "total_residential": 1886
+    },
+    "Al Sholah Dist.": {
+      "name_ar": "حي الشعلة",
+      "villas": 7829,
+      "apartments_landuse": 0,
+      "apartments_csv": 4,
+      "overlap": 0,
+      "villa_percentage": 100.0,
+      "total_residential": 7829
+    },
+    "Al Rayah Dist.": {
+      "name_ar": "حي الراية",
+      "villas": 2836,
+      "apartments_landuse": 0,
+      "apartments_csv": 1,
+      "overlap": 0,
+      "villa_percentage": 100.0,
+      "total_residential": 2836
+    },
+    "Al Zahour Dist.": {
+      "name_ar": "حي الزهور",
+      "villas": 2439,
+      "apartments_landuse": 0,
+      "apartments_csv": 0,
+      "overlap": 0,
+      "villa_percentage": 100.0,
+      "total_residential": 2439
+    },
+    "Al Zaher Dist.": {
+      "name_ar": "حي الزاهر",
+      "villas": 13856,
+      "apartments_landuse": 0,
+      "apartments_csv": 36,
+      "overlap": 0,
+      "villa_percentage": 100.0,
+      "total_residential": 13856
+    },
+    "Al Marjan Dist.": {
+      "name_ar": "حي المرجان",
+      "villas": 8010,
+      "apartments_landuse": 95,
+      "apartments_csv": 21,
+      "overlap": 0,
+      "villa_percentage": 98.82788402220851,
+      "total_residential": 8105
+    },
+    "Al Bayan Dist.": {
+      "name_ar": "حي البيان",
+      "villas": 6248,
+      "apartments_landuse": 556,
+      "apartments_csv": 55,
+      "overlap": 19,
+      "villa_percentage": 91.82833627278072,
+      "total_residential": 6804
+    },
+    "Al Ula Dist.": {
+      "name_ar": "حي العلا",
+      "villas": 12157,
+      "apartments_landuse": 0,
+      "apartments_csv": 12,
+      "overlap": 0,
+      "villa_percentage": 100.0,
+      "total_residential": 12157
+    },
+    "Al Mashriq Dist.": {
+      "name_ar": "حي المشرق",
+      "villas": 7332,
+      "apartments_landuse": 1143,
+      "apartments_csv": 36,
+      "overlap": 6,
+      "villa_percentage": 86.51327433628319,
+      "total_residential": 8475
+    },
+    "Al Nakhbah Dist.": {
+      "name_ar": "حي النخبة",
+      "villas": 9167,
+      "apartments_landuse": 0,
+      "apartments_csv": 3,
+      "overlap": 0,
+      "villa_percentage": 100.0,
+      "total_residential": 9167
+    },
+    "Al Sahab Dist.": {
+      "name_ar": "حي السحاب",
+      "villas": 9516,
+      "apartments_landuse": 37,
+      "apartments_csv": 5,
+      "overlap": 0,
+      "villa_percentage": 99.6126871139956,
+      "total_residential": 9553
+    },
+    "Al Wasam Dist.": {
+      "name_ar": "حي الوسام",
+      "villas": 11072,
+      "apartments_landuse": 14,
+      "apartments_csv": 9,
+      "overlap": 1,
+      "villa_percentage": 99.87371459498466,
+      "total_residential": 11086
+    }
+  }
+}
