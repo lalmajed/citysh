@@ -283,6 +283,7 @@
                     landUseData = {};
                     districtData = {};
                     let totalCount = 0;
+                    let skippedCount = { invalidCoords: 0, outOfRange: 0, missingCode: 0 };
                     
                     for (let i = 1; i < lines.length; i++) {
                         const line = lines[i].trim();
@@ -296,17 +297,17 @@
                         
                         // Validate coordinates
                         if (isNaN(lat) || isNaN(lng)) {
-                            console.warn(`Skipping row ${i+1}: invalid coordinates`);
+                            skippedCount.invalidCoords++;
                             continue;
                         }
                         
                         if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-                            console.warn(`Skipping row ${i+1}: coordinates out of range`);
+                            skippedCount.outOfRange++;
                             continue;
                         }
                         
                         if (!code) {
-                            console.warn(`Skipping row ${i+1}: missing land_use_code`);
+                            skippedCount.missingCode++;
                             continue;
                         }
                         
@@ -329,6 +330,12 @@
                     
                     if (totalCount === 0) {
                         throw new Error('No valid data points found in CSV');
+                    }
+                    
+                    // Log skipped rows summary
+                    const totalSkipped = skippedCount.invalidCoords + skippedCount.outOfRange + skippedCount.missingCode;
+                    if (totalSkipped > 0) {
+                        console.warn(`Skipped ${totalSkipped} rows: ${skippedCount.invalidCoords} invalid coords, ${skippedCount.outOfRange} out of range, ${skippedCount.missingCode} missing land_use_code`);
                     }
                     
                     // Update UI
@@ -538,7 +545,7 @@
                         const color = businessColors[type] || '#ff5722';
                         
                         // Draw business marker with colored fill and white border
-                        ctx.fillStyle = color.startsWith('#') ? hexToRgb(color).replace('0.7', '0.9') : color;
+                        ctx.fillStyle = colorWithAlpha(color, 0.9);
                         ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
                         ctx.lineWidth = 1;
                         ctx.beginPath();
@@ -548,10 +555,9 @@
                         businessCount++;
                     }
                 }
-                console.log(`Attempted to draw businesses: ${businessCount} in view out of ${businesses.length} total (sample rate: ${businessSample})`);
-            } else {
-                if (businesses.length > 0) {
-                    console.log(`Businesses layer toggled OFF (${businesses.length} businesses available)`);
+                // Only log if businesses were actually drawn (avoid spam)
+                if (businessCount > 0) {
+                    console.log(`Drew ${businessCount} businesses in view (total: ${businesses.length}, sample: ${businessSample})`);
                 }
             }
             
