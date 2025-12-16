@@ -174,6 +174,16 @@
         
         <div id="filters" class="filters"></div>
         
+        <div style="margin: 10px 0; padding: 8px; background: #e8f0fe; border-radius: 6px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="enableClick">
+                <span style="font-weight: 600; font-size: 12px;">🖱️ Click to show parcel info</span>
+            </label>
+            <div style="font-size:10px;color:#666;margin-top:4px;margin-left:28px;">
+                Turn OFF to freely zoom/pan the map
+            </div>
+        </div>
+        
         <div style="margin-top:10px;font-size:11px;color:#888;">
             Showing: <span id="visible">0</span> points | Zoom: <span id="zoom">0</span><br>
             Businesses: <span id="businessVisible">0</span> loaded
@@ -840,8 +850,12 @@
             }
         }
         
-        // Map click handler for showing parcel info
+        // Map click handler for showing parcel info (only when enabled)
         document.getElementById('map').addEventListener('click', function(e) {
+            // Check if click detection is enabled
+            const enableClick = document.getElementById('enableClick');
+            if (!enableClick || !enableClick.checked) return;
+            
             if (allParcels.length === 0 || !map) return;
             
             const rect = this.getBoundingClientRect();
