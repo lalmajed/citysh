@@ -222,6 +222,21 @@
             <div class="legend-item"><div class="legend-dot" style="background:#795548;"></div> 2633/2278: Industrial</div>
         </div>
         
+        <div style="margin-top:8px; padding:8px; background:#ffebee; border-radius:6px; border:1px solid #ef9a9a;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="deleteMode">
+                <span style="font-weight:600; color:#c62828;">🗑️ Delete Mode</span>
+            </label>
+            <div style="font-size:10px; color:#666; margin-top:4px;">
+                Click dots to delete. Deleted: <span id="deletedCount" style="color:#c62828; font-weight:bold;">0</span>
+            </div>
+            <div style="margin-top:5px; display:flex; gap:5px;">
+                <button onclick="undoLastDelete()" style="flex:1; padding:3px; font-size:10px; cursor:pointer;">↩️ Undo</button>
+                <button onclick="exportChanges()" style="flex:1; padding:3px; font-size:10px; cursor:pointer;">💾 Export</button>
+                <button onclick="clearDeleted()" style="flex:1; padding:3px; font-size:10px; cursor:pointer; color:#c62828;">🗑️ Reset</button>
+            </div>
+        </div>
+        
         <div style="margin-top:8px;font-size:10px;color:#888;">
             <label><input type="checkbox" id="enableClick"> Click for details</label>
             | Zoom: <span id="zoomLevel">0</span>
@@ -236,6 +251,12 @@
         let selectedCodes = new Set();  // Track selected codes
         let selectedDistricts = new Set();  // Track selected districts
         let dotSize = 3;
+        
+        // Deletion tracking
+        let deletedApartments = new Set();  // Store deleted apartment indices
+        let deletedBusinesses = new Set();
+        let deletedParcels = new Set();
+        let deleteHistory = [];  // For undo functionality
         
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -348,9 +369,10 @@
                 });
             }
             
-            // Draw land use (only selected codes)
+            // Draw land use (only selected codes, skip deleted)
             if (showLand && parcels.length > 0) {
-                parcels.forEach(p => {
+                parcels.forEach((p, idx) => {
+                    if (deletedParcels.has(idx)) return;
                     // Only show if code is selected (or all if none selected)
                     if (selectedCodes.size > 0 && !selectedCodes.has(p.code)) return;
                     if (!inBounds(p, bounds)) return;
@@ -368,9 +390,10 @@
                 });
             }
             
-            // Draw businesses
+            // Draw businesses (skip deleted)
             if (showBiz && businesses.length > 0) {
-                businesses.forEach(b => {
+                businesses.forEach((b, idx) => {
+                    if (deletedBusinesses.has(idx)) return;
                     if (!inBounds(b, bounds)) return;
                     
                     const w = proj.fromLatLngToPoint(new google.maps.LatLng(b.lat, b.lon));
@@ -386,9 +409,10 @@
                 });
             }
             
-            // Draw apartments
+            // Draw apartments (skip deleted)
             if (showApt && apartments.length > 0) {
-                apartments.forEach(a => {
+                apartments.forEach((a, idx) => {
+                    if (deletedApartments.has(idx)) return;
                     if (!inBounds(a, bounds)) return;
                     
                     const w = proj.fromLatLngToPoint(new google.maps.LatLng(a.lat, a.lon));
@@ -644,10 +668,19 @@
             const filterDiv = document.getElementById('landCodeFilters');
             const search = (document.getElementById('codeSearch')?.value || '').toLowerCase();
             
+            // Recalculate counts excluding deleted
+            const activeCounts = {};
+            parcels.forEach((p, idx) => {
+                if (deletedParcels.has(idx)) return;
+                activeCounts[p.code] = (activeCounts[p.code] || 0) + 1;
+            });
+            
             let html = '';
             const sorted = Object.entries(allCodeCounts).sort((a,b) => b[1] - a[1]);
             
-            sorted.forEach(([code, count]) => {
+            sorted.forEach(([code, originalCount]) => {
+                const activeCount = activeCounts[code] || 0;
+                const deletedCount = originalCount - activeCount;
                 const info = landUseCodes[code] || { name: code, color: getCodeColor(code) };
                 const label = `${code}: ${info.name}`;
                 if (search && !label.toLowerCase().includes(search) && !code.includes(search)) return;
@@ -657,15 +690,15 @@
                     <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleCode('${code}')">
                     <span class="toggle-dot" style="background:${info.color};"></span>
                     <span style="flex:1;">${code}: ${info.name}</span>
-                    <span style="color:#666;">(${count.toLocaleString()})</span>
+                    <span style="color:#666;">${activeCount.toLocaleString()}${deletedCount > 0 ? ` <s style="color:#c62828;">${deletedCount}</s>` : ''}</span>
                 </label>`;
             });
             
             filterDiv.innerHTML = html || '<div style="color:#999;padding:5px;">No codes found</div>';
             
-            // Update selected counts
+            // Update selected counts (excluding deleted)
             let selectedTotal = 0;
-            selectedCodes.forEach(code => { selectedTotal += allCodeCounts[code] || 0; });
+            selectedCodes.forEach(code => { selectedTotal += activeCounts[code] || 0; });
             document.getElementById('selectedCodeCount').textContent = selectedCodes.size;
             document.getElementById('selectedCodeTotal').textContent = selectedTotal.toLocaleString();
         }
@@ -729,15 +762,27 @@
         function updateDynamicCounts() {
             const container = document.getElementById('dynamicCounts');
             
+            // Calculate active counts (excluding deleted)
+            const activeAptCount = apartments.length - deletedApartments.size;
+            const activeBizCount = businesses.length - deletedBusinesses.size;
+            const activeParcelCount = parcels.length - deletedParcels.size;
+            
+            // Calculate active code counts
+            const activeCounts = {};
+            parcels.forEach((p, idx) => {
+                if (deletedParcels.has(idx)) return;
+                activeCounts[p.code] = (activeCounts[p.code] || 0) + 1;
+            });
+            
             if (selectedDistricts.size === 0) {
                 // Show total counts for all data
                 let html = '<div style="font-weight:600; margin-bottom:5px;">📊 Total (All Areas)</div>';
-                html += `<div>🏢 Apartments: ${apartments.length.toLocaleString()}</div>`;
-                html += `<div>🏪 Businesses: ${businesses.length.toLocaleString()}</div>`;
+                html += `<div>🏢 Apartments: ${activeAptCount.toLocaleString()}${deletedApartments.size > 0 ? ` <s style="color:#c62828;">${deletedApartments.size}</s>` : ''}</div>`;
+                html += `<div>🏪 Businesses: ${activeBizCount.toLocaleString()}${deletedBusinesses.size > 0 ? ` <s style="color:#c62828;">${deletedBusinesses.size}</s>` : ''}</div>`;
                 
                 if (parcels.length > 0) {
                     html += '<div style="margin-top:8px; font-weight:600;">Land Use Codes:</div>';
-                    const sorted = Object.entries(allCodeCounts).sort((a,b) => b[1] - a[1]).slice(0, 10);
+                    const sorted = Object.entries(activeCounts).sort((a,b) => b[1] - a[1]).slice(0, 10);
                     sorted.forEach(([code, count]) => {
                         const info = landUseCodes[code] || { name: code, color: getCodeColor(code) };
                         const isSelected = selectedCodes.has(code);
@@ -751,7 +796,7 @@
                 return;
             }
             
-            // Count items in selected districts
+            // Count items in selected districts (excluding deleted)
             let html = '<div style="font-weight:600; margin-bottom:5px;">📊 Selected Districts (' + selectedDistricts.size + ')</div>';
             
             let aptCount = 0, bizCount = 0;
@@ -768,22 +813,25 @@
                 const minLat = Math.min(...lats), maxLat = Math.max(...lats);
                 const minLon = Math.min(...lons), maxLon = Math.max(...lons);
                 
-                // Count apartments
-                apartments.forEach(a => {
+                // Count apartments (exclude deleted)
+                apartments.forEach((a, idx) => {
+                    if (deletedApartments.has(idx)) return;
                     if (a.lat >= minLat && a.lat <= maxLat && a.lon >= minLon && a.lon <= maxLon) {
                         if (pointInPolygon(a.lat, a.lon, boundary)) aptCount++;
                     }
                 });
                 
-                // Count businesses
-                businesses.forEach(b => {
+                // Count businesses (exclude deleted)
+                businesses.forEach((b, idx) => {
+                    if (deletedBusinesses.has(idx)) return;
                     if (b.lat >= minLat && b.lat <= maxLat && b.lon >= minLon && b.lon <= maxLon) {
                         if (pointInPolygon(b.lat, b.lon, boundary)) bizCount++;
                     }
                 });
                 
-                // Count parcels by code
-                parcels.forEach(p => {
+                // Count parcels by code (exclude deleted)
+                parcels.forEach((p, idx) => {
+                    if (deletedParcels.has(idx)) return;
                     if (p.lat >= minLat && p.lat <= maxLat && p.lon >= minLon && p.lon <= maxLon) {
                         if (pointInPolygon(p.lat, p.lon, boundary)) {
                             codeCounts[p.code] = (codeCounts[p.code] || 0) + 1;
@@ -810,6 +858,206 @@
             
             container.innerHTML = html;
         }
+        
+        // Delete mode click handler
+        canvas.addEventListener('click', function(e) {
+            const deleteMode = document.getElementById('deleteMode').checked;
+            const detailMode = document.getElementById('enableClick').checked;
+            
+            if (!deleteMode && !detailMode) return;
+            
+            const bounds = map.getBounds();
+            const proj = map.getProjection();
+            if (!proj || !bounds) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            
+            const zoom = map.getZoom();
+            const topRight = proj.fromLatLngToPoint(bounds.getNorthEast());
+            const bottomLeft = proj.fromLatLngToPoint(bounds.getSouthWest());
+            const scale = Math.pow(2, zoom);
+            const baseRadius = Math.max(1.5, zoom - 9) * dotSize / 3;
+            
+            // Find clicked item
+            let found = null;
+            
+            // Check apartments
+            for (let i = apartments.length - 1; i >= 0; i--) {
+                if (deletedApartments.has(i)) continue;
+                const a = apartments[i];
+                const w = proj.fromLatLngToPoint(new google.maps.LatLng(a.lat, a.lon));
+                const x = (w.x - bottomLeft.x) * scale;
+                const y = (w.y - topRight.y) * scale;
+                if (Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2) < baseRadius + 5) {
+                    found = { type: 'apartment', index: i, data: a };
+                    break;
+                }
+            }
+            
+            // Check businesses
+            if (!found) {
+                for (let i = businesses.length - 1; i >= 0; i--) {
+                    if (deletedBusinesses.has(i)) continue;
+                    const b = businesses[i];
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(b.lat, b.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    if (Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2) < baseRadius + 5) {
+                        found = { type: 'business', index: i, data: b };
+                        break;
+                    }
+                }
+            }
+            
+            // Check parcels
+            if (!found) {
+                for (let i = parcels.length - 1; i >= 0; i--) {
+                    if (deletedParcels.has(i)) continue;
+                    const p = parcels[i];
+                    if (selectedCodes.size > 0 && !selectedCodes.has(p.code)) continue;
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    if (Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2) < baseRadius + 5) {
+                        found = { type: 'parcel', index: i, data: p };
+                        break;
+                    }
+                }
+            }
+            
+            if (!found) {
+                closeInfoPopup();
+                return;
+            }
+            
+            if (deleteMode) {
+                // Delete the item
+                deleteItem(found);
+            } else if (detailMode) {
+                // Show details
+                let content = '<table>';
+                if (found.type === 'apartment') {
+                    content += `<tr><td>Type</td><td>Apartment</td></tr>`;
+                    content += `<tr><td>Lat</td><td>${found.data.lat}</td></tr>`;
+                    content += `<tr><td>Lon</td><td>${found.data.lon}</td></tr>`;
+                } else if (found.type === 'business') {
+                    content += `<tr><td>Type</td><td>Business</td></tr>`;
+                    content += `<tr><td>Name</td><td>${found.data.name || 'N/A'}</td></tr>`;
+                    content += `<tr><td>Category</td><td>${found.data.category || 'N/A'}</td></tr>`;
+                } else if (found.type === 'parcel') {
+                    content += `<tr><td>Type</td><td>Land Parcel</td></tr>`;
+                    content += `<tr><td>Code</td><td>${found.data.code}</td></tr>`;
+                    const info = landUseCodes[found.data.code] || {};
+                    content += `<tr><td>Name</td><td>${info.name || 'Unknown'}</td></tr>`;
+                }
+                content += '</table>';
+                showPopup(`📍 ${found.type.charAt(0).toUpperCase() + found.type.slice(1)}`, content, e.clientX, e.clientY);
+            }
+        });
+        
+        function deleteItem(item) {
+            if (item.type === 'apartment') {
+                deletedApartments.add(item.index);
+            } else if (item.type === 'business') {
+                deletedBusinesses.add(item.index);
+            } else if (item.type === 'parcel') {
+                deletedParcels.add(item.index);
+            }
+            
+            // Add to history for undo
+            deleteHistory.push(item);
+            
+            updateDeletedCount();
+            render();
+            updateDynamicCounts();
+            updateCodeFilters();
+        }
+        
+        function undoLastDelete() {
+            if (deleteHistory.length === 0) return;
+            
+            const item = deleteHistory.pop();
+            if (item.type === 'apartment') {
+                deletedApartments.delete(item.index);
+            } else if (item.type === 'business') {
+                deletedBusinesses.delete(item.index);
+            } else if (item.type === 'parcel') {
+                deletedParcels.delete(item.index);
+            }
+            
+            updateDeletedCount();
+            render();
+            updateDynamicCounts();
+            updateCodeFilters();
+        }
+        
+        function clearDeleted() {
+            if (!confirm('Restore all deleted items?')) return;
+            deletedApartments.clear();
+            deletedBusinesses.clear();
+            deletedParcels.clear();
+            deleteHistory = [];
+            updateDeletedCount();
+            render();
+            updateDynamicCounts();
+            updateCodeFilters();
+        }
+        
+        function updateDeletedCount() {
+            const total = deletedApartments.size + deletedBusinesses.size + deletedParcels.size;
+            document.getElementById('deletedCount').textContent = total;
+        }
+        
+        function exportChanges() {
+            const changes = {
+                timestamp: new Date().toISOString(),
+                summary: {
+                    deletedApartments: deletedApartments.size,
+                    deletedBusinesses: deletedBusinesses.size,
+                    deletedParcels: deletedParcels.size
+                },
+                deletedItems: deleteHistory.map(item => ({
+                    type: item.type,
+                    lat: item.data.lat,
+                    lon: item.data.lon,
+                    code: item.data.code,
+                    name: item.data.name
+                })),
+                remainingCounts: {
+                    apartments: apartments.length - deletedApartments.size,
+                    businesses: businesses.length - deletedBusinesses.size,
+                    parcels: parcels.length - deletedParcels.size
+                }
+            };
+            
+            // Download as JSON
+            const blob = new Blob([JSON.stringify(changes, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `riyadh_map_changes_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert(`Exported ${deleteHistory.length} deletions to JSON file`);
+        }
+        
+        // Enable canvas pointer events for delete mode
+        document.getElementById('deleteMode').addEventListener('change', function() {
+            canvas.style.pointerEvents = this.checked ? 'auto' : 'none';
+            if (this.checked) {
+                document.getElementById('enableClick').checked = false;
+            }
+        });
+        
+        document.getElementById('enableClick').addEventListener('change', function() {
+            canvas.style.pointerEvents = this.checked ? 'auto' : 'none';
+            if (this.checked) {
+                document.getElementById('deleteMode').checked = false;
+            }
+        });
         
         window.initMap = function() {
             map = new google.maps.Map(document.getElementById('map'), {
