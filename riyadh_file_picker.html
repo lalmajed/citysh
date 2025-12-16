@@ -172,12 +172,14 @@
             render();
         });
         
-        // Auto-load businesses from businesses_geo.json
+        // Auto-load businesses from GitHub
         function loadBusinesses() {
-            fetch('businesses_geo.json')
+            const BIZ_URL = 'https://raw.githubusercontent.com/lalmajed/citysh/main/businesses_geo.json';
+            
+            fetch(BIZ_URL)
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('businesses_geo.json not found');
+                        throw new Error('Failed to load businesses data');
                     }
                     return response.json();
                 })
@@ -190,13 +192,13 @@
                     
                     document.getElementById('businessStatus').textContent = `✅ Loaded ${businesses.length.toLocaleString()} businesses`;
                     document.getElementById('businessStatus').className = 'file-status loaded';
-                    console.log(`Loaded ${businesses.length} businesses from businesses_geo.json`);
+                    console.log(`Loaded ${businesses.length} businesses (restaurants, shops, etc.)`);
                     render();
                 })
                 .catch(err => {
-                    document.getElementById('businessStatus').textContent = '⚠️ businesses_geo.json not found (optional)';
+                    document.getElementById('businessStatus').textContent = '⚠️ Could not load businesses (optional)';
                     document.getElementById('businessStatus').className = 'file-status';
-                    console.warn('Could not load businesses_geo.json:', err.message);
+                    console.warn('Could not load businesses:', err.message);
                 });
         }
         
@@ -484,22 +486,44 @@
                 }
             });
             
-            // Draw businesses layer (on top, no sampling)
+            // Draw businesses layer (on top, with sampling)
             if (document.getElementById('showBusinesses').checked && businesses.length > 0) {
                 const businessSample = zoom <= 11 ? 10 : (zoom <= 12 ? 5 : (zoom <= 13 ? 2 : 1));
                 const baseBusinessSize = Math.max(2, Math.min(zoom - 8, 6));
                 const businessSize = baseBusinessSize * (dotSizeMultiplier / 3);
                 
+                // Business type colors
+                const businessColors = {
+                    'restaurant': '#ea4335',    // Red
+                    'fast_food': '#ff5722',     // Deep Orange
+                    'cafe': '#795548',          // Brown
+                    'hotel': '#e91e63',         // Pink
+                    'supermarket': '#fbbc04',   // Yellow
+                    'fuel': '#ff9800',          // Orange
+                    'bank': '#9c27b0',          // Purple
+                    'hospital': '#f44336',      // Red
+                    'clinic': '#ff7043',        // Deep Orange
+                    'pharmacy': '#4caf50',      // Green
+                    'mall': '#673ab7',          // Deep Purple
+                    'shop': '#3f51b5',          // Indigo
+                    'car': '#607d8b',           // Blue Grey
+                    'car_repair': '#78909c'     // Blue Grey Light
+                };
+                
                 for (let i = 0; i < businesses.length; i += businessSample) {
                     const business = businesses[i];
                     const lat = business[0];
                     const lng = business[1];
+                    const type = business[3] || 'other';
                     
                     if (inBounds(lat, lng)) {
                         const p = toPixel(lat, lng);
                         
-                        // Draw business marker (orange/red circle with white border)
-                        ctx.fillStyle = 'rgba(255, 87, 34, 0.9)';
+                        // Get color based on business type
+                        const color = businessColors[type] || '#ff5722';
+                        
+                        // Draw business marker with colored fill and white border
+                        ctx.fillStyle = color.startsWith('#') ? hexToRgb(color).replace('0.7', '0.9') : color;
                         ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
                         ctx.lineWidth = 1;
                         ctx.beginPath();
