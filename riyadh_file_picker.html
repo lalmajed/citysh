@@ -60,7 +60,7 @@
         .district-row .codes { font-size: 10px; color: #666; margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; }
         .district-row .code-badge { padding: 2px 6px; border-radius: 10px; color: white; }
         
-        #canvas { position: absolute; top: 0; left: 0; pointer-events: auto; z-index: 450; cursor: crosshair; }
+        #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 450; }
         
         .loading-msg {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -840,11 +840,11 @@
             }
         }
         
-        // Canvas click handler for showing parcel info
-        canvas.addEventListener('click', function(e) {
+        // Map click handler for showing parcel info
+        document.getElementById('map').addEventListener('click', function(e) {
             if (allParcels.length === 0 || !map) return;
             
-            const rect = canvas.getBoundingClientRect();
+            const rect = this.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
             const clickY = e.clientY - rect.top;
             
