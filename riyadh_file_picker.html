@@ -32,6 +32,34 @@
         .filters label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; font-size: 12px; }
         .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
         
+        /* Info popup for clicked points */
+        .info-popup {
+            position: absolute; background: white; padding: 12px 15px; border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 2000; min-width: 250px;
+            font-size: 12px; display: none; border-left: 4px solid #1a73e8;
+        }
+        .info-popup.show { display: block; }
+        .info-popup h3 { margin: 0 0 8px 0; color: #1a73e8; font-size: 14px; }
+        .info-popup .close { position: absolute; top: 5px; right: 8px; cursor: pointer; color: #999; font-size: 16px; }
+        .info-popup table { width: 100%; border-collapse: collapse; }
+        .info-popup td { padding: 3px 5px; border-bottom: 1px solid #eee; }
+        .info-popup td:first-child { font-weight: 600; color: #555; width: 40%; }
+        
+        /* District Statistics Widget */
+        .stats-widget {
+            position: absolute; top: 10px; right: 10px; background: white; padding: 15px;
+            border-radius: 10px; box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 1000;
+            max-width: 350px; max-height: 400px; overflow-y: auto; font-size: 12px; display: none;
+        }
+        .stats-widget.show { display: block; }
+        .stats-widget h3 { margin: 0 0 10px 0; color: #1a73e8; font-size: 14px; }
+        .stats-widget .close { position: absolute; top: 8px; right: 10px; cursor: pointer; color: #999; }
+        .district-row { padding: 8px; margin: 5px 0; background: #f5f5f5; border-radius: 6px; cursor: pointer; }
+        .district-row:hover { background: #e8f0fe; }
+        .district-row .name { font-weight: 600; color: #333; }
+        .district-row .codes { font-size: 10px; color: #666; margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; }
+        .district-row .code-badge { padding: 2px 6px; border-radius: 10px; color: white; }
+        
         #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 450; }
         
         .loading-msg {
@@ -73,6 +101,20 @@
     <div id="map"></div>
     <canvas id="canvas"></canvas>
     
+    <!-- Info Popup for clicked points -->
+    <div id="infoPopup" class="info-popup">
+        <span class="close" onclick="closeInfoPopup()">&times;</span>
+        <h3>📍 Parcel Details</h3>
+        <table id="infoTable"></table>
+    </div>
+    
+    <!-- District Statistics Widget -->
+    <div id="statsWidget" class="stats-widget">
+        <span class="close" onclick="closeStatsWidget()">&times;</span>
+        <h3>📊 District Statistics</h3>
+        <div id="districtStats"></div>
+    </div>
+    
     <div class="panel">
         <h2>🏙️ Riyadh Map <span style="font-size:10px;color:#999;">v3.0-EMBEDDED</span></h2>
         
@@ -89,6 +131,13 @@
                 💡 To get more businesses, run:<br>
                 <code style="font-size:9px;">python google_places_riyadh.py [API_KEY]</code>
             </div>
+        </div>
+        
+        <div class="file-section" style="background: #f9e8e8; border: 2px dashed #800020;">
+            <label>🏛️ OSM Buildings CSV (95K buildings):</label>
+            <input type="file" id="osmFile" accept=".csv">
+            <div id="osmStatus" class="file-status">Upload riyadh_osm_buildings.csv</div>
+            <div id="osmCategories" style="margin-top:8px; max-height:150px; overflow-y:auto; display:none;"></div>
         </div>
         
         <div class="file-section" style="background: #e8f0fe;">
@@ -125,6 +174,16 @@
         
         <div id="filters" class="filters"></div>
         
+        <div style="margin: 10px 0; padding: 8px; background: #e8f0fe; border-radius: 6px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="enableClick">
+                <span style="font-weight: 600; font-size: 12px;">🖱️ Click to show parcel info</span>
+            </label>
+            <div style="font-size:10px;color:#666;margin-top:4px;margin-left:28px;">
+                Turn OFF to freely zoom/pan the map
+            </div>
+        </div>
+        
         <div style="margin-top:10px;font-size:11px;color:#888;">
             Showing: <span id="visible">0</span> points | Zoom: <span id="zoom">0</span><br>
             Businesses: <span id="businessVisible">0</span> loaded
@@ -141,6 +200,8 @@
 
     <script>
         let map, landUseData = {}, districtData = {}, businesses = [], currentMode = 'land_use';
+        let allParcels = []; // Store all parcel data with full info
+        let districtLandUseStats = {}; // Stats: district -> land_use_code -> count
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
@@ -175,6 +236,93 @@
         
         // Business layer toggle
         document.getElementById('showBusinesses').addEventListener('change', render);
+        
+        // OSM Buildings layer
+        let osmBuildings = [];
+        let osmLayers = {};
+        let osmVisible = {};
+        
+        const OSM_COLORS = {
+            'Houses': '#800020', 'Apartments': '#A52A2A', 'Residential - Other': '#722F37',
+            'Residential Areas': '#B8860B', 'Mosques': '#8B0000', 'Places of Worship': '#960018', 'Commercial Buildings': '#C41E3A',
+            'Hotels': '#E32636', 'Tourist Attractions': '#B22222', 'Healthcare': '#DC143C',
+            'Pharmacies': '#D70040', 'Schools': '#9B111E', 'Universities': '#702963',
+            'Government & Services': '#4A0000', 'Restaurants & Cafes': '#CB4154',
+            'Shops & Retail': '#B31B1B', 'Supermarkets & Grocery': '#A45A52',
+            'Fashion & Clothing': '#C08081', 'Electronics': '#5C0120', 'Automotive Shops': '#6B0F1A',
+            'Banks & Finance': '#7B3F00', 'Parks & Gardens': '#228B22', 'Sports & Fitness': '#915F6D',
+            'Entertainment': '#AA4A44', 'Fuel & Car Services': '#8E354A', 'Parking': '#6C3461',
+            'Industrial': '#555555', 'Other Buildings': '#666666', 'Other': '#777777'
+        };
+        
+        function getOsmColor(cat) {
+            if (OSM_COLORS[cat]) return OSM_COLORS[cat];
+            let h = 0;
+            for (let i = 0; i < cat.length; i++) h = cat.charCodeAt(i) + ((h << 5) - h);
+            return `hsl(${Math.abs(h % 360)}, 65%, 45%)`;
+        }
+        
+        document.getElementById('osmFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('osmStatus').textContent = 'Loading...';
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const lines = evt.target.result.trim().split('\n');
+                const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+                const latI = headers.findIndex(h => h === 'latitude' || h === 'lat');
+                const lonI = headers.findIndex(h => h === 'longitude' || h === 'lon');
+                const nameI = headers.findIndex(h => h === 'name');
+                const catI = headers.findIndex(h => h === 'category');
+                
+                if (latI < 0 || lonI < 0) {
+                    document.getElementById('osmStatus').textContent = 'Error: Need lat/lon columns';
+                    return;
+                }
+                
+                osmBuildings = [];
+                const catCounts = {};
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const vals = lines[i].split(',');
+                    const lat = parseFloat(vals[latI]);
+                    const lon = parseFloat(vals[lonI]);
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                        const cat = catI >= 0 ? vals[catI] : 'Other';
+                        osmBuildings.push({ lat, lon, name: nameI >= 0 ? vals[nameI] : '', category: cat });
+                        catCounts[cat] = (catCounts[cat] || 0) + 1;
+                    }
+                }
+                
+                document.getElementById('osmStatus').textContent = `✓ Loaded ${osmBuildings.length.toLocaleString()} buildings`;
+                document.getElementById('osmStatus').classList.add('loaded');
+                
+                // Show category toggles
+                const catDiv = document.getElementById('osmCategories');
+                catDiv.style.display = 'block';
+                catDiv.innerHTML = '<div style="font-size:11px;font-weight:bold;margin-bottom:5px;">Categories:</div>';
+                
+                const sorted = Object.entries(catCounts).sort((a,b) => b[1] - a[1]);
+                sorted.forEach(([cat, count]) => {
+                    osmVisible[cat] = true;
+                    const color = getOsmColor(cat);
+                    const lbl = document.createElement('label');
+                    lbl.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:10px;cursor:pointer;padding:2px 0;';
+                    lbl.innerHTML = `<input type="checkbox" checked data-osmcat="${cat}">
+                        <span style="width:10px;height:10px;border-radius:50%;background:${color};"></span>
+                        ${cat} <span style="color:#888;">(${count.toLocaleString()})</span>`;
+                    lbl.querySelector('input').addEventListener('change', function() {
+                        osmVisible[cat] = this.checked;
+                        render();
+                    });
+                    catDiv.appendChild(lbl);
+                });
+                
+                render();
+            };
+            reader.readAsText(file);
+        });
         
         // Dot size slider
         let dotSizeMultiplier = 3;
@@ -217,7 +365,7 @@
             }
         }
         
-        function initMap() {
+        window.initMap = function() {
             map = new google.maps.Map(document.getElementById('map'), {
                 center: { lat: 24.7136, lng: 46.6753 },
                 zoom: 11,
@@ -265,12 +413,20 @@
                     
                     // Parse header
                     const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
+                    const originalHeaders = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
                     
                     // Validate required columns
                     const latIndex = headers.findIndex(h => h === 'lat' || h === 'latitude');
                     const lngIndex = headers.findIndex(h => h === 'lng' || h === 'lon' || h === 'longitude');
                     const codeIndex = headers.findIndex(h => h === 'land_use_code' || h === 'landusecode' || h === 'code');
                     const districtIndex = headers.findIndex(h => h === 'district');
+                    
+                    // Find additional columns
+                    const objectidIndex = headers.findIndex(h => h === 'objectid');
+                    const parcelIdIndex = headers.findIndex(h => h === 'parcel_id');
+                    const parcelNoIndex = headers.findIndex(h => h === 'parcel_no');
+                    const blockNoIndex = headers.findIndex(h => h === 'block_no');
+                    const planNoIndex = headers.findIndex(h => h === 'plan_no');
                     
                     if (latIndex === -1 || lngIndex === -1) {
                         throw new Error('CSV must contain latitude and longitude columns');
@@ -283,6 +439,8 @@
                     // Parse data rows and group by land_use_code and district
                     landUseData = {};
                     districtData = {};
+                    allParcels = [];
+                    districtLandUseStats = {};
                     let totalCount = 0;
                     let skippedCount = { invalidCoords: 0, outOfRange: 0, missingCode: 0 };
                     
@@ -312,6 +470,17 @@
                             continue;
                         }
                         
+                        // Store full parcel info
+                        const parcel = {
+                            lat, lng, code, district,
+                            objectid: objectidIndex !== -1 ? values[objectidIndex] : null,
+                            parcel_id: parcelIdIndex !== -1 ? values[parcelIdIndex] : null,
+                            parcel_no: parcelNoIndex !== -1 ? values[parcelNoIndex] : null,
+                            block_no: blockNoIndex !== -1 ? values[blockNoIndex] : null,
+                            plan_no: planNoIndex !== -1 ? values[planNoIndex] : null
+                        };
+                        allParcels.push(parcel);
+                        
                         // Group by land_use_code
                         if (!landUseData[code]) {
                             landUseData[code] = [];
@@ -324,6 +493,12 @@
                                 districtData[district] = [];
                             }
                             districtData[district].push([lat, lng]);
+                            
+                            // Build district -> land_use_code stats
+                            if (!districtLandUseStats[district]) {
+                                districtLandUseStats[district] = {};
+                            }
+                            districtLandUseStats[district][code] = (districtLandUseStats[district][code] || 0) + 1;
                         }
                         
                         totalCount++;
@@ -342,8 +517,11 @@
                     // Update UI
                     const landUseCount = Object.keys(landUseData).length;
                     const districtCount = Object.keys(districtData).length;
-                    document.getElementById('dataStatus').textContent = `✅ Loaded ${totalCount.toLocaleString()} points (${landUseCount} land uses, ${districtCount} districts)`;
+                    document.getElementById('dataStatus').innerHTML = `✅ Loaded ${totalCount.toLocaleString()} points (${landUseCount} land uses, ${districtCount} districts) <button onclick="showStatsWidget()" style="margin-left:5px;padding:2px 8px;font-size:10px;cursor:pointer;border-radius:4px;border:1px solid #1a73e8;background:#e8f0fe;color:#1a73e8;">📊 Stats</button>`;
                     document.getElementById('dataStatus').className = 'file-status loaded';
+                    
+                    // Build district statistics widget
+                    buildDistrictStats();
                     
                     // Generate stats and filters
                     updateStatsAndFilters();
@@ -366,6 +544,18 @@
             
             const dataSource = currentMode === 'land_use' ? landUseData : districtData;
             
+            // Calculate total for percentages
+            const total = Object.values(dataSource).reduce((sum, arr) => sum + arr.length, 0);
+            
+            // Add Select All / Deselect All buttons
+            const btnContainer = document.createElement('div');
+            btnContainer.style.cssText = 'width:100%;margin-bottom:10px;display:flex;gap:5px;';
+            btnContainer.innerHTML = `
+                <button onclick="selectAllFilters()" style="flex:1;padding:5px;font-size:11px;cursor:pointer;border:1px solid #1a73e8;background:#e8f0fe;color:#1a73e8;border-radius:4px;">✓ Select All</button>
+                <button onclick="deselectAllFilters()" style="flex:1;padding:5px;font-size:11px;cursor:pointer;border:1px solid #ea4335;background:#fce8e6;color:#ea4335;border-radius:4px;">✗ Deselect All</button>
+            `;
+            filtersDiv.appendChild(btnContainer);
+            
             if (currentMode === 'land_use') {
                 // Sort codes to show known ones first
                 const codes = Object.keys(dataSource).sort((a, b) => {
@@ -377,9 +567,12 @@
                 
                 codes.forEach(code => {
                     const count = dataSource[code].length;
+                    const pct = ((count / total) * 100).toFixed(1);
                     const color = getColorForCode(code);
                     const info = landUseColors[code];
-                    const label = info ? `${info.emoji} ${info.name}` : `Code ${code}`;
+                    const name = info ? info.name : 'Unknown';
+                    const emoji = info ? info.emoji : '📍';
+                    const label = `${emoji} ${name}`;
                     
                     // Add stat
                     const statDiv = document.createElement('div');
@@ -388,14 +581,15 @@
                     statDiv.innerHTML = `
                         <b>${count.toLocaleString()}</b>
                         <small>${label}</small>
+                        <small style="color:#888;">${pct}%</small>
                     `;
                     statsDiv.appendChild(statDiv);
                     
-                    // Add filter
+                    // Add filter with name, not code
                     const filterLabel = document.createElement('label');
                     filterLabel.innerHTML = `
                         <input type="checkbox" class="data-filter" data-code="${code}" checked>
-                        <span class="dot" style="background:${color}"></span> ${label}
+                        <span class="dot" style="background:${color}"></span> ${label} <span style="color:#888;font-size:10px;">(${code}) ${pct}%</span>
                     `;
                     filtersDiv.appendChild(filterLabel);
                 });
@@ -407,6 +601,7 @@
                 
                 districts.forEach(district => {
                     const count = dataSource[district].length;
+                    const pct = ((count / total) * 100).toFixed(1);
                     const color = getColorForCode(district);
                     const label = `District ${district}`;
                     
@@ -417,6 +612,7 @@
                     statDiv.innerHTML = `
                         <b>${count.toLocaleString()}</b>
                         <small>${label}</small>
+                        <small style="color:#888;">${pct}%</small>
                     `;
                     statsDiv.appendChild(statDiv);
                     
@@ -424,7 +620,7 @@
                     const filterLabel = document.createElement('label');
                     filterLabel.innerHTML = `
                         <input type="checkbox" class="data-filter" data-code="${district}" checked>
-                        <span class="dot" style="background:${color}"></span> ${label}
+                        <span class="dot" style="background:${color}"></span> ${label} <span style="color:#888;font-size:10px;">${pct}%</span>
                     `;
                     filtersDiv.appendChild(filterLabel);
                 });
@@ -434,6 +630,16 @@
             document.querySelectorAll('.data-filter').forEach(checkbox => {
                 checkbox.addEventListener('change', render);
             });
+        }
+        
+        // Select/Deselect all filters
+        function selectAllFilters() {
+            document.querySelectorAll('.data-filter').forEach(cb => { cb.checked = true; });
+            render();
+        }
+        function deselectAllFilters() {
+            document.querySelectorAll('.data-filter').forEach(cb => { cb.checked = false; });
+            render();
         }
         
         function checkReady() {
@@ -550,23 +756,194 @@
                 // Always log business drawing
                 console.log(`✅ Drew ${businessCount} BURGUNDY BUSINESSES in view (total: ${businesses.length}, sample rate: 1 in ${businessSample})`);
                 
-                // TEST: Draw one GIANT burgundy marker in center of Riyadh (24.7136, 46.6753)
-                const testLat = 24.7136, testLng = 46.6753;
-                if (inBounds(testLat, testLng)) {
-                    const testP = toPixel(testLat, testLng);
-                    ctx.fillStyle = 'rgba(220, 20, 60, 1.0)';
-                    ctx.strokeStyle = 'rgba(255, 255, 255, 1.0)';
-                    ctx.lineWidth = 3;
-                    ctx.beginPath();
-                    ctx.arc(testP.x, testP.y, 20, 0, Math.PI * 2); // GIANT 20px marker
-                    ctx.fill();
-                    ctx.stroke();
-                    console.log(`🎯 TEST MARKER drawn at Riyadh center (${testP.x}, ${testP.y})`);
+            }
+            
+            // Draw OSM Buildings layer (with category colors)
+            if (osmBuildings.length > 0) {
+                const osmSample = zoom <= 10 ? 20 : zoom <= 12 ? 5 : 1;
+                const osmSize = Math.max(3, Math.min(zoom - 6, 8)) * (dotSizeMultiplier / 3);
+                
+                let osmCount = 0;
+                for (let i = 0; i < osmBuildings.length; i += osmSample) {
+                    const b = osmBuildings[i];
+                    if (!osmVisible[b.category]) continue;
+                    
+                    if (inBounds(b.lat, b.lon)) {
+                        const p = toPixel(b.lat, b.lon);
+                        const color = getOsmColor(b.category);
+                        
+                        ctx.fillStyle = color;
+                        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, osmSize, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                        osmCount++;
+                    }
                 }
+                console.log(`🏛️ Drew ${osmCount} OSM buildings (sample: 1 in ${osmSample})`);
             }
             
             document.getElementById('visible').textContent = visible.toLocaleString();
         }
+        
+        // Info Popup Functions
+        function closeInfoPopup() {
+            document.getElementById('infoPopup').classList.remove('show');
+        }
+        
+        function showInfoPopup(parcel, x, y) {
+            const popup = document.getElementById('infoPopup');
+            const table = document.getElementById('infoTable');
+            
+            const landUseName = landUseColors[parcel.code] ? landUseColors[parcel.code].name : 'Unknown';
+            const color = getColorForCode(parcel.code);
+            
+            table.innerHTML = `
+                <tr><td>Land Use</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};margin-right:5px;"></span>${parcel.code} - ${landUseName}</td></tr>
+                <tr><td>District</td><td>${parcel.district || 'N/A'}</td></tr>
+                <tr><td>Object ID</td><td>${parcel.objectid || 'N/A'}</td></tr>
+                <tr><td>Parcel ID</td><td>${parcel.parcel_id || 'N/A'}</td></tr>
+                <tr><td>Parcel No</td><td>${parcel.parcel_no || 'N/A'}</td></tr>
+                <tr><td>Block No</td><td>${parcel.block_no || 'N/A'}</td></tr>
+                <tr><td>Plan No</td><td>${parcel.plan_no || 'N/A'}</td></tr>
+                <tr><td>Latitude</td><td>${parcel.lat.toFixed(6)}</td></tr>
+                <tr><td>Longitude</td><td>${parcel.lng.toFixed(6)}</td></tr>
+            `;
+            
+            // Position popup near click but keep on screen
+            popup.style.left = Math.min(x + 10, window.innerWidth - 280) + 'px';
+            popup.style.top = Math.min(y + 10, window.innerHeight - 300) + 'px';
+            popup.classList.add('show');
+        }
+        
+        // Stats Widget Functions
+        function showStatsWidget() {
+            document.getElementById('statsWidget').classList.add('show');
+        }
+        
+        function closeStatsWidget() {
+            document.getElementById('statsWidget').classList.remove('show');
+        }
+        
+        function buildDistrictStats() {
+            const container = document.getElementById('districtStats');
+            container.innerHTML = '';
+            
+            // Calculate grand total
+            const grandTotal = Object.values(districtLandUseStats).reduce((sum, codes) => {
+                return sum + Object.values(codes).reduce((a, b) => a + b, 0);
+            }, 0);
+            
+            // Sort districts by total count
+            const districtTotals = Object.entries(districtLandUseStats).map(([district, codes]) => {
+                const total = Object.values(codes).reduce((a, b) => a + b, 0);
+                return { district, codes, total };
+            }).sort((a, b) => b.total - a.total);
+            
+            districtTotals.forEach(({ district, codes, total }) => {
+                const row = document.createElement('div');
+                row.className = 'district-row';
+                const districtPct = ((total / grandTotal) * 100).toFixed(1);
+                
+                // Sort codes by count
+                const sortedCodes = Object.entries(codes).sort((a, b) => b[1] - a[1]);
+                
+                let codesHtml = '';
+                sortedCodes.slice(0, 6).forEach(([code, count]) => {
+                    const color = getColorForCode(code);
+                    const info = landUseColors[code];
+                    const name = info ? info.name : 'Unknown';
+                    const codePct = ((count / total) * 100).toFixed(0);
+                    codesHtml += `<span class="code-badge" style="background:${color}" title="${name} (${code}): ${count} parcels, ${codePct}%">${name}: ${count} (${codePct}%)</span>`;
+                });
+                if (sortedCodes.length > 6) {
+                    codesHtml += `<span style="color:#888;font-size:9px;">+${sortedCodes.length - 6} more types</span>`;
+                }
+                
+                row.innerHTML = `
+                    <div class="name">📍 District ${district} <span style="color:#666;font-weight:normal;">(${total.toLocaleString()} parcels - ${districtPct}%)</span></div>
+                    <div class="codes">${codesHtml}</div>
+                `;
+                
+                row.onclick = () => {
+                    // Zoom to district
+                    if (districtData[district] && districtData[district].length > 0) {
+                        const bounds = new google.maps.LatLngBounds();
+                        districtData[district].slice(0, 1000).forEach(([lat, lng]) => {
+                            bounds.extend(new google.maps.LatLng(lat, lng));
+                        });
+                        map.fitBounds(bounds);
+                        closeStatsWidget();
+                    }
+                };
+                
+                container.appendChild(row);
+            });
+            
+            if (districtTotals.length === 0) {
+                container.innerHTML = '<div style="color:#888;text-align:center;padding:20px;">No district data available</div>';
+            }
+        }
+        
+        // Map click handler for showing parcel info (only when enabled)
+        document.getElementById('map').addEventListener('click', function(e) {
+            // Check if click detection is enabled
+            const enableClick = document.getElementById('enableClick');
+            if (!enableClick || !enableClick.checked) return;
+            
+            if (allParcels.length === 0 || !map) return;
+            
+            const rect = this.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            
+            const bounds = map.getBounds();
+            const proj = map.getProjection();
+            if (!bounds || !proj) return;
+            
+            const zoom = map.getZoom();
+            const ne = bounds.getNorthEast(), sw = bounds.getSouthWest();
+            
+            // Find closest parcel to click
+            let closestParcel = null;
+            let closestDist = Infinity;
+            const clickRadius = 15; // pixels
+            
+            for (const parcel of allParcels) {
+                if (parcel.lat < sw.lat() || parcel.lat > ne.lat() || 
+                    parcel.lng < sw.lng() || parcel.lng > ne.lng()) continue;
+                
+                const w = proj.fromLatLngToPoint(new google.maps.LatLng(parcel.lat, parcel.lng));
+                const nw = proj.fromLatLngToPoint(ne);
+                const se = proj.fromLatLngToPoint(sw);
+                const scale = Math.pow(2, zoom);
+                
+                const px = (w.x - se.x) * scale + (se.x - nw.x) * scale * (0);
+                const py = (w.y - nw.y) * scale;
+                
+                // Simplified pixel calculation
+                const mapDiv = document.getElementById('map');
+                const mapWidth = mapDiv.offsetWidth;
+                const mapHeight = mapDiv.offsetHeight;
+                
+                const x = ((parcel.lng - sw.lng()) / (ne.lng() - sw.lng())) * mapWidth;
+                const y = ((ne.lat() - parcel.lat) / (ne.lat() - sw.lat())) * mapHeight;
+                
+                const dist = Math.sqrt((x - clickX) ** 2 + (y - clickY) ** 2);
+                if (dist < clickRadius && dist < closestDist) {
+                    closestDist = dist;
+                    closestParcel = parcel;
+                }
+            }
+            
+            if (closestParcel) {
+                showInfoPopup(closestParcel, e.clientX, e.clientY);
+            } else {
+                closeInfoPopup();
+            }
+        });
         
         // Color utility function
         function colorWithAlpha(color, alpha) {
@@ -583,6 +960,6 @@
             return color;
         }
     </script>
-    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
+    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js?callback=initMap" async defer></script>
 </body>
 </html>
