@@ -48,8 +48,12 @@
         .toggle-dot { width: 12px; height: 12px; border-radius: 50%; }
         
         .district-list { max-height: 250px; overflow-y: auto; }
-        .district-item { padding: 6px; margin: 3px 0; background: #f9f9f9; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .district-item { padding: 6px; margin: 3px 0; background: #f9f9f9; border-radius: 4px; cursor: pointer; font-size: 11px; display: flex; align-items: center; gap: 6px; }
         .district-item:hover { background: #fff3e0; }
+        .district-item.selected { background: #ff9800; color: white; }
+        .district-item.selected .counts { color: rgba(255,255,255,0.8); }
+        .district-item input { margin: 0; }
+        .district-item .info { flex: 1; }
         .district-item .name { font-weight: 600; }
         .district-item .counts { color: #666; font-size: 10px; }
         
@@ -166,6 +170,13 @@
                 📍 Districts (<span id="districtCount">0</span>) <span>▼</span>
             </div>
             <div class="section-content">
+                <div style="display:flex; gap:5px; margin-bottom:5px;">
+                    <button onclick="selectAllDistricts()" style="flex:1; padding:4px; font-size:10px; cursor:pointer;">Select All</button>
+                    <button onclick="clearAllDistricts()" style="flex:1; padding:4px; font-size:10px; cursor:pointer;">Clear All</button>
+                </div>
+                <div style="font-size:10px; color:#666; margin-bottom:5px;">
+                    Selected: <span id="selectedCount">0</span> | Click checkbox to select, click name to zoom
+                </div>
                 <input type="text" class="search-box" id="districtSearch" placeholder="Search districts...">
                 <div class="district-list" id="districtList"></div>
             </div>
@@ -202,6 +213,7 @@
         let apartments = [], businesses = [], parcels = [], districts = [];
         let districtCounts = {};
         let activeCodeFilters = {};
+        let selectedDistricts = new Set();  // Track selected districts
         let dotSize = 3;
         
         const canvas = document.getElementById('canvas');
@@ -270,16 +282,33 @@
             const showLand = document.getElementById('showLandUse').checked;
             const showDist = document.getElementById('showDistricts').checked;
             
-            // Draw district boundaries
+            // Draw district boundaries (only selected ones, or all if none selected)
             if (showDist && districts.length > 0) {
-                ctx.strokeStyle = '#ff9800';
-                ctx.lineWidth = 2;
-                ctx.globalAlpha = 0.7;
+                const showAll = selectedDistricts.size === 0;
                 
                 districts.forEach(d => {
+                    if (!showAll && !selectedDistricts.has(d.name_en)) return;
+                    
                     const boundary = d.boundaries?.[0];
                     if (!boundary || boundary.length < 3) return;
                     
+                    // Fill with transparent color if selected
+                    if (selectedDistricts.has(d.name_en)) {
+                        ctx.beginPath();
+                        let first = true;
+                        boundary.forEach(([lat, lon]) => {
+                            const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                            const x = (w.x - bottomLeft.x) * scale;
+                            const y = (w.y - topRight.y) * scale;
+                            if (first) { ctx.moveTo(x, y); first = false; }
+                            else ctx.lineTo(x, y);
+                        });
+                        ctx.closePath();
+                        ctx.fillStyle = 'rgba(255, 152, 0, 0.2)';
+                        ctx.fill();
+                    }
+                    
+                    // Draw boundary line
                     ctx.beginPath();
                     let first = true;
                     boundary.forEach(([lat, lon]) => {
@@ -290,9 +319,12 @@
                         else ctx.lineTo(x, y);
                     });
                     ctx.closePath();
+                    ctx.strokeStyle = selectedDistricts.has(d.name_en) ? '#e65100' : '#ff9800';
+                    ctx.lineWidth = selectedDistricts.has(d.name_en) ? 3 : 1;
+                    ctx.globalAlpha = showAll ? 0.4 : 0.9;
                     ctx.stroke();
+                    ctx.globalAlpha = 1;
                 });
-                ctx.globalAlpha = 1;
             }
             
             // Draw land use
@@ -376,29 +408,64 @@
             
             filtered.slice(0, 50).forEach(d => {
                 const counts = districtCounts[d.name_en] || {};
-                html += `<div class="district-item" onclick="zoomToDistrict('${d.name_en}')">
-                    <div class="name">${d.name_en}</div>
-                    <div class="counts">
-                        🏢 ${counts.apartments || 0} apt | 
-                        🏗️ ${counts.complexes || 0} bldg | 
-                        🏪 ${counts.businesses || 0} biz
+                const isSelected = selectedDistricts.has(d.name_en);
+                const escapedName = d.name_en.replace(/'/g, "\\'");
+                html += `<div class="district-item ${isSelected ? 'selected' : ''}">
+                    <input type="checkbox" ${isSelected ? 'checked' : ''} onclick="toggleDistrict('${escapedName}', event)">
+                    <div class="info" onclick="zoomToDistrict('${escapedName}')">
+                        <div class="name">${d.name_en}</div>
+                        <div class="counts">
+                            🏢 ${counts.apartments || 0} | 
+                            🏗️ ${counts.complexes || 0} | 
+                            🏪 ${counts.businesses || 0}
+                        </div>
                     </div>
                 </div>`;
             });
             
             list.innerHTML = html || '<div style="color:#999;padding:10px;">No districts found</div>';
             document.getElementById('districtCount').textContent = districts.length;
+            document.getElementById('selectedCount').textContent = selectedDistricts.size;
+        }
+        
+        function toggleDistrict(name, event) {
+            event.stopPropagation();
+            if (selectedDistricts.has(name)) {
+                selectedDistricts.delete(name);
+            } else {
+                selectedDistricts.add(name);
+            }
+            updateDistrictList();
+            render();
+        }
+        
+        function selectAllDistricts() {
+            districts.forEach(d => selectedDistricts.add(d.name_en));
+            updateDistrictList();
+            render();
+        }
+        
+        function clearAllDistricts() {
+            selectedDistricts.clear();
+            updateDistrictList();
+            render();
         }
         
         function zoomToDistrict(name) {
             const d = districts.find(x => x.name_en === name);
             if (!d || !d.boundaries?.[0]) return;
             
+            // Select only this district
+            selectedDistricts.clear();
+            selectedDistricts.add(name);
+            updateDistrictList();
+            
             const bounds = new google.maps.LatLngBounds();
             d.boundaries[0].forEach(([lat, lon]) => {
                 bounds.extend(new google.maps.LatLng(lat, lon));
             });
             map.fitBounds(bounds);
+            render();
         }
         
         function parseCSVLine(line) {
