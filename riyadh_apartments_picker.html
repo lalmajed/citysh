@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Riyadh Apartments Map - Bayut Data</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, width=device-width">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; }
+        #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+        
+        .panel {
+            position: absolute; top: 10px; left: 60px;
+            background: white; padding: 15px; border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 1000;
+            max-width: 350px; max-height: 90vh; overflow-y: auto; font-size: 13px;
+        }
+        .panel h2 { color: #00b4d8; margin-bottom: 10px; font-size: 16px; }
+        
+        .file-section { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; }
+        .file-section label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 12px; }
+        .file-section input[type="file"] { font-size: 11px; width: 100%; }
+        .file-status { font-size: 11px; color: #666; margin-top: 5px; }
+        .file-status.loaded { color: #00b4d8; font-weight: bold; }
+        
+        .stats { margin: 10px 0; }
+        .stat-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 12px; }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-value { color: #00b4d8; font-weight: bold; }
+        
+        .total-count {
+            background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
+            padding: 15px; border-radius: 10px; text-align: center; margin: 10px 0; color: white;
+        }
+        .total-count .number { font-size: 2em; font-weight: bold; }
+        .total-count .label { font-size: 0.9em; opacity: 0.9; }
+        
+        .filter-section { margin: 10px 0; padding: 10px; background: #e8f4f8; border-radius: 8px; }
+        .filter-section h3 { font-size: 12px; color: #0077b6; margin-bottom: 8px; }
+        .filter-btn {
+            padding: 5px 10px; margin: 2px; border: none; border-radius: 15px;
+            cursor: pointer; font-size: 11px; background: #cce5ff; color: #0077b6;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover { background: #00b4d8; color: white; }
+        .filter-btn.active { background: #0077b6; color: white; }
+        
+        .info-popup {
+            position: absolute; background: white; padding: 12px 15px; border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 2000; min-width: 280px;
+            font-size: 12px; display: none; border-left: 4px solid #00b4d8;
+        }
+        .info-popup.show { display: block; }
+        .info-popup h3 { margin: 0 0 8px 0; color: #0077b6; font-size: 14px; }
+        .info-popup .close { position: absolute; top: 5px; right: 8px; cursor: pointer; color: #999; font-size: 16px; }
+        .info-popup .price { color: #00b4d8; font-size: 1.3em; font-weight: bold; margin: 5px 0; }
+        .info-popup table { width: 100%; border-collapse: collapse; }
+        .info-popup td { padding: 4px 5px; border-bottom: 1px solid #eee; }
+        .info-popup td:first-child { font-weight: 600; color: #555; width: 35%; }
+        
+        #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 450; }
+        
+        .loading-msg {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 30px; border-radius: 10px; text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 2000;
+        }
+        
+        input[type="range"] {
+            -webkit-appearance: none; appearance: none;
+            height: 6px; background: #ddd; border-radius: 3px; outline: none; width: 100%;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 18px; height: 18px; background: #00b4d8; border-radius: 50%; cursor: pointer;
+        }
+        
+        .legend { margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 8px; }
+        .legend h4 { font-size: 11px; color: #666; margin-bottom: 5px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; padding: 3px 0; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <canvas id="canvas"></canvas>
+    
+    <div id="infoPopup" class="info-popup">
+        <span class="close" onclick="closeInfoPopup()">&times;</span>
+        <h3>🏢 Apartment Details</h3>
+        <div id="popupContent"></div>
+    </div>
+    
+    <div class="panel">
+        <h2>🏢 Riyadh Apartments <span style="font-size:10px;color:#999;">Bayut.sa</span></h2>
+        
+        <div class="file-section" style="background: #e8f4f8; border: 2px dashed #00b4d8;">
+            <label>📊 Apartments CSV (lat, lon):</label>
+            <input type="file" id="apartmentsFile" accept=".csv">
+            <div id="fileStatus" class="file-status">Upload riyadh_apartments.csv</div>
+        </div>
+        
+        <div class="total-count" id="totalCount" style="display:none;">
+            <div class="number" id="countNumber">0</div>
+            <div class="label">Apartments Loaded</div>
+        </div>
+        
+        <div class="filter-section" id="roomFilters" style="display:none;">
+            <h3>🛏️ Filter by Rooms</h3>
+            <div id="roomButtons"></div>
+        </div>
+        
+        <div class="filter-section" id="neighborhoodSection" style="display:none;">
+            <h3>📍 Top Neighborhoods</h3>
+            <div class="stats" id="neighborhoodStats"></div>
+        </div>
+        
+        <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+            <label style="display: block; font-weight: 600; font-size: 12px; margin-bottom: 8px;">
+                📍 Dot Size: <span id="dotSizeValue">4</span>x
+            </label>
+            <input type="range" id="dotSize" min="1" max="12" value="4" step="0.5">
+        </div>
+        
+        <div style="margin: 10px 0; padding: 8px; background: #e8f0fe; border-radius: 6px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="enableClick" checked>
+                <span style="font-weight: 600; font-size: 12px;">🖱️ Click to show details</span>
+            </label>
+        </div>
+        
+        <div class="legend">
+            <h4>Color by Rooms</h4>
+            <div class="legend-item"><div class="legend-dot" style="background:#00b4d8;"></div> 1-2 Bedrooms</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#0077b6;"></div> 3-4 Bedrooms</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#023e8a;"></div> 5+ Bedrooms</div>
+        </div>
+        
+        <div style="margin-top:10px;font-size:11px;color:#888;">
+            Visible: <span id="visible">0</span> | Zoom: <span id="zoom">0</span>
+        </div>
+    </div>
+    
+    <div id="loadingMsg" class="loading-msg">
+        <p>📂 Load your apartments CSV</p>
+        <p style="font-size:12px;color:#666;margin-top:10px;">
+            Required columns: <strong>lat, lon</strong><br>
+            Optional: title, price, rooms, baths, area, location
+        </p>
+    </div>
+
+    <script>
+        let map, apartments = [], filteredApartments = [];
+        let activeRoomFilter = null;
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let dotSizeMultiplier = 4;
+        
+        function getColor(rooms) {
+            if (!rooms || rooms <= 2) return '#00b4d8';
+            if (rooms <= 4) return '#0077b6';
+            return '#023e8a';
+        }
+        
+        function formatPrice(price, frequency) {
+            if (!price) return 'Price on request';
+            const num = parseFloat(price);
+            if (isNaN(num)) return price;
+            const formatted = num.toLocaleString('en-SA');
+            const period = frequency === 'monthly' ? '/month' : '/year';
+            return `SAR ${formatted}${period}`;
+        }
+        
+        function closeInfoPopup() {
+            document.getElementById('infoPopup').classList.remove('show');
+        }
+        
+        function showApartmentInfo(apt, x, y) {
+            const popup = document.getElementById('infoPopup');
+            const content = document.getElementById('popupContent');
+            
+            content.innerHTML = `
+                <div class="price">${formatPrice(apt.price, apt.rent_frequency)}</div>
+                <table>
+                    <tr><td>Title</td><td>${apt.title || 'N/A'}</td></tr>
+                    <tr><td>Rooms</td><td>${apt.rooms || 'N/A'} 🛏️</td></tr>
+                    <tr><td>Baths</td><td>${apt.baths || 'N/A'} 🚿</td></tr>
+                    <tr><td>Area</td><td>${apt.area ? apt.area + ' m²' : 'N/A'}</td></tr>
+                    <tr><td>Location</td><td>${apt.location || 'N/A'}</td></tr>
+                    <tr><td>ID</td><td>${apt.external_id || 'N/A'}</td></tr>
+                </table>
+            `;
+            
+            popup.style.left = Math.min(x + 10, window.innerWidth - 320) + 'px';
+            popup.style.top = Math.min(y + 10, window.innerHeight - 300) + 'px';
+            popup.classList.add('show');
+        }
+        
+        function render() {
+            if (!map) return;
+            
+            const bounds = map.getBounds();
+            if (!bounds) return;
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const proj = map.getProjection();
+            if (!proj) return;
+            
+            const zoom = map.getZoom();
+            document.getElementById('zoom').textContent = zoom.toFixed(1);
+            
+            const topRight = proj.fromLatLngToPoint(bounds.getNorthEast());
+            const bottomLeft = proj.fromLatLngToPoint(bounds.getSouthWest());
+            const scale = Math.pow(2, zoom);
+            
+            let visibleCount = 0;
+            const baseRadius = Math.max(2, zoom - 8) * dotSizeMultiplier / 3;
+            
+            const dataToRender = filteredApartments.length > 0 ? filteredApartments : apartments;
+            
+            dataToRender.forEach(apt => {
+                const lat = apt.lat;
+                const lon = apt.lon;
+                
+                if (lat < bounds.getSouthWest().lat() || lat > bounds.getNorthEast().lat() ||
+                    lon < bounds.getSouthWest().lng() || lon > bounds.getNorthEast().lng()) {
+                    return;
+                }
+                
+                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                const x = (w.x - bottomLeft.x) * scale;
+                const y = (w.y - topRight.y) * scale;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, baseRadius, 0, 2 * Math.PI);
+                ctx.fillStyle = getColor(apt.rooms);
+                ctx.globalAlpha = 0.7;
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                
+                visibleCount++;
+            });
+            
+            document.getElementById('visible').textContent = visibleCount.toLocaleString();
+        }
+        
+        function updateStats() {
+            const data = filteredApartments.length > 0 ? filteredApartments : apartments;
+            
+            // Count by neighborhood
+            const neighborhoods = {};
+            data.forEach(apt => {
+                const loc = apt.location || '';
+                const parts = loc.split(' > ');
+                const neighborhood = parts[3] || parts[2] || 'Unknown';
+                neighborhoods[neighborhood] = (neighborhoods[neighborhood] || 0) + 1;
+            });
+            
+            const sorted = Object.entries(neighborhoods).sort((a, b) => b[1] - a[1]).slice(0, 8);
+            document.getElementById('neighborhoodStats').innerHTML = sorted.map(([name, count]) => `
+                <div class="stat-row">
+                    <span>${name}</span>
+                    <span class="stat-value">${count.toLocaleString()}</span>
+                </div>
+            `).join('');
+        }
+        
+        function filterByRooms(rooms) {
+            activeRoomFilter = rooms;
+            
+            // Update button states
+            document.querySelectorAll('#roomButtons .filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.rooms === String(rooms));
+            });
+            
+            if (rooms === null) {
+                filteredApartments = [];
+            } else {
+                filteredApartments = apartments.filter(apt => apt.rooms === rooms);
+            }
+            
+            document.getElementById('countNumber').textContent = 
+                (filteredApartments.length || apartments.length).toLocaleString();
+            
+            updateStats();
+            render();
+        }
+        
+        // Handle canvas click
+        canvas.style.pointerEvents = 'auto';
+        canvas.addEventListener('click', function(e) {
+            if (!document.getElementById('enableClick').checked) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            
+            const bounds = map.getBounds();
+            const proj = map.getProjection();
+            if (!proj || !bounds) return;
+            
+            const zoom = map.getZoom();
+            const topRight = proj.fromLatLngToPoint(bounds.getNorthEast());
+            const bottomLeft = proj.fromLatLngToPoint(bounds.getSouthWest());
+            const scale = Math.pow(2, zoom);
+            const baseRadius = Math.max(2, zoom - 8) * dotSizeMultiplier / 3;
+            
+            const dataToSearch = filteredApartments.length > 0 ? filteredApartments : apartments;
+            
+            // Find clicked apartment
+            for (const apt of dataToSearch) {
+                const w = proj.fromLatLngToPoint(new google.maps.LatLng(apt.lat, apt.lon));
+                const x = (w.x - bottomLeft.x) * scale;
+                const y = (w.y - topRight.y) * scale;
+                
+                const dist = Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2);
+                if (dist < baseRadius + 5) {
+                    showApartmentInfo(apt, e.clientX, e.clientY);
+                    return;
+                }
+            }
+            
+            closeInfoPopup();
+        });
+        
+        // Dot size slider
+        document.getElementById('dotSize').addEventListener('input', function(e) {
+            dotSizeMultiplier = parseFloat(e.target.value);
+            document.getElementById('dotSizeValue').textContent = dotSizeMultiplier;
+            render();
+        });
+        
+        window.initMap = function() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 24.7136, lng: 46.6753 },
+                zoom: 11,
+                mapTypeControl: true,
+                streetViewControl: true,
+                fullscreenControl: true
+            });
+            
+            map.addListener('idle', render);
+            window.addEventListener('resize', render);
+        }
+        
+        // File loader
+        document.getElementById('apartmentsFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('fileStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const lines = evt.target.result.trim().split('\n');
+                    const headers = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
+                    
+                    // Find column indices
+                    const latI = headers.findIndex(h => h === 'lat' || h === 'latitude');
+                    const lonI = headers.findIndex(h => h === 'lon' || h === 'lng' || h === 'longitude');
+                    const titleI = headers.findIndex(h => h === 'title');
+                    const priceI = headers.findIndex(h => h === 'price');
+                    const roomsI = headers.findIndex(h => h === 'rooms');
+                    const bathsI = headers.findIndex(h => h === 'baths');
+                    const areaI = headers.findIndex(h => h === 'area');
+                    const locationI = headers.findIndex(h => h === 'location');
+                    const freqI = headers.findIndex(h => h === 'rent_frequency');
+                    const idI = headers.findIndex(h => h === 'external_id');
+                    
+                    if (latI < 0 || lonI < 0) {
+                        throw new Error('CSV must have lat and lon columns');
+                    }
+                    
+                    apartments = [];
+                    const roomCounts = {};
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        // Handle CSV with commas in quoted fields
+                        const line = lines[i];
+                        const vals = [];
+                        let inQuote = false;
+                        let current = '';
+                        
+                        for (let c of line) {
+                            if (c === '"') {
+                                inQuote = !inQuote;
+                            } else if (c === ',' && !inQuote) {
+                                vals.push(current.trim());
+                                current = '';
+                            } else {
+                                current += c;
+                            }
+                        }
+                        vals.push(current.trim());
+                        
+                        const lat = parseFloat(vals[latI]);
+                        const lon = parseFloat(vals[lonI]);
+                        
+                        if (!isNaN(lat) && !isNaN(lon)) {
+                            const rooms = roomsI >= 0 ? parseInt(vals[roomsI]) : null;
+                            apartments.push({
+                                lat, lon,
+                                title: titleI >= 0 ? vals[titleI] : '',
+                                price: priceI >= 0 ? parseFloat(vals[priceI]) : null,
+                                rooms: rooms,
+                                baths: bathsI >= 0 ? parseInt(vals[bathsI]) : null,
+                                area: areaI >= 0 ? parseFloat(vals[areaI]) : null,
+                                location: locationI >= 0 ? vals[locationI] : '',
+                                rent_frequency: freqI >= 0 ? vals[freqI] : '',
+                                external_id: idI >= 0 ? vals[idI] : ''
+                            });
+                            
+                            if (rooms) {
+                                roomCounts[rooms] = (roomCounts[rooms] || 0) + 1;
+                            }
+                        }
+                    }
+                    
+                    document.getElementById('fileStatus').textContent = `✅ Loaded ${apartments.length.toLocaleString()} apartments`;
+                    document.getElementById('fileStatus').classList.add('loaded');
+                    document.getElementById('loadingMsg').style.display = 'none';
+                    
+                    // Show stats
+                    document.getElementById('totalCount').style.display = 'block';
+                    document.getElementById('countNumber').textContent = apartments.length.toLocaleString();
+                    
+                    // Room filter buttons
+                    const roomDiv = document.getElementById('roomFilters');
+                    roomDiv.style.display = 'block';
+                    const btns = document.getElementById('roomButtons');
+                    btns.innerHTML = '<button class="filter-btn active" data-rooms="null" onclick="filterByRooms(null)">All</button>';
+                    
+                    Object.keys(roomCounts).sort((a, b) => a - b).slice(0, 7).forEach(r => {
+                        btns.innerHTML += `<button class="filter-btn" data-rooms="${r}" onclick="filterByRooms(${r})">${r} BR (${roomCounts[r].toLocaleString()})</button>`;
+                    });
+                    
+                    // Neighborhood stats
+                    document.getElementById('neighborhoodSection').style.display = 'block';
+                    updateStats();
+                    
+                    render();
+                    
+                } catch (err) {
+                    document.getElementById('fileStatus').textContent = '❌ Error: ' + err.message;
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
+        });
+    </script>
+    
+    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js?callback=initMap" async defer></script>
+</body>
+</html>
