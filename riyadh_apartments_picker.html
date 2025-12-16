@@ -34,6 +34,7 @@
         }
         .count-box.apartments { background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%); }
         .count-box.landuse { background: linear-gradient(135deg, #34a853 0%, #1e8e3e 100%); }
+        .count-box.businesses { background: linear-gradient(135deg, #c2185b 0%, #880e4f 100%); }
         .count-box .number { font-size: 1.5em; font-weight: bold; }
         .count-box .label { font-size: 0.8em; opacity: 0.9; }
         
@@ -119,6 +120,13 @@
             <div id="landStatus" class="file-status">Upload land use parcels CSV</div>
         </div>
         
+        <!-- Businesses File -->
+        <div class="file-section" style="background: #fce4ec; border: 2px dashed #c2185b;">
+            <label>🏪 Businesses JSON/CSV:</label>
+            <input type="file" id="businessFile" accept=".json,.csv">
+            <div id="bizStatus" class="file-status">Upload businesses file</div>
+        </div>
+        
         <!-- Counts -->
         <div class="total-counts" id="countsSection" style="display:none;">
             <div class="count-box apartments">
@@ -128,6 +136,10 @@
             <div class="count-box landuse">
                 <div class="number" id="landCount">0</div>
                 <div class="label">Parcels</div>
+            </div>
+            <div class="count-box businesses" id="bizCountBox" style="display:none;">
+                <div class="number" id="bizCount">0</div>
+                <div class="label">Businesses</div>
             </div>
         </div>
         
@@ -140,6 +152,10 @@
             <label class="layer-toggle landuse">
                 <input type="checkbox" id="showLandUse" checked>
                 <span style="color:#34a853; font-weight:600;">📊 Show Land Use</span>
+            </label>
+            <label class="layer-toggle businesses" id="bizToggle" style="display:none; background:#fce4ec;">
+                <input type="checkbox" id="showBusinesses" checked>
+                <span style="color:#c2185b; font-weight:600;">🏪 Show Businesses</span>
             </label>
         </div>
         
@@ -210,6 +226,7 @@
         let map;
         let apartments = [], filteredApartments = [];
         let parcels = [], filteredParcels = [];
+        let businesses = [];
         let activeRoomFilter = null;
         let activeCodeFilters = {};
         
@@ -286,6 +303,19 @@
             showPopupAt(x, y);
         }
         
+        function showBusinessInfo(biz, x, y) {
+            document.getElementById('popupTitle').textContent = '🏪 Business Details';
+            document.getElementById('popupContent').innerHTML = `
+                <table>
+                    <tr><td>Name</td><td><strong>${biz.name || 'Unknown'}</strong></td></tr>
+                    <tr><td>Category</td><td>${biz.category || 'N/A'}</td></tr>
+                    ${biz.subcategory ? `<tr><td>Type</td><td>${biz.subcategory}</td></tr>` : ''}
+                    <tr><td>Coordinates</td><td>${biz.lat.toFixed(6)}, ${biz.lon.toFixed(6)}</td></tr>
+                </table>
+            `;
+            showPopupAt(x, y);
+        }
+        
         function showPopupAt(x, y) {
             const popup = document.getElementById('infoPopup');
             popup.style.left = Math.min(x + 10, window.innerWidth - 320) + 'px';
@@ -318,8 +348,32 @@
             
             const showApt = document.getElementById('showApartments')?.checked !== false;
             const showLand = document.getElementById('showLandUse')?.checked !== false;
+            const showBiz = document.getElementById('showBusinesses')?.checked !== false;
             
-            // Render land use parcels first (background)
+            // Render businesses first (background layer)
+            if (showBiz && businesses.length > 0) {
+                businesses.forEach(biz => {
+                    if (biz.lat < bounds.getSouthWest().lat() || biz.lat > bounds.getNorthEast().lat() ||
+                        biz.lon < bounds.getSouthWest().lng() || biz.lon > bounds.getNorthEast().lng()) {
+                        return;
+                    }
+                    
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(biz.lat, biz.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, baseRadius * 0.7, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#c2185b';
+                    ctx.globalAlpha = 0.6;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    
+                    visibleCount++;
+                });
+            }
+            
+            // Render land use parcels
             if (showLand && parcels.length > 0) {
                 const dataToRender = Object.keys(activeCodeFilters).length > 0 ? filteredParcels : parcels;
                 
@@ -459,6 +513,7 @@
             
             const showApt = document.getElementById('showApartments')?.checked !== false;
             const showLand = document.getElementById('showLandUse')?.checked !== false;
+            const showBiz = document.getElementById('showBusinesses')?.checked !== false;
             
             // Check apartments first (they're on top)
             if (showApt && apartments.length > 0) {
@@ -490,6 +545,20 @@
                 }
             }
             
+            // Check businesses
+            if (showBiz && businesses.length > 0) {
+                for (const biz of businesses) {
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(biz.lat, biz.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    const dist = Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2);
+                    if (dist < baseRadius + 5) {
+                        showBusinessInfo(biz, e.clientX, e.clientY);
+                        return;
+                    }
+                }
+            }
+            
             closeInfoPopup();
         });
         
@@ -503,6 +572,7 @@
         // Layer toggles
         document.getElementById('showApartments')?.addEventListener('change', render);
         document.getElementById('showLandUse')?.addEventListener('change', render);
+        document.getElementById('showBusinesses')?.addEventListener('change', render);
         
         window.initMap = function() {
             map = new google.maps.Map(document.getElementById('map'), {
@@ -698,6 +768,96 @@
                     
                 } catch (err) {
                     document.getElementById('landStatus').textContent = '❌ ' + err.message;
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        // Businesses file loader (JSON or CSV)
+        document.getElementById('businessFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('bizStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const content = evt.target.result;
+                    businesses = [];
+                    
+                    if (file.name.endsWith('.json')) {
+                        // JSON format: array of [lat, lon, name, category, subcategory] or objects
+                        const data = JSON.parse(content);
+                        
+                        if (Array.isArray(data)) {
+                            data.forEach(item => {
+                                if (Array.isArray(item) && item.length >= 2) {
+                                    // Array format: [lat, lon, name, category, subcategory]
+                                    businesses.push({
+                                        lat: item[0],
+                                        lon: item[1],
+                                        name: item[2] || 'Unknown',
+                                        category: item[3] || '',
+                                        subcategory: item[4] || ''
+                                    });
+                                } else if (item.lat && (item.lon || item.lng)) {
+                                    // Object format
+                                    businesses.push({
+                                        lat: item.lat,
+                                        lon: item.lon || item.lng,
+                                        name: item.name || 'Unknown',
+                                        category: item.category || '',
+                                        subcategory: item.subcategory || item.type || ''
+                                    });
+                                }
+                            });
+                        }
+                    } else {
+                        // CSV format
+                        const lines = content.trim().split('\n');
+                        const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+                        
+                        const latI = headers.findIndex(h => h === 'lat' || h === 'latitude');
+                        const lonI = headers.findIndex(h => h === 'lon' || h === 'lng' || h === 'longitude');
+                        const nameI = headers.findIndex(h => h === 'name');
+                        const catI = headers.findIndex(h => h === 'category');
+                        const subI = headers.findIndex(h => h === 'subcategory' || h === 'type' || h === 'sub_category');
+                        
+                        if (latI < 0 || lonI < 0) throw new Error('Need lat and lon columns');
+                        
+                        for (let i = 1; i < lines.length; i++) {
+                            const vals = parseCSVLine(lines[i]);
+                            const lat = parseFloat(vals[latI]);
+                            const lon = parseFloat(vals[lonI]);
+                            
+                            if (!isNaN(lat) && !isNaN(lon)) {
+                                businesses.push({
+                                    lat, lon,
+                                    name: nameI >= 0 ? vals[nameI] : 'Unknown',
+                                    category: catI >= 0 ? vals[catI] : '',
+                                    subcategory: subI >= 0 ? vals[subI] : ''
+                                });
+                            }
+                        }
+                    }
+                    
+                    document.getElementById('bizStatus').textContent = `✅ ${businesses.length.toLocaleString()} businesses`;
+                    document.getElementById('bizStatus').classList.add('loaded');
+                    document.getElementById('loadingMsg').style.display = 'none';
+                    
+                    // Show UI
+                    document.getElementById('countsSection').style.display = 'flex';
+                    document.getElementById('bizCountBox').style.display = 'block';
+                    document.getElementById('bizCount').textContent = businesses.length.toLocaleString();
+                    document.getElementById('layerToggles').style.display = 'block';
+                    document.getElementById('bizToggle').style.display = 'block';
+                    
+                    render();
+                    
+                } catch (err) {
+                    document.getElementById('bizStatus').textContent = '❌ ' + err.message;
+                    console.error(err);
                 }
             };
             reader.readAsText(file);
