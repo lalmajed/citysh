@@ -115,7 +115,8 @@
         <div id="filters" class="filters"></div>
         
         <div style="margin-top:10px;font-size:11px;color:#888;">
-            Showing: <span id="visible">0</span> points | Zoom: <span id="zoom">0</span>
+            Showing: <span id="visible">0</span> points | Zoom: <span id="zoom">0</span><br>
+            Businesses: <span id="businessVisible">0</span> loaded
         </div>
     </div>
     
@@ -176,8 +177,12 @@
         function loadBusinesses() {
             const BIZ_URL = 'https://raw.githubusercontent.com/lalmajed/citysh/main/businesses_geo.json';
             
+            document.getElementById('businessStatus').textContent = 'Loading businesses...';
+            console.log('Starting to load businesses from GitHub...');
+            
             fetch(BIZ_URL)
                 .then(response => {
+                    console.log('Business fetch response:', response.status);
                     if (!response.ok) {
                         throw new Error('Failed to load businesses data');
                     }
@@ -185,6 +190,7 @@
                 })
                 .then(data => {
                     businesses = data;
+                    console.log('Raw businesses data:', businesses.slice(0, 3));
                     
                     if (!Array.isArray(businesses)) {
                         throw new Error('Invalid format: expected array of businesses');
@@ -192,18 +198,23 @@
                     
                     document.getElementById('businessStatus').textContent = `✅ Loaded ${businesses.length.toLocaleString()} businesses`;
                     document.getElementById('businessStatus').className = 'file-status loaded';
-                    console.log(`Loaded ${businesses.length} businesses (restaurants, shops, etc.)`);
-                    render();
+                    document.getElementById('businessVisible').textContent = businesses.length.toLocaleString();
+                    console.log(`✅ Successfully loaded ${businesses.length} businesses (restaurants, shops, etc.)`);
+                    
+                    // Force render after loading
+                    if (map) {
+                        console.log('Map exists, rendering businesses...');
+                        render();
+                    } else {
+                        console.log('Map not ready yet, will render when map initializes');
+                    }
                 })
                 .catch(err => {
-                    document.getElementById('businessStatus').textContent = '⚠️ Could not load businesses (optional)';
+                    document.getElementById('businessStatus').textContent = '⚠️ Could not load businesses';
                     document.getElementById('businessStatus').className = 'file-status';
-                    console.warn('Could not load businesses:', err.message);
+                    console.error('❌ Error loading businesses:', err);
                 });
         }
-        
-        // Load businesses when page loads
-        loadBusinesses();
         
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
@@ -216,6 +227,9 @@
             
             map.addListener('idle', render);
             window.addEventListener('resize', render);
+            
+            // Load businesses after map is ready
+            loadBusinesses();
         }
         
         // File loader for CSV with land_use_code
@@ -510,6 +524,7 @@
                     'car_repair': '#78909c'     // Blue Grey Light
                 };
                 
+                let businessCount = 0;
                 for (let i = 0; i < businesses.length; i += businessSample) {
                     const business = businesses[i];
                     const lat = business[0];
@@ -530,7 +545,13 @@
                         ctx.arc(p.x, p.y, businessSize, 0, Math.PI * 2);
                         ctx.fill();
                         ctx.stroke();
+                        businessCount++;
                     }
+                }
+                console.log(`Attempted to draw businesses: ${businessCount} in view out of ${businesses.length} total (sample rate: ${businessSample})`);
+            } else {
+                if (businesses.length > 0) {
+                    console.log(`Businesses layer toggled OFF (${businesses.length} businesses available)`);
                 }
             }
             
