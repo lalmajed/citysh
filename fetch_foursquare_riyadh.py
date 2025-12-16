@@ -9,7 +9,7 @@ import json
 import time
 
 # Foursquare API key
-API_KEY = "EZ1GLDXLFCD1J5VWAT5YIEQBJKSWNSSMI2Q2Y3U1U5JSM3QW"
+API_KEY = "fsq3xqWHU6i1rHzAHOb3dMysOThTXzgZTYLEDn/r/8lM+NA="
 
 # Riyadh center and bounds
 RIYADH_CENTER = (24.7136, 46.6753)
