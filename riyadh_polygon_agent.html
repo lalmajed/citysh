@@ -101,11 +101,23 @@
         .result-name { font-weight: 600; font-size: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .result-coords { font-size: 10px; color: #666; }
         
-        .result-category { display: flex; align-items: center; gap: 8px; }
-        .category-select { flex: 1; padding: 6px; border-radius: 6px; border: 1px solid #ddd; font-size: 12px; }
+        .result-category { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+        
+        .cat-nav { display: flex; gap: 3px; flex: 1; }
+        .cat-btn {
+            padding: 5px 10px; border: 2px solid #ddd; border-radius: 15px;
+            background: white; font-size: 11px; cursor: pointer; transition: all 0.15s;
+        }
+        .cat-btn:hover { transform: scale(1.05); }
+        .cat-btn.villa { border-color: #34a853; }
+        .cat-btn.villa.active { background: #34a853; color: white; }
+        .cat-btn.apartment { border-color: #4285f4; }
+        .cat-btn.apartment.active { background: #4285f4; color: white; }
+        .cat-btn.business { border-color: #ea4335; }
+        .cat-btn.business.active { background: #ea4335; color: white; }
         
         .result-actions { display: flex; gap: 5px; }
-        .result-actions button { padding: 5px 12px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; }
+        .result-actions button { padding: 5px 10px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; }
         .btn-approve { background: #34a853; color: white; }
         .btn-reject { background: #ea4335; color: white; }
         
@@ -717,11 +729,11 @@
                         </div>
                         <div class="result-coords">${place.lat.toFixed(5)}, ${place.lng.toFixed(5)} | ${place.source}</div>
                         <div class="result-category">
-                            <select class="category-select" onchange="changeCategory(${idx}, this.value)">
-                                <option value="villa" ${place.assignedCategory === 'villa' ? 'selected' : ''}>🏠 Villa</option>
-                                <option value="apartment" ${place.assignedCategory === 'apartment' ? 'selected' : ''}>🏢 Apartment</option>
-                                <option value="business" ${place.assignedCategory === 'business' ? 'selected' : ''}>🏪 Business</option>
-                            </select>
+                            <div class="cat-nav">
+                                <button class="cat-btn villa ${place.assignedCategory === 'villa' ? 'active' : ''}" onclick="changeCategory(${idx}, 'villa')">🏠 Villa</button>
+                                <button class="cat-btn apartment ${place.assignedCategory === 'apartment' ? 'active' : ''}" onclick="changeCategory(${idx}, 'apartment')">🏢 Apt</button>
+                                <button class="cat-btn business ${place.assignedCategory === 'business' ? 'active' : ''}" onclick="changeCategory(${idx}, 'business')">🏪 Biz</button>
+                            </div>
                             <div class="result-actions">
                                 <button class="btn-approve" onclick="setStatus(${idx}, 'approved')" ${place.status === 'approved' ? 'disabled' : ''}>✓</button>
                                 <button class="btn-reject" onclick="setStatus(${idx}, 'rejected')" ${place.status === 'rejected' ? 'disabled' : ''}>✗</button>
@@ -736,10 +748,32 @@
         
         function changeCategory(idx, cat) {
             detectedPlaces[idx].assignedCategory = cat;
+            
+            // Update marker color
             detectedPlaces[idx].marker.setIcon({
-                path: google.maps.SymbolPath.CIRCLE, scale: 12,
-                fillColor: categories[cat].color, fillOpacity: 0.9, strokeColor: '#fff', strokeWeight: 2
+                path: google.maps.SymbolPath.CIRCLE, 
+                scale: 12,
+                fillColor: categories[cat].color, 
+                fillOpacity: 0.9, 
+                strokeColor: '#ffffff', 
+                strokeWeight: 2
             });
+            
+            // Update button styling
+            const item = document.getElementById(`result-${idx}`);
+            if (item) {
+                const buttons = item.querySelectorAll('.cat-btn');
+                buttons.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.classList.contains(cat)) btn.classList.add('active');
+                });
+                
+                // Update the "Now:" label
+                const catInfo = categories[cat];
+                const nameEl = item.querySelector('.result-name');
+                if (nameEl) nameEl.innerHTML = `${catInfo.emoji} ${detectedPlaces[idx].name}`;
+            }
+            
             updateAgentStats();
         }
         
