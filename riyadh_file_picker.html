@@ -183,12 +183,12 @@
             render();
         });
         
-        // Auto-load businesses from GitHub
+        // Auto-load businesses from local extracted file
         function loadBusinesses() {
-            const BIZ_URL = 'https://raw.githubusercontent.com/lalmajed/citysh/main/businesses_geo.json';
+            const BIZ_URL = 'businesses_extracted.json';
             
             document.getElementById('businessStatus').textContent = 'Loading businesses...';
-            console.log('Starting to load businesses from GitHub...');
+            console.log('Starting to load businesses from local file...');
             
             fetch(BIZ_URL)
                 .then(response => {
