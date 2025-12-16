@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Scrape apartment building (عمائر) geolocations from Aqar.fm for Riyadh
-Excludes villas - only gets apartment buildings
+Scrape apartments (شقق) geolocations from Aqar.fm for Riyadh
+Excludes villas - only gets apartments
 """
 
 import json
@@ -14,10 +14,10 @@ HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
 }
 
-# Base URLs for apartment buildings in Riyadh
+# Base URLs for APARTMENTS (شقق) in Riyadh - NOT villas, NOT buildings
 URLS = {
-    'sale': 'https://sa.aqar.fm/%D8%B9%D9%85%D8%A7%D8%A6%D8%B1-%D9%84%D9%84%D8%A8%D9%8A%D8%B9/%D8%A7%D9%84%D8%B1%D9%8A%D8%A7%D8%B6',
-    'rent': 'https://sa.aqar.fm/%D8%B9%D9%85%D8%A7%D8%A6%D8%B1-%D9%84%D9%84%D8%A5%D9%8A%D8%AC%D8%A7%D8%B1/%D8%A7%D9%84%D8%B1%D9%8A%D8%A7%D8%B6'
+    'شقق للإيجار': 'https://sa.aqar.fm/%D8%B4%D9%82%D9%82-%D9%84%D9%84%D8%A5%D9%8A%D8%AC%D8%A7%D8%B1/%D8%A7%D9%84%D8%B1%D9%8A%D8%A7%D8%B6',  # Apartments for rent
+    'شقق للبيع': 'https://sa.aqar.fm/%D8%B4%D9%82%D9%82-%D9%84%D9%84%D8%A8%D9%8A%D8%B9/%D8%A7%D9%84%D8%B1%D9%8A%D8%A7%D8%B6',  # Apartments for sale
 }
 
 
@@ -69,10 +69,13 @@ def fetch_page(session, base_url, page=0):
                             'district': value.get('district', ''),
                             'price': value.get('price'),
                             'area': value.get('area'),
-                            'apts': value.get('apts'),
+                            'beds': value.get('beds'),
                             'rooms': value.get('rooms'),
+                            'livings': value.get('livings'),
+                            'wc': value.get('wc'),
                             'age': value.get('age'),
-                            'stores': value.get('stores'),
+                            'furnished': value.get('furnished'),
+                            'fl': value.get('fl'),  # floor
                         })
         
         return listings, total
@@ -109,14 +112,15 @@ def scrape_category(name, base_url, all_geos, all_details):
     
     # Calculate total pages (20 per page)
     if total == 0:
-        total = 1500  # Estimate
+        total = 50000  # Large estimate for apartments
     
     total_pages = (total + 19) // 20
+    max_pages = min(total_pages, 500)  # Cap at 500 pages for safety
     
     # Scrape remaining pages
     empty_count = 0
-    for page in range(1, total_pages + 5):
-        time.sleep(0.5)  # Be nice to the server
+    for page in range(1, max_pages + 5):
+        time.sleep(0.4)  # Be nice to the server
         
         listings, _ = fetch_page(session, base_url, page)
         
@@ -138,12 +142,16 @@ def scrape_category(name, base_url, all_geos, all_details):
                 new_count += 1
         
         print(f"  Page {page}: {len(listings)} listings ({new_count} new unique)")
+        
+        # Progress update every 50 pages
+        if page % 50 == 0:
+            print(f"  >>> Progress: {len(all_geos)} unique locations so far")
 
 
 def main():
     print("="*60)
-    print("Aqar.fm Apartment Buildings Scraper - Riyadh")
-    print("Scraping: عمائر (Apartment Buildings) - NO Villas")
+    print("Aqar.fm APARTMENTS Scraper - Riyadh")
+    print("Scraping: شقق (Apartments) - NO Villas, NO Buildings")
     print(f"Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("="*60)
     
@@ -151,8 +159,8 @@ def main():
     all_details = []
     
     # Scrape both categories
-    scrape_category("عمائر للبيع (Apartment Buildings For Sale)", URLS['sale'], all_geos, all_details)
-    scrape_category("عمائر للإيجار (Apartment Buildings For Rent)", URLS['rent'], all_geos, all_details)
+    for name, url in URLS.items():
+        scrape_category(name, url, all_geos, all_details)
     
     # Prepare output
     geo_list = [[lat, lng] for (lat, lng) in all_geos.keys()]
@@ -167,10 +175,13 @@ def main():
             'district': item.get('district', ''),
             'price': item.get('price'),
             'area_sqm': item.get('area'),
-            'num_apartments': item.get('apts'),
-            'num_rooms': item.get('rooms'),
+            'bedrooms': item.get('beds'),
+            'rooms': item.get('rooms'),
+            'living_rooms': item.get('livings'),
+            'bathrooms': item.get('wc'),
             'age_years': item.get('age'),
-            'num_stores': item.get('stores'),
+            'furnished': item.get('furnished'),
+            'floor': item.get('fl'),
         })
     
     # Save files
@@ -184,7 +195,7 @@ def main():
     print("\n" + "="*60)
     print("COMPLETE!")
     print("="*60)
-    print(f"Total unique apartment building locations: {len(geo_list)}")
+    print(f"Total unique apartment locations: {len(geo_list)}")
     print(f"\nFiles saved:")
     print(f"  - aqar_apartments_geo.json")
     print(f"  - aqar_apartments_detailed.json")
