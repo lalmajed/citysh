@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Riyadh Apartments Map - Bayut Data</title>
+    <title>Riyadh Map - Apartments & Land Use</title>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1.0, width=device-width">
     <style>
@@ -13,49 +13,58 @@
             position: absolute; top: 10px; left: 60px;
             background: white; padding: 15px; border-radius: 10px;
             box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 1000;
-            max-width: 350px; max-height: 90vh; overflow-y: auto; font-size: 13px;
+            max-width: 380px; max-height: 90vh; overflow-y: auto; font-size: 13px;
         }
-        .panel h2 { color: #00b4d8; margin-bottom: 10px; font-size: 16px; }
+        .panel h2 { color: #1a73e8; margin-bottom: 10px; font-size: 16px; }
         
         .file-section { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; }
         .file-section label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 12px; }
         .file-section input[type="file"] { font-size: 11px; width: 100%; }
         .file-status { font-size: 11px; color: #666; margin-top: 5px; }
-        .file-status.loaded { color: #00b4d8; font-weight: bold; }
+        .file-status.loaded { color: #34a853; font-weight: bold; }
         
         .stats { margin: 10px 0; }
-        .stat-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 12px; }
+        .stat-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 11px; }
         .stat-row:last-child { border-bottom: none; }
-        .stat-value { color: #00b4d8; font-weight: bold; }
+        .stat-value { color: #1a73e8; font-weight: bold; }
         
-        .total-count {
-            background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
-            padding: 15px; border-radius: 10px; text-align: center; margin: 10px 0; color: white;
+        .total-counts { display: flex; gap: 10px; margin: 10px 0; }
+        .count-box {
+            flex: 1; padding: 12px; border-radius: 8px; text-align: center; color: white;
         }
-        .total-count .number { font-size: 2em; font-weight: bold; }
-        .total-count .label { font-size: 0.9em; opacity: 0.9; }
+        .count-box.apartments { background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%); }
+        .count-box.landuse { background: linear-gradient(135deg, #34a853 0%, #1e8e3e 100%); }
+        .count-box .number { font-size: 1.5em; font-weight: bold; }
+        .count-box .label { font-size: 0.8em; opacity: 0.9; }
         
-        .filter-section { margin: 10px 0; padding: 10px; background: #e8f4f8; border-radius: 8px; }
-        .filter-section h3 { font-size: 12px; color: #0077b6; margin-bottom: 8px; }
+        .filter-section { margin: 10px 0; padding: 10px; background: #f0f7ff; border-radius: 8px; }
+        .filter-section h3 { font-size: 12px; color: #1a73e8; margin-bottom: 8px; }
         .filter-btn {
-            padding: 5px 10px; margin: 2px; border: none; border-radius: 15px;
-            cursor: pointer; font-size: 11px; background: #cce5ff; color: #0077b6;
+            padding: 4px 8px; margin: 2px; border: none; border-radius: 12px;
+            cursor: pointer; font-size: 10px; background: #e3f2fd; color: #1a73e8;
             transition: all 0.2s;
         }
-        .filter-btn:hover { background: #00b4d8; color: white; }
-        .filter-btn.active { background: #0077b6; color: white; }
+        .filter-btn:hover { background: #1a73e8; color: white; }
+        .filter-btn.active { background: #1a73e8; color: white; }
+        
+        .layer-toggle {
+            display: flex; align-items: center; gap: 8px; padding: 8px;
+            background: #fff3cd; border-radius: 6px; margin: 5px 0; cursor: pointer;
+        }
+        .layer-toggle.apartments { background: #e0f7fa; }
+        .layer-toggle.landuse { background: #e8f5e9; }
         
         .info-popup {
             position: absolute; background: white; padding: 12px 15px; border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 2000; min-width: 280px;
-            font-size: 12px; display: none; border-left: 4px solid #00b4d8;
+            font-size: 12px; display: none; border-left: 4px solid #1a73e8;
         }
         .info-popup.show { display: block; }
-        .info-popup h3 { margin: 0 0 8px 0; color: #0077b6; font-size: 14px; }
+        .info-popup h3 { margin: 0 0 8px 0; color: #1a73e8; font-size: 14px; }
         .info-popup .close { position: absolute; top: 5px; right: 8px; cursor: pointer; color: #999; font-size: 16px; }
-        .info-popup .price { color: #00b4d8; font-size: 1.3em; font-weight: bold; margin: 5px 0; }
+        .info-popup .price { color: #00b4d8; font-size: 1.2em; font-weight: bold; margin: 5px 0; }
         .info-popup table { width: 100%; border-collapse: collapse; }
-        .info-popup td { padding: 4px 5px; border-bottom: 1px solid #eee; }
+        .info-popup td { padding: 3px 5px; border-bottom: 1px solid #eee; font-size: 11px; }
         .info-popup td:first-child { font-weight: 600; color: #555; width: 35%; }
         
         #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 450; }
@@ -72,13 +81,15 @@
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none; appearance: none;
-            width: 18px; height: 18px; background: #00b4d8; border-radius: 50%; cursor: pointer;
+            width: 16px; height: 16px; background: #1a73e8; border-radius: 50%; cursor: pointer;
         }
         
-        .legend { margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 8px; }
+        .legend { margin-top: 10px; padding: 8px; background: #f5f5f5; border-radius: 6px; font-size: 10px; }
         .legend h4 { font-size: 11px; color: #666; margin-bottom: 5px; }
-        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; padding: 3px 0; }
-        .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .legend-item { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+        
+        .code-filters { max-height: 150px; overflow-y: auto; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -87,76 +98,141 @@
     
     <div id="infoPopup" class="info-popup">
         <span class="close" onclick="closeInfoPopup()">&times;</span>
-        <h3>🏢 Apartment Details</h3>
+        <h3 id="popupTitle">📍 Details</h3>
         <div id="popupContent"></div>
     </div>
     
     <div class="panel">
-        <h2>🏢 Riyadh Apartments <span style="font-size:10px;color:#999;">Bayut.sa</span></h2>
+        <h2>🗺️ Riyadh Map <span style="font-size:10px;color:#999;">Multi-Layer</span></h2>
         
-        <div class="file-section" style="background: #e8f4f8; border: 2px dashed #00b4d8;">
-            <label>📊 Apartments CSV (lat, lon):</label>
+        <!-- Apartments File -->
+        <div class="file-section" style="background: #e0f7fa; border: 2px dashed #00b4d8;">
+            <label>🏢 Apartments CSV (lat, lon):</label>
             <input type="file" id="apartmentsFile" accept=".csv">
-            <div id="fileStatus" class="file-status">Upload riyadh_apartments.csv</div>
+            <div id="aptStatus" class="file-status">Upload riyadh_apartments.csv</div>
         </div>
         
-        <div class="total-count" id="totalCount" style="display:none;">
-            <div class="number" id="countNumber">0</div>
-            <div class="label">Apartments Loaded</div>
+        <!-- Land Use File -->
+        <div class="file-section" style="background: #e8f5e9; border: 2px dashed #34a853;">
+            <label>📊 Land Use CSV (lat, lon, land_use_code):</label>
+            <input type="file" id="landUseFile" accept=".csv">
+            <div id="landStatus" class="file-status">Upload land use parcels CSV</div>
         </div>
         
+        <!-- Counts -->
+        <div class="total-counts" id="countsSection" style="display:none;">
+            <div class="count-box apartments">
+                <div class="number" id="aptCount">0</div>
+                <div class="label">Apartments</div>
+            </div>
+            <div class="count-box landuse">
+                <div class="number" id="landCount">0</div>
+                <div class="label">Parcels</div>
+            </div>
+        </div>
+        
+        <!-- Layer Toggles -->
+        <div id="layerToggles" style="display:none;">
+            <label class="layer-toggle apartments">
+                <input type="checkbox" id="showApartments" checked>
+                <span style="color:#0077b6; font-weight:600;">🏢 Show Apartments</span>
+            </label>
+            <label class="layer-toggle landuse">
+                <input type="checkbox" id="showLandUse" checked>
+                <span style="color:#34a853; font-weight:600;">📊 Show Land Use</span>
+            </label>
+        </div>
+        
+        <!-- Room Filters -->
         <div class="filter-section" id="roomFilters" style="display:none;">
-            <h3>🛏️ Filter by Rooms</h3>
+            <h3>🛏️ Filter Apartments by Rooms</h3>
             <div id="roomButtons"></div>
         </div>
         
+        <!-- Land Use Code Filters -->
+        <div class="filter-section" id="codeFilters" style="display:none;">
+            <h3>🏷️ Filter by Land Use Code</h3>
+            <div id="codeButtons" class="code-filters"></div>
+        </div>
+        
+        <!-- Neighborhood Stats -->
         <div class="filter-section" id="neighborhoodSection" style="display:none;">
             <h3>📍 Top Neighborhoods</h3>
             <div class="stats" id="neighborhoodStats"></div>
         </div>
         
-        <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 6px;">
-            <label style="display: block; font-weight: 600; font-size: 12px; margin-bottom: 8px;">
-                📍 Dot Size: <span id="dotSizeValue">4</span>x
+        <!-- Dot Size -->
+        <div style="margin: 10px 0; padding: 8px; background: #f8f9fa; border-radius: 6px;">
+            <label style="display: block; font-weight: 600; font-size: 11px; margin-bottom: 5px;">
+                📍 Dot Size: <span id="dotSizeValue">3</span>x
             </label>
-            <input type="range" id="dotSize" min="1" max="12" value="4" step="0.5">
+            <input type="range" id="dotSize" min="1" max="10" value="3" step="0.5">
         </div>
         
-        <div style="margin: 10px 0; padding: 8px; background: #e8f0fe; border-radius: 6px;">
-            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+        <!-- Click Toggle -->
+        <div style="margin: 8px 0; padding: 6px; background: #e8f0fe; border-radius: 6px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 11px;">
                 <input type="checkbox" id="enableClick" checked>
-                <span style="font-weight: 600; font-size: 12px;">🖱️ Click to show details</span>
+                <span style="font-weight: 600;">🖱️ Click to show details</span>
             </label>
         </div>
         
-        <div class="legend">
-            <h4>Color by Rooms</h4>
+        <!-- Legends -->
+        <div class="legend" id="aptLegend" style="display:none;">
+            <h4>🏢 Apartments (by Rooms)</h4>
             <div class="legend-item"><div class="legend-dot" style="background:#00b4d8;"></div> 1-2 Bedrooms</div>
             <div class="legend-item"><div class="legend-dot" style="background:#0077b6;"></div> 3-4 Bedrooms</div>
             <div class="legend-item"><div class="legend-dot" style="background:#023e8a;"></div> 5+ Bedrooms</div>
         </div>
         
-        <div style="margin-top:10px;font-size:11px;color:#888;">
+        <div class="legend" id="landLegend" style="display:none;">
+            <h4>📊 Land Use Codes</h4>
+            <div id="landLegendItems"></div>
+        </div>
+        
+        <div style="margin-top:8px;font-size:10px;color:#888;">
             Visible: <span id="visible">0</span> | Zoom: <span id="zoom">0</span>
         </div>
     </div>
     
     <div id="loadingMsg" class="loading-msg">
-        <p>📂 Load your apartments CSV</p>
+        <p>📂 Load your CSV files</p>
         <p style="font-size:12px;color:#666;margin-top:10px;">
-            Required columns: <strong>lat, lon</strong><br>
-            Optional: title, price, rooms, baths, area, location
+            <strong>Apartments:</strong> lat, lon, title, price, rooms...<br>
+            <strong>Land Use:</strong> lat, lon, land_use_code, district...
         </p>
     </div>
 
     <script>
-        let map, apartments = [], filteredApartments = [];
+        let map;
+        let apartments = [], filteredApartments = [];
+        let parcels = [], filteredParcels = [];
         let activeRoomFilter = null;
+        let activeCodeFilters = {};
+        
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        let dotSizeMultiplier = 4;
+        let dotSizeMultiplier = 3;
         
-        function getColor(rooms) {
+        // Land use colors
+        const landUseColors = {
+            '1000': { color: '#34a853', name: 'Villas', emoji: '🏠' },
+            '1012': { color: '#2e7d32', name: 'Residential Commercial', emoji: '🏠' },
+            '7510': { color: '#4285f4', name: 'Vacant Land', emoji: '📦' },
+            '2000': { color: '#ea4335', name: 'Commercial', emoji: '🏪' },
+            '4010': { color: '#9334e6', name: 'Commercial Centers', emoji: '🏢' },
+            '1098': { color: '#f9a825', name: 'Muezzin Residence', emoji: '🕌' },
+            '1099': { color: '#ff6f00', name: 'Imam Residence', emoji: '🕌' }
+        };
+        
+        function getColorForCode(code) {
+            if (landUseColors[code]) return landUseColors[code].color;
+            const numCode = parseInt(code) || 0;
+            const hue = (numCode * 137) % 360;
+            return `hsl(${hue}, 70%, 50%)`;
+        }
+        
+        function getAptColor(rooms) {
             if (!rooms || rooms <= 2) return '#00b4d8';
             if (rooms <= 4) return '#0077b6';
             return '#023e8a';
@@ -167,7 +243,7 @@
             const num = parseFloat(price);
             if (isNaN(num)) return price;
             const formatted = num.toLocaleString('en-SA');
-            const period = frequency === 'monthly' ? '/month' : '/year';
+            const period = frequency === 'monthly' ? '/mo' : '/yr';
             return `SAR ${formatted}${period}`;
         }
         
@@ -176,10 +252,8 @@
         }
         
         function showApartmentInfo(apt, x, y) {
-            const popup = document.getElementById('infoPopup');
-            const content = document.getElementById('popupContent');
-            
-            content.innerHTML = `
+            document.getElementById('popupTitle').textContent = '🏢 Apartment Details';
+            document.getElementById('popupContent').innerHTML = `
                 <div class="price">${formatPrice(apt.price, apt.rent_frequency)}</div>
                 <table>
                     <tr><td>Title</td><td>${apt.title || 'N/A'}</td></tr>
@@ -190,9 +264,29 @@
                     <tr><td>ID</td><td>${apt.external_id || 'N/A'}</td></tr>
                 </table>
             `;
-            
+            showPopupAt(x, y);
+        }
+        
+        function showParcelInfo(parcel, x, y) {
+            const codeInfo = landUseColors[parcel.code] || { name: 'Unknown', emoji: '📍' };
+            document.getElementById('popupTitle').textContent = `${codeInfo.emoji} Parcel Details`;
+            document.getElementById('popupContent').innerHTML = `
+                <table>
+                    <tr><td>Land Use</td><td><strong>${parcel.code}</strong> - ${codeInfo.name}</td></tr>
+                    ${parcel.district ? `<tr><td>District</td><td>${parcel.district}</td></tr>` : ''}
+                    ${parcel.parcel_id ? `<tr><td>Parcel ID</td><td>${parcel.parcel_id}</td></tr>` : ''}
+                    ${parcel.block_no ? `<tr><td>Block No</td><td>${parcel.block_no}</td></tr>` : ''}
+                    ${parcel.plan_no ? `<tr><td>Plan No</td><td>${parcel.plan_no}</td></tr>` : ''}
+                    <tr><td>Coordinates</td><td>${parcel.lat.toFixed(6)}, ${parcel.lon.toFixed(6)}</td></tr>
+                </table>
+            `;
+            showPopupAt(x, y);
+        }
+        
+        function showPopupAt(x, y) {
+            const popup = document.getElementById('infoPopup');
             popup.style.left = Math.min(x + 10, window.innerWidth - 320) + 'px';
-            popup.style.top = Math.min(y + 10, window.innerHeight - 300) + 'px';
+            popup.style.top = Math.min(y + 10, window.innerHeight - 250) + 'px';
             popup.classList.add('show');
         }
         
@@ -217,40 +311,71 @@
             const scale = Math.pow(2, zoom);
             
             let visibleCount = 0;
-            const baseRadius = Math.max(2, zoom - 8) * dotSizeMultiplier / 3;
+            const baseRadius = Math.max(2, zoom - 9) * dotSizeMultiplier / 3;
             
-            const dataToRender = filteredApartments.length > 0 ? filteredApartments : apartments;
+            const showApt = document.getElementById('showApartments')?.checked !== false;
+            const showLand = document.getElementById('showLandUse')?.checked !== false;
             
-            dataToRender.forEach(apt => {
-                const lat = apt.lat;
-                const lon = apt.lon;
+            // Render land use parcels first (background)
+            if (showLand && parcels.length > 0) {
+                const dataToRender = Object.keys(activeCodeFilters).length > 0 ? filteredParcels : parcels;
                 
-                if (lat < bounds.getSouthWest().lat() || lat > bounds.getNorthEast().lat() ||
-                    lon < bounds.getSouthWest().lng() || lon > bounds.getNorthEast().lng()) {
-                    return;
-                }
+                dataToRender.forEach(parcel => {
+                    if (parcel.lat < bounds.getSouthWest().lat() || parcel.lat > bounds.getNorthEast().lat() ||
+                        parcel.lon < bounds.getSouthWest().lng() || parcel.lon > bounds.getNorthEast().lng()) {
+                        return;
+                    }
+                    
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(parcel.lat, parcel.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, baseRadius * 0.8, 0, 2 * Math.PI);
+                    ctx.fillStyle = getColorForCode(parcel.code);
+                    ctx.globalAlpha = 0.6;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    
+                    visibleCount++;
+                });
+            }
+            
+            // Render apartments on top
+            if (showApt && apartments.length > 0) {
+                const aptData = activeRoomFilter !== null ? filteredApartments : apartments;
                 
-                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                const x = (w.x - bottomLeft.x) * scale;
-                const y = (w.y - topRight.y) * scale;
-                
-                ctx.beginPath();
-                ctx.arc(x, y, baseRadius, 0, 2 * Math.PI);
-                ctx.fillStyle = getColor(apt.rooms);
-                ctx.globalAlpha = 0.7;
-                ctx.fill();
-                ctx.globalAlpha = 1;
-                
-                visibleCount++;
-            });
+                aptData.forEach(apt => {
+                    if (apt.lat < bounds.getSouthWest().lat() || apt.lat > bounds.getNorthEast().lat() ||
+                        apt.lon < bounds.getSouthWest().lng() || apt.lon > bounds.getNorthEast().lng()) {
+                        return;
+                    }
+                    
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(apt.lat, apt.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, baseRadius, 0, 2 * Math.PI);
+                    ctx.fillStyle = getAptColor(apt.rooms);
+                    ctx.globalAlpha = 0.75;
+                    ctx.fill();
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
+                    
+                    visibleCount++;
+                });
+            }
             
             document.getElementById('visible').textContent = visibleCount.toLocaleString();
         }
         
-        function updateStats() {
-            const data = filteredApartments.length > 0 ? filteredApartments : apartments;
+        function updateNeighborhoodStats() {
+            const data = activeRoomFilter !== null ? filteredApartments : apartments;
+            if (data.length === 0) return;
             
-            // Count by neighborhood
             const neighborhoods = {};
             data.forEach(apt => {
                 const loc = apt.location || '';
@@ -270,22 +395,38 @@
         
         function filterByRooms(rooms) {
             activeRoomFilter = rooms;
-            
-            // Update button states
             document.querySelectorAll('#roomButtons .filter-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.rooms === String(rooms));
             });
             
-            if (rooms === null) {
-                filteredApartments = [];
-            } else {
-                filteredApartments = apartments.filter(apt => apt.rooms === rooms);
-            }
-            
-            document.getElementById('countNumber').textContent = 
+            filteredApartments = rooms === null ? [] : apartments.filter(apt => apt.rooms === rooms);
+            document.getElementById('aptCount').textContent = 
                 (filteredApartments.length || apartments.length).toLocaleString();
             
-            updateStats();
+            updateNeighborhoodStats();
+            render();
+        }
+        
+        function toggleCodeFilter(code) {
+            if (activeCodeFilters[code]) {
+                delete activeCodeFilters[code];
+            } else {
+                activeCodeFilters[code] = true;
+            }
+            
+            document.querySelectorAll('#codeButtons .filter-btn').forEach(btn => {
+                btn.classList.toggle('active', activeCodeFilters[btn.dataset.code]);
+            });
+            
+            if (Object.keys(activeCodeFilters).length === 0) {
+                filteredParcels = [];
+            } else {
+                filteredParcels = parcels.filter(p => activeCodeFilters[p.code]);
+            }
+            
+            document.getElementById('landCount').textContent = 
+                (filteredParcels.length || parcels.length).toLocaleString();
+            
             render();
         }
         
@@ -306,20 +447,38 @@
             const topRight = proj.fromLatLngToPoint(bounds.getNorthEast());
             const bottomLeft = proj.fromLatLngToPoint(bounds.getSouthWest());
             const scale = Math.pow(2, zoom);
-            const baseRadius = Math.max(2, zoom - 8) * dotSizeMultiplier / 3;
+            const baseRadius = Math.max(2, zoom - 9) * dotSizeMultiplier / 3;
             
-            const dataToSearch = filteredApartments.length > 0 ? filteredApartments : apartments;
+            const showApt = document.getElementById('showApartments')?.checked !== false;
+            const showLand = document.getElementById('showLandUse')?.checked !== false;
             
-            // Find clicked apartment
-            for (const apt of dataToSearch) {
-                const w = proj.fromLatLngToPoint(new google.maps.LatLng(apt.lat, apt.lon));
-                const x = (w.x - bottomLeft.x) * scale;
-                const y = (w.y - topRight.y) * scale;
-                
-                const dist = Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2);
-                if (dist < baseRadius + 5) {
-                    showApartmentInfo(apt, e.clientX, e.clientY);
-                    return;
+            // Check apartments first (they're on top)
+            if (showApt && apartments.length > 0) {
+                const aptData = activeRoomFilter !== null ? filteredApartments : apartments;
+                for (const apt of aptData) {
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(apt.lat, apt.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    const dist = Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2);
+                    if (dist < baseRadius + 5) {
+                        showApartmentInfo(apt, e.clientX, e.clientY);
+                        return;
+                    }
+                }
+            }
+            
+            // Check parcels
+            if (showLand && parcels.length > 0) {
+                const parcelData = Object.keys(activeCodeFilters).length > 0 ? filteredParcels : parcels;
+                for (const parcel of parcelData) {
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(parcel.lat, parcel.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    const dist = Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2);
+                    if (dist < baseRadius + 5) {
+                        showParcelInfo(parcel, e.clientX, e.clientY);
+                        return;
+                    }
                 }
             }
             
@@ -332,6 +491,10 @@
             document.getElementById('dotSizeValue').textContent = dotSizeMultiplier;
             render();
         });
+        
+        // Layer toggles
+        document.getElementById('showApartments')?.addEventListener('change', render);
+        document.getElementById('showLandUse')?.addEventListener('change', render);
         
         window.initMap = function() {
             map = new google.maps.Map(document.getElementById('map'), {
@@ -346,12 +509,31 @@
             window.addEventListener('resize', render);
         }
         
-        // File loader
+        // Parse CSV handling quoted fields
+        function parseCSVLine(line) {
+            const vals = [];
+            let inQuote = false;
+            let current = '';
+            for (let c of line) {
+                if (c === '"') {
+                    inQuote = !inQuote;
+                } else if (c === ',' && !inQuote) {
+                    vals.push(current.trim());
+                    current = '';
+                } else {
+                    current += c;
+                }
+            }
+            vals.push(current.trim());
+            return vals;
+        }
+        
+        // Apartments file loader
         document.getElementById('apartmentsFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
             
-            document.getElementById('fileStatus').textContent = 'Loading...';
+            document.getElementById('aptStatus').textContent = 'Loading...';
             
             const reader = new FileReader();
             reader.onload = function(evt) {
@@ -359,7 +541,6 @@
                     const lines = evt.target.result.trim().split('\n');
                     const headers = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
                     
-                    // Find column indices
                     const latI = headers.findIndex(h => h === 'lat' || h === 'latitude');
                     const lonI = headers.findIndex(h => h === 'lon' || h === 'lng' || h === 'longitude');
                     const titleI = headers.findIndex(h => h === 'title');
@@ -371,32 +552,13 @@
                     const freqI = headers.findIndex(h => h === 'rent_frequency');
                     const idI = headers.findIndex(h => h === 'external_id');
                     
-                    if (latI < 0 || lonI < 0) {
-                        throw new Error('CSV must have lat and lon columns');
-                    }
+                    if (latI < 0 || lonI < 0) throw new Error('Need lat and lon columns');
                     
                     apartments = [];
                     const roomCounts = {};
                     
                     for (let i = 1; i < lines.length; i++) {
-                        // Handle CSV with commas in quoted fields
-                        const line = lines[i];
-                        const vals = [];
-                        let inQuote = false;
-                        let current = '';
-                        
-                        for (let c of line) {
-                            if (c === '"') {
-                                inQuote = !inQuote;
-                            } else if (c === ',' && !inQuote) {
-                                vals.push(current.trim());
-                                current = '';
-                            } else {
-                                current += c;
-                            }
-                        }
-                        vals.push(current.trim());
-                        
+                        const vals = parseCSVLine(lines[i]);
                         const lat = parseFloat(vals[latI]);
                         const lon = parseFloat(vals[lonI]);
                         
@@ -413,40 +575,117 @@
                                 rent_frequency: freqI >= 0 ? vals[freqI] : '',
                                 external_id: idI >= 0 ? vals[idI] : ''
                             });
-                            
-                            if (rooms) {
-                                roomCounts[rooms] = (roomCounts[rooms] || 0) + 1;
-                            }
+                            if (rooms) roomCounts[rooms] = (roomCounts[rooms] || 0) + 1;
                         }
                     }
                     
-                    document.getElementById('fileStatus').textContent = `✅ Loaded ${apartments.length.toLocaleString()} apartments`;
-                    document.getElementById('fileStatus').classList.add('loaded');
+                    document.getElementById('aptStatus').textContent = `✅ ${apartments.length.toLocaleString()} apartments`;
+                    document.getElementById('aptStatus').classList.add('loaded');
                     document.getElementById('loadingMsg').style.display = 'none';
                     
-                    // Show stats
-                    document.getElementById('totalCount').style.display = 'block';
-                    document.getElementById('countNumber').textContent = apartments.length.toLocaleString();
+                    // Show UI elements
+                    document.getElementById('countsSection').style.display = 'flex';
+                    document.getElementById('aptCount').textContent = apartments.length.toLocaleString();
+                    document.getElementById('layerToggles').style.display = 'block';
+                    document.getElementById('aptLegend').style.display = 'block';
                     
-                    // Room filter buttons
+                    // Room filters
                     const roomDiv = document.getElementById('roomFilters');
                     roomDiv.style.display = 'block';
                     const btns = document.getElementById('roomButtons');
                     btns.innerHTML = '<button class="filter-btn active" data-rooms="null" onclick="filterByRooms(null)">All</button>';
-                    
                     Object.keys(roomCounts).sort((a, b) => a - b).slice(0, 7).forEach(r => {
-                        btns.innerHTML += `<button class="filter-btn" data-rooms="${r}" onclick="filterByRooms(${r})">${r} BR (${roomCounts[r].toLocaleString()})</button>`;
+                        btns.innerHTML += `<button class="filter-btn" data-rooms="${r}" onclick="filterByRooms(${r})">${r}BR (${roomCounts[r]})</button>`;
                     });
                     
-                    // Neighborhood stats
                     document.getElementById('neighborhoodSection').style.display = 'block';
-                    updateStats();
+                    updateNeighborhoodStats();
+                    render();
+                    
+                } catch (err) {
+                    document.getElementById('aptStatus').textContent = '❌ ' + err.message;
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        // Land Use file loader
+        document.getElementById('landUseFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('landStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const lines = evt.target.result.trim().split('\n');
+                    const headers = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
+                    
+                    const latI = headers.findIndex(h => h === 'lat' || h === 'latitude');
+                    const lonI = headers.findIndex(h => h === 'lon' || h === 'lng' || h === 'longitude');
+                    const codeI = headers.findIndex(h => h === 'land_use_code' || h === 'landusecode' || h === 'code');
+                    const districtI = headers.findIndex(h => h === 'district');
+                    const parcelIdI = headers.findIndex(h => h === 'parcel_id');
+                    const blockNoI = headers.findIndex(h => h === 'block_no');
+                    const planNoI = headers.findIndex(h => h === 'plan_no');
+                    
+                    if (latI < 0 || lonI < 0) throw new Error('Need lat and lon columns');
+                    if (codeI < 0) throw new Error('Need land_use_code column');
+                    
+                    parcels = [];
+                    const codeCounts = {};
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        const vals = parseCSVLine(lines[i]);
+                        const lat = parseFloat(vals[latI]);
+                        const lon = parseFloat(vals[lonI]);
+                        const code = vals[codeI];
+                        
+                        if (!isNaN(lat) && !isNaN(lon) && code) {
+                            parcels.push({
+                                lat, lon, code,
+                                district: districtI >= 0 ? vals[districtI] : '',
+                                parcel_id: parcelIdI >= 0 ? vals[parcelIdI] : '',
+                                block_no: blockNoI >= 0 ? vals[blockNoI] : '',
+                                plan_no: planNoI >= 0 ? vals[planNoI] : ''
+                            });
+                            codeCounts[code] = (codeCounts[code] || 0) + 1;
+                        }
+                    }
+                    
+                    document.getElementById('landStatus').textContent = `✅ ${parcels.length.toLocaleString()} parcels`;
+                    document.getElementById('landStatus').classList.add('loaded');
+                    document.getElementById('loadingMsg').style.display = 'none';
+                    
+                    // Show UI
+                    document.getElementById('countsSection').style.display = 'flex';
+                    document.getElementById('landCount').textContent = parcels.length.toLocaleString();
+                    document.getElementById('layerToggles').style.display = 'block';
+                    document.getElementById('landLegend').style.display = 'block';
+                    
+                    // Code filters
+                    const codeDiv = document.getElementById('codeFilters');
+                    codeDiv.style.display = 'block';
+                    const cbtns = document.getElementById('codeButtons');
+                    cbtns.innerHTML = '';
+                    
+                    const sorted = Object.entries(codeCounts).sort((a, b) => b[1] - a[1]).slice(0, 15);
+                    sorted.forEach(([code, count]) => {
+                        const info = landUseColors[code] || { name: code, color: getColorForCode(code) };
+                        cbtns.innerHTML += `<button class="filter-btn" data-code="${code}" onclick="toggleCodeFilter('${code}')" style="border-left: 3px solid ${info.color};">${code} (${count.toLocaleString()})</button>`;
+                    });
+                    
+                    // Legend
+                    document.getElementById('landLegendItems').innerHTML = sorted.slice(0, 6).map(([code]) => {
+                        const info = landUseColors[code] || { name: code };
+                        return `<div class="legend-item"><div class="legend-dot" style="background:${getColorForCode(code)};"></div> ${code}: ${info.name}</div>`;
+                    }).join('');
                     
                     render();
                     
                 } catch (err) {
-                    document.getElementById('fileStatus').textContent = '❌ Error: ' + err.message;
-                    console.error(err);
+                    document.getElementById('landStatus').textContent = '❌ ' + err.message;
                 }
             };
             reader.readAsText(file);
