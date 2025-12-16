@@ -74,7 +74,7 @@
     <canvas id="canvas"></canvas>
     
     <div class="panel">
-        <h2>🏙️ Riyadh Map <span style="font-size:10px;color:#999;">v2.2</span></h2>
+        <h2>🏙️ Riyadh Map <span style="font-size:10px;color:#999;">v2.3-DEBUG</span></h2>
         
         <div class="file-section">
             <label>📊 Land Use Data CSV:</label>
@@ -194,18 +194,25 @@
                 .then(data => {
                     businesses = data;
                     
+                    console.log(`🎉 BUSINESSES LOADED! Count: ${businesses.length}`);
+                    console.log(`First 3 businesses:`, businesses.slice(0, 3));
+                    
                     document.getElementById('businessStatus').textContent = `✅ Loaded ${businesses.length.toLocaleString()} businesses`;
                     document.getElementById('businessStatus').className = 'file-status loaded';
                     document.getElementById('businessVisible').textContent = businesses.length.toLocaleString();
                     
                     // Make sure checkbox is checked
                     document.getElementById('showBusinesses').checked = true;
+                    console.log(`✅ Business checkbox FORCED to CHECKED`);
                     
-                    console.log(`✅ Successfully loaded ${businesses.length} businesses from instant map data`);
+                    console.log(`✅ Successfully loaded ${businesses.length} BURGUNDY businesses from extracted data`);
                     
                     // Force render after loading
                     if (map) {
+                        console.log(`🗺️ Map exists - RENDERING BUSINESSES NOW!`);
                         render();
+                    } else {
+                        console.warn(`⚠️ Map not ready yet`);
                     }
                 })
                 .catch(err => {
@@ -512,11 +519,11 @@
             
             if (bizChecked && businesses.length > 0) {
                 // Less aggressive sampling to show more businesses
-                const businessSample = zoom <= 10 ? 5 : (zoom <= 11 ? 3 : (zoom <= 12 ? 2 : 1));
-                const baseBusinessSize = Math.max(3, Math.min(zoom - 7, 7)); // Slightly larger
+                const businessSample = zoom <= 10 ? 3 : (zoom <= 11 ? 2 : 1);
+                const baseBusinessSize = Math.max(5, Math.min(zoom - 5, 10)); // MUCH larger!
                 const businessSize = baseBusinessSize * (dotSizeMultiplier / 3);
                 
-                console.log(`🏪 Drawing businesses: checkbox=${bizChecked}, total=${businesses.length}, zoom=${zoom}, sample=${businessSample}, size=${businessSize}`);
+                console.log(`🏪 DRAWING BUSINESSES: checkbox=${bizChecked}, total=${businesses.length}, zoom=${zoom}, sample=${businessSample}, size=${businessSize}px, color=burgundy`);
                 
                 // All businesses get burgundy color
                 const burgundy = '#800020';
@@ -530,11 +537,11 @@
                     if (inBounds(lat, lng)) {
                         const p = toPixel(lat, lng);
                         
-                        // Draw business marker in burgundy with white border
+                        // Draw business marker in BRIGHT BURGUNDY with thick white border
                         try {
-                            ctx.fillStyle = 'rgba(128, 0, 32, 0.9)'; // Burgundy with transparency
-                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-                            ctx.lineWidth = 1.5;
+                            ctx.fillStyle = 'rgba(220, 20, 60, 1.0)'; // BRIGHT Crimson/Burgundy - FULLY OPAQUE
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 1.0)';
+                            ctx.lineWidth = 2;
                             ctx.beginPath();
                             ctx.arc(p.x, p.y, businessSize, 0, Math.PI * 2);
                             ctx.fill();
@@ -545,9 +552,21 @@
                         }
                     }
                 }
-                // Only log if businesses were actually drawn (avoid spam)
-                if (businessCount > 0) {
-                    console.log(`Drew ${businessCount} businesses in view (total: ${businesses.length}, sample: ${businessSample})`);
+                // Always log business drawing
+                console.log(`✅ Drew ${businessCount} BURGUNDY BUSINESSES in view (total: ${businesses.length}, sample rate: 1 in ${businessSample})`);
+                
+                // TEST: Draw one GIANT burgundy marker in center of Riyadh (24.7136, 46.6753)
+                const testLat = 24.7136, testLng = 46.6753;
+                if (inBounds(testLat, testLng)) {
+                    const testP = toPixel(testLat, testLng);
+                    ctx.fillStyle = 'rgba(220, 20, 60, 1.0)';
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 1.0)';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(testP.x, testP.y, 20, 0, Math.PI * 2); // GIANT 20px marker
+                    ctx.fill();
+                    ctx.stroke();
+                    console.log(`🎯 TEST MARKER drawn at Riyadh center (${testP.x}, ${testP.y})`);
                 }
             }
             
