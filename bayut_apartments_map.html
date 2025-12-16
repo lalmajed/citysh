@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bayut Apartments Map - Saudi Arabia</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+        }
+        #map {
+            position: fixed;
+            top: 0;
+            left: 280px;
+            right: 0;
+            bottom: 0;
+        }
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, #16213e 0%, #0f0f23 100%);
+            color: #f5f5f5;
+            overflow-y: auto;
+            padding: 20px;
+            border-right: 3px solid #00b4d8;
+        }
+        .sidebar h1 {
+            color: #00b4d8;
+            font-size: 1.4em;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sidebar h2 {
+            color: #90e0ef;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            font-weight: normal;
+        }
+        .stats-card {
+            background: rgba(0, 180, 216, 0.1);
+            border: 1px solid rgba(0, 180, 216, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .stats-card h3 {
+            color: #00b4d8;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+        .stat-value {
+            color: #90e0ef;
+            font-weight: bold;
+        }
+        .total-count {
+            background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .total-count .number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: white;
+        }
+        .total-count .label {
+            color: rgba(255,255,255,0.9);
+            font-size: 0.9em;
+        }
+        .legend {
+            margin-top: 15px;
+        }
+        .legend h3 {
+            color: #00b4d8;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px 0;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        .filter-section {
+            margin-top: 15px;
+        }
+        .filter-section h3 {
+            color: #00b4d8;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .filter-btn {
+            padding: 8px 15px;
+            margin: 3px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s;
+            background: rgba(0, 180, 216, 0.2);
+            color: #90e0ef;
+            border: 1px solid rgba(0, 180, 216, 0.3);
+        }
+        .filter-btn:hover {
+            background: rgba(0, 180, 216, 0.4);
+        }
+        .filter-btn.active {
+            background: #00b4d8;
+            color: white;
+        }
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(0, 180, 216, 0.3);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            color: white;
+            margin-bottom: 15px;
+        }
+        .search-box::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(22, 33, 62, 0.95);
+            padding: 30px 50px;
+            border-radius: 15px;
+            color: #00b4d8;
+            font-size: 1.2em;
+            z-index: 10000;
+            border: 2px solid #00b4d8;
+        }
+        .loading.hidden {
+            display: none;
+        }
+        .popup-content {
+            min-width: 200px;
+        }
+        .popup-content h4 {
+            color: #0077b6;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        .popup-content .price {
+            color: #00b4d8;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .popup-content .details {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        .popup-content .location {
+            color: #888;
+            font-size: 0.8em;
+        }
+        .marker-cluster-small {
+            background-color: rgba(0, 180, 216, 0.6);
+        }
+        .marker-cluster-small div {
+            background-color: rgba(0, 180, 216, 0.8);
+        }
+        .marker-cluster-medium {
+            background-color: rgba(0, 119, 182, 0.6);
+        }
+        .marker-cluster-medium div {
+            background-color: rgba(0, 119, 182, 0.8);
+        }
+        .marker-cluster-large {
+            background-color: rgba(3, 4, 94, 0.6);
+        }
+        .marker-cluster-large div {
+            background-color: rgba(3, 4, 94, 0.8);
+        }
+        .marker-cluster {
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading">Loading apartments data...</div>
+    
+    <div class="sidebar">
+        <h1>🏢 Bayut Apartments</h1>
+        <h2>Saudi Arabia Rental Listings</h2>
+        
+        <div class="total-count">
+            <div class="number" id="totalCount">0</div>
+            <div class="label">Total Apartments</div>
+        </div>
+        
+        <input type="text" class="search-box" id="searchBox" placeholder="Search by location...">
+        
+        <div class="stats-card">
+            <h3>📊 By City</h3>
+            <div id="cityStats"></div>
+        </div>
+        
+        <div class="stats-card">
+            <h3>🛏️ By Rooms</h3>
+            <div id="roomStats"></div>
+        </div>
+        
+        <div class="filter-section">
+            <h3>Filter by Rooms</h3>
+            <div id="roomFilters"></div>
+        </div>
+        
+        <div class="legend">
+            <h3>Map Legend</h3>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #00b4d8;"></div>
+                <span>1-2 Bedrooms</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #0077b6;"></div>
+                <span>3-4 Bedrooms</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #023e8a;"></div>
+                <span>5+ Bedrooms</span>
+            </div>
+        </div>
+    </div>
+    
+    <div id="map"></div>
+    
+    <script>
+        // Load apartment data
+        let allApartments = [];
+        let markers = null;
+        let map = null;
+        
+        function getMarkerColor(rooms) {
+            if (rooms <= 2) return '#00b4d8';
+            if (rooms <= 4) return '#0077b6';
+            return '#023e8a';
+        }
+        
+        function formatPrice(price, frequency) {
+            if (!price) return 'Price on request';
+            const formatted = price.toLocaleString('en-SA');
+            const period = frequency === 'monthly' ? '/month' : '/year';
+            return `SAR ${formatted}${period}`;
+        }
+        
+        function createPopupContent(apt) {
+            return `
+                <div class="popup-content">
+                    <h4>${apt.title}</h4>
+                    <div class="price">${formatPrice(apt.price, apt.rent_frequency)}</div>
+                    <div class="details">
+                        🛏️ ${apt.rooms || '?'} rooms | 
+                        🚿 ${apt.baths || '?'} baths | 
+                        📐 ${apt.area || '?'} m²
+                    </div>
+                    <div class="location">📍 ${apt.location}</div>
+                </div>
+            `;
+        }
+        
+        function updateStats(apartments) {
+            // Total count
+            document.getElementById('totalCount').textContent = apartments.length.toLocaleString();
+            
+            // City stats
+            const cityCounts = {};
+            apartments.forEach(apt => {
+                const parts = apt.location.split(' > ');
+                const city = parts[1] || 'Unknown';
+                cityCounts[city] = (cityCounts[city] || 0) + 1;
+            });
+            
+            const sortedCities = Object.entries(cityCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            document.getElementById('cityStats').innerHTML = sortedCities
+                .map(([city, count]) => `
+                    <div class="stat-row">
+                        <span>${city}</span>
+                        <span class="stat-value">${count.toLocaleString()}</span>
+                    </div>
+                `).join('');
+            
+            // Room stats
+            const roomCounts = {};
+            apartments.forEach(apt => {
+                const rooms = apt.rooms || 'Unknown';
+                roomCounts[rooms] = (roomCounts[rooms] || 0) + 1;
+            });
+            
+            const sortedRooms = Object.entries(roomCounts)
+                .filter(([r]) => r !== 'Unknown')
+                .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+                .slice(0, 6);
+            
+            document.getElementById('roomStats').innerHTML = sortedRooms
+                .map(([rooms, count]) => `
+                    <div class="stat-row">
+                        <span>${rooms} rooms</span>
+                        <span class="stat-value">${count.toLocaleString()}</span>
+                    </div>
+                `).join('');
+            
+            // Room filters
+            const allRooms = [...new Set(apartments.map(a => a.rooms).filter(r => r))].sort((a, b) => a - b);
+            document.getElementById('roomFilters').innerHTML = 
+                '<button class="filter-btn active" onclick="filterByRooms(null)">All</button>' +
+                allRooms.slice(0, 6).map(r => 
+                    `<button class="filter-btn" onclick="filterByRooms(${r})">${r} BR</button>`
+                ).join('');
+        }
+        
+        function addMarkers(apartments) {
+            if (markers) {
+                map.removeLayer(markers);
+            }
+            
+            markers = L.markerClusterGroup({
+                maxClusterRadius: 50,
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false,
+                zoomToBoundsOnClick: true
+            });
+            
+            apartments.forEach(apt => {
+                const color = getMarkerColor(apt.rooms || 2);
+                const marker = L.circleMarker([apt.lat, apt.lng], {
+                    radius: 6,
+                    fillColor: color,
+                    color: '#fff',
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+                
+                marker.bindPopup(createPopupContent(apt));
+                markers.addLayer(marker);
+            });
+            
+            map.addLayer(markers);
+        }
+        
+        function filterByRooms(rooms) {
+            // Update button states
+            document.querySelectorAll('#roomFilters .filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Filter and update
+            const filtered = rooms === null 
+                ? allApartments 
+                : allApartments.filter(a => a.rooms === rooms);
+            
+            addMarkers(filtered);
+            updateStats(filtered);
+        }
+        
+        // Search functionality
+        document.getElementById('searchBox').addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            const filtered = allApartments.filter(apt => 
+                apt.location.toLowerCase().includes(query) ||
+                apt.title.toLowerCase().includes(query)
+            );
+            addMarkers(filtered);
+            updateStats(filtered);
+        });
+        
+        // Initialize map
+        map = L.map('map', {
+            center: [24.7136, 46.6753],  // Riyadh
+            zoom: 10,
+            preferCanvas: true
+        });
+        
+        // Add tile layer
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap © CARTO',
+            maxZoom: 19
+        }).addTo(map);
+        
+        // Load data
+        fetch('bayut_apartments_full.json')
+            .then(response => response.json())
+            .then(data => {
+                allApartments = data;
+                addMarkers(data);
+                updateStats(data);
+                document.getElementById('loading').classList.add('hidden');
+            })
+            .catch(err => {
+                console.error('Error loading data:', err);
+                document.getElementById('loading').textContent = 'Error loading data';
+            });
+    </script>
+</body>
+</html>
