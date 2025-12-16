@@ -1,4 +1,4 @@
-lat,lng,external_id,title,title_ar,price,rooms,baths,area,rent_frequency,location,category,photo_count
+lat,lon,external_id,title,title_ar,price,rooms,baths,area,rent_frequency,location,category,photo_count
 24.827490630186,46.630013639812,87781506,"Apartment For Rent in Al Yasmin, Riyadh",شقة للإيجار في الياسمين، الرياض,8990.0,2,3,100.0,monthly,KSA > Riyadh > North Riyadh > Al Yasmin,Residential > Apartments,21
 24.831090828036,46.627683191392,87714864,"Apartment For Rent in Al Yasmin, Riyadh",شقة للإيجار في الياسمين، الرياض,150000.0,3,3,128.0,yearly,KSA > Riyadh > North Riyadh > Al Yasmin,Residential > Apartments,20
 24.828338981406,46.645378386006,87780267,Modern Living Starts Here – Stay at Al Majdiah,حياة عصرية تبدأ من هنا – سكن راقٍ في الماجدية مع ستاي,7900.0,2,3,90.0,monthly,KSA > Riyadh > North Riyadh > Al Yasmin,Residential > Apartments,18
