@@ -1,0 +1,429 @@
+[
+  {
+    "lat": 24.648064,
+    "lon": 46.731175,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "parking"
+  },
+  {
+    "lat": 24.650844,
+    "lon": 46.716417,
+    "name": "البريد السعودي المركز الرئيسي",
+    "category": "amenity",
+    "subcategory": "post_box"
+  },
+  {
+    "lat": 24.647,
+    "lon": 46.714,
+    "name": "فندق مريوت رياض",
+    "category": "tourism",
+    "subcategory": "hotel"
+  },
+  {
+    "lat": 24.640242,
+    "lon": 46.718019,
+    "name": "ATM",
+    "category": "amenity",
+    "subcategory": "atm"
+  },
+  {
+    "lat": 24.649496,
+    "lon": 46.714757,
+    "name": "بنك الرياض",
+    "category": "amenity",
+    "subcategory": "bank"
+  },
+  {
+    "lat": 24.645727,
+    "lon": 46.718361,
+    "name": "SJ Supermarket Al Batha",
+    "category": "shop",
+    "subcategory": "supermarket"
+  },
+  {
+    "lat": 24.645865,
+    "lon": 46.715708,
+    "name": "زين",
+    "category": "office",
+    "subcategory": "telecommunication"
+  },
+  {
+    "lat": 24.647624,
+    "lon": 46.717124,
+    "name": "الزاجل للشحن الجوي و البحري",
+    "category": "amenity",
+    "subcategory": "post_office"
+  },
+  {
+    "lat": 24.647221,
+    "lon": 46.717359,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "place_of_worship"
+  },
+  {
+    "lat": 24.643389,
+    "lon": 46.729375,
+    "name": "خالو عبدالسلام",
+    "category": "amenity",
+    "subcategory": "post_office"
+  },
+  {
+    "lat": 24.647955,
+    "lon": 46.724639,
+    "name": "المديفر",
+    "category": "shop",
+    "subcategory": "travel_agency"
+  },
+  {
+    "lat": 24.640906,
+    "lon": 46.719151,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "atm"
+  },
+  {
+    "lat": 24.648859,
+    "lon": 46.731778,
+    "name": "القوات الخاصة للأمن والحماية",
+    "category": "office",
+    "subcategory": "government"
+  },
+  {
+    "lat": 24.641107,
+    "lon": 46.718069,
+    "name": "جمال سنتر",
+    "category": "amenity",
+    "subcategory": "cinema"
+  },
+  {
+    "lat": 24.644921,
+    "lon": 46.717291,
+    "name": "بالطيف",
+    "category": "shop",
+    "subcategory": "jewelry"
+  },
+  {
+    "lat": 24.647562,
+    "lon": 46.716443,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "restaurant"
+  },
+  {
+    "lat": 24.644429,
+    "lon": 46.715664,
+    "name": "batha hotel",
+    "category": "amenity",
+    "subcategory": "fast_food"
+  },
+  {
+    "lat": 24.644765,
+    "lon": 46.728652,
+    "name": "Adeeb Accomodation",
+    "category": "tourism",
+    "subcategory": "apartment"
+  },
+  {
+    "lat": 24.650679,
+    "lon": 46.73265,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "parking"
+  },
+  {
+    "lat": 24.65052,
+    "lon": 46.731368,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "parking"
+  },
+  {
+    "lat": 24.64981,
+    "lon": 46.730382,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "parking"
+  },
+  {
+    "lat": 24.64891,
+    "lon": 46.731243,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "parking"
+  },
+  {
+    "lat": 24.641574,
+    "lon": 46.720164,
+    "name": "Bin Shaihoun Tire shop",
+    "category": "shop",
+    "subcategory": "car_repair"
+  },
+  {
+    "lat": 24.644743,
+    "lon": 46.715014,
+    "name": "الفرسان الرحاله",
+    "category": "shop",
+    "subcategory": "travel_agency"
+  },
+  {
+    "lat": 24.646755,
+    "lon": 46.71985,
+    "name": "Gurabi RAM back",
+    "category": "shop",
+    "subcategory": "car_parts"
+  },
+  {
+    "lat": 24.64827,
+    "lon": 46.714575,
+    "name": "Petromin",
+    "category": "shop",
+    "subcategory": "car_repair"
+  },
+  {
+    "lat": 24.649431,
+    "lon": 46.723829,
+    "name": "الدريس",
+    "category": "shop",
+    "subcategory": "car_repair"
+  },
+  {
+    "lat": 24.646325,
+    "lon": 46.716764,
+    "name": "aDawliah",
+    "category": "shop",
+    "subcategory": "musical_instrument"
+  },
+  {
+    "lat": 24.639241,
+    "lon": 46.715089,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "atm"
+  },
+  {
+    "lat": 24.651532,
+    "lon": 46.734077,
+    "name": "آبار الذهب",
+    "category": "amenity",
+    "subcategory": "fuel"
+  },
+  {
+    "lat": 24.642848,
+    "lon": 46.724736,
+    "name": "Masdar Technical Supplies",
+    "category": "shop",
+    "subcategory": "hardware"
+  },
+  {
+    "lat": 24.647387,
+    "lon": 46.714386,
+    "name": "قصر التوت",
+    "category": "tourism",
+    "subcategory": "hotel"
+  },
+  {
+    "lat": 24.645357,
+    "lon": 46.715255,
+    "name": "الطازج",
+    "category": "amenity",
+    "subcategory": "restaurant"
+  },
+  {
+    "lat": 24.646207,
+    "lon": 46.717277,
+    "name": "فلاجيو",
+    "category": "shop",
+    "subcategory": "mall"
+  },
+  {
+    "lat": 24.644883,
+    "lon": 46.715404,
+    "name": "الكدادين",
+    "category": "amenity",
+    "subcategory": "parking"
+  },
+  {
+    "lat": 24.639295,
+    "lon": 46.714557,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "school"
+  },
+  {
+    "lat": 24.639303,
+    "lon": 46.714107,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "place_of_worship"
+  },
+  {
+    "lat": 24.647921,
+    "lon": 46.714144,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "fuel"
+  },
+  {
+    "lat": 24.648017,
+    "lon": 46.714095,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "fuel"
+  },
+  {
+    "lat": 24.647944,
+    "lon": 46.71405,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "fuel"
+  },
+  {
+    "lat": 24.640751,
+    "lon": 46.727218,
+    "name": "Unnamed",
+    "category": "leisure",
+    "subcategory": "park"
+  },
+  {
+    "lat": 24.647564,
+    "lon": 46.714056,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "car_wash"
+  },
+  {
+    "lat": 24.651477,
+    "lon": 46.714993,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "parking"
+  },
+  {
+    "lat": 24.650106,
+    "lon": 46.716503,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "post_office"
+  },
+  {
+    "lat": 24.650148,
+    "lon": 46.71663,
+    "name": "البريد السعودي المركز الرئيسي",
+    "category": "amenity",
+    "subcategory": "post_office"
+  },
+  {
+    "lat": 24.648695,
+    "lon": 46.727889,
+    "name": "الموسسة العامة للتدريب التقني والمهني",
+    "category": "office",
+    "subcategory": "government"
+  },
+  {
+    "lat": 24.64941,
+    "lon": 46.731547,
+    "name": "Unnamed",
+    "category": "office",
+    "subcategory": "government"
+  },
+  {
+    "lat": 24.649514,
+    "lon": 46.73106,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "parking_space"
+  },
+  {
+    "lat": 24.649881,
+    "lon": 46.731941,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "parking_space"
+  },
+  {
+    "lat": 24.648668,
+    "lon": 46.731957,
+    "name": "القوات الخاصة للأمن والحماية",
+    "category": "office",
+    "subcategory": "government"
+  },
+  {
+    "lat": 24.647267,
+    "lon": 46.73276,
+    "name": "Unnamed",
+    "category": "leisure",
+    "subcategory": "park"
+  },
+  {
+    "lat": 24.648411,
+    "lon": 46.721605,
+    "name": "حديقة عمر بن الخطاب",
+    "category": "leisure",
+    "subcategory": "park"
+  },
+  {
+    "lat": 24.644786,
+    "lon": 46.722464,
+    "name": "حديقة العمل",
+    "category": "leisure",
+    "subcategory": "park"
+  },
+  {
+    "lat": 24.64413,
+    "lon": 46.72229,
+    "name": "جامع إبراهيم التركي",
+    "category": "amenity",
+    "subcategory": "place_of_worship"
+  },
+  {
+    "lat": 24.644125,
+    "lon": 46.717465,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "parking"
+  },
+  {
+    "lat": 24.651406,
+    "lon": 46.727285,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "parking_space"
+  },
+  {
+    "lat": 24.650276,
+    "lon": 46.730237,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "parking_space"
+  },
+  {
+    "lat": 24.650467,
+    "lon": 46.730819,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "parking_space"
+  },
+  {
+    "lat": 24.650517,
+    "lon": 46.731383,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "parking_space"
+  },
+  {
+    "lat": 24.648907,
+    "lon": 46.731179,
+    "name": "Unnamed",
+    "category": "amenity",
+    "subcategory": "parking_space"
+  },
+  {
+    "lat": 24.651738,
+    "lon": 46.717177,
+    "name": "إدارة الميزانية العامة",
+    "category": "office",
+    "subcategory": "government"
+  }
+]
