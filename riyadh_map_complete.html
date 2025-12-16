@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Riyadh Complete Map - Districts, Apartments, Businesses</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, width=device-width">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; }
+        #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+        
+        .panel {
+            position: absolute; top: 10px; left: 10px;
+            background: white; padding: 12px; border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 1000;
+            max-width: 340px; max-height: 95vh; overflow-y: auto; font-size: 12px;
+        }
+        .panel h2 { color: #1a73e8; margin-bottom: 8px; font-size: 15px; }
+        
+        .section { margin: 8px 0; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+        .section-header {
+            background: #f5f5f5; padding: 8px 10px; cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: 600; font-size: 12px;
+        }
+        .section-header:hover { background: #e8e8e8; }
+        .section-content { padding: 8px; display: none; }
+        .section-content.open { display: block; }
+        
+        .file-input { margin: 5px 0; }
+        .file-input label { display: block; font-weight: 600; font-size: 11px; margin-bottom: 3px; }
+        .file-input input { font-size: 10px; width: 100%; }
+        .file-status { font-size: 10px; color: #666; margin-top: 3px; }
+        .file-status.loaded { color: #34a853; font-weight: bold; }
+        
+        .count-row { display: flex; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
+        .count-box { flex: 1; min-width: 70px; padding: 8px; border-radius: 6px; text-align: center; color: white; }
+        .count-box.apt { background: #0077b6; }
+        .count-box.biz { background: #c2185b; }
+        .count-box.land { background: #34a853; }
+        .count-box.dist { background: #ff9800; }
+        .count-box .num { font-size: 1.3em; font-weight: bold; }
+        .count-box .lbl { font-size: 9px; opacity: 0.9; }
+        
+        .toggle-row { display: flex; align-items: center; gap: 6px; padding: 5px; cursor: pointer; border-radius: 4px; }
+        .toggle-row:hover { background: #f5f5f5; }
+        .toggle-row input { margin: 0; }
+        .toggle-dot { width: 12px; height: 12px; border-radius: 50%; }
+        
+        .district-list { max-height: 250px; overflow-y: auto; }
+        .district-item { padding: 6px; margin: 3px 0; background: #f9f9f9; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .district-item:hover { background: #fff3e0; }
+        .district-item .name { font-weight: 600; }
+        .district-item .counts { color: #666; font-size: 10px; }
+        
+        .legend { margin-top: 8px; padding: 8px; background: #f5f5f5; border-radius: 6px; }
+        .legend h4 { font-size: 11px; color: #666; margin-bottom: 5px; }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 10px; padding: 2px 0; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+        
+        #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 450; }
+        
+        .info-popup {
+            position: absolute; background: white; padding: 12px; border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 2000; min-width: 250px;
+            font-size: 11px; display: none; border-left: 4px solid #1a73e8;
+        }
+        .info-popup.show { display: block; }
+        .info-popup h3 { margin: 0 0 6px 0; color: #1a73e8; font-size: 13px; }
+        .info-popup .close { position: absolute; top: 3px; right: 8px; cursor: pointer; color: #999; font-size: 16px; }
+        .info-popup table { width: 100%; }
+        .info-popup td { padding: 3px 5px; border-bottom: 1px solid #eee; }
+        .info-popup td:first-child { font-weight: 600; color: #555; width: 35%; }
+        
+        input[type="range"] { width: 100%; }
+        
+        .search-box { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <canvas id="canvas"></canvas>
+    
+    <div id="infoPopup" class="info-popup">
+        <span class="close" onclick="closeInfoPopup()">&times;</span>
+        <h3 id="popupTitle">Details</h3>
+        <div id="popupContent"></div>
+    </div>
+    
+    <div class="panel">
+        <h2>🗺️ Riyadh Complete Map</h2>
+        
+        <!-- Counts -->
+        <div class="count-row" id="countsRow" style="display:none;">
+            <div class="count-box apt"><div class="num" id="aptCount">0</div><div class="lbl">Apartments</div></div>
+            <div class="count-box biz"><div class="num" id="bizCount">0</div><div class="lbl">Businesses</div></div>
+            <div class="count-box land"><div class="num" id="landCount">0</div><div class="lbl">Parcels</div></div>
+        </div>
+        
+        <!-- File Loaders Section -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                📂 Data Files <span>▼</span>
+            </div>
+            <div class="section-content open">
+                <div class="file-input">
+                    <label>🏢 Apartments CSV:</label>
+                    <input type="file" id="aptFile" accept=".csv">
+                    <div id="aptStatus" class="file-status">riyadh_apartments.csv</div>
+                </div>
+                <div class="file-input">
+                    <label>🏪 Businesses CSV:</label>
+                    <input type="file" id="bizFile" accept=".csv,.json">
+                    <div id="bizStatus" class="file-status">riyadh_businesses.csv</div>
+                </div>
+                <div class="file-input">
+                    <label>📊 Land Use CSV:</label>
+                    <input type="file" id="landFile" accept=".csv">
+                    <div id="landStatus" class="file-status">Upload land use data</div>
+                </div>
+                <div class="file-input">
+                    <label>🗺️ Districts JSON:</label>
+                    <input type="file" id="distFile" accept=".json">
+                    <div id="distStatus" class="file-status">riyadh_districts.json</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Layers Section -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                🎨 Layers <span>▼</span>
+            </div>
+            <div class="section-content open">
+                <label class="toggle-row">
+                    <input type="checkbox" id="showApartments" checked>
+                    <span class="toggle-dot" style="background:#0077b6;"></span>
+                    <span>Apartments</span>
+                </label>
+                <label class="toggle-row">
+                    <input type="checkbox" id="showBusinesses" checked>
+                    <span class="toggle-dot" style="background:#c2185b;"></span>
+                    <span>Businesses</span>
+                </label>
+                <label class="toggle-row">
+                    <input type="checkbox" id="showLandUse" checked>
+                    <span class="toggle-dot" style="background:#34a853;"></span>
+                    <span>Land Use</span>
+                </label>
+                <label class="toggle-row">
+                    <input type="checkbox" id="showDistricts" checked>
+                    <span class="toggle-dot" style="background:#ff9800;"></span>
+                    <span>District Boundaries</span>
+                </label>
+                
+                <div style="margin-top:8px;">
+                    <label style="font-size:11px;">Dot Size: <span id="dotSizeVal">3</span></label>
+                    <input type="range" id="dotSize" min="1" max="10" value="3" step="0.5">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Districts Section -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                📍 Districts (<span id="districtCount">0</span>) <span>▼</span>
+            </div>
+            <div class="section-content">
+                <input type="text" class="search-box" id="districtSearch" placeholder="Search districts...">
+                <div class="district-list" id="districtList"></div>
+            </div>
+        </div>
+        
+        <!-- Land Use Codes Section -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                🏷️ Land Use Codes <span>▼</span>
+            </div>
+            <div class="section-content">
+                <div id="landCodeFilters" style="max-height:150px;overflow-y:auto;"></div>
+            </div>
+        </div>
+        
+        <!-- Legend -->
+        <div class="legend">
+            <h4>Land Use Colors</h4>
+            <div class="legend-item"><div class="legend-dot" style="background:#34a853;"></div> 1000/1012: Villas</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#0077b6;"></div> 7510: Apartments</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ea4335;"></div> 2000: Commercial</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ff9800;"></div> 2285: Commercial Area</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#795548;"></div> 2633/2278: Industrial</div>
+        </div>
+        
+        <div style="margin-top:8px;font-size:10px;color:#888;">
+            <label><input type="checkbox" id="enableClick"> Click for details</label>
+            | Zoom: <span id="zoomLevel">0</span>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let apartments = [], businesses = [], parcels = [], districts = [];
+        let districtCounts = {};
+        let activeCodeFilters = {};
+        let dotSize = 3;
+        
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Land use code mappings
+        const landUseCodes = {
+            '1000': { color: '#34a853', name: 'Villas' },
+            '1012': { color: '#34a853', name: 'Villas' },
+            '7510': { color: '#0077b6', name: 'Apartments' },
+            '2000': { color: '#ea4335', name: 'Commercial' },
+            '2285': { color: '#ff9800', name: 'Commercial Area' },
+            '2633': { color: '#795548', name: 'Industrial' },
+            '2278': { color: '#795548', name: 'Industrial' },
+            '4010': { color: '#9c27b0', name: 'Commercial Centers' }
+        };
+        
+        function getCodeColor(code) {
+            if (landUseCodes[code]) return landUseCodes[code].color;
+            const num = parseInt(code) || 0;
+            return `hsl(${(num * 137) % 360}, 60%, 50%)`;
+        }
+        
+        function toggleSection(header) {
+            const content = header.nextElementSibling;
+            const arrow = header.querySelector('span:last-child');
+            content.classList.toggle('open');
+            arrow.textContent = content.classList.contains('open') ? '▼' : '▶';
+        }
+        
+        function closeInfoPopup() {
+            document.getElementById('infoPopup').classList.remove('show');
+        }
+        
+        function showPopup(title, content, x, y) {
+            document.getElementById('popupTitle').textContent = title;
+            document.getElementById('popupContent').innerHTML = content;
+            const popup = document.getElementById('infoPopup');
+            popup.style.left = Math.min(x + 10, window.innerWidth - 280) + 'px';
+            popup.style.top = Math.min(y + 10, window.innerHeight - 200) + 'px';
+            popup.classList.add('show');
+        }
+        
+        function render() {
+            if (!map) return;
+            const bounds = map.getBounds();
+            if (!bounds) return;
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const proj = map.getProjection();
+            if (!proj) return;
+            
+            const zoom = map.getZoom();
+            document.getElementById('zoomLevel').textContent = zoom.toFixed(1);
+            
+            const topRight = proj.fromLatLngToPoint(bounds.getNorthEast());
+            const bottomLeft = proj.fromLatLngToPoint(bounds.getSouthWest());
+            const scale = Math.pow(2, zoom);
+            const baseRadius = Math.max(1.5, zoom - 9) * dotSize / 3;
+            
+            const showApt = document.getElementById('showApartments').checked;
+            const showBiz = document.getElementById('showBusinesses').checked;
+            const showLand = document.getElementById('showLandUse').checked;
+            const showDist = document.getElementById('showDistricts').checked;
+            
+            // Draw district boundaries
+            if (showDist && districts.length > 0) {
+                ctx.strokeStyle = '#ff9800';
+                ctx.lineWidth = 2;
+                ctx.globalAlpha = 0.7;
+                
+                districts.forEach(d => {
+                    const boundary = d.boundaries?.[0];
+                    if (!boundary || boundary.length < 3) return;
+                    
+                    ctx.beginPath();
+                    let first = true;
+                    boundary.forEach(([lat, lon]) => {
+                        const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                        const x = (w.x - bottomLeft.x) * scale;
+                        const y = (w.y - topRight.y) * scale;
+                        if (first) { ctx.moveTo(x, y); first = false; }
+                        else ctx.lineTo(x, y);
+                    });
+                    ctx.closePath();
+                    ctx.stroke();
+                });
+                ctx.globalAlpha = 1;
+            }
+            
+            // Draw land use
+            if (showLand && parcels.length > 0) {
+                parcels.forEach(p => {
+                    if (Object.keys(activeCodeFilters).length > 0 && !activeCodeFilters[p.code]) return;
+                    if (!inBounds(p, bounds)) return;
+                    
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, baseRadius * 0.7, 0, 2 * Math.PI);
+                    ctx.fillStyle = getCodeColor(p.code);
+                    ctx.globalAlpha = 0.6;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                });
+            }
+            
+            // Draw businesses
+            if (showBiz && businesses.length > 0) {
+                businesses.forEach(b => {
+                    if (!inBounds(b, bounds)) return;
+                    
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(b.lat, b.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, baseRadius * 0.6, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#c2185b';
+                    ctx.globalAlpha = 0.6;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                });
+            }
+            
+            // Draw apartments
+            if (showApt && apartments.length > 0) {
+                apartments.forEach(a => {
+                    if (!inBounds(a, bounds)) return;
+                    
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(a.lat, a.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, baseRadius, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#0077b6';
+                    ctx.globalAlpha = 0.7;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                });
+            }
+        }
+        
+        function inBounds(item, bounds) {
+            return item.lat >= bounds.getSouthWest().lat() && 
+                   item.lat <= bounds.getNorthEast().lat() &&
+                   item.lon >= bounds.getSouthWest().lng() && 
+                   item.lon <= bounds.getNorthEast().lng();
+        }
+        
+        function updateDistrictList() {
+            const list = document.getElementById('districtList');
+            const search = document.getElementById('districtSearch').value.toLowerCase();
+            
+            let html = '';
+            const filtered = districts.filter(d => 
+                d.name_en.toLowerCase().includes(search) || 
+                d.name_ar.includes(search)
+            );
+            
+            filtered.sort((a, b) => {
+                const ca = districtCounts[a.name_en] || {};
+                const cb = districtCounts[b.name_en] || {};
+                return (cb.apartments || 0) - (ca.apartments || 0);
+            });
+            
+            filtered.slice(0, 50).forEach(d => {
+                const counts = districtCounts[d.name_en] || {};
+                html += `<div class="district-item" onclick="zoomToDistrict('${d.name_en}')">
+                    <div class="name">${d.name_en}</div>
+                    <div class="counts">
+                        🏢 ${counts.apartments || 0} apt | 
+                        🏗️ ${counts.complexes || 0} bldg | 
+                        🏪 ${counts.businesses || 0} biz
+                    </div>
+                </div>`;
+            });
+            
+            list.innerHTML = html || '<div style="color:#999;padding:10px;">No districts found</div>';
+            document.getElementById('districtCount').textContent = districts.length;
+        }
+        
+        function zoomToDistrict(name) {
+            const d = districts.find(x => x.name_en === name);
+            if (!d || !d.boundaries?.[0]) return;
+            
+            const bounds = new google.maps.LatLngBounds();
+            d.boundaries[0].forEach(([lat, lon]) => {
+                bounds.extend(new google.maps.LatLng(lat, lon));
+            });
+            map.fitBounds(bounds);
+        }
+        
+        function parseCSVLine(line) {
+            const vals = [];
+            let inQuote = false, current = '';
+            for (let c of line) {
+                if (c === '"') inQuote = !inQuote;
+                else if (c === ',' && !inQuote) { vals.push(current.trim()); current = ''; }
+                else current += c;
+            }
+            vals.push(current.trim());
+            return vals;
+        }
+        
+        // Event listeners
+        document.getElementById('dotSize').addEventListener('input', e => {
+            dotSize = parseFloat(e.target.value);
+            document.getElementById('dotSizeVal').textContent = dotSize;
+            render();
+        });
+        
+        ['showApartments', 'showBusinesses', 'showLandUse', 'showDistricts'].forEach(id => {
+            document.getElementById(id).addEventListener('change', render);
+        });
+        
+        document.getElementById('districtSearch').addEventListener('input', updateDistrictList);
+        
+        // File loaders
+        document.getElementById('aptFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            document.getElementById('aptStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const lines = evt.target.result.trim().split('\n');
+                const headers = lines[0].toLowerCase().split(',');
+                const latI = headers.findIndex(h => h.includes('lat'));
+                const lonI = headers.findIndex(h => h.includes('lon') || h.includes('lng'));
+                
+                apartments = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const vals = parseCSVLine(lines[i]);
+                    const lat = parseFloat(vals[latI]);
+                    const lon = parseFloat(vals[lonI]);
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                        apartments.push({ lat, lon, data: vals });
+                    }
+                }
+                
+                document.getElementById('aptStatus').textContent = `✓ ${apartments.length.toLocaleString()}`;
+                document.getElementById('aptStatus').classList.add('loaded');
+                document.getElementById('aptCount').textContent = apartments.length.toLocaleString();
+                document.getElementById('countsRow').style.display = 'flex';
+                render();
+            };
+            reader.readAsText(file);
+        });
+        
+        document.getElementById('bizFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            document.getElementById('bizStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                businesses = [];
+                
+                if (file.name.endsWith('.json')) {
+                    const data = JSON.parse(evt.target.result);
+                    data.forEach(item => {
+                        if (Array.isArray(item)) {
+                            businesses.push({ lat: item[0], lon: item[1], name: item[2], category: item[3], sub: item[4] });
+                        } else if (item.lat) {
+                            businesses.push({ lat: item.lat, lon: item.lon || item.lng, name: item.name, category: item.category });
+                        }
+                    });
+                } else {
+                    const lines = evt.target.result.trim().split('\n');
+                    const headers = lines[0].toLowerCase().split(',');
+                    const latI = headers.findIndex(h => h.includes('lat'));
+                    const lonI = headers.findIndex(h => h.includes('lon') || h.includes('lng'));
+                    const nameI = headers.findIndex(h => h === 'name');
+                    const catI = headers.findIndex(h => h === 'category');
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        const vals = parseCSVLine(lines[i]);
+                        const lat = parseFloat(vals[latI]);
+                        const lon = parseFloat(vals[lonI]);
+                        if (!isNaN(lat) && !isNaN(lon)) {
+                            businesses.push({ lat, lon, name: vals[nameI], category: vals[catI] });
+                        }
+                    }
+                }
+                
+                document.getElementById('bizStatus').textContent = `✓ ${businesses.length.toLocaleString()}`;
+                document.getElementById('bizStatus').classList.add('loaded');
+                document.getElementById('bizCount').textContent = businesses.length.toLocaleString();
+                document.getElementById('countsRow').style.display = 'flex';
+                render();
+            };
+            reader.readAsText(file);
+        });
+        
+        document.getElementById('landFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            document.getElementById('landStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const lines = evt.target.result.trim().split('\n');
+                const headers = lines[0].toLowerCase().split(',');
+                const latI = headers.findIndex(h => h.includes('lat'));
+                const lonI = headers.findIndex(h => h.includes('lon') || h.includes('lng'));
+                const codeI = headers.findIndex(h => h.includes('code') || h.includes('land_use'));
+                
+                parcels = [];
+                const codeCounts = {};
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const vals = parseCSVLine(lines[i]);
+                    const lat = parseFloat(vals[latI]);
+                    const lon = parseFloat(vals[lonI]);
+                    const code = vals[codeI];
+                    if (!isNaN(lat) && !isNaN(lon) && code) {
+                        parcels.push({ lat, lon, code });
+                        codeCounts[code] = (codeCounts[code] || 0) + 1;
+                    }
+                }
+                
+                // Update code filters
+                const filterDiv = document.getElementById('landCodeFilters');
+                filterDiv.innerHTML = '';
+                Object.entries(codeCounts).sort((a,b) => b[1] - a[1]).slice(0, 20).forEach(([code, count]) => {
+                    const info = landUseCodes[code] || { name: code, color: getCodeColor(code) };
+                    filterDiv.innerHTML += `<label class="toggle-row">
+                        <input type="checkbox" checked onchange="toggleCode('${code}', this.checked)">
+                        <span class="toggle-dot" style="background:${info.color};"></span>
+                        <span>${code}: ${info.name} (${count.toLocaleString()})</span>
+                    </label>`;
+                });
+                
+                document.getElementById('landStatus').textContent = `✓ ${parcels.length.toLocaleString()}`;
+                document.getElementById('landStatus').classList.add('loaded');
+                document.getElementById('landCount').textContent = parcels.length.toLocaleString();
+                document.getElementById('countsRow').style.display = 'flex';
+                render();
+            };
+            reader.readAsText(file);
+        });
+        
+        document.getElementById('distFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            document.getElementById('distStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                districts = JSON.parse(evt.target.result);
+                document.getElementById('distStatus').textContent = `✓ ${districts.length}`;
+                document.getElementById('distStatus').classList.add('loaded');
+                updateDistrictList();
+                render();
+            };
+            reader.readAsText(file);
+        });
+        
+        function toggleCode(code, checked) {
+            if (checked) delete activeCodeFilters[code];
+            else activeCodeFilters[code] = false;
+            
+            // If all unchecked, show all
+            const allUnchecked = Object.values(activeCodeFilters).every(v => v === false);
+            if (allUnchecked) activeCodeFilters = {};
+            
+            render();
+        }
+        
+        window.initMap = function() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 24.7136, lng: 46.6753 },
+                zoom: 11,
+                mapTypeControl: true,
+                gestureHandling: 'greedy'
+            });
+            
+            map.addListener('idle', render);
+            window.addEventListener('resize', render);
+            
+            // Try to load district counts
+            fetch('riyadh_district_counts.json')
+                .then(r => r.json())
+                .then(data => { districtCounts = data; updateDistrictList(); })
+                .catch(() => {});
+        }
+    </script>
+    
+    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js?callback=initMap" async defer></script>
+</body>
+</html>
