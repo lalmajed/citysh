@@ -94,6 +94,17 @@
     <div class="panel">
         <h2>🗺️ Riyadh Complete Map</h2>
         
+        <!-- Villa Analysis Summary -->
+        <div id="villaSummary" style="display:none; padding:8px; background:linear-gradient(135deg,#e8f5e9,#fff3e0); border-radius:8px; margin-bottom:8px; border:1px solid #a5d6a7;">
+            <div style="font-weight:600; color:#2e7d32; margin-bottom:5px;">🏠 Villa Analysis Summary</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; font-size:10px;">
+                <div>🏠 Villas: <b id="totalVillas">0</b></div>
+                <div>🏢 Apt(LU): <b id="totalAptLU">0</b></div>
+                <div>📍 Apt(CSV): <b id="totalAptCSV">0</b></div>
+                <div>🔗 Overlap: <b id="overlapPct">0%</b></div>
+            </div>
+        </div>
+        
         <!-- Counts -->
         <div class="count-row" id="countsRow" style="display:none;">
             <div class="count-box apt"><div class="num" id="aptCount">0</div><div class="lbl">Apartments</div></div>
@@ -308,6 +319,7 @@
         let map;
         let apartments = [], businesses = [], parcels = [], districts = [];
         let districtCounts = {};
+        let districtVillaAnalysis = {};  // Villa analysis data
         let allCodeCounts = {};  // All codes with counts
         let selectedCodes = new Set();  // Track selected codes
         let selectedDistricts = new Set();  // Track selected districts
@@ -602,25 +614,41 @@
                 d.name_ar.includes(search)
             );
             
+            // Sort by villa count if available, otherwise by apartments
             filtered.sort((a, b) => {
+                const va = districtVillaAnalysis[a.name_en] || {};
+                const vb = districtVillaAnalysis[b.name_en] || {};
+                if (va.villas || vb.villas) {
+                    return (vb.villas || 0) - (va.villas || 0);
+                }
                 const ca = districtCounts[a.name_en] || {};
                 const cb = districtCounts[b.name_en] || {};
                 return (cb.apartments || 0) - (ca.apartments || 0);
             });
             
-            filtered.slice(0, 50).forEach(d => {
+            filtered.slice(0, 80).forEach(d => {
                 const counts = districtCounts[d.name_en] || {};
+                const villa = districtVillaAnalysis[d.name_en] || {};
                 const isSelected = selectedDistricts.has(d.name_en);
                 const escapedName = d.name_en.replace(/'/g, "\\'");
+                
+                // Format villa percentage with color
+                let villaPctStyle = '';
+                if (villa.villa_percentage >= 90) villaPctStyle = 'color:#2e7d32;font-weight:bold;';
+                else if (villa.villa_percentage >= 70) villaPctStyle = 'color:#ff9800;';
+                else if (villa.villa_percentage > 0) villaPctStyle = 'color:#0077b6;';
+                
                 html += `<div class="district-item ${isSelected ? 'selected' : ''}">
                     <input type="checkbox" ${isSelected ? 'checked' : ''} onclick="toggleDistrict('${escapedName}', event)">
                     <div class="info" onclick="zoomToDistrict('${escapedName}')">
                         <div class="name">${d.name_en}</div>
                         <div class="counts">
-                            🏢 ${counts.apartments || 0} | 
-                            🏗️ ${counts.complexes || 0} | 
-                            🏪 ${counts.businesses || 0}
+                            ${villa.villas !== undefined ? 
+                                `🏠 ${villa.villas?.toLocaleString() || 0} | 🏢 ${villa.apartments_landuse?.toLocaleString() || 0} | <span style="${villaPctStyle}">${villa.villa_percentage?.toFixed(1) || 0}%</span>` :
+                                `🏢 ${counts.apartments || 0} | 🏗️ ${counts.complexes || 0} | 🏪 ${counts.businesses || 0}`
+                            }
                         </div>
+                        ${villa.overlap > 0 ? `<div style="font-size:9px;color:#9c27b0;">📍 CSV overlap: ${villa.overlap}/${villa.apartments_csv}</div>` : ''}
                     </div>
                 </div>`;
             });
@@ -936,6 +964,20 @@
                 html += `<div>🏢 Apartments: ${activeAptCount.toLocaleString()}${deletedApartments.size > 0 ? ` <s style="color:#c62828;">${deletedApartments.size}</s>` : ''}</div>`;
                 html += `<div>🏪 Businesses: ${activeBizCount.toLocaleString()}${deletedBusinesses.size > 0 ? ` <s style="color:#c62828;">${deletedBusinesses.size}</s>` : ''}</div>`;
                 
+                // Show villa/apartment totals from analysis
+                if (Object.keys(districtVillaAnalysis).length > 0) {
+                    let totalVillas = 0, totalAptLU = 0;
+                    Object.values(districtVillaAnalysis).forEach(v => {
+                        totalVillas += v.villas || 0;
+                        totalAptLU += v.apartments_landuse || 0;
+                    });
+                    const villaPct = totalVillas + totalAptLU > 0 ? (totalVillas / (totalVillas + totalAptLU) * 100) : 0;
+                    html += '<div style="margin-top:8px; font-weight:600;">Villa Analysis:</div>';
+                    html += `<div>🏠 Villas: ${totalVillas.toLocaleString()}</div>`;
+                    html += `<div>🏢 Apartments (LU): ${totalAptLU.toLocaleString()}</div>`;
+                    html += `<div style="color:#2e7d32;font-weight:bold;">Villa %: ${villaPct.toFixed(1)}%</div>`;
+                }
+                
                 if (parcels.length > 0) {
                     html += '<div style="margin-top:8px; font-weight:600;">Land Use Codes:</div>';
                     const sorted = Object.entries(activeCounts).sort((a,b) => b[1] - a[1]).slice(0, 10);
@@ -998,6 +1040,29 @@
             
             html += `<div>🏢 Apartments: ${aptCount.toLocaleString()}</div>`;
             html += `<div>🏪 Businesses: ${bizCount.toLocaleString()}</div>`;
+            
+            // Show villa stats for selected districts
+            if (Object.keys(districtVillaAnalysis).length > 0) {
+                let selVillas = 0, selAptLU = 0, selAptCSV = 0, selOverlap = 0;
+                selectedDistricts.forEach(distName => {
+                    const v = districtVillaAnalysis[distName];
+                    if (v) {
+                        selVillas += v.villas || 0;
+                        selAptLU += v.apartments_landuse || 0;
+                        selAptCSV += v.apartments_csv || 0;
+                        selOverlap += v.overlap || 0;
+                    }
+                });
+                const villaPct = selVillas + selAptLU > 0 ? (selVillas / (selVillas + selAptLU) * 100) : 0;
+                html += '<div style="margin-top:8px; font-weight:600;">Villa Analysis:</div>';
+                html += `<div>🏠 Villas: ${selVillas.toLocaleString()}</div>`;
+                html += `<div>🏢 Apartments (LU): ${selAptLU.toLocaleString()}</div>`;
+                html += `<div style="color:#2e7d32;font-weight:bold;">Villa %: ${villaPct.toFixed(1)}%</div>`;
+                if (selAptCSV > 0) {
+                    const overlapPct = (selOverlap / selAptCSV * 100).toFixed(1);
+                    html += `<div style="font-size:10px;color:#9c27b0;">📍 CSV: ${selAptCSV} (overlap: ${selOverlap}, ${overlapPct}%)</div>`;
+                }
+            }
             
             if (Object.keys(codeCounts).length > 0) {
                 html += '<div style="margin-top:8px; font-weight:600;">Land Use in Selection:</div>';
@@ -1509,6 +1574,25 @@
             fetch('riyadh_district_counts.json')
                 .then(r => r.json())
                 .then(data => { districtCounts = data; updateDistrictList(); })
+                .catch(() => {});
+            
+            // Load villa analysis data
+            fetch('riyadh_district_villa_analysis.json')
+                .then(r => r.json())
+                .then(data => { 
+                    districtVillaAnalysis = data.districts || {};
+                    updateDistrictList();
+                    
+                    // Show summary in UI
+                    const s = data.summary;
+                    if (s) {
+                        document.getElementById('villaSummary').style.display = 'block';
+                        document.getElementById('totalVillas').textContent = s.total_villas?.toLocaleString() || 0;
+                        document.getElementById('totalAptLU').textContent = s.total_apartments_landuse?.toLocaleString() || 0;
+                        document.getElementById('totalAptCSV').textContent = s.total_apartments_csv?.toLocaleString() || 0;
+                        document.getElementById('overlapPct').textContent = `${s.overlap_count?.toLocaleString() || 0} (${s.overlap_percentage?.toFixed(1) || 0}%)`;
+                    }
+                })
                 .catch(() => {});
         }
     </script>
