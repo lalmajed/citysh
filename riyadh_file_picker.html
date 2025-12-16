@@ -54,12 +54,25 @@
             <div id="dataStatus" class="file-status">No file loaded</div>
         </div>
         
+        <div class="file-section">
+            <label>🏪 Businesses JSON (Optional):</label>
+            <input type="file" id="businessFile" accept=".json">
+            <div id="businessStatus" class="file-status">No file loaded</div>
+        </div>
+        
         <div class="file-section" style="background: #e8f0fe;">
             <label>🎨 Color By:</label>
             <select id="colorMode" style="width:100%; padding:5px; border-radius:4px; border:1px solid #ccc;">
                 <option value="land_use">Land Use Code</option>
                 <option value="district">District</option>
             </select>
+        </div>
+        
+        <div style="margin: 10px 0; padding: 8px; background: #fff3cd; border-radius: 6px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="showBusinesses" checked>
+                <span style="font-weight: 600; font-size: 12px;">🏪 Show Business Markers</span>
+            </label>
         </div>
         
         <div id="stats" class="stats"></div>
@@ -72,12 +85,15 @@
     </div>
     
     <div id="loadingMsg" class="loading-msg">
-        <p>📂 Load your CSV file using the panel on the left</p>
-        <p style="font-size:12px;color:#666;margin-top:10px;">Required: latitude, longitude, land_use_code<br>Optional: district (for district coloring)</p>
+        <p>📂 Load your files using the panel on the left</p>
+        <p style="font-size:12px;color:#666;margin-top:10px;">
+            <strong>Parcels CSV (Required):</strong> latitude, longitude, land_use_code, district<br>
+            <strong>Businesses JSON (Optional):</strong> Overlay business locations
+        </p>
     </div>
 
     <script>
-        let map, landUseData = {}, districtData = {}, currentMode = 'land_use';
+        let map, landUseData = {}, districtData = {}, businesses = [], currentMode = 'land_use';
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
@@ -108,6 +124,42 @@
             currentMode = e.target.value;
             updateStatsAndFilters();
             render();
+        });
+        
+        // Business layer toggle
+        document.getElementById('showBusinesses').addEventListener('change', render);
+        
+        // File loader for businesses JSON
+        document.getElementById('businessFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (!file.name.toLowerCase().endsWith('.json')) {
+                document.getElementById('businessStatus').textContent = '❌ Error: File must be JSON';
+                document.getElementById('businessStatus').className = 'file-status';
+                return;
+            }
+            
+            document.getElementById('businessStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    businesses = JSON.parse(e.target.result);
+                    
+                    if (!Array.isArray(businesses)) {
+                        throw new Error('Invalid format: expected array of businesses');
+                    }
+                    
+                    document.getElementById('businessStatus').textContent = `✅ Loaded ${businesses.length.toLocaleString()} businesses`;
+                    document.getElementById('businessStatus').className = 'file-status loaded';
+                    render();
+                } catch (err) {
+                    document.getElementById('businessStatus').textContent = '❌ Error: ' + err.message;
+                    document.getElementById('businessStatus').className = 'file-status';
+                }
+            };
+            reader.readAsText(file);
         });
         
         function initMap() {
@@ -389,6 +441,31 @@
                     }
                 }
             });
+            
+            // Draw businesses layer (on top, no sampling)
+            if (document.getElementById('showBusinesses').checked && businesses.length > 0) {
+                const businessSample = zoom <= 11 ? 10 : (zoom <= 12 ? 5 : (zoom <= 13 ? 2 : 1));
+                const businessSize = Math.max(2, Math.min(zoom - 8, 6));
+                
+                for (let i = 0; i < businesses.length; i += businessSample) {
+                    const business = businesses[i];
+                    const lat = business[0];
+                    const lng = business[1];
+                    
+                    if (inBounds(lat, lng)) {
+                        const p = toPixel(lat, lng);
+                        
+                        // Draw business marker (orange/red circle with white border)
+                        ctx.fillStyle = 'rgba(255, 87, 34, 0.9)';
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, businessSize, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                    }
+                }
+            }
             
             document.getElementById('visible').textContent = visible.toLocaleString();
         }
