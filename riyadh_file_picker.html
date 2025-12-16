@@ -74,7 +74,7 @@
     <canvas id="canvas"></canvas>
     
     <div class="panel">
-        <h2>🏙️ Riyadh Map</h2>
+        <h2>🏙️ Riyadh Map <span style="font-size:10px;color:#999;">v2.0</span></h2>
         
         <div class="file-section">
             <label>📊 Land Use Data CSV:</label>
@@ -199,7 +199,12 @@
                     document.getElementById('businessStatus').textContent = `✅ Loaded ${businesses.length.toLocaleString()} businesses`;
                     document.getElementById('businessStatus').className = 'file-status loaded';
                     document.getElementById('businessVisible').textContent = businesses.length.toLocaleString();
+                    
+                    // Make sure checkbox is checked
+                    document.getElementById('showBusinesses').checked = true;
+                    
                     console.log(`✅ Successfully loaded ${businesses.length} businesses (restaurants, shops, etc.)`);
+                    console.log(`Business checkbox is: ${document.getElementById('showBusinesses').checked ? 'CHECKED' : 'UNCHECKED'}`);
                     
                     // Force render after loading
                     if (map) {
@@ -508,10 +513,15 @@
             });
             
             // Draw businesses layer (on top, with sampling)
-            if (document.getElementById('showBusinesses').checked && businesses.length > 0) {
+            const showBizCheckbox = document.getElementById('showBusinesses');
+            const bizChecked = showBizCheckbox ? showBizCheckbox.checked : false;
+            
+            if (bizChecked && businesses.length > 0) {
                 const businessSample = zoom <= 11 ? 10 : (zoom <= 12 ? 5 : (zoom <= 13 ? 2 : 1));
                 const baseBusinessSize = Math.max(2, Math.min(zoom - 8, 6));
                 const businessSize = baseBusinessSize * (dotSizeMultiplier / 3);
+                
+                console.log(`🏪 Drawing businesses: checkbox=${bizChecked}, total=${businesses.length}, zoom=${zoom}, sample=${businessSample}, size=${businessSize}`);
                 
                 // Business type colors
                 const businessColors = {
@@ -545,14 +555,18 @@
                         const color = businessColors[type] || '#ff5722';
                         
                         // Draw business marker with colored fill and white border
-                        ctx.fillStyle = colorWithAlpha(color, 0.9);
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-                        ctx.lineWidth = 1;
-                        ctx.beginPath();
-                        ctx.arc(p.x, p.y, businessSize, 0, Math.PI * 2);
-                        ctx.fill();
-                        ctx.stroke();
-                        businessCount++;
+                        try {
+                            ctx.fillStyle = colorWithAlpha(color, 0.9);
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.arc(p.x, p.y, businessSize, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.stroke();
+                            businessCount++;
+                        } catch (e) {
+                            console.error('Error drawing business:', e, 'color:', color);
+                        }
                     }
                 }
                 // Only log if businesses were actually drawn (avoid spam)
@@ -564,6 +578,7 @@
             document.getElementById('visible').textContent = visible.toLocaleString();
         }
         
+        // Color utility function
         function colorWithAlpha(color, alpha) {
             if (color.startsWith('#')) {
                 // Hex color
