@@ -74,7 +74,7 @@
     <canvas id="canvas"></canvas>
     
     <div class="panel">
-        <h2>🏙️ Riyadh Map <span style="font-size:10px;color:#999;">v2.1</span></h2>
+        <h2>🏙️ Riyadh Map <span style="font-size:10px;color:#999;">v2.2</span></h2>
         
         <div class="file-section">
             <label>📊 Land Use Data CSV:</label>
@@ -183,28 +183,16 @@
             render();
         });
         
-        // Auto-load businesses from local extracted file
+        // Businesses data embedded from riyadh_instant_map.html
         function loadBusinesses() {
-            const BIZ_URL = 'businesses_extracted.json';
+            document.getElementById('businessStatus').textContent = 'Loading embedded businesses...';
+            console.log('Loading businesses from embedded data...');
             
-            document.getElementById('businessStatus').textContent = 'Loading businesses...';
-            console.log('Starting to load businesses from local file...');
-            
-            fetch(BIZ_URL)
-                .then(response => {
-                    console.log('Business fetch response:', response.status);
-                    if (!response.ok) {
-                        throw new Error('Failed to load businesses data');
-                    }
-                    return response.json();
-                })
+            // Load businesses from external file
+            fetch('businesses_extracted.json')
+                .then(response => response.json())
                 .then(data => {
                     businesses = data;
-                    console.log('Raw businesses data:', businesses.slice(0, 3));
-                    
-                    if (!Array.isArray(businesses)) {
-                        throw new Error('Invalid format: expected array of businesses');
-                    }
                     
                     document.getElementById('businessStatus').textContent = `✅ Loaded ${businesses.length.toLocaleString()} businesses`;
                     document.getElementById('businessStatus').className = 'file-status loaded';
@@ -213,21 +201,17 @@
                     // Make sure checkbox is checked
                     document.getElementById('showBusinesses').checked = true;
                     
-                    console.log(`✅ Successfully loaded ${businesses.length} businesses (restaurants, shops, etc.)`);
-                    console.log(`Business checkbox is: ${document.getElementById('showBusinesses').checked ? 'CHECKED' : 'UNCHECKED'}`);
+                    console.log(`✅ Successfully loaded ${businesses.length} businesses from instant map data`);
                     
                     // Force render after loading
                     if (map) {
-                        console.log('Map exists, rendering businesses...');
                         render();
-                    } else {
-                        console.log('Map not ready yet, will render when map initializes');
                     }
                 })
                 .catch(err => {
-                    document.getElementById('businessStatus').textContent = '⚠️ Could not load businesses';
+                    console.warn('Could not load businesses file:', err);
+                    document.getElementById('businessStatus').textContent = '⚠️ businesses_extracted.json not found';
                     document.getElementById('businessStatus').className = 'file-status';
-                    console.error('❌ Error loading businesses:', err);
                 });
         }
         
