@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Riyadh Fast Map Viewer</title>
+    <meta charset="utf-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; }
+        #map { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #1a1a2e; }
+        #canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+        
+        .panel {
+            position: absolute; top: 10px; left: 10px; background: white;
+            padding: 15px; border-radius: 10px; box-shadow: 0 2px 15px rgba(0,0,0,0.3);
+            z-index: 1000; width: 280px; max-height: 90vh; overflow-y: auto;
+        }
+        h2 { font-size: 16px; margin-bottom: 10px; color: #333; }
+        
+        .upload-box {
+            border: 2px dashed #800020; padding: 20px; text-align: center;
+            border-radius: 8px; cursor: pointer; margin-bottom: 10px;
+            background: #fef5f5; transition: all 0.2s;
+        }
+        .upload-box:hover { background: #fee; border-color: #c00; }
+        .upload-box.loaded { border-color: #4CAF50; background: #f0fff0; }
+        #fileInput { display: none; }
+        
+        .stats { background: #800020; color: white; padding: 12px; border-radius: 8px; margin: 10px 0; text-align: center; display: none; }
+        .stats.show { display: block; }
+        .stats .num { font-size: 24px; font-weight: bold; }
+        
+        .cat-list { list-style: none; max-height: 300px; overflow-y: auto; display: none; }
+        .cat-list.show { display: block; }
+        .cat-item { display: flex; align-items: center; padding: 6px 8px; margin: 2px 0; background: #f5f5f5; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .cat-item:hover { background: #eee; }
+        .cat-item.on { background: #e8f0fe; }
+        .cat-item .dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+        .cat-item .cnt { margin-left: auto; color: #666; font-size: 10px; }
+        
+        .btns { display: none; gap: 5px; margin: 10px 0; }
+        .btns.show { display: flex; }
+        .btns button { flex: 1; padding: 8px; border: none; border-radius: 5px; cursor: pointer; font-size: 11px; }
+        .btn-all { background: #800020; color: white; }
+        .btn-none { background: #666; color: white; }
+        
+        #info { font-size: 11px; color: #666; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <canvas id="canvas"></canvas>
+    
+    <div class="panel">
+        <h2>🗺️ Riyadh Fast Map</h2>
+        
+        <div class="upload-box" id="uploadBox" onclick="document.getElementById('fileInput').click()">
+            <div style="font-size: 24px;">📂</div>
+            <div>Click or drop CSV</div>
+            <input type="file" id="fileInput" accept=".csv">
+        </div>
+        
+        <div class="stats" id="stats">
+            <div class="num" id="totalNum">0</div>
+            <div>places loaded</div>
+        </div>
+        
+        <div class="btns" id="btns">
+            <button class="btn-all" onclick="showAll()">✓ All</button>
+            <button class="btn-none" onclick="hideAll()">✗ None</button>
+        </div>
+        
+        <ul class="cat-list" id="catList"></ul>
+        
+        <div id="info">Zoom: <span id="zoom">-</span> | Visible: <span id="visible">0</span></div>
+    </div>
+
+<script>
+// Fast canvas-based map viewer
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+// Data storage
+let points = [];
+let categories = {};
+let visibleCats = new Set();
+
+// Map state
+let center = { lat: 24.7136, lng: 46.6753 };
+let zoom = 11;
+let dragging = false;
+let lastMouse = { x: 0, y: 0 };
+
+// Category colors
+const COLORS = {
+    'Houses': '#800020', 'Apartments': '#A52A2A', 'Residential': '#722F37',
+    'Residential Areas': '#B8860B', 'Mosques': '#8B0000', 'Commercial Buildings': '#C41E3A',
+    'Hotels': '#E32636', 'Healthcare': '#DC143C', 'Schools': '#9B111E',
+    'Restaurants & Cafes': '#CB4154', 'Restaurant': '#CB4154',
+    'Shops & Retail': '#B31B1B', 'Parks & Gardens': '#228B22',
+    'Fuel & Car Services': '#8E354A', 'Banks & Finance': '#7B3F00',
+    'Other Buildings': '#666666', 'Other': '#777777'
+};
+
+function getColor(cat) {
+    if (COLORS[cat]) return COLORS[cat];
+    // Generate from name
+    let h = 0;
+    for (let i = 0; i < cat.length; i++) h = cat.charCodeAt(i) + ((h << 5) - h);
+    return `hsl(${Math.abs(h) % 360}, 60%, 45%)`;
+}
+
+// Resize canvas
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    render();
+}
+window.addEventListener('resize', resize);
+
+// Convert lat/lng to pixels
+function toPixel(lat, lng) {
+    const scale = Math.pow(2, zoom) * 256;
+    const worldX = (lng + 180) / 360 * scale;
+    const worldY = (1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * scale;
+    
+    const centerX = (center.lng + 180) / 360 * scale;
+    const centerY = (1 - Math.log(Math.tan(center.lat * Math.PI / 180) + 1 / Math.cos(center.lat * Math.PI / 180)) / Math.PI) / 2 * scale;
+    
+    return {
+        x: worldX - centerX + canvas.width / 2,
+        y: worldY - centerY + canvas.height / 2
+    };
+}
+
+// Render all points
+function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw tile grid (dark background)
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    if (points.length === 0) return;
+    
+    // Calculate visible bounds
+    const margin = 50;
+    let visible = 0;
+    
+    // Sample rate based on zoom
+    let sample = 1;
+    if (zoom <= 10) sample = 20;
+    else if (zoom <= 12) sample = 5;
+    else if (zoom <= 14) sample = 2;
+    
+    // Point size based on zoom
+    const size = Math.max(2, Math.min(zoom - 8, 6));
+    
+    // Group by category for batch drawing
+    const byColor = {};
+    
+    for (let i = 0; i < points.length; i += sample) {
+        const p = points[i];
+        if (!visibleCats.has(p.cat)) continue;
+        
+        const px = toPixel(p.lat, p.lng);
+        if (px.x < -margin || px.x > canvas.width + margin || 
+            px.y < -margin || px.y > canvas.height + margin) continue;
+        
+        const color = getColor(p.cat);
+        if (!byColor[color]) byColor[color] = [];
+        byColor[color].push(px);
+        visible++;
+    }
+    
+    // Draw all points by color (faster)
+    for (const [color, pts] of Object.entries(byColor)) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        for (const px of pts) {
+            ctx.moveTo(px.x + size, px.y);
+            ctx.arc(px.x, px.y, size, 0, Math.PI * 2);
+        }
+        ctx.fill();
+    }
+    
+    document.getElementById('zoom').textContent = zoom.toFixed(1);
+    document.getElementById('visible').textContent = visible.toLocaleString();
+}
+
+// Mouse controls
+const mapEl = document.getElementById('map');
+
+mapEl.addEventListener('mousedown', e => {
+    dragging = true;
+    lastMouse = { x: e.clientX, y: e.clientY };
+});
+
+mapEl.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    
+    const dx = e.clientX - lastMouse.x;
+    const dy = e.clientY - lastMouse.y;
+    
+    const scale = Math.pow(2, zoom) * 256;
+    center.lng -= dx / scale * 360;
+    center.lat += dy / scale * 180;
+    
+    lastMouse = { x: e.clientX, y: e.clientY };
+    render();
+});
+
+mapEl.addEventListener('mouseup', () => dragging = false);
+mapEl.addEventListener('mouseleave', () => dragging = false);
+
+mapEl.addEventListener('wheel', e => {
+    e.preventDefault();
+    zoom += e.deltaY > 0 ? -0.5 : 0.5;
+    zoom = Math.max(5, Math.min(18, zoom));
+    render();
+});
+
+// File upload
+document.getElementById('fileInput').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = evt => parseCSV(evt.target.result);
+    reader.readAsText(file);
+});
+
+// Drag and drop
+const uploadBox = document.getElementById('uploadBox');
+uploadBox.addEventListener('dragover', e => { e.preventDefault(); uploadBox.style.borderColor = '#4CAF50'; });
+uploadBox.addEventListener('dragleave', () => uploadBox.style.borderColor = '#800020');
+uploadBox.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadBox.style.borderColor = '#800020';
+    const file = e.dataTransfer.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = evt => parseCSV(evt.target.result);
+        reader.readAsText(file);
+    }
+});
+
+// Parse CSV (fast)
+function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    const headers = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/"/g, ''));
+    
+    const latI = headers.findIndex(h => h === 'latitude' || h === 'lat');
+    const lngI = headers.findIndex(h => h === 'longitude' || h === 'lng' || h === 'lon');
+    const nameI = headers.findIndex(h => h === 'name');
+    const catI = headers.findIndex(h => h === 'category' || h === 'type');
+    
+    if (latI < 0 || lngI < 0) {
+        alert('CSV needs latitude & longitude columns');
+        return;
+    }
+    
+    points = [];
+    categories = {};
+    
+    for (let i = 1; i < lines.length; i++) {
+        const vals = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+        const lat = parseFloat(vals[latI]);
+        const lng = parseFloat(vals[lngI]);
+        
+        if (isNaN(lat) || isNaN(lng)) continue;
+        
+        const cat = catI >= 0 ? vals[catI] || 'Other' : 'Other';
+        const name = nameI >= 0 ? vals[nameI] : '';
+        
+        points.push({ lat, lng, name, cat });
+        categories[cat] = (categories[cat] || 0) + 1;
+    }
+    
+    // Update UI
+    document.getElementById('uploadBox').classList.add('loaded');
+    document.getElementById('totalNum').textContent = points.length.toLocaleString();
+    document.getElementById('stats').classList.add('show');
+    document.getElementById('btns').classList.add('show');
+    document.getElementById('catList').classList.add('show');
+    
+    // Build category list
+    const sorted = Object.entries(categories).sort((a, b) => b[1] - a[1]);
+    visibleCats = new Set(sorted.map(c => c[0]));
+    
+    const list = document.getElementById('catList');
+    list.innerHTML = '';
+    
+    for (const [cat, count] of sorted) {
+        const li = document.createElement('li');
+        li.className = 'cat-item on';
+        li.dataset.cat = cat;
+        li.innerHTML = `<span class="dot" style="background:${getColor(cat)}"></span>${cat}<span class="cnt">${count.toLocaleString()}</span>`;
+        li.onclick = () => toggleCat(li);
+        list.appendChild(li);
+    }
+    
+    // Fit to data
+    if (points.length > 0) {
+        let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+        for (const p of points.slice(0, 10000)) {
+            minLat = Math.min(minLat, p.lat);
+            maxLat = Math.max(maxLat, p.lat);
+            minLng = Math.min(minLng, p.lng);
+            maxLng = Math.max(maxLng, p.lng);
+        }
+        center = { lat: (minLat + maxLat) / 2, lng: (minLng + maxLng) / 2 };
+    }
+    
+    render();
+}
+
+function toggleCat(el) {
+    const cat = el.dataset.cat;
+    if (visibleCats.has(cat)) {
+        visibleCats.delete(cat);
+        el.classList.remove('on');
+    } else {
+        visibleCats.add(cat);
+        el.classList.add('on');
+    }
+    render();
+}
+
+function showAll() {
+    visibleCats = new Set(Object.keys(categories));
+    document.querySelectorAll('.cat-item').forEach(el => el.classList.add('on'));
+    render();
+}
+
+function hideAll() {
+    visibleCats.clear();
+    document.querySelectorAll('.cat-item').forEach(el => el.classList.remove('on'));
+    render();
+}
+
+// Init
+resize();
+</script>
+</body>
+</html>
