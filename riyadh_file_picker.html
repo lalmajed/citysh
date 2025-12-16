@@ -544,6 +544,18 @@
             
             const dataSource = currentMode === 'land_use' ? landUseData : districtData;
             
+            // Calculate total for percentages
+            const total = Object.values(dataSource).reduce((sum, arr) => sum + arr.length, 0);
+            
+            // Add Select All / Deselect All buttons
+            const btnContainer = document.createElement('div');
+            btnContainer.style.cssText = 'width:100%;margin-bottom:10px;display:flex;gap:5px;';
+            btnContainer.innerHTML = `
+                <button onclick="selectAllFilters()" style="flex:1;padding:5px;font-size:11px;cursor:pointer;border:1px solid #1a73e8;background:#e8f0fe;color:#1a73e8;border-radius:4px;">✓ Select All</button>
+                <button onclick="deselectAllFilters()" style="flex:1;padding:5px;font-size:11px;cursor:pointer;border:1px solid #ea4335;background:#fce8e6;color:#ea4335;border-radius:4px;">✗ Deselect All</button>
+            `;
+            filtersDiv.appendChild(btnContainer);
+            
             if (currentMode === 'land_use') {
                 // Sort codes to show known ones first
                 const codes = Object.keys(dataSource).sort((a, b) => {
@@ -555,9 +567,12 @@
                 
                 codes.forEach(code => {
                     const count = dataSource[code].length;
+                    const pct = ((count / total) * 100).toFixed(1);
                     const color = getColorForCode(code);
                     const info = landUseColors[code];
-                    const label = info ? `${info.emoji} ${info.name}` : `Code ${code}`;
+                    const name = info ? info.name : 'Unknown';
+                    const emoji = info ? info.emoji : '📍';
+                    const label = `${emoji} ${name}`;
                     
                     // Add stat
                     const statDiv = document.createElement('div');
@@ -566,14 +581,15 @@
                     statDiv.innerHTML = `
                         <b>${count.toLocaleString()}</b>
                         <small>${label}</small>
+                        <small style="color:#888;">${pct}%</small>
                     `;
                     statsDiv.appendChild(statDiv);
                     
-                    // Add filter
+                    // Add filter with name, not code
                     const filterLabel = document.createElement('label');
                     filterLabel.innerHTML = `
                         <input type="checkbox" class="data-filter" data-code="${code}" checked>
-                        <span class="dot" style="background:${color}"></span> ${label}
+                        <span class="dot" style="background:${color}"></span> ${label} <span style="color:#888;font-size:10px;">(${code}) ${pct}%</span>
                     `;
                     filtersDiv.appendChild(filterLabel);
                 });
@@ -585,6 +601,7 @@
                 
                 districts.forEach(district => {
                     const count = dataSource[district].length;
+                    const pct = ((count / total) * 100).toFixed(1);
                     const color = getColorForCode(district);
                     const label = `District ${district}`;
                     
@@ -595,6 +612,7 @@
                     statDiv.innerHTML = `
                         <b>${count.toLocaleString()}</b>
                         <small>${label}</small>
+                        <small style="color:#888;">${pct}%</small>
                     `;
                     statsDiv.appendChild(statDiv);
                     
@@ -602,7 +620,7 @@
                     const filterLabel = document.createElement('label');
                     filterLabel.innerHTML = `
                         <input type="checkbox" class="data-filter" data-code="${district}" checked>
-                        <span class="dot" style="background:${color}"></span> ${label}
+                        <span class="dot" style="background:${color}"></span> ${label} <span style="color:#888;font-size:10px;">${pct}%</span>
                     `;
                     filtersDiv.appendChild(filterLabel);
                 });
@@ -612,6 +630,16 @@
             document.querySelectorAll('.data-filter').forEach(checkbox => {
                 checkbox.addEventListener('change', render);
             });
+        }
+        
+        // Select/Deselect all filters
+        function selectAllFilters() {
+            document.querySelectorAll('.data-filter').forEach(cb => { cb.checked = true; });
+            render();
+        }
+        function deselectAllFilters() {
+            document.querySelectorAll('.data-filter').forEach(cb => { cb.checked = false; });
+            render();
         }
         
         function checkReady() {
@@ -803,6 +831,11 @@
             const container = document.getElementById('districtStats');
             container.innerHTML = '';
             
+            // Calculate grand total
+            const grandTotal = Object.values(districtLandUseStats).reduce((sum, codes) => {
+                return sum + Object.values(codes).reduce((a, b) => a + b, 0);
+            }, 0);
+            
             // Sort districts by total count
             const districtTotals = Object.entries(districtLandUseStats).map(([district, codes]) => {
                 const total = Object.values(codes).reduce((a, b) => a + b, 0);
@@ -812,22 +845,25 @@
             districtTotals.forEach(({ district, codes, total }) => {
                 const row = document.createElement('div');
                 row.className = 'district-row';
+                const districtPct = ((total / grandTotal) * 100).toFixed(1);
                 
                 // Sort codes by count
                 const sortedCodes = Object.entries(codes).sort((a, b) => b[1] - a[1]);
                 
                 let codesHtml = '';
-                sortedCodes.slice(0, 5).forEach(([code, count]) => {
+                sortedCodes.slice(0, 6).forEach(([code, count]) => {
                     const color = getColorForCode(code);
-                    const name = landUseColors[code] ? landUseColors[code].name : code;
-                    codesHtml += `<span class="code-badge" style="background:${color}" title="${name}: ${count}">${code}: ${count}</span>`;
+                    const info = landUseColors[code];
+                    const name = info ? info.name : 'Unknown';
+                    const codePct = ((count / total) * 100).toFixed(0);
+                    codesHtml += `<span class="code-badge" style="background:${color}" title="${name} (${code}): ${count} parcels, ${codePct}%">${name}: ${count} (${codePct}%)</span>`;
                 });
-                if (sortedCodes.length > 5) {
-                    codesHtml += `<span style="color:#888;">+${sortedCodes.length - 5} more</span>`;
+                if (sortedCodes.length > 6) {
+                    codesHtml += `<span style="color:#888;font-size:9px;">+${sortedCodes.length - 6} more types</span>`;
                 }
                 
                 row.innerHTML = `
-                    <div class="name">District ${district} <span style="color:#666;font-weight:normal;">(${total.toLocaleString()} parcels)</span></div>
+                    <div class="name">📍 District ${district} <span style="color:#666;font-weight:normal;">(${total.toLocaleString()} parcels - ${districtPct}%)</span></div>
                     <div class="codes">${codesHtml}</div>
                 `;
                 
@@ -839,6 +875,7 @@
                             bounds.extend(new google.maps.LatLng(lat, lng));
                         });
                         map.fitBounds(bounds);
+                        closeStatsWidget();
                     }
                 };
                 
