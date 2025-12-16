@@ -108,7 +108,8 @@
                 </span>
             </label>
             <div style="font-size:10px;color:#666;margin-top:4px;margin-left:28px;">
-                Burgundy dots = Restaurants, shops, banks, etc.
+                Burgundy dots = 13,617 extracted businesses<br>
+                <span style="color:#ea4335;">⚠️ Google Map shows MORE POI labels (dynamic)</span>
             </div>
         </div>
         
@@ -512,9 +513,9 @@
             const bizChecked = showBizCheckbox ? showBizCheckbox.checked : false;
             
             if (bizChecked && businesses.length > 0) {
-                // Less aggressive sampling to show more businesses
-                const businessSample = zoom <= 10 ? 3 : (zoom <= 11 ? 2 : 1);
-                const baseBusinessSize = Math.max(5, Math.min(zoom - 5, 10)); // MUCH larger!
+                // SHOW ALL BUSINESSES - NO SAMPLING!
+                const businessSample = 1; // Always show every business!
+                const baseBusinessSize = Math.max(6, Math.min(zoom - 4, 12)); // EVEN BIGGER!
                 const businessSize = baseBusinessSize * (dotSizeMultiplier / 3);
                 
                 console.log(`🏪 DRAWING BUSINESSES: checkbox=${bizChecked}, total=${businesses.length}, zoom=${zoom}, sample=${businessSample}, size=${businessSize}px, color=burgundy`);
