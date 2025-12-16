@@ -83,9 +83,8 @@
         </div>
         
         <div class="file-section">
-            <label>🏪 Businesses JSON (Optional):</label>
-            <input type="file" id="businessFile" accept=".json">
-            <div id="businessStatus" class="file-status">No file loaded</div>
+            <label>🏪 Businesses Layer:</label>
+            <div id="businessStatus" class="file-status">Loading businesses...</div>
         </div>
         
         <div class="file-section" style="background: #e8f0fe;">
@@ -173,23 +172,17 @@
             render();
         });
         
-        // File loader for businesses JSON
-        document.getElementById('businessFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            if (!file.name.toLowerCase().endsWith('.json')) {
-                document.getElementById('businessStatus').textContent = '❌ Error: File must be JSON';
-                document.getElementById('businessStatus').className = 'file-status';
-                return;
-            }
-            
-            document.getElementById('businessStatus').textContent = 'Loading...';
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    businesses = JSON.parse(e.target.result);
+        // Auto-load businesses from businesses_geo.json
+        function loadBusinesses() {
+            fetch('businesses_geo.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('businesses_geo.json not found');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    businesses = data;
                     
                     if (!Array.isArray(businesses)) {
                         throw new Error('Invalid format: expected array of businesses');
@@ -197,14 +190,18 @@
                     
                     document.getElementById('businessStatus').textContent = `✅ Loaded ${businesses.length.toLocaleString()} businesses`;
                     document.getElementById('businessStatus').className = 'file-status loaded';
+                    console.log(`Loaded ${businesses.length} businesses from businesses_geo.json`);
                     render();
-                } catch (err) {
-                    document.getElementById('businessStatus').textContent = '❌ Error: ' + err.message;
+                })
+                .catch(err => {
+                    document.getElementById('businessStatus').textContent = '⚠️ businesses_geo.json not found (optional)';
                     document.getElementById('businessStatus').className = 'file-status';
-                }
-            };
-            reader.readAsText(file);
-        });
+                    console.warn('Could not load businesses_geo.json:', err.message);
+                });
+        }
+        
+        // Load businesses when page loads
+        loadBusinesses();
         
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
