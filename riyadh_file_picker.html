@@ -140,6 +140,13 @@
             <div id="osmCategories" style="margin-top:8px; max-height:150px; overflow-y:auto; display:none;"></div>
         </div>
         
+        <div class="file-section" style="background: #e8f5e9; border: 2px dashed #4caf50;">
+            <label>📍 Al Amal POI JSON/CSV:</label>
+            <input type="file" id="poiFile" accept=".json,.csv">
+            <div id="poiStatus" class="file-status">Upload al_amal_gmaps_places.json or .csv</div>
+            <div id="poiCategories" style="margin-top:8px; max-height:200px; overflow-y:auto; display:none;"></div>
+        </div>
+        
         <div class="file-section" style="background: #e8f0fe;">
             <label>🎨 Color By:</label>
             <select id="colorMode" style="width:100%; padding:5px; border-radius:4px; border:1px solid #ccc;">
@@ -186,7 +193,7 @@
         
         <div style="margin-top:10px;font-size:11px;color:#888;">
             Showing: <span id="visible">0</span> points | Zoom: <span id="zoom">0</span><br>
-            Businesses: <span id="businessVisible">0</span> loaded
+            Businesses: <span id="businessVisible">0</span> | POIs: <span id="poiVisible">0</span> loaded
         </div>
     </div>
     
@@ -254,6 +261,76 @@
             'Entertainment': '#AA4A44', 'Fuel & Car Services': '#8E354A', 'Parking': '#6C3461',
             'Industrial': '#555555', 'Other Buildings': '#666666', 'Other': '#777777'
         };
+        
+        // POI (Points of Interest) layer - Al Amal Places
+        let poiData = [];
+        let poiLayers = {}; // category -> [{lat, lon, name, subcategory}]
+        let poiVisible = {}; // category -> boolean
+        
+        // POI Colors for different categories and subcategories
+        const POI_COLORS = {
+            // Government & Office - Red/Burgundy
+            'office:government': { color: '#8B0000', name: 'Government Office', emoji: '🏛️' },
+            'office:telecommunication': { color: '#FF4500', name: 'Telecom Office', emoji: '📡' },
+            'office': { color: '#B22222', name: 'Office', emoji: '🏢' },
+            
+            // Amenity categories - Various colors
+            'amenity:restaurant': { color: '#FF6347', name: 'Restaurant', emoji: '🍽️' },
+            'amenity:fast_food': { color: '#FF7F50', name: 'Fast Food', emoji: '🍔' },
+            'amenity:cafe': { color: '#D2691E', name: 'Cafe', emoji: '☕' },
+            'amenity:parking': { color: '#708090', name: 'Parking', emoji: '🅿️' },
+            'amenity:parking_space': { color: '#778899', name: 'Parking Space', emoji: '🅿️' },
+            'amenity:atm': { color: '#FFD700', name: 'ATM', emoji: '🏧' },
+            'amenity:bank': { color: '#DAA520', name: 'Bank', emoji: '🏦' },
+            'amenity:post_office': { color: '#4169E1', name: 'Post Office', emoji: '📮' },
+            'amenity:post_box': { color: '#6495ED', name: 'Post Box', emoji: '📬' },
+            'amenity:place_of_worship': { color: '#9400D3', name: 'Place of Worship', emoji: '🕌' },
+            'amenity:school': { color: '#32CD32', name: 'School', emoji: '🏫' },
+            'amenity:cinema': { color: '#FF1493', name: 'Cinema', emoji: '🎬' },
+            'amenity:fuel': { color: '#FF8C00', name: 'Fuel Station', emoji: '⛽' },
+            'amenity:car_wash': { color: '#00CED1', name: 'Car Wash', emoji: '🚗' },
+            'amenity': { color: '#20B2AA', name: 'Amenity', emoji: '🏪' },
+            
+            // Shop categories - Blue/Teal
+            'shop:supermarket': { color: '#00BFFF', name: 'Supermarket', emoji: '🛒' },
+            'shop:mall': { color: '#1E90FF', name: 'Mall', emoji: '🏬' },
+            'shop:jewelry': { color: '#FFD700', name: 'Jewelry', emoji: '💎' },
+            'shop:car_repair': { color: '#4682B4', name: 'Car Repair', emoji: '🔧' },
+            'shop:car_parts': { color: '#5F9EA0', name: 'Car Parts', emoji: '⚙️' },
+            'shop:hardware': { color: '#808000', name: 'Hardware', emoji: '🔨' },
+            'shop:travel_agency': { color: '#00FA9A', name: 'Travel Agency', emoji: '✈️' },
+            'shop:musical_instrument': { color: '#BA55D3', name: 'Music Store', emoji: '🎸' },
+            'shop': { color: '#87CEEB', name: 'Shop', emoji: '🛍️' },
+            
+            // Tourism - Purple
+            'tourism:hotel': { color: '#9932CC', name: 'Hotel', emoji: '🏨' },
+            'tourism:apartment': { color: '#8A2BE2', name: 'Apartment', emoji: '🏢' },
+            'tourism': { color: '#9370DB', name: 'Tourism', emoji: '🗺️' },
+            
+            // Leisure - Green
+            'leisure:park': { color: '#228B22', name: 'Park', emoji: '🌳' },
+            'leisure': { color: '#32CD32', name: 'Leisure', emoji: '🎡' },
+            
+            // Place (generic) - Gray
+            'place': { color: '#A9A9A9', name: 'Place/Street', emoji: '📍' }
+        };
+        
+        function getPoiColor(category, subcategory) {
+            const key = subcategory ? `${category}:${subcategory}` : category;
+            if (POI_COLORS[key]) return POI_COLORS[key].color;
+            if (POI_COLORS[category]) return POI_COLORS[category].color;
+            // Generate fallback color
+            let h = 0;
+            for (let i = 0; i < key.length; i++) h = key.charCodeAt(i) + ((h << 5) - h);
+            return `hsl(${Math.abs(h % 360)}, 65%, 50%)`;
+        }
+        
+        function getPoiInfo(category, subcategory) {
+            const key = subcategory ? `${category}:${subcategory}` : category;
+            if (POI_COLORS[key]) return POI_COLORS[key];
+            if (POI_COLORS[category]) return POI_COLORS[category];
+            return { color: '#888', name: key || 'Unknown', emoji: '📍' };
+        }
         
         function getOsmColor(cat) {
             if (OSM_COLORS[cat]) return OSM_COLORS[cat];
@@ -323,6 +400,125 @@
             };
             reader.readAsText(file);
         });
+        
+        // POI File loader - Al Amal Places (JSON or CSV)
+        document.getElementById('poiFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('poiStatus').textContent = 'Loading...';
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    let data = [];
+                    const isJson = file.name.toLowerCase().endsWith('.json');
+                    
+                    if (isJson) {
+                        // Parse JSON format
+                        data = JSON.parse(evt.target.result);
+                    } else {
+                        // Parse CSV format
+                        const lines = evt.target.result.trim().split('\n');
+                        const headers = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/"/g, ''));
+                        const latI = headers.findIndex(h => h === 'lat' || h === 'latitude');
+                        const lonI = headers.findIndex(h => h === 'lon' || h === 'lng' || h === 'longitude');
+                        const nameI = headers.findIndex(h => h === 'name');
+                        const catI = headers.findIndex(h => h === 'category' || h === 'types');
+                        const subI = headers.findIndex(h => h === 'subcategory');
+                        
+                        if (latI < 0 || lonI < 0) {
+                            document.getElementById('poiStatus').textContent = 'Error: Need lat/lon columns';
+                            return;
+                        }
+                        
+                        for (let i = 1; i < lines.length; i++) {
+                            // Handle CSV with possible commas in quoted fields
+                            const vals = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
+                            const cleanVals = vals.map(v => v.replace(/^"|"$/g, '').trim());
+                            
+                            const lat = parseFloat(cleanVals[latI]);
+                            const lon = parseFloat(cleanVals[lonI]);
+                            if (!isNaN(lat) && !isNaN(lon)) {
+                                data.push({
+                                    lat: lat,
+                                    lon: lon,
+                                    name: nameI >= 0 ? cleanVals[nameI] : 'Unnamed',
+                                    category: catI >= 0 ? cleanVals[catI] : 'place',
+                                    subcategory: subI >= 0 ? cleanVals[subI] : ''
+                                });
+                            }
+                        }
+                    }
+                    
+                    poiData = data;
+                    poiLayers = {};
+                    const catCounts = {};
+                    
+                    // Group POIs by category:subcategory
+                    data.forEach(poi => {
+                        const cat = poi.category || 'place';
+                        const sub = poi.subcategory || '';
+                        const key = sub ? `${cat}:${sub}` : cat;
+                        
+                        if (!poiLayers[key]) poiLayers[key] = [];
+                        poiLayers[key].push(poi);
+                        catCounts[key] = (catCounts[key] || 0) + 1;
+                    });
+                    
+                    document.getElementById('poiStatus').textContent = `✓ Loaded ${poiData.length.toLocaleString()} POIs`;
+                    document.getElementById('poiStatus').classList.add('loaded');
+                    document.getElementById('poiVisible').textContent = poiData.length.toLocaleString();
+                    
+                    // Show category toggles
+                    const catDiv = document.getElementById('poiCategories');
+                    catDiv.style.display = 'block';
+                    catDiv.innerHTML = '<div style="font-size:11px;font-weight:bold;margin-bottom:5px;">POI Categories (click to toggle):</div>';
+                    
+                    // Add "Toggle All" buttons
+                    const toggleDiv = document.createElement('div');
+                    toggleDiv.style.cssText = 'margin-bottom:8px;display:flex;gap:5px;';
+                    toggleDiv.innerHTML = `
+                        <button onclick="toggleAllPOI(true)" style="font-size:9px;padding:2px 6px;cursor:pointer;">Show All</button>
+                        <button onclick="toggleAllPOI(false)" style="font-size:9px;padding:2px 6px;cursor:pointer;">Hide All</button>
+                    `;
+                    catDiv.appendChild(toggleDiv);
+                    
+                    const sorted = Object.entries(catCounts).sort((a,b) => b[1] - a[1]);
+                    sorted.forEach(([key, count]) => {
+                        poiVisible[key] = true; // Default to visible
+                        const info = getPoiInfo(key.split(':')[0], key.split(':')[1]);
+                        const color = info.color;
+                        const lbl = document.createElement('label');
+                        lbl.style.cssText = 'display:flex;align-items:center;gap:5px;font-size:10px;cursor:pointer;padding:2px 0;';
+                        lbl.innerHTML = `<input type="checkbox" checked data-poicat="${key}">
+                            <span style="width:12px;height:12px;border-radius:50%;background:${color};border:1px solid rgba(0,0,0,0.2);"></span>
+                            ${info.emoji} ${info.name} <span style="color:#888;">(${count.toLocaleString()})</span>`;
+                        lbl.querySelector('input').addEventListener('change', function() {
+                            poiVisible[key] = this.checked;
+                            render();
+                        });
+                        catDiv.appendChild(lbl);
+                    });
+                    
+                    render();
+                } catch (err) {
+                    console.error('POI load error:', err);
+                    document.getElementById('poiStatus').textContent = 'Error: ' + err.message;
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        // Toggle all POI categories
+        function toggleAllPOI(show) {
+            Object.keys(poiVisible).forEach(key => {
+                poiVisible[key] = show;
+            });
+            document.querySelectorAll('[data-poicat]').forEach(cb => {
+                cb.checked = show;
+            });
+            render();
+        }
         
         // Dot size slider
         let dotSizeMultiplier = 3;
@@ -783,6 +979,42 @@
                     }
                 }
                 console.log(`🏛️ Drew ${osmCount} OSM buildings (sample: 1 in ${osmSample})`);
+            }
+            
+            // Draw POI (Points of Interest) layer - Al Amal Places with category colors
+            if (poiData.length > 0) {
+                const poiSample = zoom <= 10 ? 10 : zoom <= 12 ? 3 : 1;
+                const poiSize = Math.max(4, Math.min(zoom - 5, 10)) * (dotSizeMultiplier / 3);
+                
+                let poiCount = 0;
+                for (let i = 0; i < poiData.length; i += poiSample) {
+                    const poi = poiData[i];
+                    const cat = poi.category || 'place';
+                    const sub = poi.subcategory || '';
+                    const key = sub ? `${cat}:${sub}` : cat;
+                    
+                    // Skip if category is hidden
+                    if (poiVisible[key] === false) continue;
+                    
+                    const lat = poi.lat;
+                    const lon = poi.lon;
+                    
+                    if (inBounds(lat, lon)) {
+                        const p = toPixel(lat, lon);
+                        const color = getPoiColor(cat, sub);
+                        
+                        // Draw POI marker with border
+                        ctx.fillStyle = color;
+                        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, poiSize, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                        poiCount++;
+                    }
+                }
+                console.log(`📍 Drew ${poiCount} POIs (sample: 1 in ${poiSample})`);
             }
             
             document.getElementById('visible').textContent = visible.toLocaleString();
