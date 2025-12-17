@@ -35,6 +35,7 @@
         .stat-box.apt { background: #e74c3c; }
         .stat-box.villa { background: #27ae60; }
         .stat-box.land { background: #3498db; }
+        .stat-box.biz { background: #ff9800; }
         
         .dynamic-stats { background: #e8f5e9; border: 2px solid #4caf50; border-radius: 8px; padding: 10px; margin: 8px 0; }
         .dynamic-stats h3 { color: #2e7d32; font-size: 13px; margin-bottom: 8px; }
@@ -51,7 +52,6 @@
         .layer-control .header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
         .layer-control .dot { width: 14px; height: 14px; border-radius: 50%; }
         .layer-control .name { font-weight: 600; flex: 1; }
-        .layer-control .count { font-size: 10px; color: #666; }
         .layer-control input[type="range"] { width: 100%; margin: 2px 0; }
         
         #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 450; }
@@ -71,6 +71,12 @@
         .progress-bar { width: 300px; height: 20px; background: #333; border-radius: 10px; overflow: hidden; }
         .progress-fill { height: 100%; background: #4CAF50; transition: width 0.3s; }
         
+        .category-list { max-height: 180px; overflow-y: auto; background: #fff8e1; border-radius: 6px; padding: 5px; }
+        .cat-item { display: flex; align-items: center; gap: 6px; padding: 4px 6px; font-size: 11px; }
+        .cat-item:hover { background: #fff3e0; }
+        .cat-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .cat-count { color: #888; font-size: 10px; }
+        
         .code-filters { max-height: 120px; overflow-y: auto; }
         .code-item { display: flex; align-items: center; gap: 5px; padding: 2px 5px; font-size: 10px; }
         .code-dot { width: 8px; height: 8px; border-radius: 50%; }
@@ -82,10 +88,10 @@
         
         .search-box { width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; margin-bottom: 5px; }
         
-        .file-input { margin: 5px 0; }
-        .file-input label { display: block; font-weight: 600; font-size: 10px; margin-bottom: 2px; }
-        .file-input input[type="file"] { font-size: 9px; width: 100%; }
-        .file-status { font-size: 9px; color: #666; }
+        .file-input { margin: 5px 0; border: 1px dashed #ccc; padding: 8px; border-radius: 6px; }
+        .file-input label { display: block; font-weight: 600; font-size: 11px; margin-bottom: 3px; }
+        .file-input input[type="file"] { font-size: 10px; width: 100%; }
+        .file-status { font-size: 10px; color: #666; margin-top: 3px; }
         .file-status.loaded { color: #28a745; font-weight: bold; }
     </style>
 </head>
@@ -105,7 +111,7 @@
         <!-- Total Stats -->
         <div class="stats-grid">
             <div class="stat-box bldg"><div class="num" id="totalBldg">0</div><div class="lbl">Buildings</div></div>
-            <div class="stat-box apt"><div class="num" id="totalApt">0</div><div class="lbl">Apartments</div></div>
+            <div class="stat-box biz"><div class="num" id="totalBiz">0</div><div class="lbl">Businesses</div></div>
             <div class="stat-box villa"><div class="num" id="totalVilla">0</div><div class="lbl">Villas</div></div>
             <div class="stat-box land"><div class="num" id="totalParcel">0</div><div class="lbl">Parcels</div></div>
         </div>
@@ -114,26 +120,45 @@
         <div class="district-stats" id="districtStats">
             <h3 id="districtStatsTitle">DISTRICT: None</h3>
             <div class="row"><span>Buildings:</span><span id="distBldg">0</span></div>
-            <div class="row"><span>Apartments Listed:</span><span id="distApt">0</span></div>
+            <div class="row"><span>Businesses:</span><span id="distBiz">0</span></div>
             <div class="row" style="color:#27ae60;"><span>Villas (1000/1012):</span><span id="distVilla">0</span></div>
             <div class="row" style="color:#0077b6;"><span>Apartments (7510):</span><span id="distAptLU">0</span></div>
             <div class="row"><span>Commercial:</span><span id="distComm">0</span></div>
             <div class="row"><span>Other:</span><span id="distOther">0</span></div>
             <div class="row total"><span>Total Parcels:</span><span id="distTotal">0</span></div>
-            <div class="row total" style="color:#27ae60;"><span>Villa %:</span><span id="distVillaPct">0%</span></div>
         </div>
         
         <!-- Dynamic Counts (In View) -->
         <div class="dynamic-stats">
             <h3>IN CURRENT VIEW</h3>
             <div class="row"><span>Buildings:</span><span id="viewBldg">0</span></div>
-            <div class="row"><span>Apartments Listed:</span><span id="viewApt">0</span></div>
+            <div class="row"><span>Businesses:</span><span id="viewBiz">0</span></div>
             <div class="row" style="color:#27ae60;"><span>Villas (1000/1012):</span><span id="viewVilla">0</span></div>
             <div class="row" style="color:#0077b6;"><span>Apartments (7510):</span><span id="viewAptLU">0</span></div>
-            <div class="row"><span>Commercial:</span><span id="viewComm">0</span></div>
             <div class="row"><span>Other Parcels:</span><span id="viewOther">0</span></div>
-            <div class="row total"><span>Total Parcels in View:</span><span id="viewTotal">0</span></div>
-            <div class="row total" style="color:#27ae60;"><span>Villa %:</span><span id="viewVillaPct">0%</span></div>
+            <div class="row total"><span>Total Parcels:</span><span id="viewTotal">0</span></div>
+        </div>
+        
+        <!-- Businesses Section -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                BUSINESSES <span>v</span>
+            </div>
+            <div class="section-content open">
+                <div class="file-input">
+                    <label>Businesses CSV:</label>
+                    <input type="file" id="bizFile" accept=".csv">
+                    <div id="bizStatus" class="file-status">riyadh_businesses.csv</div>
+                </div>
+                <div style="margin-top:8px;">
+                    <div style="font-size:11px;font-weight:600;margin-bottom:5px;">Categories:</div>
+                    <div id="bizCategories" class="category-list">Load CSV to see categories</div>
+                </div>
+                <div style="margin-top:8px;font-size:10px;">
+                    Size: <span id="bizSizeVal">4</span> <input type="range" id="bizSize" min="1" max="10" value="4" step="0.5" oninput="updateSlider('biz')">
+                    Opacity: <span id="bizOpacityVal">80</span>% <input type="range" id="bizOpacity" min="10" max="100" value="80" step="5" oninput="updateSlider('biz')">
+                </div>
+            </div>
         </div>
         
         <!-- Layer Controls -->
@@ -166,35 +191,11 @@
                 </div>
                 <div class="layer-control">
                     <div class="header">
-                        <input type="checkbox" id="showApartments" checked onchange="render()">
-                        <div class="dot" style="background:#e74c3c;"></div>
-                        <span class="name">Apartments</span>
-                    </div>
-                    <div style="font-size:10px;">
-                        Size: <span id="aptSizeVal">4</span> <input type="range" id="aptSize" min="0.5" max="8" value="4" step="0.5" oninput="updateSlider('apt')">
-                        Opacity: <span id="aptOpacityVal">80</span>% <input type="range" id="aptOpacity" min="10" max="100" value="80" step="5" oninput="updateSlider('apt')">
-                    </div>
-                </div>
-                <div class="layer-control">
-                    <div class="header">
                         <input type="checkbox" id="showDistricts" checked onchange="render()">
                         <div class="dot" style="background:#ff9800;"></div>
                         <span class="name">Districts</span>
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- Export -->
-        <div class="section">
-            <div class="section-header" onclick="toggleSection(this)">
-                EXPORT <span>v</span>
-            </div>
-            <div class="section-content">
-                <button class="btn btn-success" onclick="exportVisibleParcels()">Export Visible Parcels CSV</button>
-                <button class="btn btn-primary" onclick="exportDistrictParcels()">Export District Parcels CSV</button>
-                <button class="btn" onclick="exportBuildings()">Export Buildings CSV</button>
-                <div id="exportStatus" style="font-size:9px;color:#666;margin-top:5px;"></div>
             </div>
         </div>
         
@@ -215,11 +216,6 @@
                     <div id="landStatus" class="file-status">RIYADH_ALL_PARCELS_COMPLETE.csv</div>
                 </div>
                 <div class="file-input">
-                    <label>Apartments CSV:</label>
-                    <input type="file" id="aptFile" accept=".csv">
-                    <div id="aptStatus" class="file-status">riyadh_apartments.csv</div>
-                </div>
-                <div class="file-input">
                     <label>Districts JSON:</label>
                     <input type="file" id="distFile" accept=".json">
                     <div id="distStatus" class="file-status">riyadh_districts.json</div>
@@ -230,7 +226,7 @@
         <!-- Land Use Codes -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                CODES (<span id="codeCount">0</span>) <span>v</span>
+                LAND USE CODES (<span id="codeCount">0</span>) <span>v</span>
             </div>
             <div class="section-content">
                 <div style="display:flex;gap:3px;margin-bottom:5px;flex-wrap:wrap;">
@@ -255,6 +251,19 @@
             </div>
         </div>
         
+        <!-- Export -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                EXPORT <span>v</span>
+            </div>
+            <div class="section-content">
+                <button class="btn btn-success" onclick="exportVisibleParcels()">Export Visible Parcels</button>
+                <button class="btn btn-primary" onclick="exportDistrictParcels()">Export District Parcels</button>
+                <button class="btn" onclick="exportBusinesses()">Export Businesses</button>
+                <div id="exportStatus" style="font-size:9px;color:#666;margin-top:5px;"></div>
+            </div>
+        </div>
+        
         <div style="margin-top:8px;font-size:9px;color:#888;">
             Zoom: <span id="zoomLevel">0</span>
         </div>
@@ -263,13 +272,30 @@
     <script>
         let map;
         let buildings = [];
-        let apartments = [];
+        let businesses = [];
         let parcels = [];
         let districts = [];
         let allCodeCounts = {};
         let selectedCodes = new Set();
-        let selectedDistrict = null; // Single district selection
-        let districtCache = {}; // Cache for district counts
+        let selectedDistrict = null;
+        let districtCache = {};
+        
+        // Business categories
+        let bizCategories = {};
+        let selectedBizCats = new Set();
+        const bizCatColors = {
+            'Restaurants': '#e74c3c',
+            'Cafes': '#9b59b6',
+            'Supermarkets': '#3498db',
+            'Shopping Malls': '#e91e63',
+            'Fashion Stores': '#ff9800',
+            'Electronics': '#00bcd4',
+            'Pharmacies': '#4caf50',
+            'Banks': '#607d8b',
+            'Gas Stations': '#795548',
+            'Other Stores': '#9e9e9e',
+            'Other': '#666666'
+        };
         
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -280,8 +306,6 @@
             '7510': { color: '#0077b6', name: 'Apartments', type: 'apt' },
             '2000': { color: '#ea4335', name: 'Commercial', type: 'comm' },
             '2285': { color: '#ff9800', name: 'Commercial Area', type: 'comm' },
-            '2633': { color: '#795548', name: 'Industrial', type: 'other' },
-            '2278': { color: '#795548', name: 'Industrial', type: 'other' },
         };
         
         function getCodeColor(code) {
@@ -292,7 +316,6 @@
             return landUseCodes[code]?.type || 'other';
         }
         
-        // Point in polygon check (ray casting)
         function pointInPolygon(lat, lon, polygon) {
             if (!polygon || polygon.length < 3) return false;
             let inside = false;
@@ -317,11 +340,6 @@
             document.getElementById('loadingOverlay').classList.remove('hidden');
         }
         
-        function setLoadingStatus(msg, pct) {
-            document.getElementById('loadingStatus').textContent = msg;
-            document.getElementById('progressFill').style.width = pct + '%';
-        }
-        
         function hideLoading() {
             document.getElementById('loadingOverlay').classList.add('hidden');
         }
@@ -329,6 +347,32 @@
         function updateSlider(layer) {
             document.getElementById(layer + 'SizeVal').textContent = document.getElementById(layer + 'Size').value;
             document.getElementById(layer + 'OpacityVal').textContent = document.getElementById(layer + 'Opacity').value;
+            render();
+        }
+        
+        function updateBizCategories() {
+            const div = document.getElementById('bizCategories');
+            let html = '';
+            Object.entries(bizCategories).sort((a,b) => b[1]-a[1]).forEach(([cat, count]) => {
+                const color = bizCatColors[cat] || '#666';
+                const checked = selectedBizCats.has(cat) ? 'checked' : '';
+                html += `<label class="cat-item">
+                    <input type="checkbox" ${checked} onchange="toggleBizCat('${cat}')">
+                    <span class="cat-dot" style="background:${color}"></span>
+                    <span style="flex:1">${cat}</span>
+                    <span class="cat-count">(${count.toLocaleString()})</span>
+                </label>`;
+            });
+            div.innerHTML = html || 'Load CSV to see categories';
+        }
+        
+        function toggleBizCat(cat) {
+            if (selectedBizCats.has(cat)) {
+                selectedBizCats.delete(cat);
+            } else {
+                selectedBizCats.add(cat);
+            }
+            updateBizCategories();
             render();
         }
         
@@ -342,27 +386,10 @@
             if (!d?.boundaries?.[0]) return;
             
             const poly = d.boundaries[0];
+            let distBldg = 0, distBiz = 0, distVilla = 0, distAptLU = 0, distComm = 0, distOther = 0;
             
-            // Check cache
-            const cacheKey = selectedDistrict;
-            if (districtCache[cacheKey]) {
-                displayDistrictStats(districtCache[cacheKey]);
-                return;
-            }
-            
-            let distBldg = 0, distApt = 0, distVilla = 0, distAptLU = 0, distComm = 0, distOther = 0;
-            
-            // Count buildings in district
-            buildings.forEach(b => {
-                if (pointInPolygon(b[0], b[1], poly)) distBldg++;
-            });
-            
-            // Count apartments in district
-            apartments.forEach(a => {
-                if (pointInPolygon(a.lat, a.lon, poly)) distApt++;
-            });
-            
-            // Count parcels by type in district
+            buildings.forEach(b => { if (pointInPolygon(b[0], b[1], poly)) distBldg++; });
+            businesses.forEach(b => { if (pointInPolygon(b.lat, b.lon, poly)) distBiz++; });
             parcels.forEach(p => {
                 if (!pointInPolygon(p.lat, p.lon, poly)) return;
                 const type = getCodeType(p.code);
@@ -372,25 +399,15 @@
                 else distOther++;
             });
             
-            const stats = { distBldg, distApt, distVilla, distAptLU, distComm, distOther };
-            districtCache[cacheKey] = stats;
-            displayDistrictStats(stats);
-        }
-        
-        function displayDistrictStats(stats) {
-            const { distBldg, distApt, distVilla, distAptLU, distComm, distOther } = stats;
             const distTotal = distVilla + distAptLU + distComm + distOther;
-            const villaPct = distTotal > 0 ? (distVilla / distTotal * 100).toFixed(1) : 0;
-            
             document.getElementById('districtStatsTitle').textContent = 'DISTRICT: ' + selectedDistrict;
             document.getElementById('distBldg').textContent = distBldg.toLocaleString();
-            document.getElementById('distApt').textContent = distApt.toLocaleString();
+            document.getElementById('distBiz').textContent = distBiz.toLocaleString();
             document.getElementById('distVilla').textContent = distVilla.toLocaleString();
             document.getElementById('distAptLU').textContent = distAptLU.toLocaleString();
             document.getElementById('distComm').textContent = distComm.toLocaleString();
             document.getElementById('distOther').textContent = distOther.toLocaleString();
             document.getElementById('distTotal').textContent = distTotal.toLocaleString();
-            document.getElementById('distVillaPct').textContent = villaPct + '%';
             document.getElementById('districtStats').classList.add('active');
         }
         
@@ -416,29 +433,24 @@
             
             const showBldg = document.getElementById('showBuildings').checked;
             const showParcel = document.getElementById('showParcels').checked;
-            const showApt = document.getElementById('showApartments').checked;
             const showDist = document.getElementById('showDistricts').checked;
             
             const bldgSize = parseFloat(document.getElementById('bldgSize').value) * baseSize / 2;
             const bldgOpacity = parseInt(document.getElementById('bldgOpacity').value) / 100;
             const parcelSize = parseFloat(document.getElementById('parcelSize').value) * baseSize / 2;
             const parcelOpacity = parseInt(document.getElementById('parcelOpacity').value) / 100;
-            const aptSize = parseFloat(document.getElementById('aptSize').value) * baseSize / 2;
-            const aptOpacity = parseInt(document.getElementById('aptOpacity').value) / 100;
+            const bizSize = parseFloat(document.getElementById('bizSize').value) * baseSize / 2;
+            const bizOpacity = parseInt(document.getElementById('bizOpacity').value) / 100;
             
-            // Dynamic counts (in view)
-            let viewBldg = 0, viewApt = 0, viewVilla = 0, viewAptLU = 0, viewComm = 0, viewOther = 0;
+            let viewBldg = 0, viewBiz = 0, viewVilla = 0, viewAptLU = 0, viewOther = 0;
             
-            // Draw ONLY selected district boundary (or all if none selected)
+            // Districts
             if (showDist && districts.length) {
                 districts.forEach(d => {
-                    // Only draw selected district, or all if none selected
                     if (selectedDistrict && d.name_en !== selectedDistrict) return;
-                    
                     const b = d.boundaries?.[0];
                     if (!b || b.length < 3) return;
                     
-                    // Draw filled polygon for selected district
                     if (selectedDistrict) {
                         ctx.fillStyle = 'rgba(255, 152, 0, 0.15)';
                         ctx.beginPath();
@@ -451,7 +463,6 @@
                         ctx.fill();
                     }
                     
-                    // Draw boundary
                     ctx.strokeStyle = selectedDistrict ? '#ff5722' : '#ff9800';
                     ctx.lineWidth = selectedDistrict ? 3 : 1;
                     ctx.globalAlpha = selectedDistrict ? 1 : 0.5;
@@ -483,7 +494,7 @@
                 ctx.globalAlpha = 1;
             }
             
-            // Parcels with dynamic counting
+            // Parcels
             if (showParcel && parcels.length) {
                 ctx.globalAlpha = parcelOpacity;
                 parcels.forEach(p => {
@@ -491,11 +502,9 @@
                     if (p.lat < bounds.getSouthWest().lat() || p.lat > bounds.getNorthEast().lat() ||
                         p.lon < bounds.getSouthWest().lng() || p.lon > bounds.getNorthEast().lng()) return;
                     
-                    // Count by type
                     const type = getCodeType(p.code);
                     if (type === 'villa') viewVilla++;
                     else if (type === 'apt') viewAptLU++;
-                    else if (type === 'comm') viewComm++;
                     else viewOther++;
                     
                     const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lon));
@@ -507,34 +516,31 @@
                 ctx.globalAlpha = 1;
             }
             
-            // Apartments
-            if (showApt && apartments.length) {
-                ctx.fillStyle = '#e74c3c';
-                ctx.globalAlpha = aptOpacity;
-                apartments.forEach(a => {
-                    if (a.lat < bounds.getSouthWest().lat() || a.lat > bounds.getNorthEast().lat() ||
-                        a.lon < bounds.getSouthWest().lng() || a.lon > bounds.getNorthEast().lng()) return;
-                    viewApt++;
-                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(a.lat, a.lon));
+            // Businesses
+            if (businesses.length && selectedBizCats.size > 0) {
+                ctx.globalAlpha = bizOpacity;
+                businesses.forEach(b => {
+                    if (!selectedBizCats.has(b.category)) return;
+                    if (b.lat < bounds.getSouthWest().lat() || b.lat > bounds.getNorthEast().lat() ||
+                        b.lon < bounds.getSouthWest().lng() || b.lon > bounds.getNorthEast().lng()) return;
+                    viewBiz++;
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(b.lat, b.lon));
                     ctx.beginPath();
-                    ctx.arc((w.x-bl.x)*scale, (w.y-tr.y)*scale, aptSize, 0, Math.PI*2);
+                    ctx.arc((w.x-bl.x)*scale, (w.y-tr.y)*scale, bizSize, 0, Math.PI*2);
+                    ctx.fillStyle = bizCatColors[b.category] || '#666';
                     ctx.fill();
                 });
                 ctx.globalAlpha = 1;
             }
             
-            // Update dynamic counts (in view)
-            const viewTotal = viewVilla + viewAptLU + viewComm + viewOther;
-            const villaPct = viewTotal > 0 ? (viewVilla / viewTotal * 100).toFixed(1) : 0;
-            
+            // Update counts
+            const viewTotal = viewVilla + viewAptLU + viewOther;
             document.getElementById('viewBldg').textContent = viewBldg.toLocaleString();
-            document.getElementById('viewApt').textContent = viewApt.toLocaleString();
+            document.getElementById('viewBiz').textContent = viewBiz.toLocaleString();
             document.getElementById('viewVilla').textContent = viewVilla.toLocaleString();
             document.getElementById('viewAptLU').textContent = viewAptLU.toLocaleString();
-            document.getElementById('viewComm').textContent = viewComm.toLocaleString();
             document.getElementById('viewOther').textContent = viewOther.toLocaleString();
             document.getElementById('viewTotal').textContent = viewTotal.toLocaleString();
-            document.getElementById('viewVillaPct').textContent = villaPct + '%';
         }
         
         function parseCSV(text) {
@@ -557,13 +563,47 @@
             const reader = new FileReader();
             reader.onload = evt => {
                 buildings = JSON.parse(evt.target.result);
-                districtCache = {}; // Clear cache
                 document.getElementById('totalBldg').textContent = buildings.length.toLocaleString();
                 document.getElementById('buildingsStatus').textContent = buildings.length.toLocaleString() + ' loaded';
                 document.getElementById('buildingsStatus').classList.add('loaded');
-                hideLoading(); 
-                calculateDistrictStats();
-                render();
+                hideLoading(); calculateDistrictStats(); render();
+            };
+            reader.readAsText(file);
+        });
+        
+        document.getElementById('bizFile').addEventListener('change', e => {
+            const file = e.target.files[0]; if (!file) return;
+            showLoading('Loading Businesses...');
+            const reader = new FileReader();
+            reader.onload = evt => {
+                const rows = parseCSV(evt.target.result);
+                const h = rows[0].map(x => x.toLowerCase());
+                const latI = h.findIndex(x => x === 'lat');
+                const lonI = h.findIndex(x => x === 'lon');
+                const catI = h.findIndex(x => x === 'category');
+                const nameI = h.findIndex(x => x === 'name');
+                
+                businesses = []; bizCategories = {}; selectedBizCats.clear();
+                
+                for (let i = 1; i < rows.length; i++) {
+                    const r = rows[i];
+                    const lat = parseFloat(r[latI]), lon = parseFloat(r[lonI]);
+                    const cat = r[catI] || 'Other';
+                    const name = r[nameI] || '';
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                        businesses.push({lat, lon, category: cat, name});
+                        bizCategories[cat] = (bizCategories[cat] || 0) + 1;
+                    }
+                }
+                
+                // Select all categories by default
+                Object.keys(bizCategories).forEach(c => selectedBizCats.add(c));
+                updateBizCategories();
+                
+                document.getElementById('totalBiz').textContent = businesses.length.toLocaleString();
+                document.getElementById('bizStatus').textContent = businesses.length.toLocaleString() + ' loaded';
+                document.getElementById('bizStatus').classList.add('loaded');
+                hideLoading(); calculateDistrictStats(); render();
             };
             reader.readAsText(file);
         });
@@ -580,18 +620,15 @@
                 const codeI = h.findIndex(x => x.includes('code'));
                 
                 parcels = []; allCodeCounts = {}; selectedCodes.clear();
-                districtCache = {}; // Clear cache
-                let totalVillas = 0, totalApts = 0;
+                let totalVillas = 0;
                 
                 for (let i = 1; i < rows.length; i++) {
-                    if (i % 100000 === 0) setLoadingStatus(`${i.toLocaleString()} rows`, i/rows.length*100);
                     const r = rows[i];
                     const lat = parseFloat(r[latI]), lon = parseFloat(r[lonI]), code = r[codeI];
                     if (!isNaN(lat) && !isNaN(lon) && code) {
                         parcels.push({lat, lon, code});
                         allCodeCounts[code] = (allCodeCounts[code]||0) + 1;
                         if (code === '1000' || code === '1012') totalVillas++;
-                        if (code === '7510') totalApts++;
                     }
                 }
                 
@@ -602,32 +639,7 @@
                 document.getElementById('totalVilla').textContent = totalVillas.toLocaleString();
                 document.getElementById('landStatus').textContent = parcels.length.toLocaleString() + ' loaded';
                 document.getElementById('landStatus').classList.add('loaded');
-                hideLoading(); 
-                calculateDistrictStats();
-                render();
-            };
-            reader.readAsText(file);
-        });
-        
-        document.getElementById('aptFile').addEventListener('change', e => {
-            const file = e.target.files[0]; if (!file) return;
-            const reader = new FileReader();
-            reader.onload = evt => {
-                const rows = parseCSV(evt.target.result);
-                const h = rows[0].map(x => x.toLowerCase());
-                const latI = h.findIndex(x => x.includes('lat'));
-                const lonI = h.findIndex(x => x.includes('lon'));
-                apartments = [];
-                districtCache = {}; // Clear cache
-                for (let i = 1; i < rows.length; i++) {
-                    const lat = parseFloat(rows[i][latI]), lon = parseFloat(rows[i][lonI]);
-                    if (!isNaN(lat) && !isNaN(lon)) apartments.push({lat, lon});
-                }
-                document.getElementById('totalApt').textContent = apartments.length.toLocaleString();
-                document.getElementById('aptStatus').textContent = apartments.length.toLocaleString() + ' loaded';
-                document.getElementById('aptStatus').classList.add('loaded');
-                calculateDistrictStats();
-                render();
+                hideLoading(); calculateDistrictStats(); render();
             };
             reader.readAsText(file);
         });
@@ -637,13 +649,10 @@
             const reader = new FileReader();
             reader.onload = evt => {
                 districts = JSON.parse(evt.target.result);
-                districtCache = {}; // Clear cache
                 document.getElementById('districtCount').textContent = districts.length;
                 document.getElementById('distStatus').textContent = districts.length + ' loaded';
                 document.getElementById('distStatus').classList.add('loaded');
-                updateDistrictList();
-                calculateDistrictStats();
-                render();
+                updateDistrictList(); calculateDistrictStats(); render();
             };
             reader.readAsText(file);
         });
@@ -652,7 +661,7 @@
             const div = document.getElementById('codeFilters');
             let html = '';
             Object.entries(allCodeCounts).sort((a,b) => b[1]-a[1]).forEach(([code, count]) => {
-                const info = landUseCodes[code] || {name: code, color: getCodeColor(code)};
+                const info = landUseCodes[code] || {color: getCodeColor(code)};
                 html += `<label class="code-item">
                     <input type="checkbox" ${selectedCodes.has(code)?'checked':''} onchange="toggleCode('${code}')">
                     <span class="code-dot" style="background:${info.color}"></span>
@@ -684,25 +693,18 @@
         function selectDistrict(name) {
             const d = districts.find(x => x.name_en === name);
             if (!d?.boundaries?.[0]) return;
-            
             selectedDistrict = name;
             updateDistrictList();
-            
-            // Zoom to district
             const bounds = new google.maps.LatLngBounds();
             d.boundaries[0].forEach(([lat,lon]) => bounds.extend(new google.maps.LatLng(lat,lon)));
             map.fitBounds(bounds);
-            
-            // Calculate district stats
-            calculateDistrictStats();
-            render();
+            calculateDistrictStats(); render();
         }
         
         function clearDistrictSelection() { 
             selectedDistrict = null;
             document.getElementById('districtStats').classList.remove('active');
-            updateDistrictList(); 
-            render(); 
+            updateDistrictList(); render();
         }
         
         function exportVisibleParcels() {
@@ -715,31 +717,28 @@
             let csv = 'lat,lon,code\n';
             visible.forEach(p => csv += `${p.lat},${p.lon},${p.code}\n`);
             downloadCSV(csv, 'riyadh_visible_parcels.csv');
-            document.getElementById('exportStatus').textContent = `Exported ${visible.length.toLocaleString()} visible parcels`;
+            document.getElementById('exportStatus').textContent = `Exported ${visible.length.toLocaleString()} parcels`;
         }
         
         function exportDistrictParcels() {
-            if (!selectedDistrict) {
-                document.getElementById('exportStatus').textContent = 'Select a district first';
-                return;
-            }
+            if (!selectedDistrict) { document.getElementById('exportStatus').textContent = 'Select a district first'; return; }
             const d = districts.find(x => x.name_en === selectedDistrict);
             if (!d?.boundaries?.[0]) return;
-            
             const poly = d.boundaries[0];
-            const inDistrict = parcels.filter(p => pointInPolygon(p.lat, p.lon, poly));
-            
+            const inDist = parcels.filter(p => pointInPolygon(p.lat, p.lon, poly));
             let csv = 'lat,lon,code\n';
-            inDistrict.forEach(p => csv += `${p.lat},${p.lon},${p.code}\n`);
-            downloadCSV(csv, `riyadh_${selectedDistrict.replace(/[^a-zA-Z0-9]/g,'_')}_parcels.csv`);
-            document.getElementById('exportStatus').textContent = `Exported ${inDistrict.length.toLocaleString()} parcels from ${selectedDistrict}`;
+            inDist.forEach(p => csv += `${p.lat},${p.lon},${p.code}\n`);
+            downloadCSV(csv, `${selectedDistrict.replace(/[^a-zA-Z0-9]/g,'_')}_parcels.csv`);
+            document.getElementById('exportStatus').textContent = `Exported ${inDist.length.toLocaleString()} parcels`;
         }
         
-        function exportBuildings() {
-            let csv = 'lat,lon\n';
-            buildings.forEach(b => csv += `${b[0]},${b[1]}\n`);
-            downloadCSV(csv, 'riyadh_buildings.csv');
-            document.getElementById('exportStatus').textContent = `Exported ${buildings.length.toLocaleString()} buildings`;
+        function exportBusinesses() {
+            let csv = 'name,lat,lon,category\n';
+            businesses.filter(b => selectedBizCats.has(b.category)).forEach(b => {
+                csv += `"${b.name.replace(/"/g,'""')}",${b.lat},${b.lon},${b.category}\n`;
+            });
+            downloadCSV(csv, 'riyadh_businesses_export.csv');
+            document.getElementById('exportStatus').textContent = `Exported ${businesses.length.toLocaleString()} businesses`;
         }
         
         function downloadCSV(csv, filename) {
