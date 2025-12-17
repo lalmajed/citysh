@@ -105,6 +105,17 @@
             </div>
         </div>
         
+        <!-- Building Validation Summary -->
+        <div id="buildingValidation" style="display:none; padding:8px; background:linear-gradient(135deg,#e3f2fd,#fce4ec); border-radius:8px; margin-bottom:8px; border:1px solid #90caf9;">
+            <div style="font-weight:600; color:#1565c0; margin-bottom:5px;">🏗️ MS Building Validation</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; font-size:10px;">
+                <div>🏗️ MS Buildings: <b id="msBuildingCount">0</b></div>
+                <div>✅ Matched: <b id="matchedCount" style="color:#2e7d32;">0</b></div>
+                <div>❌ Unmatched: <b id="unmatchedCount" style="color:#c62828;">0</b></div>
+                <div>📊 Match %: <b id="matchPct">0%</b></div>
+            </div>
+        </div>
+        
         <!-- Counts -->
         <div class="count-row" id="countsRow" style="display:none;">
             <div class="count-box apt"><div class="num" id="aptCount">0</div><div class="lbl">Apartments</div></div>
@@ -138,6 +149,16 @@
                     <input type="file" id="distFile" accept=".json">
                     <div id="distStatus" class="file-status">riyadh_districts.json</div>
                 </div>
+                <div class="file-input">
+                    <label>🏗️ MS Buildings CSV:</label>
+                    <input type="file" id="msBuildingsFile" accept=".csv">
+                    <div id="msBuildingsStatus" class="file-status">riyadh_ms_buildings.csv</div>
+                </div>
+                <div class="file-input">
+                    <label>✅ Validated Parcels CSV:</label>
+                    <input type="file" id="validatedFile" accept=".csv">
+                    <div id="validatedStatus" class="file-status">riyadh_validated_parcels.csv</div>
+                </div>
             </div>
         </div>
         
@@ -167,6 +188,22 @@
                     <span class="toggle-dot" style="background:#ff9800;"></span>
                     <span>District Boundaries</span>
                 </label>
+                <label class="toggle-row">
+                    <input type="checkbox" id="showMSBuildings">
+                    <span class="toggle-dot" style="background:#9c27b0;"></span>
+                    <span>MS Building Footprints</span>
+                </label>
+                
+                <div style="margin-top:8px; padding:6px; background:#fce4ec; border-radius:4px;">
+                    <label class="toggle-row">
+                        <input type="checkbox" id="showValidatedOnly">
+                        <span style="font-size:11px;">✅ Show only validated (with building)</span>
+                    </label>
+                    <label class="toggle-row">
+                        <input type="checkbox" id="showUnmatchedOnly">
+                        <span style="font-size:11px;">❌ Show only unmatched (no building)</span>
+                    </label>
+                </div>
                 
                 <div style="margin-top:8px;">
                     <label style="font-size:11px;">Dot Size: <span id="dotSizeVal">3</span></label>
@@ -318,8 +355,11 @@
     <script>
         let map;
         let apartments = [], businesses = [], parcels = [], districts = [];
+        let msBuildings = [];  // Microsoft building footprints
+        let validatedParcels = new Set();  // Set of validated parcel indices
         let districtCounts = {};
         let districtVillaAnalysis = {};  // Villa analysis data
+        let buildingValidation = {};  // Building validation data
         let allCodeCounts = {};  // All codes with counts
         let selectedCodes = new Set();  // Track selected codes
         let selectedDistricts = new Set();  // Track selected districts
@@ -450,7 +490,29 @@
                 });
             }
             
+            // Draw MS buildings layer
+            const showMS = document.getElementById('showMSBuildings').checked;
+            if (showMS && msBuildings.length > 0) {
+                ctx.globalAlpha = 0.3;
+                msBuildings.forEach(b => {
+                    if (!inBounds(b, bounds)) return;
+                    
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(b.lat, b.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, baseRadius * 0.5, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#9c27b0';
+                    ctx.fill();
+                });
+                ctx.globalAlpha = 1;
+            }
+            
             // Draw land use (only selected codes, skip deleted)
+            const showValidatedOnly = document.getElementById('showValidatedOnly').checked;
+            const showUnmatchedOnly = document.getElementById('showUnmatchedOnly').checked;
+            
             if (showLand && parcels.length > 0) {
                 parcels.forEach((p, idx) => {
                     if (deletedParcels.has(idx)) return;
@@ -458,13 +520,24 @@
                     if (selectedCodes.size > 0 && !selectedCodes.has(p.code)) return;
                     if (!inBounds(p, bounds)) return;
                     
+                    // Filter by validation status
+                    const isValidated = p.has_building === true || validatedParcels.has(idx);
+                    if (showValidatedOnly && !isValidated) return;
+                    if (showUnmatchedOnly && isValidated) return;
+                    
                     const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lon));
                     const x = (w.x - bottomLeft.x) * scale;
                     const y = (w.y - topRight.y) * scale;
                     
                     ctx.beginPath();
                     ctx.arc(x, y, baseRadius * 0.7, 0, 2 * Math.PI);
-                    ctx.fillStyle = getCodeColor(p.code);
+                    
+                    // Color based on validation if filtering is active
+                    if (showValidatedOnly || showUnmatchedOnly) {
+                        ctx.fillStyle = isValidated ? '#2e7d32' : '#c62828';
+                    } else {
+                        ctx.fillStyle = getCodeColor(p.code);
+                    }
                     ctx.globalAlpha = 0.6;
                     ctx.fill();
                     ctx.globalAlpha = 1;
@@ -721,8 +794,18 @@
             render();
         });
         
-        ['showApartments', 'showBusinesses', 'showLandUse', 'showDistricts'].forEach(id => {
+        ['showApartments', 'showBusinesses', 'showLandUse', 'showDistricts', 'showMSBuildings', 'showValidatedOnly', 'showUnmatchedOnly'].forEach(id => {
             document.getElementById(id).addEventListener('change', render);
+        });
+        
+        // Mutual exclusion for validated/unmatched filters
+        document.getElementById('showValidatedOnly').addEventListener('change', function() {
+            if (this.checked) document.getElementById('showUnmatchedOnly').checked = false;
+            render();
+        });
+        document.getElementById('showUnmatchedOnly').addEventListener('change', function() {
+            if (this.checked) document.getElementById('showValidatedOnly').checked = false;
+            render();
         });
         
         document.getElementById('districtSearch').addEventListener('input', updateDistrictList);
@@ -900,6 +983,95 @@
                 document.getElementById('distStatus').textContent = `✓ ${districts.length}`;
                 document.getElementById('distStatus').classList.add('loaded');
                 updateDistrictList();
+                render();
+            };
+            reader.readAsText(file);
+        });
+        
+        // MS Buildings file loader
+        document.getElementById('msBuildingsFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            document.getElementById('msBuildingsStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const lines = evt.target.result.trim().split('\n');
+                const headers = lines[0].toLowerCase().split(',');
+                const latI = headers.findIndex(h => h.includes('lat'));
+                const lonI = headers.findIndex(h => h.includes('lon'));
+                
+                msBuildings = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const vals = parseCSVLine(lines[i]);
+                    const lat = parseFloat(vals[latI]);
+                    const lon = parseFloat(vals[lonI]);
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                        msBuildings.push({ lat, lon });
+                    }
+                }
+                
+                document.getElementById('msBuildingsStatus').textContent = `✓ ${msBuildings.length.toLocaleString()}`;
+                document.getElementById('msBuildingsStatus').classList.add('loaded');
+                document.getElementById('buildingValidation').style.display = 'block';
+                document.getElementById('msBuildingCount').textContent = msBuildings.length.toLocaleString();
+                render();
+            };
+            reader.readAsText(file);
+        });
+        
+        // Validated parcels file loader
+        document.getElementById('validatedFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            document.getElementById('validatedStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const lines = evt.target.result.trim().split('\n');
+                const headers = lines[0].toLowerCase().split(',');
+                const latI = headers.findIndex(h => h.includes('lat'));
+                const lonI = headers.findIndex(h => h.includes('lon'));
+                const codeI = headers.findIndex(h => h.includes('code'));
+                const hasBuilding = headers.findIndex(h => h.includes('has_building'));
+                
+                // Clear existing parcels and load validated ones
+                parcels = [];
+                validatedParcels.clear();
+                allCodeCounts = {};
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const vals = parseCSVLine(lines[i]);
+                    const lat = parseFloat(vals[latI]);
+                    const lon = parseFloat(vals[lonI]);
+                    const code = vals[codeI];
+                    const validated = hasBuilding >= 0 ? vals[hasBuilding] === 'True' : true;
+                    
+                    if (!isNaN(lat) && !isNaN(lon) && code) {
+                        parcels.push({ lat, lon, code, has_building: validated });
+                        if (validated) validatedParcels.add(parcels.length - 1);
+                        allCodeCounts[code] = (allCodeCounts[code] || 0) + 1;
+                    }
+                }
+                
+                // Select all codes
+                Object.keys(allCodeCounts).forEach(code => selectedCodes.add(code));
+                
+                document.getElementById('validatedStatus').textContent = `✓ ${parcels.length.toLocaleString()} validated`;
+                document.getElementById('validatedStatus').classList.add('loaded');
+                document.getElementById('landStatus').textContent = `Using validated: ${parcels.length.toLocaleString()}`;
+                document.getElementById('landStatus').classList.add('loaded');
+                document.getElementById('landCount').textContent = parcels.length.toLocaleString();
+                document.getElementById('countsRow').style.display = 'flex';
+                
+                // Update validation stats
+                document.getElementById('buildingValidation').style.display = 'block';
+                document.getElementById('matchedCount').textContent = validatedParcels.size.toLocaleString();
+                document.getElementById('unmatchedCount').textContent = (parcels.length - validatedParcels.size).toLocaleString();
+                const pct = validatedParcels.size / parcels.length * 100;
+                document.getElementById('matchPct').textContent = pct.toFixed(1) + '%';
+                
+                updateCodeFilters();
                 render();
             };
             reader.readAsText(file);
@@ -1592,6 +1764,19 @@
                         document.getElementById('totalAptCSV').textContent = s.total_apartments_csv?.toLocaleString() || 0;
                         document.getElementById('overlapPct').textContent = `${s.overlap_count?.toLocaleString() || 0} (${s.overlap_percentage?.toFixed(1) || 0}%)`;
                     }
+                })
+                .catch(() => {});
+            
+            // Load building validation data
+            fetch('riyadh_building_validation.json')
+                .then(r => r.json())
+                .then(data => {
+                    buildingValidation = data;
+                    document.getElementById('buildingValidation').style.display = 'block';
+                    document.getElementById('msBuildingCount').textContent = data.total_ms_buildings?.toLocaleString() || 0;
+                    document.getElementById('matchedCount').textContent = data.matched_total?.toLocaleString() || 0;
+                    document.getElementById('unmatchedCount').textContent = data.unmatched_total?.toLocaleString() || 0;
+                    document.getElementById('matchPct').textContent = (data.match_percentage?.toFixed(1) || 0) + '%';
                 })
                 .catch(() => {});
         }
