@@ -382,6 +382,31 @@
             return { color: '#888', name: key || 'Unknown', emoji: '📍' };
         }
         
+        // Get primary type from types array - skip generic types like point_of_interest, establishment
+        function getPrimaryType(types) {
+            if (!types || types.length === 0) return 'place';
+            // Skip generic types, prefer specific ones
+            const generic = ['point_of_interest', 'establishment', 'food', 'store'];
+            for (const t of types) {
+                if (!generic.includes(t)) return t;
+            }
+            return types[0]; // fallback to first
+        }
+        
+        // Get color for a type
+        function getTypeColor(type) {
+            if (POI_COLORS[type]) return POI_COLORS[type].color;
+            // Generate consistent color from type name
+            let h = 0;
+            for (let i = 0; i < type.length; i++) h = type.charCodeAt(i) + ((h << 5) - h);
+            return `hsl(${Math.abs(h % 360)}, 65%, 50%)`;
+        }
+        
+        function getTypeInfo(type) {
+            if (POI_COLORS[type]) return POI_COLORS[type];
+            return { color: getTypeColor(type), name: type.replace(/_/g, ' '), emoji: '📍' };
+        }
+        
         const landUseCodes = {
             '1000': { color: '#27ae60', name: 'Villas', type: 'villa' },
             '1012': { color: '#27ae60', name: 'Villas', type: 'villa' },
@@ -633,18 +658,16 @@
                 ctx.globalAlpha = 1;
             }
             
-            // POI (Points of Interest) - Al Amal Places with category colors
+            // POI (Points of Interest) - Al Amal Places with type-based colors
             const showPOI = document.getElementById('showPOI').checked;
             if (showPOI && poiData.length) {
                 const poiSize = parseFloat(document.getElementById('poiSize').value) * baseSize / 2;
                 
                 poiData.forEach(poi => {
-                    const cat = poi.category || 'place';
-                    const sub = poi.subcategory || '';
-                    const key = sub ? `${cat}:${sub}` : cat;
+                    const primaryType = getPrimaryType(poi.types || ['place']);
                     
-                    // Skip if category is hidden
-                    if (poiVisible[key] === false) return;
+                    // Skip if type is hidden
+                    if (poiVisible[primaryType] === false) return;
                     
                     const lat = poi.lat;
                     const lon = poi.lon;
@@ -656,8 +679,8 @@
                     const x = (w.x - bl.x) * scale;
                     const y = (w.y - tr.y) * scale;
                     
-                    // Draw POI marker with color based on category
-                    ctx.fillStyle = getPoiColor(cat, sub);
+                    // Draw POI marker with color based on type
+                    ctx.fillStyle = getTypeColor(primaryType);
                     ctx.strokeStyle = 'rgba(255,255,255,0.8)';
                     ctx.lineWidth = 1.5;
                     ctx.beginPath();
@@ -803,34 +826,65 @@
                     const isJson = file.name.toLowerCase().endsWith('.json');
                     
                     if (isJson) {
-                        data = JSON.parse(evt.target.result);
+                        const jsonData = JSON.parse(evt.target.result);
+                        // Normalize JSON data to have 'types' array
+                        jsonData.forEach(item => {
+                            if (item.types && typeof item.types === 'string') {
+                                item.types = item.types.split(',').map(t => t.trim());
+                            } else if (!item.types) {
+                                item.types = [item.category || 'place'];
+                            }
+                            data.push(item);
+                        });
                     } else {
-                        // Parse CSV - handle lat,lon columns
+                        // Parse CSV - handle lat,lon,types columns
                         const lines = evt.target.result.trim().split('\n');
                         const headers = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/"/g, ''));
                         const latI = headers.findIndex(h => h === 'lat' || h === 'latitude');
                         const lonI = headers.findIndex(h => h === 'lon' || h === 'lng' || h === 'longitude');
                         const nameI = headers.findIndex(h => h === 'name');
-                        const catI = headers.findIndex(h => h === 'category' || h === 'types');
+                        const typesI = headers.findIndex(h => h === 'types');
+                        const catI = headers.findIndex(h => h === 'category');
                         const subI = headers.findIndex(h => h === 'subcategory');
                         
                         if (latI < 0 || lonI < 0) {
-                            alert('Error: CSV needs lat and lon columns');
+                            alert('Error: CSV needs lat and lon/lng columns');
                             hideLoading();
                             return;
                         }
                         
                         for (let i = 1; i < lines.length; i++) {
-                            const vals = lines[i].split(',');
+                            // Handle quoted fields with commas inside
+                            const line = lines[i];
+                            const vals = [];
+                            let inQuote = false, current = '';
+                            for (let c of line) {
+                                if (c === '"') inQuote = !inQuote;
+                                else if (c === ',' && !inQuote) { vals.push(current.trim()); current = ''; }
+                                else current += c;
+                            }
+                            vals.push(current.trim());
+                            
                             const lat = parseFloat(vals[latI]);
                             const lon = parseFloat(vals[lonI]);
                             if (!isNaN(lat) && !isNaN(lon)) {
+                                // Parse types - comma separated in the types column
+                                let types = [];
+                                if (typesI >= 0 && vals[typesI]) {
+                                    types = vals[typesI].split(',').map(t => t.trim()).filter(t => t);
+                                } else if (catI >= 0 && vals[catI]) {
+                                    const cat = vals[catI];
+                                    const sub = subI >= 0 ? vals[subI] : '';
+                                    types = sub ? [`${cat}:${sub}`] : [cat];
+                                } else {
+                                    types = ['place'];
+                                }
+                                
                                 data.push({
                                     lat: lat,
                                     lon: lon,
                                     name: nameI >= 0 ? vals[nameI] : 'Unnamed',
-                                    category: catI >= 0 ? vals[catI] : 'place',
-                                    subcategory: subI >= 0 ? vals[subI] : ''
+                                    types: types
                                 });
                             }
                         }
@@ -840,13 +894,11 @@
                     poiVisible = {};
                     const catCounts = {};
                     
-                    // Group POIs by category:subcategory
+                    // Group POIs by primary type (first type in array)
                     data.forEach(poi => {
-                        const cat = poi.category || 'place';
-                        const sub = poi.subcategory || '';
-                        const key = sub ? `${cat}:${sub}` : cat;
-                        catCounts[key] = (catCounts[key] || 0) + 1;
-                        poiVisible[key] = true; // Default visible
+                        const primaryType = getPrimaryType(poi.types || ['place']);
+                        catCounts[primaryType] = (catCounts[primaryType] || 0) + 1;
+                        poiVisible[primaryType] = true; // Default visible
                     });
                     
                     document.getElementById('poiCount').textContent = poiData.length.toLocaleString();
@@ -861,17 +913,17 @@
                     document.getElementById('poiAllBtn').onclick = () => toggleAllPOI(true);
                     document.getElementById('poiNoneBtn').onclick = () => toggleAllPOI(false);
                     
-                    Object.entries(catCounts).sort((a,b) => b[1] - a[1]).forEach(([key, count]) => {
-                        const info = getPoiInfo(key.split(':')[0], key.split(':')[1]);
+                    Object.entries(catCounts).sort((a,b) => b[1] - a[1]).forEach(([type, count]) => {
+                        const info = getTypeInfo(type);
                         const label = document.createElement('label');
                         label.style.cssText = 'display:flex;align-items:center;gap:3px;font-size:9px;cursor:pointer;';
                         
                         const cb = document.createElement('input');
                         cb.type = 'checkbox';
                         cb.checked = true;
-                        cb.dataset.poicat = key;
+                        cb.dataset.poicat = type;
                         cb.addEventListener('change', function() {
-                            poiVisible[key] = this.checked;
+                            poiVisible[type] = this.checked;
                             render();
                         });
                         
