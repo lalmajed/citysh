@@ -182,6 +182,18 @@
                         <span class="name">Districts</span>
                     </div>
                 </div>
+                <div class="layer-control" style="background:#e8f5e9;">
+                    <div class="header">
+                        <input type="checkbox" id="showPOI" checked onchange="render()">
+                        <div class="dot" style="background:linear-gradient(135deg,#8B0000,#FF6347,#228B22);"></div>
+                        <span class="name">POI (Al Amal)</span>
+                        <span class="count" id="poiCount">0</span>
+                    </div>
+                    <div style="font-size:10px;">
+                        Size: <span id="poiSizeVal">4</span> <input type="range" id="poiSize" min="1" max="10" value="4" step="0.5" oninput="updateSlider('poi')">
+                    </div>
+                    <div id="poiCategories" style="max-height:100px;overflow-y:auto;margin-top:5px;display:none;"></div>
+                </div>
             </div>
         </div>
         
@@ -223,6 +235,11 @@
                     <label>Districts JSON:</label>
                     <input type="file" id="distFile" accept=".json">
                     <div id="distStatus" class="file-status">riyadh_districts.json</div>
+                </div>
+                <div class="file-input" style="background:#e8f5e9;padding:5px;border-radius:4px;margin-top:5px;">
+                    <label style="color:#2e7d32;">📍 Al Amal POI (JSON/CSV):</label>
+                    <input type="file" id="poiFile" accept=".json,.csv">
+                    <div id="poiStatus" class="file-status">al_amal_gmaps_places.json</div>
                 </div>
             </div>
         </div>
@@ -266,6 +283,8 @@
         let apartments = [];
         let parcels = [];
         let districts = [];
+        let poiData = [];
+        let poiVisible = {}; // category:subcategory -> boolean
         let allCodeCounts = {};
         let selectedCodes = new Set();
         let selectedDistrict = null; // Single district selection
@@ -273,6 +292,64 @@
         
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        
+        // POI Colors for different categories and subcategories
+        const POI_COLORS = {
+            // Government & Office - Red/Burgundy
+            'office:government': { color: '#8B0000', name: 'Government', emoji: '🏛️' },
+            'office:telecommunication': { color: '#FF4500', name: 'Telecom', emoji: '📡' },
+            'office': { color: '#B22222', name: 'Office', emoji: '🏢' },
+            // Amenity categories
+            'amenity:restaurant': { color: '#FF6347', name: 'Restaurant', emoji: '🍽️' },
+            'amenity:fast_food': { color: '#FF7F50', name: 'Fast Food', emoji: '🍔' },
+            'amenity:cafe': { color: '#D2691E', name: 'Cafe', emoji: '☕' },
+            'amenity:parking': { color: '#708090', name: 'Parking', emoji: '🅿️' },
+            'amenity:parking_space': { color: '#778899', name: 'Parking', emoji: '🅿️' },
+            'amenity:atm': { color: '#FFD700', name: 'ATM', emoji: '🏧' },
+            'amenity:bank': { color: '#DAA520', name: 'Bank', emoji: '🏦' },
+            'amenity:post_office': { color: '#4169E1', name: 'Post Office', emoji: '📮' },
+            'amenity:post_box': { color: '#6495ED', name: 'Post Box', emoji: '📬' },
+            'amenity:place_of_worship': { color: '#9400D3', name: 'Mosque/Worship', emoji: '🕌' },
+            'amenity:school': { color: '#32CD32', name: 'School', emoji: '🏫' },
+            'amenity:cinema': { color: '#FF1493', name: 'Cinema', emoji: '🎬' },
+            'amenity:fuel': { color: '#FF8C00', name: 'Fuel Station', emoji: '⛽' },
+            'amenity:car_wash': { color: '#00CED1', name: 'Car Wash', emoji: '🚗' },
+            'amenity': { color: '#20B2AA', name: 'Amenity', emoji: '🏪' },
+            // Shop categories
+            'shop:supermarket': { color: '#00BFFF', name: 'Supermarket', emoji: '🛒' },
+            'shop:mall': { color: '#1E90FF', name: 'Mall', emoji: '🏬' },
+            'shop:jewelry': { color: '#FFD700', name: 'Jewelry', emoji: '💎' },
+            'shop:car_repair': { color: '#4682B4', name: 'Car Repair', emoji: '🔧' },
+            'shop:car_parts': { color: '#5F9EA0', name: 'Car Parts', emoji: '⚙️' },
+            'shop:hardware': { color: '#808000', name: 'Hardware', emoji: '🔨' },
+            'shop:travel_agency': { color: '#00FA9A', name: 'Travel', emoji: '✈️' },
+            'shop': { color: '#87CEEB', name: 'Shop', emoji: '🛍️' },
+            // Tourism
+            'tourism:hotel': { color: '#9932CC', name: 'Hotel', emoji: '🏨' },
+            'tourism:apartment': { color: '#8A2BE2', name: 'Apartment', emoji: '🏢' },
+            'tourism': { color: '#9370DB', name: 'Tourism', emoji: '🗺️' },
+            // Leisure
+            'leisure:park': { color: '#228B22', name: 'Park', emoji: '🌳' },
+            'leisure': { color: '#32CD32', name: 'Leisure', emoji: '🎡' },
+            // Place (generic)
+            'place': { color: '#A9A9A9', name: 'Place/Street', emoji: '📍' }
+        };
+        
+        function getPoiColor(category, subcategory) {
+            const key = subcategory ? `${category}:${subcategory}` : category;
+            if (POI_COLORS[key]) return POI_COLORS[key].color;
+            if (POI_COLORS[category]) return POI_COLORS[category].color;
+            let h = 0;
+            for (let i = 0; i < key.length; i++) h = key.charCodeAt(i) + ((h << 5) - h);
+            return `hsl(${Math.abs(h % 360)}, 65%, 50%)`;
+        }
+        
+        function getPoiInfo(category, subcategory) {
+            const key = subcategory ? `${category}:${subcategory}` : category;
+            if (POI_COLORS[key]) return POI_COLORS[key];
+            if (POI_COLORS[category]) return POI_COLORS[category];
+            return { color: '#888', name: key || 'Unknown', emoji: '📍' };
+        }
         
         const landUseCodes = {
             '1000': { color: '#27ae60', name: 'Villas', type: 'villa' },
@@ -328,7 +405,9 @@
         
         function updateSlider(layer) {
             document.getElementById(layer + 'SizeVal').textContent = document.getElementById(layer + 'Size').value;
-            document.getElementById(layer + 'OpacityVal').textContent = document.getElementById(layer + 'Opacity').value;
+            const opacityEl = document.getElementById(layer + 'Opacity');
+            const opacityVal = document.getElementById(layer + 'OpacityVal');
+            if (opacityEl && opacityVal) opacityVal.textContent = opacityEl.value;
             render();
         }
         
@@ -523,6 +602,40 @@
                 ctx.globalAlpha = 1;
             }
             
+            // POI (Points of Interest) - Al Amal Places with category colors
+            const showPOI = document.getElementById('showPOI').checked;
+            if (showPOI && poiData.length) {
+                const poiSize = parseFloat(document.getElementById('poiSize').value) * baseSize / 2;
+                
+                poiData.forEach(poi => {
+                    const cat = poi.category || 'place';
+                    const sub = poi.subcategory || '';
+                    const key = sub ? `${cat}:${sub}` : cat;
+                    
+                    // Skip if category is hidden
+                    if (poiVisible[key] === false) return;
+                    
+                    const lat = poi.lat;
+                    const lon = poi.lon;
+                    
+                    if (lat < bounds.getSouthWest().lat() || lat > bounds.getNorthEast().lat() ||
+                        lon < bounds.getSouthWest().lng() || lon > bounds.getNorthEast().lng()) return;
+                    
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                    const x = (w.x - bl.x) * scale;
+                    const y = (w.y - tr.y) * scale;
+                    
+                    // Draw POI marker with color based on category
+                    ctx.fillStyle = getPoiColor(cat, sub);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.arc(x, y, poiSize, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                });
+            }
+            
             // Update dynamic counts (in view)
             const viewTotal = viewVilla + viewAptLU + viewComm + viewOther;
             const villaPct = viewTotal > 0 ? (viewVilla / viewTotal * 100).toFixed(1) : 0;
@@ -647,6 +760,103 @@
             };
             reader.readAsText(file);
         });
+        
+        // POI File loader - Al Amal Places (JSON or CSV)
+        document.getElementById('poiFile').addEventListener('change', e => {
+            const file = e.target.files[0]; if (!file) return;
+            showLoading('Loading POI...');
+            const reader = new FileReader();
+            reader.onload = evt => {
+                try {
+                    let data = [];
+                    const isJson = file.name.toLowerCase().endsWith('.json');
+                    
+                    if (isJson) {
+                        data = JSON.parse(evt.target.result);
+                    } else {
+                        // Parse CSV - handle lat,lon columns
+                        const lines = evt.target.result.trim().split('\n');
+                        const headers = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/"/g, ''));
+                        const latI = headers.findIndex(h => h === 'lat' || h === 'latitude');
+                        const lonI = headers.findIndex(h => h === 'lon' || h === 'lng' || h === 'longitude');
+                        const nameI = headers.findIndex(h => h === 'name');
+                        const catI = headers.findIndex(h => h === 'category' || h === 'types');
+                        const subI = headers.findIndex(h => h === 'subcategory');
+                        
+                        if (latI < 0 || lonI < 0) {
+                            alert('Error: CSV needs lat and lon columns');
+                            hideLoading();
+                            return;
+                        }
+                        
+                        for (let i = 1; i < lines.length; i++) {
+                            const vals = lines[i].split(',');
+                            const lat = parseFloat(vals[latI]);
+                            const lon = parseFloat(vals[lonI]);
+                            if (!isNaN(lat) && !isNaN(lon)) {
+                                data.push({
+                                    lat: lat,
+                                    lon: lon,
+                                    name: nameI >= 0 ? vals[nameI] : 'Unnamed',
+                                    category: catI >= 0 ? vals[catI] : 'place',
+                                    subcategory: subI >= 0 ? vals[subI] : ''
+                                });
+                            }
+                        }
+                    }
+                    
+                    poiData = data;
+                    poiVisible = {};
+                    const catCounts = {};
+                    
+                    // Group POIs by category:subcategory
+                    data.forEach(poi => {
+                        const cat = poi.category || 'place';
+                        const sub = poi.subcategory || '';
+                        const key = sub ? `${cat}:${sub}` : cat;
+                        catCounts[key] = (catCounts[key] || 0) + 1;
+                        poiVisible[key] = true; // Default visible
+                    });
+                    
+                    document.getElementById('poiCount').textContent = poiData.length.toLocaleString();
+                    document.getElementById('poiStatus').textContent = poiData.length.toLocaleString() + ' loaded';
+                    document.getElementById('poiStatus').classList.add('loaded');
+                    
+                    // Show category toggles
+                    const catDiv = document.getElementById('poiCategories');
+                    catDiv.style.display = 'block';
+                    let html = '<div style="margin-bottom:3px;"><button onclick="toggleAllPOI(true)" style="font-size:8px;padding:1px 3px;">All</button> <button onclick="toggleAllPOI(false)" style="font-size:8px;padding:1px 3px;">None</button></div>';
+                    
+                    Object.entries(catCounts).sort((a,b) => b[1] - a[1]).forEach(([key, count]) => {
+                        const info = getPoiInfo(key.split(':')[0], key.split(':')[1]);
+                        html += `<label style="display:flex;align-items:center;gap:3px;font-size:9px;cursor:pointer;">
+                            <input type="checkbox" checked data-poicat="${key}" onchange="togglePOICat('${key}',this.checked)">
+                            <span style="width:8px;height:8px;border-radius:50%;background:${info.color};"></span>
+                            ${info.emoji} ${info.name} (${count})
+                        </label>`;
+                    });
+                    catDiv.innerHTML = html;
+                    
+                    hideLoading();
+                    render();
+                } catch (err) {
+                    alert('Error loading POI: ' + err.message);
+                    hideLoading();
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        function togglePOICat(key, checked) {
+            poiVisible[key] = checked;
+            render();
+        }
+        
+        function toggleAllPOI(show) {
+            Object.keys(poiVisible).forEach(key => poiVisible[key] = show);
+            document.querySelectorAll('[data-poicat]').forEach(cb => cb.checked = show);
+            render();
+        }
         
         function updateCodeFilters() {
             const div = document.getElementById('codeFilters');
