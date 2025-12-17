@@ -41,6 +41,12 @@
         .dynamic-stats .row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; }
         .dynamic-stats .row.total { font-weight: bold; border-top: 1px solid #a5d6a7; padding-top: 5px; margin-top: 5px; }
         
+        .district-stats { background: #fff3e0; border: 2px solid #ff9800; border-radius: 8px; padding: 10px; margin: 8px 0; display: none; }
+        .district-stats.active { display: block; }
+        .district-stats h3 { color: #e65100; font-size: 13px; margin-bottom: 8px; }
+        .district-stats .row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; }
+        .district-stats .row.total { font-weight: bold; border-top: 1px solid #ffcc80; padding-top: 5px; margin-top: 5px; }
+        
         .layer-control { padding: 8px; margin: 5px 0; background: #f9f9f9; border-radius: 6px; }
         .layer-control .header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
         .layer-control .dot { width: 14px; height: 14px; border-radius: 50%; }
@@ -104,13 +110,26 @@
             <div class="stat-box land"><div class="num" id="totalParcel">0</div><div class="lbl">Parcels</div></div>
         </div>
         
+        <!-- Selected District Stats -->
+        <div class="district-stats" id="districtStats">
+            <h3 id="districtStatsTitle">DISTRICT: None</h3>
+            <div class="row"><span>Buildings:</span><span id="distBldg">0</span></div>
+            <div class="row"><span>Apartments Listed:</span><span id="distApt">0</span></div>
+            <div class="row" style="color:#27ae60;"><span>Villas (1000/1012):</span><span id="distVilla">0</span></div>
+            <div class="row" style="color:#0077b6;"><span>Apartments (7510):</span><span id="distAptLU">0</span></div>
+            <div class="row"><span>Commercial:</span><span id="distComm">0</span></div>
+            <div class="row"><span>Other:</span><span id="distOther">0</span></div>
+            <div class="row total"><span>Total Parcels:</span><span id="distTotal">0</span></div>
+            <div class="row total" style="color:#27ae60;"><span>Villa %:</span><span id="distVillaPct">0%</span></div>
+        </div>
+        
         <!-- Dynamic Counts (In View) -->
         <div class="dynamic-stats">
             <h3>IN CURRENT VIEW</h3>
             <div class="row"><span>Buildings:</span><span id="viewBldg">0</span></div>
             <div class="row"><span>Apartments Listed:</span><span id="viewApt">0</span></div>
-            <div class="row" style="color:#27ae60;"><span>Villas (Code 1000/1012):</span><span id="viewVilla">0</span></div>
-            <div class="row" style="color:#0077b6;"><span>Apartments (Code 7510):</span><span id="viewAptLU">0</span></div>
+            <div class="row" style="color:#27ae60;"><span>Villas (1000/1012):</span><span id="viewVilla">0</span></div>
+            <div class="row" style="color:#0077b6;"><span>Apartments (7510):</span><span id="viewAptLU">0</span></div>
             <div class="row"><span>Commercial:</span><span id="viewComm">0</span></div>
             <div class="row"><span>Other Parcels:</span><span id="viewOther">0</span></div>
             <div class="row total"><span>Total Parcels in View:</span><span id="viewTotal">0</span></div>
@@ -173,7 +192,7 @@
             </div>
             <div class="section-content">
                 <button class="btn btn-success" onclick="exportVisibleParcels()">Export Visible Parcels CSV</button>
-                <button class="btn btn-primary" onclick="exportAllParcels()">Export All Parcels CSV</button>
+                <button class="btn btn-primary" onclick="exportDistrictParcels()">Export District Parcels CSV</button>
                 <button class="btn" onclick="exportBuildings()">Export Buildings CSV</button>
                 <div id="exportStatus" style="font-size:9px;color:#666;margin-top:5px;"></div>
             </div>
@@ -249,7 +268,8 @@
         let districts = [];
         let allCodeCounts = {};
         let selectedCodes = new Set();
-        let selectedDistricts = new Set();
+        let selectedDistrict = null; // Single district selection
+        let districtCache = {}; // Cache for district counts
         
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -270,6 +290,20 @@
         
         function getCodeType(code) {
             return landUseCodes[code]?.type || 'other';
+        }
+        
+        // Point in polygon check (ray casting)
+        function pointInPolygon(lat, lon, polygon) {
+            if (!polygon || polygon.length < 3) return false;
+            let inside = false;
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                const [yi, xi] = polygon[i];
+                const [yj, xj] = polygon[j];
+                if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
+                    inside = !inside;
+                }
+            }
+            return inside;
         }
         
         function toggleSection(header) {
@@ -296,6 +330,68 @@
             document.getElementById(layer + 'SizeVal').textContent = document.getElementById(layer + 'Size').value;
             document.getElementById(layer + 'OpacityVal').textContent = document.getElementById(layer + 'Opacity').value;
             render();
+        }
+        
+        function calculateDistrictStats() {
+            if (!selectedDistrict) {
+                document.getElementById('districtStats').classList.remove('active');
+                return;
+            }
+            
+            const d = districts.find(x => x.name_en === selectedDistrict);
+            if (!d?.boundaries?.[0]) return;
+            
+            const poly = d.boundaries[0];
+            
+            // Check cache
+            const cacheKey = selectedDistrict;
+            if (districtCache[cacheKey]) {
+                displayDistrictStats(districtCache[cacheKey]);
+                return;
+            }
+            
+            let distBldg = 0, distApt = 0, distVilla = 0, distAptLU = 0, distComm = 0, distOther = 0;
+            
+            // Count buildings in district
+            buildings.forEach(b => {
+                if (pointInPolygon(b[0], b[1], poly)) distBldg++;
+            });
+            
+            // Count apartments in district
+            apartments.forEach(a => {
+                if (pointInPolygon(a.lat, a.lon, poly)) distApt++;
+            });
+            
+            // Count parcels by type in district
+            parcels.forEach(p => {
+                if (!pointInPolygon(p.lat, p.lon, poly)) return;
+                const type = getCodeType(p.code);
+                if (type === 'villa') distVilla++;
+                else if (type === 'apt') distAptLU++;
+                else if (type === 'comm') distComm++;
+                else distOther++;
+            });
+            
+            const stats = { distBldg, distApt, distVilla, distAptLU, distComm, distOther };
+            districtCache[cacheKey] = stats;
+            displayDistrictStats(stats);
+        }
+        
+        function displayDistrictStats(stats) {
+            const { distBldg, distApt, distVilla, distAptLU, distComm, distOther } = stats;
+            const distTotal = distVilla + distAptLU + distComm + distOther;
+            const villaPct = distTotal > 0 ? (distVilla / distTotal * 100).toFixed(1) : 0;
+            
+            document.getElementById('districtStatsTitle').textContent = 'DISTRICT: ' + selectedDistrict;
+            document.getElementById('distBldg').textContent = distBldg.toLocaleString();
+            document.getElementById('distApt').textContent = distApt.toLocaleString();
+            document.getElementById('distVilla').textContent = distVilla.toLocaleString();
+            document.getElementById('distAptLU').textContent = distAptLU.toLocaleString();
+            document.getElementById('distComm').textContent = distComm.toLocaleString();
+            document.getElementById('distOther').textContent = distOther.toLocaleString();
+            document.getElementById('distTotal').textContent = distTotal.toLocaleString();
+            document.getElementById('distVillaPct').textContent = villaPct + '%';
+            document.getElementById('districtStats').classList.add('active');
         }
         
         function render() {
@@ -330,18 +426,35 @@
             const aptSize = parseFloat(document.getElementById('aptSize').value) * baseSize / 2;
             const aptOpacity = parseInt(document.getElementById('aptOpacity').value) / 100;
             
-            // Dynamic counts
+            // Dynamic counts (in view)
             let viewBldg = 0, viewApt = 0, viewVilla = 0, viewAptLU = 0, viewComm = 0, viewOther = 0;
             
-            // Districts
+            // Draw ONLY selected district boundary (or all if none selected)
             if (showDist && districts.length) {
-                ctx.strokeStyle = '#ff9800';
-                ctx.lineWidth = 1;
-                ctx.globalAlpha = 0.5;
                 districts.forEach(d => {
-                    if (selectedDistricts.size && !selectedDistricts.has(d.name_en)) return;
+                    // Only draw selected district, or all if none selected
+                    if (selectedDistrict && d.name_en !== selectedDistrict) return;
+                    
                     const b = d.boundaries?.[0];
                     if (!b || b.length < 3) return;
+                    
+                    // Draw filled polygon for selected district
+                    if (selectedDistrict) {
+                        ctx.fillStyle = 'rgba(255, 152, 0, 0.15)';
+                        ctx.beginPath();
+                        b.forEach(([lat,lon], i) => {
+                            const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat,lon));
+                            const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                            i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+                        });
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                    
+                    // Draw boundary
+                    ctx.strokeStyle = selectedDistrict ? '#ff5722' : '#ff9800';
+                    ctx.lineWidth = selectedDistrict ? 3 : 1;
+                    ctx.globalAlpha = selectedDistrict ? 1 : 0.5;
                     ctx.beginPath();
                     b.forEach(([lat,lon], i) => {
                         const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat,lon));
@@ -350,8 +463,8 @@
                     });
                     ctx.closePath();
                     ctx.stroke();
+                    ctx.globalAlpha = 1;
                 });
-                ctx.globalAlpha = 1;
             }
             
             // Buildings
@@ -410,7 +523,7 @@
                 ctx.globalAlpha = 1;
             }
             
-            // Update dynamic counts
+            // Update dynamic counts (in view)
             const viewTotal = viewVilla + viewAptLU + viewComm + viewOther;
             const villaPct = viewTotal > 0 ? (viewVilla / viewTotal * 100).toFixed(1) : 0;
             
@@ -444,10 +557,13 @@
             const reader = new FileReader();
             reader.onload = evt => {
                 buildings = JSON.parse(evt.target.result);
+                districtCache = {}; // Clear cache
                 document.getElementById('totalBldg').textContent = buildings.length.toLocaleString();
                 document.getElementById('buildingsStatus').textContent = buildings.length.toLocaleString() + ' loaded';
                 document.getElementById('buildingsStatus').classList.add('loaded');
-                hideLoading(); render();
+                hideLoading(); 
+                calculateDistrictStats();
+                render();
             };
             reader.readAsText(file);
         });
@@ -464,6 +580,7 @@
                 const codeI = h.findIndex(x => x.includes('code'));
                 
                 parcels = []; allCodeCounts = {}; selectedCodes.clear();
+                districtCache = {}; // Clear cache
                 let totalVillas = 0, totalApts = 0;
                 
                 for (let i = 1; i < rows.length; i++) {
@@ -485,7 +602,9 @@
                 document.getElementById('totalVilla').textContent = totalVillas.toLocaleString();
                 document.getElementById('landStatus').textContent = parcels.length.toLocaleString() + ' loaded';
                 document.getElementById('landStatus').classList.add('loaded');
-                hideLoading(); render();
+                hideLoading(); 
+                calculateDistrictStats();
+                render();
             };
             reader.readAsText(file);
         });
@@ -499,6 +618,7 @@
                 const latI = h.findIndex(x => x.includes('lat'));
                 const lonI = h.findIndex(x => x.includes('lon'));
                 apartments = [];
+                districtCache = {}; // Clear cache
                 for (let i = 1; i < rows.length; i++) {
                     const lat = parseFloat(rows[i][latI]), lon = parseFloat(rows[i][lonI]);
                     if (!isNaN(lat) && !isNaN(lon)) apartments.push({lat, lon});
@@ -506,6 +626,7 @@
                 document.getElementById('totalApt').textContent = apartments.length.toLocaleString();
                 document.getElementById('aptStatus').textContent = apartments.length.toLocaleString() + ' loaded';
                 document.getElementById('aptStatus').classList.add('loaded');
+                calculateDistrictStats();
                 render();
             };
             reader.readAsText(file);
@@ -516,10 +637,12 @@
             const reader = new FileReader();
             reader.onload = evt => {
                 districts = JSON.parse(evt.target.result);
+                districtCache = {}; // Clear cache
                 document.getElementById('districtCount').textContent = districts.length;
                 document.getElementById('distStatus').textContent = districts.length + ' loaded';
                 document.getElementById('distStatus').classList.add('loaded');
                 updateDistrictList();
+                calculateDistrictStats();
                 render();
             };
             reader.readAsText(file);
@@ -552,7 +675,7 @@
             const div = document.getElementById('districtList');
             let html = '';
             districts.filter(d => d.name_en.toLowerCase().includes(search)).slice(0,30).forEach(d => {
-                const sel = selectedDistricts.has(d.name_en);
+                const sel = selectedDistrict === d.name_en;
                 html += `<div class="district-item ${sel?'selected':''}" onclick="selectDistrict('${d.name_en.replace(/'/g,"\\'")}')">${d.name_en}</div>`;
             });
             div.innerHTML = html || 'Load JSON';
@@ -561,16 +684,26 @@
         function selectDistrict(name) {
             const d = districts.find(x => x.name_en === name);
             if (!d?.boundaries?.[0]) return;
-            selectedDistricts.clear();
-            selectedDistricts.add(name);
+            
+            selectedDistrict = name;
             updateDistrictList();
+            
+            // Zoom to district
             const bounds = new google.maps.LatLngBounds();
             d.boundaries[0].forEach(([lat,lon]) => bounds.extend(new google.maps.LatLng(lat,lon)));
             map.fitBounds(bounds);
+            
+            // Calculate district stats
+            calculateDistrictStats();
             render();
         }
         
-        function clearDistrictSelection() { selectedDistricts.clear(); updateDistrictList(); render(); }
+        function clearDistrictSelection() { 
+            selectedDistrict = null;
+            document.getElementById('districtStats').classList.remove('active');
+            updateDistrictList(); 
+            render(); 
+        }
         
         function exportVisibleParcels() {
             const bounds = map.getBounds();
@@ -585,11 +718,21 @@
             document.getElementById('exportStatus').textContent = `Exported ${visible.length.toLocaleString()} visible parcels`;
         }
         
-        function exportAllParcels() {
+        function exportDistrictParcels() {
+            if (!selectedDistrict) {
+                document.getElementById('exportStatus').textContent = 'Select a district first';
+                return;
+            }
+            const d = districts.find(x => x.name_en === selectedDistrict);
+            if (!d?.boundaries?.[0]) return;
+            
+            const poly = d.boundaries[0];
+            const inDistrict = parcels.filter(p => pointInPolygon(p.lat, p.lon, poly));
+            
             let csv = 'lat,lon,code\n';
-            parcels.forEach(p => csv += `${p.lat},${p.lon},${p.code}\n`);
-            downloadCSV(csv, 'riyadh_all_parcels.csv');
-            document.getElementById('exportStatus').textContent = `Exported ${parcels.length.toLocaleString()} parcels`;
+            inDistrict.forEach(p => csv += `${p.lat},${p.lon},${p.code}\n`);
+            downloadCSV(csv, `riyadh_${selectedDistrict.replace(/[^a-zA-Z0-9]/g,'_')}_parcels.csv`);
+            document.getElementById('exportStatus').textContent = `Exported ${inDistrict.length.toLocaleString()} parcels from ${selectedDistrict}`;
         }
         
         function exportBuildings() {
