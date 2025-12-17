@@ -1,0 +1,13 @@
+{
+  "total_ms_buildings": 854738,
+  "total_residential_parcels": 1037644,
+  "total_villas": 914055,
+  "total_apartments": 123589,
+  "matched_total": 705823,
+  "unmatched_total": 331821,
+  "match_percentage": 68.021691447163,
+  "villas_matched": 602749,
+  "villas_unmatched": 311306,
+  "apartments_matched": 103074,
+  "apartments_unmatched": 20515
+}
