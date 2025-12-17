@@ -1,0 +1,1901 @@
+{
+  "summary": {
+    "total_districts": 189,
+    "total_villas": 843894,
+    "total_apartments_landuse": 123420,
+    "total_apartments_listed": 8877,
+    "total_residential": 967314
+  },
+  "districts": [
+    {
+      "district_en": "Oraid Dist.",
+      "district_ar": "حي عريض",
+      "villas": 55635,
+      "apartments_landuse": 2438,
+      "apartments_listed": 40,
+      "total_residential": 58073,
+      "villa_percentage": 95.8,
+      "apartment_percentage": 4.2
+    },
+    {
+      "district_en": "Tuwaiq Dist.",
+      "district_ar": "حي طويق",
+      "villas": 32323,
+      "apartments_landuse": 5654,
+      "apartments_listed": 83,
+      "total_residential": 37977,
+      "villa_percentage": 85.11,
+      "apartment_percentage": 14.89
+    },
+    {
+      "district_en": "Al Janadriyah Dist.",
+      "district_ar": "حي الجنادرية",
+      "villas": 30932,
+      "apartments_landuse": 1808,
+      "apartments_listed": 39,
+      "total_residential": 32740,
+      "villa_percentage": 94.48,
+      "apartment_percentage": 5.52
+    },
+    {
+      "district_en": "Dahiyat Namar Dist.",
+      "district_ar": "حي ضاحية نمار",
+      "villas": 26809,
+      "apartments_landuse": 4701,
+      "apartments_listed": 53,
+      "total_residential": 31510,
+      "villa_percentage": 85.08,
+      "apartment_percentage": 14.92
+    },
+    {
+      "district_en": "Al Arid Dist.",
+      "district_ar": "حي العارض",
+      "villas": 25328,
+      "apartments_landuse": 4291,
+      "apartments_listed": 89,
+      "total_residential": 29619,
+      "villa_percentage": 85.51,
+      "apartment_percentage": 14.49
+    },
+    {
+      "district_en": "Al Narjis Dist.",
+      "district_ar": "حي النرجس",
+      "villas": 22557,
+      "apartments_landuse": 2631,
+      "apartments_listed": 81,
+      "total_residential": 25188,
+      "villa_percentage": 89.55,
+      "apartment_percentage": 10.45
+    },
+    {
+      "district_en": "Al Rimal Dist.",
+      "district_ar": "حي الرمال",
+      "villas": 22716,
+      "apartments_landuse": 1657,
+      "apartments_listed": 36,
+      "total_residential": 24373,
+      "villa_percentage": 93.2,
+      "apartment_percentage": 6.8
+    },
+    {
+      "district_en": "Dhahrat Laban Dist.",
+      "district_ar": "حي ظهرة لبن",
+      "villas": 16980,
+      "apartments_landuse": 7024,
+      "apartments_listed": 112,
+      "total_residential": 24004,
+      "villa_percentage": 70.74,
+      "apartment_percentage": 29.26
+    },
+    {
+      "district_en": "Badr Dist.",
+      "district_ar": "حي بدر",
+      "villas": 15570,
+      "apartments_landuse": 3310,
+      "apartments_listed": 99,
+      "total_residential": 18880,
+      "villa_percentage": 82.47,
+      "apartment_percentage": 17.53
+    },
+    {
+      "district_en": "Al Nadheem Dist.",
+      "district_ar": "حي النظيم",
+      "villas": 16556,
+      "apartments_landuse": 1320,
+      "apartments_listed": 9,
+      "total_residential": 17876,
+      "villa_percentage": 92.62,
+      "apartment_percentage": 7.38
+    },
+    {
+      "district_en": "Al Mahdiyah Dist.",
+      "district_ar": "حي المهدية",
+      "villas": 13062,
+      "apartments_landuse": 3831,
+      "apartments_listed": 68,
+      "total_residential": 16893,
+      "villa_percentage": 77.32,
+      "apartment_percentage": 22.68
+    },
+    {
+      "district_en": "Al Khair Dist.",
+      "district_ar": "حي الخير",
+      "villas": 15482,
+      "apartments_landuse": 69,
+      "apartments_listed": 51,
+      "total_residential": 15551,
+      "villa_percentage": 99.56,
+      "apartment_percentage": 0.44
+    },
+    {
+      "district_en": "Al Qairawan Dist.",
+      "district_ar": "حي القيروان",
+      "villas": 13410,
+      "apartments_landuse": 1813,
+      "apartments_listed": 25,
+      "total_residential": 15223,
+      "villa_percentage": 88.09,
+      "apartment_percentage": 11.91
+    },
+    {
+      "district_en": "Al Malqa Dist.",
+      "district_ar": "حي الملقا",
+      "villas": 12911,
+      "apartments_landuse": 1956,
+      "apartments_listed": 102,
+      "total_residential": 14867,
+      "villa_percentage": 86.84,
+      "apartment_percentage": 13.16
+    },
+    {
+      "district_en": "Al Aziziyah Dist.",
+      "district_ar": "حي العزيزية",
+      "villas": 11631,
+      "apartments_landuse": 2462,
+      "apartments_listed": 194,
+      "total_residential": 14093,
+      "villa_percentage": 82.53,
+      "apartment_percentage": 17.47
+    },
+    {
+      "district_en": "Al Yasmeen Dist.",
+      "district_ar": "حي الياسمين",
+      "villas": 12729,
+      "apartments_landuse": 1325,
+      "apartments_listed": 64,
+      "total_residential": 14054,
+      "villa_percentage": 90.57,
+      "apartment_percentage": 9.43
+    },
+    {
+      "district_en": "Al Zaher Dist.",
+      "district_ar": "حي الزاهر",
+      "villas": 13856,
+      "apartments_landuse": 0,
+      "apartments_listed": 36,
+      "total_residential": 13856,
+      "villa_percentage": 100.0,
+      "apartment_percentage": 0.0
+    },
+    {
+      "district_en": "Al Dar Al Baida Dist.",
+      "district_ar": "حي الدار البيضاء",
+      "villas": 10687,
+      "apartments_landuse": 1903,
+      "apartments_listed": 76,
+      "total_residential": 12590,
+      "villa_percentage": 84.88,
+      "apartment_percentage": 15.12
+    },
+    {
+      "district_en": "West Oraija Dist.",
+      "district_ar": "حي العريجاء الغربي",
+      "villas": 10608,
+      "apartments_landuse": 1980,
+      "apartments_listed": 56,
+      "total_residential": 12588,
+      "villa_percentage": 84.27,
+      "apartment_percentage": 15.73
+    },
+    {
+      "district_en": "Al Munisiyah Dist.",
+      "district_ar": "حي المونسية",
+      "villas": 10647,
+      "apartments_landuse": 1924,
+      "apartments_listed": 116,
+      "total_residential": 12571,
+      "villa_percentage": 84.69,
+      "apartment_percentage": 15.31
+    },
+    {
+      "district_en": "West Naseem Dist.",
+      "district_ar": "حي النسيم الغربي",
+      "villas": 10281,
+      "apartments_landuse": 1890,
+      "apartments_listed": 77,
+      "total_residential": 12171,
+      "villa_percentage": 84.47,
+      "apartment_percentage": 15.53
+    },
+    {
+      "district_en": "Al Ula Dist.",
+      "district_ar": "حي العلا",
+      "villas": 12157,
+      "apartments_landuse": 0,
+      "apartments_listed": 12,
+      "total_residential": 12157,
+      "villa_percentage": 100.0,
+      "apartment_percentage": 0.0
+    },
+    {
+      "district_en": "Al Wasam Dist.",
+      "district_ar": "حي الوسام",
+      "villas": 11072,
+      "apartments_landuse": 14,
+      "apartments_listed": 9,
+      "total_residential": 11086,
+      "villa_percentage": 99.87,
+      "apartment_percentage": 0.13
+    },
+    {
+      "district_en": "Al Nahdah Dist.",
+      "district_ar": "حي النهضة",
+      "villas": 8997,
+      "apartments_landuse": 1186,
+      "apartments_listed": 157,
+      "total_residential": 10183,
+      "villa_percentage": 88.35,
+      "apartment_percentage": 11.65
+    },
+    {
+      "district_en": "Al Sahab Dist.",
+      "district_ar": "حي السحاب",
+      "villas": 9516,
+      "apartments_landuse": 37,
+      "apartments_listed": 5,
+      "total_residential": 9553,
+      "villa_percentage": 99.61,
+      "apartment_percentage": 0.39
+    },
+    {
+      "district_en": "Al Nakhbah Dist.",
+      "district_ar": "حي النخبة",
+      "villas": 9167,
+      "apartments_landuse": 0,
+      "apartments_listed": 3,
+      "total_residential": 9167,
+      "villa_percentage": 100.0,
+      "apartment_percentage": 0.0
+    },
+    {
+      "district_en": "Qurtubah Dist.",
+      "district_ar": "حي قرطبة",
+      "villas": 7636,
+      "apartments_landuse": 1391,
+      "apartments_listed": 86,
+      "total_residential": 9027,
+      "villa_percentage": 84.59,
+      "apartment_percentage": 15.41
+    },
+    {
+      "district_en": "Al Khaleej Dist.",
+      "district_ar": "حي الخليج",
+      "villas": 7152,
+      "apartments_landuse": 1576,
+      "apartments_listed": 126,
+      "total_residential": 8728,
+      "villa_percentage": 81.94,
+      "apartment_percentage": 18.06
+    },
+    {
+      "district_en": "Al Tadamun Dist.",
+      "district_ar": "حي التضامن",
+      "villas": 8656,
+      "apartments_landuse": 0,
+      "apartments_listed": 1,
+      "total_residential": 8656,
+      "villa_percentage": 100.0,
+      "apartment_percentage": 0.0
+    },
+    {
+      "district_en": "Dirab Dist.",
+      "district_ar": "حي ديراب",
+      "villas": 6740,
+      "apartments_landuse": 1899,
+      "apartments_listed": 54,
+      "total_residential": 8639,
+      "villa_percentage": 78.02,
+      "apartment_percentage": 21.98
+    },
+    {
+      "district_en": "Al Hazm Dist.",
+      "district_ar": "حي الحزم",
+      "villas": 7292,
+      "apartments_landuse": 1290,
+      "apartments_listed": 122,
+      "total_residential": 8582,
+      "villa_percentage": 84.97,
+      "apartment_percentage": 15.03
+    },
+    {
+      "district_en": "Al Olaya Dist.",
+      "district_ar": "حي العليا",
+      "villas": 7018,
+      "apartments_landuse": 1550,
+      "apartments_listed": 73,
+      "total_residential": 8568,
+      "villa_percentage": 81.91,
+      "apartment_percentage": 18.09
+    },
+    {
+      "district_en": "Al Mashriq Dist.",
+      "district_ar": "حي المشرق",
+      "villas": 7332,
+      "apartments_landuse": 1143,
+      "apartments_listed": 36,
+      "total_residential": 8475,
+      "villa_percentage": 86.51,
+      "apartment_percentage": 13.49
+    },
+    {
+      "district_en": "East Naseem Dist.",
+      "district_ar": "حي النسيم الشرقي",
+      "villas": 5846,
+      "apartments_landuse": 2270,
+      "apartments_listed": 59,
+      "total_residential": 8116,
+      "villa_percentage": 72.03,
+      "apartment_percentage": 27.97
+    },
+    {
+      "district_en": "Al Marjan Dist.",
+      "district_ar": "حي المرجان",
+      "villas": 8010,
+      "apartments_landuse": 95,
+      "apartments_listed": 21,
+      "total_residential": 8105,
+      "villa_percentage": 98.83,
+      "apartment_percentage": 1.17
+    },
+    {
+      "district_en": "Ishbiliyah Dist.",
+      "district_ar": "حي اشبيلية",
+      "villas": 6912,
+      "apartments_landuse": 976,
+      "apartments_listed": 76,
+      "total_residential": 7888,
+      "villa_percentage": 87.63,
+      "apartment_percentage": 12.37
+    },
+    {
+      "district_en": "Al Awaly Dist.",
+      "district_ar": "حي العوالي",
+      "villas": 6190,
+      "apartments_landuse": 1640,
+      "apartments_listed": 71,
+      "total_residential": 7830,
+      "villa_percentage": 79.05,
+      "apartment_percentage": 20.95
+    },
+    {
+      "district_en": "Al Sholah Dist.",
+      "district_ar": "حي الشعلة",
+      "villas": 7829,
+      "apartments_landuse": 0,
+      "apartments_listed": 4,
+      "total_residential": 7829,
+      "villa_percentage": 100.0,
+      "apartment_percentage": 0.0
+    },
+    {
+      "district_en": "Al Yarmuk Dist.",
+      "district_ar": "حي اليرموك",
+      "villas": 5651,
+      "apartments_landuse": 1867,
+      "apartments_listed": 97,
+      "total_residential": 7518,
+      "villa_percentage": 75.17,
+      "apartment_percentage": 24.83
+    },
+    {
+      "district_en": "Okaz Dist.",
+      "district_ar": "حي عكاظ",
+      "villas": 6764,
+      "apartments_landuse": 700,
+      "apartments_listed": 92,
+      "total_residential": 7464,
+      "villa_percentage": 90.62,
+      "apartment_percentage": 9.38
+    },
+    {
+      "district_en": "Al Rawdah Dist.",
+      "district_ar": "حي الروضة",
+      "villas": 5791,
+      "apartments_landuse": 1398,
+      "apartments_listed": 41,
+      "total_residential": 7189,
+      "villa_percentage": 80.55,
+      "apartment_percentage": 19.45
+    },
+    {
+      "district_en": "Irqah",
+      "district_ar": "عرقة",
+      "villas": 6498,
+      "apartments_landuse": 525,
+      "apartments_listed": 61,
+      "total_residential": 7023,
+      "villa_percentage": 92.52,
+      "apartment_percentage": 7.48
+    },
+    {
+      "district_en": "Al Shifa Dist.",
+      "district_ar": "حي الشفا",
+      "villas": 5685,
+      "apartments_landuse": 1257,
+      "apartments_listed": 88,
+      "total_residential": 6942,
+      "villa_percentage": 81.89,
+      "apartment_percentage": 18.11
+    },
+    {
+      "district_en": "Al Sahafah Dist.",
+      "district_ar": "حي الصحافة",
+      "villas": 5549,
+      "apartments_landuse": 1307,
+      "apartments_listed": 63,
+      "total_residential": 6856,
+      "villa_percentage": 80.94,
+      "apartment_percentage": 19.06
+    },
+    {
+      "district_en": "Hiteen Dist.",
+      "district_ar": "حي حطين",
+      "villas": 6028,
+      "apartments_landuse": 806,
+      "apartments_listed": 49,
+      "total_residential": 6834,
+      "villa_percentage": 88.21,
+      "apartment_percentage": 11.79
+    },
+    {
+      "district_en": "Al Misfat Dist.",
+      "district_ar": "حي المصفاة",
+      "villas": 6312,
+      "apartments_landuse": 517,
+      "apartments_listed": 41,
+      "total_residential": 6829,
+      "villa_percentage": 92.43,
+      "apartment_percentage": 7.57
+    },
+    {
+      "district_en": "Al Bayan Dist.",
+      "district_ar": "حي البيان",
+      "villas": 6248,
+      "apartments_landuse": 556,
+      "apartments_listed": 55,
+      "total_residential": 6804,
+      "villa_percentage": 91.83,
+      "apartment_percentage": 8.17
+    },
+    {
+      "district_en": "Ar Rabwah Dist.",
+      "district_ar": "حي الربوة",
+      "villas": 6008,
+      "apartments_landuse": 676,
+      "apartments_listed": 63,
+      "total_residential": 6684,
+      "villa_percentage": 89.89,
+      "apartment_percentage": 10.11
+    },
+    {
+      "district_en": "Banban Dist.",
+      "district_ar": "حي بنبان",
+      "villas": 6352,
+      "apartments_landuse": 298,
+      "apartments_listed": 34,
+      "total_residential": 6650,
+      "villa_percentage": 95.52,
+      "apartment_percentage": 4.48
+    },
+    {
+      "district_en": "Dhahrat Al Badeah Dist.",
+      "district_ar": "حي ظهرة البديعة",
+      "villas": 5524,
+      "apartments_landuse": 807,
+      "apartments_listed": 29,
+      "total_residential": 6331,
+      "villa_percentage": 87.25,
+      "apartment_percentage": 12.75
+    },
+    {
+      "district_en": "Middle Oraija Dist.",
+      "district_ar": "حي العريجاء الوسطى",
+      "villas": 5124,
+      "apartments_landuse": 1108,
+      "apartments_listed": 50,
+      "total_residential": 6232,
+      "villa_percentage": 82.22,
+      "apartment_percentage": 17.78
+    },
+    {
+      "district_en": "Al Suwaidi Dist.",
+      "district_ar": "حي السويدي",
+      "villas": 4942,
+      "apartments_landuse": 1247,
+      "apartments_listed": 79,
+      "total_residential": 6189,
+      "villa_percentage": 79.85,
+      "apartment_percentage": 20.15
+    },
+    {
+      "district_en": "Al Zahrah Dist.",
+      "district_ar": "حي الزهرة",
+      "villas": 4919,
+      "apartments_landuse": 998,
+      "apartments_listed": 34,
+      "total_residential": 5917,
+      "villa_percentage": 83.13,
+      "apartment_percentage": 16.87
+    },
+    {
+      "district_en": "Al Saadah Dist.",
+      "district_ar": "حي السعادة",
+      "villas": 4488,
+      "apartments_landuse": 1416,
+      "apartments_listed": 148,
+      "total_residential": 5904,
+      "villa_percentage": 76.02,
+      "apartment_percentage": 23.98
+    },
+    {
+      "district_en": "Al Qadisiyah Dist.",
+      "district_ar": "حي القادسية",
+      "villas": 5097,
+      "apartments_landuse": 713,
+      "apartments_listed": 62,
+      "total_residential": 5810,
+      "villa_percentage": 87.73,
+      "apartment_percentage": 12.27
+    },
+    {
+      "district_en": "Al Sulaimaniyah Dist.",
+      "district_ar": "حي السليمانية",
+      "villas": 4546,
+      "apartments_landuse": 872,
+      "apartments_listed": 165,
+      "total_residential": 5418,
+      "villa_percentage": 83.91,
+      "apartment_percentage": 16.09
+    },
+    {
+      "district_en": "West Suwaidi Dist.",
+      "district_ar": "حي السويدي الغربي",
+      "villas": 4463,
+      "apartments_landuse": 756,
+      "apartments_listed": 83,
+      "total_residential": 5219,
+      "villa_percentage": 85.51,
+      "apartment_percentage": 14.49
+    },
+    {
+      "district_en": "Shubra Dist.",
+      "district_ar": "حي شبرا",
+      "villas": 4201,
+      "apartments_landuse": 989,
+      "apartments_listed": 24,
+      "total_residential": 5190,
+      "villa_percentage": 80.94,
+      "apartment_percentage": 19.06
+    },
+    {
+      "district_en": "Taybah Dist.",
+      "district_ar": "حي طيبة",
+      "villas": 5028,
+      "apartments_landuse": 39,
+      "apartments_listed": 13,
+      "total_residential": 5067,
+      "villa_percentage": 99.23,
+      "apartment_percentage": 0.77
+    },
+    {
+      "district_en": "Al Rawabi Dist.",
+      "district_ar": "حي الروابي",
+      "villas": 4005,
+      "apartments_landuse": 1057,
+      "apartments_listed": 73,
+      "total_residential": 5062,
+      "villa_percentage": 79.12,
+      "apartment_percentage": 20.88
+    },
+    {
+      "district_en": "Al Fayha Dist.",
+      "district_ar": "حي الفيحاء",
+      "villas": 3788,
+      "apartments_landuse": 1105,
+      "apartments_listed": 77,
+      "total_residential": 4893,
+      "villa_percentage": 77.42,
+      "apartment_percentage": 22.58
+    },
+    {
+      "district_en": "Al Nakheel Dist.",
+      "district_ar": "حي النخيل",
+      "villas": 4042,
+      "apartments_landuse": 846,
+      "apartments_listed": 28,
+      "total_residential": 4888,
+      "villa_percentage": 82.69,
+      "apartment_percentage": 17.31
+    },
+    {
+      "district_en": "Al Hamra Dist.",
+      "district_ar": "حي الحمراء",
+      "villas": 4165,
+      "apartments_landuse": 698,
+      "apartments_listed": 46,
+      "total_residential": 4863,
+      "villa_percentage": 85.65,
+      "apartment_percentage": 14.35
+    },
+    {
+      "district_en": "Ar Rabie Dist.",
+      "district_ar": "حي الربيع",
+      "villas": 4229,
+      "apartments_landuse": 593,
+      "apartments_listed": 63,
+      "total_residential": 4822,
+      "villa_percentage": 87.7,
+      "apartment_percentage": 12.3
+    },
+    {
+      "district_en": "Al Aqeeq Dist.",
+      "district_ar": "حي العقيق",
+      "villas": 3436,
+      "apartments_landuse": 1357,
+      "apartments_listed": 91,
+      "total_residential": 4793,
+      "villa_percentage": 71.69,
+      "apartment_percentage": 28.31
+    },
+    {
+      "district_en": "Al Salam Dist.",
+      "district_ar": "حي السلام",
+      "villas": 3523,
+      "apartments_landuse": 1112,
+      "apartments_listed": 31,
+      "total_residential": 4635,
+      "villa_percentage": 76.01,
+      "apartment_percentage": 23.99
+    },
+    {
+      "district_en": "Al Haer Dist.",
+      "district_ar": "حي الحائر",
+      "villas": 4534,
+      "apartments_landuse": 0,
+      "apartments_listed": 22,
+      "total_residential": 4534,
+      "villa_percentage": 100.0,
+      "apartment_percentage": 0.0
+    },
+    {
+      "district_en": "Al Malaz Dist.",
+      "district_ar": "حي الملز",
+      "villas": 3484,
+      "apartments_landuse": 1007,
+      "apartments_listed": 173,
+      "total_residential": 4491,
+      "villa_percentage": 77.58,
+      "apartment_percentage": 22.42
+    },
+    {
+      "district_en": "King Faisal Dist.",
+      "district_ar": "حي الملك فيصل",
+      "villas": 3210,
+      "apartments_landuse": 1236,
+      "apartments_listed": 73,
+      "total_residential": 4446,
+      "villa_percentage": 72.2,
+      "apartment_percentage": 27.8
+    },
+    {
+      "district_en": "Al Quds Dist.",
+      "district_ar": "حي القدس",
+      "villas": 3371,
+      "apartments_landuse": 984,
+      "apartments_listed": 56,
+      "total_residential": 4355,
+      "villa_percentage": 77.41,
+      "apartment_percentage": 22.59
+    },
+    {
+      "district_en": "Al Rayan Dist.",
+      "district_ar": "حي الريان",
+      "villas": 3384,
+      "apartments_landuse": 882,
+      "apartments_listed": 40,
+      "total_residential": 4266,
+      "villa_percentage": 79.32,
+      "apartment_percentage": 20.68
+    },
+    {
+      "district_en": "Al Mansurah Dist.",
+      "district_ar": "حي المنصورة",
+      "villas": 2928,
+      "apartments_landuse": 1295,
+      "apartments_listed": 125,
+      "total_residential": 4223,
+      "villa_percentage": 69.33,
+      "apartment_percentage": 30.67
+    },
+    {
+      "district_en": "Al Ghannamiyah Dist.",
+      "district_ar": "حي الغنامية",
+      "villas": 3966,
+      "apartments_landuse": 117,
+      "apartments_listed": 27,
+      "total_residential": 4083,
+      "villa_percentage": 97.13,
+      "apartment_percentage": 2.87
+    },
+    {
+      "district_en": "Al Andalus Dist.",
+      "district_ar": "حي الاندلس",
+      "villas": 3522,
+      "apartments_landuse": 514,
+      "apartments_listed": 44,
+      "total_residential": 4036,
+      "villa_percentage": 87.26,
+      "apartment_percentage": 12.74
+    },
+    {
+      "district_en": "Al Jazeerah Dist.",
+      "district_ar": "حي الجزيرة",
+      "villas": 3874,
+      "apartments_landuse": 114,
+      "apartments_listed": 55,
+      "total_residential": 3988,
+      "villa_percentage": 97.14,
+      "apartment_percentage": 2.86
+    },
+    {
+      "district_en": "Al Maseef Dist.",
+      "district_ar": "حي المصيف",
+      "villas": 3345,
+      "apartments_landuse": 631,
+      "apartments_listed": 54,
+      "total_residential": 3976,
+      "villa_percentage": 84.13,
+      "apartment_percentage": 15.87
+    },
+    {
+      "district_en": "Al Wadi Dist.",
+      "district_ar": "حي الوادي",
+      "villas": 3364,
+      "apartments_landuse": 479,
+      "apartments_listed": 58,
+      "total_residential": 3843,
+      "villa_percentage": 87.54,
+      "apartment_percentage": 12.46
+    },
+    {
+      "district_en": "Al Nadwah Dist.",
+      "district_ar": "حي الندوة",
+      "villas": 3301,
+      "apartments_landuse": 441,
+      "apartments_listed": 70,
+      "total_residential": 3742,
+      "villa_percentage": 88.21,
+      "apartment_percentage": 11.79
+    },
+    {
+      "district_en": "Namar Dist.",
+      "district_ar": "حي نمار",
+      "villas": 3301,
+      "apartments_landuse": 285,
+      "apartments_listed": 43,
+      "total_residential": 3586,
+      "villa_percentage": 92.05,
+      "apartment_percentage": 7.95
+    },
+    {
+      "district_en": "King Fahd Dist.",
+      "district_ar": "حي الملك فهد",
+      "villas": 3086,
+      "apartments_landuse": 414,
+      "apartments_listed": 56,
+      "total_residential": 3500,
+      "villa_percentage": 88.17,
+      "apartment_percentage": 11.83
+    },
+    {
+      "district_en": "Al Nafel Dist.",
+      "district_ar": "حي النفل",
+      "villas": 2993,
+      "apartments_landuse": 474,
+      "apartments_listed": 72,
+      "total_residential": 3467,
+      "villa_percentage": 86.33,
+      "apartment_percentage": 13.67
+    },
+    {
+      "district_en": "Laban Dist.",
+      "district_ar": "حي لبن",
+      "villas": 2684,
+      "apartments_landuse": 778,
+      "apartments_listed": 88,
+      "total_residential": 3462,
+      "villa_percentage": 77.53,
+      "apartment_percentage": 22.47
+    },
+    {
+      "district_en": "Al Maizalah Dist.",
+      "district_ar": "حي المعيزلة",
+      "villas": 2765,
+      "apartments_landuse": 616,
+      "apartments_listed": 49,
+      "total_residential": 3381,
+      "villa_percentage": 81.78,
+      "apartment_percentage": 18.22
+    },
+    {
+      "district_en": "Al Woroud Dist.",
+      "district_ar": "حي الورود",
+      "villas": 2831,
+      "apartments_landuse": 516,
+      "apartments_listed": 110,
+      "total_residential": 3347,
+      "villa_percentage": 84.58,
+      "apartment_percentage": 15.42
+    },
+    {
+      "district_en": "Al Muruj Dist.",
+      "district_ar": "حي المروج",
+      "villas": 2374,
+      "apartments_landuse": 929,
+      "apartments_listed": 58,
+      "total_residential": 3303,
+      "villa_percentage": 71.87,
+      "apartment_percentage": 28.13
+    },
+    {
+      "district_en": "Al Manakh Dist.",
+      "district_ar": "حي المناخ",
+      "villas": 2823,
+      "apartments_landuse": 376,
+      "apartments_listed": 87,
+      "total_residential": 3199,
+      "villa_percentage": 88.25,
+      "apartment_percentage": 11.75
+    },
+    {
+      "district_en": "Al Nada Dist.",
+      "district_ar": "حي الندى",
+      "villas": 2939,
+      "apartments_landuse": 244,
+      "apartments_listed": 61,
+      "total_residential": 3183,
+      "villa_percentage": 92.33,
+      "apartment_percentage": 7.67
+    },
+    {
+      "district_en": "Al Taawun Dist.",
+      "district_ar": "حي التعاون",
+      "villas": 2422,
+      "apartments_landuse": 734,
+      "apartments_listed": 50,
+      "total_residential": 3156,
+      "villa_percentage": 76.74,
+      "apartment_percentage": 23.26
+    },
+    {
+      "district_en": "Al Safa Dist.",
+      "district_ar": "حي الصفا",
+      "villas": 2994,
+      "apartments_landuse": 140,
+      "apartments_listed": 19,
+      "total_residential": 3134,
+      "villa_percentage": 95.53,
+      "apartment_percentage": 4.47
+    },
+    {
+      "district_en": "Al Manar Dist.",
+      "district_ar": "حي المنار",
+      "villas": 2013,
+      "apartments_landuse": 991,
+      "apartments_listed": 41,
+      "total_residential": 3004,
+      "villa_percentage": 67.01,
+      "apartment_percentage": 32.99
+    },
+    {
+      "district_en": "West Umm Al Hamam Dist.",
+      "district_ar": "حي ام الحمام الغربي",
+      "villas": 2736,
+      "apartments_landuse": 253,
+      "apartments_listed": 83,
+      "total_residential": 2989,
+      "villa_percentage": 91.54,
+      "apartment_percentage": 8.46
+    },
+    {
+      "district_en": "Al Rayah Dist.",
+      "district_ar": "حي الراية",
+      "villas": 2836,
+      "apartments_landuse": 0,
+      "apartments_listed": 1,
+      "total_residential": 2836,
+      "villa_percentage": 100.0,
+      "apartment_percentage": 0.0
+    },
+    {
+      "district_en": "Al Falah Dist.",
+      "district_ar": "حي الفلاح",
+      "villas": 2404,
+      "apartments_landuse": 354,
+      "apartments_listed": 94,
+      "total_residential": 2758,
+      "villa_percentage": 87.16,
+      "apartment_percentage": 12.84
+    },
+    {
+      "district_en": "Ohod Dist.",
+      "district_ar": "حي احد",
+      "villas": 2390,
+      "apartments_landuse": 319,
+      "apartments_listed": 48,
+      "total_residential": 2709,
+      "villa_percentage": 88.22,
+      "apartment_percentage": 11.78
+    },
+    {
+      "district_en": "Al Ezdihar Dist.",
+      "district_ar": "حي الازدهار",
+      "villas": 1972,
+      "apartments_landuse": 701,
+      "apartments_listed": 36,
+      "total_residential": 2673,
+      "villa_percentage": 73.77,
+      "apartment_percentage": 26.23
+    },
+    {
+      "district_en": "Al Nuzha Dist.",
+      "district_ar": "حي النزهة",
+      "villas": 1988,
+      "apartments_landuse": 653,
+      "apartments_listed": 77,
+      "total_residential": 2641,
+      "villa_percentage": 75.27,
+      "apartment_percentage": 24.73
+    },
+    {
+      "district_en": "Al Wahah Dist.",
+      "district_ar": "حي الواحة",
+      "villas": 2450,
+      "apartments_landuse": 180,
+      "apartments_listed": 20,
+      "total_residential": 2630,
+      "villa_percentage": 93.16,
+      "apartment_percentage": 6.84
+    },
+    {
+      "district_en": "Al Muhammadiyah Dist.",
+      "district_ar": "حي المحمدية",
+      "villas": 2084,
+      "apartments_landuse": 447,
+      "apartments_listed": 55,
+      "total_residential": 2531,
+      "villa_percentage": 82.34,
+      "apartment_percentage": 17.66
+    },
+    {
+      "district_en": "Jareer Dist.",
+      "district_ar": "حي جرير",
+      "villas": 2175,
+      "apartments_landuse": 354,
+      "apartments_listed": 49,
+      "total_residential": 2529,
+      "villa_percentage": 86.0,
+      "apartment_percentage": 14.0
+    },
+    {
+      "district_en": "Al Zahour Dist.",
+      "district_ar": "حي الزهور",
+      "villas": 2439,
+      "apartments_landuse": 0,
+      "apartments_listed": 0,
+      "total_residential": 2439,
+      "villa_percentage": 100.0,
+      "apartment_percentage": 0.0
+    },
+    {
+      "district_en": "Al Wizarat Dist.",
+      "district_ar": "حي الوزارات",
+      "villas": 1591,
+      "apartments_landuse": 760,
+      "apartments_listed": 73,
+      "total_residential": 2351,
+      "villa_percentage": 67.67,
+      "apartment_percentage": 32.33
+    },
+    {
+      "district_en": "Al Ghadeer Dist.",
+      "district_ar": "حي الغدير",
+      "villas": 2060,
+      "apartments_landuse": 263,
+      "apartments_listed": 35,
+      "total_residential": 2323,
+      "villa_percentage": 88.68,
+      "apartment_percentage": 11.32
+    },
+    {
+      "district_en": "King Abdullah Dist.",
+      "district_ar": "حي الملك عبدالله",
+      "villas": 2206,
+      "apartments_landuse": 107,
+      "apartments_listed": 16,
+      "total_residential": 2313,
+      "villa_percentage": 95.37,
+      "apartment_percentage": 4.63
+    },
+    {
+      "district_en": "Al Shohda Dist.",
+      "district_ar": "حي الشهداء",
+      "villas": 1645,
+      "apartments_landuse": 610,
+      "apartments_listed": 100,
+      "total_residential": 2255,
+      "villa_percentage": 72.95,
+      "apartment_percentage": 27.05
+    },
+    {
+      "district_en": "Sultanah Dist.",
+      "district_ar": "حي سلطانة",
+      "villas": 1970,
+      "apartments_landuse": 271,
+      "apartments_listed": 20,
+      "total_residential": 2241,
+      "villa_percentage": 87.91,
+      "apartment_percentage": 12.09
+    },
+    {
+      "district_en": "Al Yamamah Dist.",
+      "district_ar": "حي اليمامة",
+      "villas": 1950,
+      "apartments_landuse": 283,
+      "apartments_listed": 33,
+      "total_residential": 2233,
+      "villa_percentage": 87.33,
+      "apartment_percentage": 12.67
+    },
+    {
+      "district_en": "Al Khalidiyah Dist.",
+      "district_ar": "حي الخالدية",
+      "villas": 1702,
+      "apartments_landuse": 526,
+      "apartments_listed": 120,
+      "total_residential": 2228,
+      "villa_percentage": 76.39,
+      "apartment_percentage": 23.61
+    },
+    {
+      "district_en": "East Umm Al Hamam Dist.",
+      "district_ar": "حي ام الحمام الشرقي",
+      "villas": 2085,
+      "apartments_landuse": 113,
+      "apartments_listed": 53,
+      "total_residential": 2198,
+      "villa_percentage": 94.86,
+      "apartment_percentage": 5.14
+    },
+    {
+      "district_en": "Ghirnatah Dist.",
+      "district_ar": "حي غرناطة",
+      "villas": 1518,
+      "apartments_landuse": 564,
+      "apartments_listed": 56,
+      "total_residential": 2082,
+      "villa_percentage": 72.91,
+      "apartment_percentage": 27.09
+    },
+    {
+      "district_en": "Al Farooq Dist.",
+      "district_ar": "حي الفاروق",
+      "villas": 1979,
+      "apartments_landuse": 73,
+      "apartments_listed": 23,
+      "total_residential": 2052,
+      "villa_percentage": 96.44,
+      "apartment_percentage": 3.56
+    },
+    {
+      "district_en": "Al Mursalat Dist.",
+      "district_ar": "حي المرسلات",
+      "villas": 1535,
+      "apartments_landuse": 421,
+      "apartments_listed": 47,
+      "total_residential": 1956,
+      "villa_percentage": 78.48,
+      "apartment_percentage": 21.52
+    },
+    {
+      "district_en": "Manfuhah Dist.",
+      "district_ar": "حي منفوحة",
+      "villas": 1824,
+      "apartments_landuse": 127,
+      "apartments_listed": 83,
+      "total_residential": 1951,
+      "villa_percentage": 93.49,
+      "apartment_percentage": 6.51
+    },
+    {
+      "district_en": "Al Iskan Dist.",
+      "district_ar": "حي الاسكان",
+      "villas": 1912,
+      "apartments_landuse": 17,
+      "apartments_listed": 49,
+      "total_residential": 1929,
+      "villa_percentage": 99.12,
+      "apartment_percentage": 0.88
+    },
+    {
+      "district_en": "Ar Rafiah Dist.",
+      "district_ar": "حي الرفيعة",
+      "villas": 1833,
+      "apartments_landuse": 87,
+      "apartments_listed": 47,
+      "total_residential": 1920,
+      "villa_percentage": 95.47,
+      "apartment_percentage": 4.53
+    },
+    {
+      "district_en": "Al Fursan Dist.",
+      "district_ar": "حي الفرسان",
+      "villas": 1886,
+      "apartments_landuse": 0,
+      "apartments_listed": 2,
+      "total_residential": 1886,
+      "villa_percentage": 100.0,
+      "apartment_percentage": 0.0
+    },
+    {
+      "district_en": "Al Faisaliyah Dist.",
+      "district_ar": "حي الفيصلية",
+      "villas": 1471,
+      "apartments_landuse": 406,
+      "apartments_listed": 53,
+      "total_residential": 1877,
+      "villa_percentage": 78.37,
+      "apartment_percentage": 21.63
+    },
+    {
+      "district_en": "Al Murabba Dist.",
+      "district_ar": "حي المربع",
+      "villas": 1285,
+      "apartments_landuse": 553,
+      "apartments_listed": 104,
+      "total_residential": 1838,
+      "villa_percentage": 69.91,
+      "apartment_percentage": 30.09
+    },
+    {
+      "district_en": "Al Risalah Dist.",
+      "district_ar": "حي الرسالة",
+      "villas": 1833,
+      "apartments_landuse": 0,
+      "apartments_listed": 1,
+      "total_residential": 1833,
+      "villa_percentage": 100.0,
+      "apartment_percentage": 0.0
+    },
+    {
+      "district_en": "Ar Rahmaniyah Dist.",
+      "district_ar": "حي الرحمانية",
+      "villas": 1542,
+      "apartments_landuse": 232,
+      "apartments_listed": 49,
+      "total_residential": 1774,
+      "villa_percentage": 86.92,
+      "apartment_percentage": 13.08
+    },
+    {
+      "district_en": "Ghobairah Dist.",
+      "district_ar": "حي غبيرة",
+      "villas": 1513,
+      "apartments_landuse": 246,
+      "apartments_listed": 80,
+      "total_residential": 1759,
+      "villa_percentage": 86.01,
+      "apartment_percentage": 13.99
+    },
+    {
+      "district_en": "2nd Industrial City",
+      "district_ar": "المدينة الصناعية الثانية",
+      "villas": 1151,
+      "apartments_landuse": 566,
+      "apartments_listed": 90,
+      "total_residential": 1717,
+      "villa_percentage": 67.04,
+      "apartment_percentage": 32.96
+    },
+    {
+      "district_en": "Al Oud Dist.",
+      "district_ar": "حي العود",
+      "villas": 1569,
+      "apartments_landuse": 136,
+      "apartments_listed": 13,
+      "total_residential": 1705,
+      "villa_percentage": 92.02,
+      "apartment_percentage": 7.98
+    },
+    {
+      "district_en": "North Mathar Dist.",
+      "district_ar": "حي المعذر الشمالي",
+      "villas": 1539,
+      "apartments_landuse": 157,
+      "apartments_listed": 30,
+      "total_residential": 1696,
+      "villa_percentage": 90.74,
+      "apartment_percentage": 9.26
+    },
+    {
+      "district_en": "Al Mughrazat Dist.",
+      "district_ar": "حي المغرزات",
+      "villas": 1183,
+      "apartments_landuse": 425,
+      "apartments_listed": 56,
+      "total_residential": 1608,
+      "villa_percentage": 73.57,
+      "apartment_percentage": 26.43
+    },
+    {
+      "district_en": "Al Marwah Dist.",
+      "district_ar": "حي المروة",
+      "villas": 1206,
+      "apartments_landuse": 301,
+      "apartments_listed": 55,
+      "total_residential": 1507,
+      "villa_percentage": 80.03,
+      "apartment_percentage": 19.97
+    },
+    {
+      "district_en": "Al Khuzama Dist.",
+      "district_ar": "حي الخزامى",
+      "villas": 1500,
+      "apartments_landuse": 2,
+      "apartments_listed": 21,
+      "total_residential": 1502,
+      "villa_percentage": 99.87,
+      "apartment_percentage": 0.13
+    },
+    {
+      "district_en": "Salahuddin Dist.",
+      "district_ar": "حي صلاح الدين",
+      "villas": 1222,
+      "apartments_landuse": 142,
+      "apartments_listed": 25,
+      "total_residential": 1364,
+      "villa_percentage": 89.59,
+      "apartment_percentage": 10.41
+    },
+    {
+      "district_en": "Al Sharafiyah Dist.",
+      "district_ar": "حي الشرفية",
+      "villas": 1226,
+      "apartments_landuse": 130,
+      "apartments_listed": 41,
+      "total_residential": 1356,
+      "villa_percentage": 90.41,
+      "apartment_percentage": 9.59
+    },
+    {
+      "district_en": "Al Duraihemiyah Dist.",
+      "district_ar": "حي الدريهمية",
+      "villas": 986,
+      "apartments_landuse": 283,
+      "apartments_listed": 25,
+      "total_residential": 1269,
+      "villa_percentage": 77.7,
+      "apartment_percentage": 22.3
+    },
+    {
+      "district_en": "Al Hada Dist.",
+      "district_ar": "حي الهدا",
+      "villas": 1223,
+      "apartments_landuse": 15,
+      "apartments_listed": 30,
+      "total_residential": 1238,
+      "villa_percentage": 98.79,
+      "apartment_percentage": 1.21
+    },
+    {
+      "district_en": "Al Raed Dist.",
+      "district_ar": "حي الرائد",
+      "villas": 1045,
+      "apartments_landuse": 192,
+      "apartments_listed": 23,
+      "total_residential": 1237,
+      "villa_percentage": 84.48,
+      "apartment_percentage": 15.52
+    },
+    {
+      "district_en": "Al Badiah Dist.",
+      "district_ar": "حي البديعة",
+      "villas": 1033,
+      "apartments_landuse": 98,
+      "apartments_listed": 46,
+      "total_residential": 1131,
+      "villa_percentage": 91.34,
+      "apartment_percentage": 8.66
+    },
+    {
+      "district_en": "Utayqah Dist.",
+      "district_ar": "حي عتيقة",
+      "villas": 1041,
+      "apartments_landuse": 84,
+      "apartments_listed": 39,
+      "total_residential": 1125,
+      "villa_percentage": 92.53,
+      "apartment_percentage": 7.47
+    },
+    {
+      "district_en": "Al Jarradiyah Dist.",
+      "district_ar": "حي الجرادية",
+      "villas": 1002,
+      "apartments_landuse": 122,
+      "apartments_listed": 52,
+      "total_residential": 1124,
+      "villa_percentage": 89.15,
+      "apartment_percentage": 10.85
+    },
+    {
+      "district_en": "Al Majd Dist.",
+      "district_ar": "حي المجد",
+      "villas": 1094,
+      "apartments_landuse": 0,
+      "apartments_listed": 0,
+      "total_residential": 1094,
+      "villa_percentage": 100.0,
+      "apartment_percentage": 0.0
+    },
+    {
+      "district_en": "Al Zahra Dist.",
+      "district_ar": "حي الزهراء",
+      "villas": 994,
+      "apartments_landuse": 92,
+      "apartments_listed": 24,
+      "total_residential": 1086,
+      "villa_percentage": 91.53,
+      "apartment_percentage": 8.47
+    },
+    {
+      "district_en": "Al Dhubbat Dist.",
+      "district_ar": "حي الضباط",
+      "villas": 887,
+      "apartments_landuse": 136,
+      "apartments_listed": 69,
+      "total_residential": 1023,
+      "villa_percentage": 86.71,
+      "apartment_percentage": 13.29
+    },
+    {
+      "district_en": "Manfuha Al Jadidah Dist.",
+      "district_ar": "حي منفوحة الجديدة",
+      "villas": 743,
+      "apartments_landuse": 244,
+      "apartments_listed": 74,
+      "total_residential": 987,
+      "villa_percentage": 75.28,
+      "apartment_percentage": 24.72
+    },
+    {
+      "district_en": "King Abdulaziz Dist.",
+      "district_ar": "حي الملك عبدالعزيز",
+      "villas": 890,
+      "apartments_landuse": 75,
+      "apartments_listed": 19,
+      "total_residential": 965,
+      "villa_percentage": 92.23,
+      "apartment_percentage": 7.77
+    },
+    {
+      "district_en": "Al Bariyah Dist.",
+      "district_ar": "حي البرية",
+      "villas": 686,
+      "apartments_landuse": 201,
+      "apartments_listed": 11,
+      "total_residential": 887,
+      "villa_percentage": 77.34,
+      "apartment_percentage": 22.66
+    },
+    {
+      "district_en": "Al Mathar Dist.",
+      "district_ar": "حي المعذر",
+      "villas": 784,
+      "apartments_landuse": 40,
+      "apartments_listed": 74,
+      "total_residential": 824,
+      "villa_percentage": 95.15,
+      "apartment_percentage": 4.85
+    },
+    {
+      "district_en": "Al Fakhiriyah Dist.",
+      "district_ar": "حي الفاخرية",
+      "villas": 595,
+      "apartments_landuse": 55,
+      "apartments_listed": 14,
+      "total_residential": 650,
+      "villa_percentage": 91.54,
+      "apartment_percentage": 8.46
+    },
+    {
+      "district_en": "Al Uraija Dist.",
+      "district_ar": "حي العريجاء",
+      "villas": 478,
+      "apartments_landuse": 66,
+      "apartments_listed": 15,
+      "total_residential": 544,
+      "villa_percentage": 87.87,
+      "apartment_percentage": 12.13
+    },
+    {
+      "district_en": "Hyt Dist.",
+      "district_ar": "حي هيت",
+      "villas": 508,
+      "apartments_landuse": 35,
+      "apartments_listed": 16,
+      "total_residential": 543,
+      "villa_percentage": 93.55,
+      "apartment_percentage": 6.45
+    },
+    {
+      "district_en": "Al Amal Dist.",
+      "district_ar": "حي العمل",
+      "villas": 341,
+      "apartments_landuse": 161,
+      "apartments_listed": 70,
+      "total_residential": 502,
+      "villa_percentage": 67.93,
+      "apartment_percentage": 32.07
+    },
+    {
+      "district_en": "Al Nasiriyah Dist.",
+      "district_ar": "حي الناصرية",
+      "villas": 433,
+      "apartments_landuse": 52,
+      "apartments_listed": 19,
+      "total_residential": 485,
+      "villa_percentage": 89.28,
+      "apartment_percentage": 10.72
+    },
+    {
+      "district_en": "Al Namudhajiyah Dist.",
+      "district_ar": "حي النموذجية",
+      "villas": 323,
+      "apartments_landuse": 77,
+      "apartments_listed": 27,
+      "total_residential": 400,
+      "villa_percentage": 80.75,
+      "apartment_percentage": 19.25
+    },
+    {
+      "district_en": "Al Mishael Dist.",
+      "district_ar": "حي المشاعل",
+      "villas": 5,
+      "apartments_landuse": 391,
+      "apartments_listed": 31,
+      "total_residential": 396,
+      "villa_percentage": 1.26,
+      "apartment_percentage": 98.74
+    },
+    {
+      "district_en": "Al Sulay Dist.",
+      "district_ar": "حي السلي",
+      "villas": 2,
+      "apartments_landuse": 385,
+      "apartments_listed": 33,
+      "total_residential": 387,
+      "villa_percentage": 0.52,
+      "apartment_percentage": 99.48
+    },
+    {
+      "district_en": "Al Mutamarat Dist.",
+      "district_ar": "حي المؤتمرات",
+      "villas": 295,
+      "apartments_landuse": 90,
+      "apartments_listed": 12,
+      "total_residential": 385,
+      "villa_percentage": 76.62,
+      "apartment_percentage": 23.38
+    },
+    {
+      "district_en": "Al Sinaiyah Dist.",
+      "district_ar": "حي الصناعية",
+      "villas": 340,
+      "apartments_landuse": 37,
+      "apartments_listed": 16,
+      "total_residential": 377,
+      "villa_percentage": 90.19,
+      "apartment_percentage": 9.81
+    },
+    {
+      "district_en": "As Salhiyah Dist.",
+      "district_ar": "حي الصالحية",
+      "villas": 350,
+      "apartments_landuse": 26,
+      "apartments_listed": 19,
+      "total_residential": 376,
+      "villa_percentage": 93.09,
+      "apartment_percentage": 6.91
+    },
+    {
+      "district_en": "Al Dirah Dist.",
+      "district_ar": "حي الديرة",
+      "villas": 351,
+      "apartments_landuse": 15,
+      "apartments_listed": 37,
+      "total_residential": 366,
+      "villa_percentage": 95.9,
+      "apartment_percentage": 4.1
+    },
+    {
+      "district_en": "Al Masani Dist.",
+      "district_ar": "حي المصانع",
+      "villas": 124,
+      "apartments_landuse": 220,
+      "apartments_listed": 35,
+      "total_residential": 344,
+      "villa_percentage": 36.05,
+      "apartment_percentage": 63.95
+    },
+    {
+      "district_en": "Olaishah Dist.",
+      "district_ar": "حي عليشة",
+      "villas": 289,
+      "apartments_landuse": 24,
+      "apartments_listed": 21,
+      "total_residential": 313,
+      "villa_percentage": 92.33,
+      "apartment_percentage": 7.67
+    },
+    {
+      "district_en": "Umm Saleem Dist.",
+      "district_ar": "حي ام سليم",
+      "villas": 204,
+      "apartments_landuse": 44,
+      "apartments_listed": 24,
+      "total_residential": 248,
+      "villa_percentage": 82.26,
+      "apartment_percentage": 17.74
+    },
+    {
+      "district_en": "Thulaim Dist.",
+      "district_ar": "حي ثليم",
+      "villas": 220,
+      "apartments_landuse": 25,
+      "apartments_listed": 38,
+      "total_residential": 245,
+      "villa_percentage": 89.8,
+      "apartment_percentage": 10.2
+    },
+    {
+      "district_en": "Al Futah Dist.",
+      "district_ar": "حي الفوطة",
+      "villas": 107,
+      "apartments_landuse": 121,
+      "apartments_listed": 40,
+      "total_residential": 228,
+      "villa_percentage": 46.93,
+      "apartment_percentage": 53.07
+    },
+    {
+      "district_en": "Al Shumaisi Dist.",
+      "district_ar": "حي الشميسي",
+      "villas": 144,
+      "apartments_landuse": 56,
+      "apartments_listed": 46,
+      "total_residential": 200,
+      "villa_percentage": 72.0,
+      "apartment_percentage": 28.0
+    },
+    {
+      "district_en": "Al Noor Dist.",
+      "district_ar": "حي النور",
+      "villas": 86,
+      "apartments_landuse": 112,
+      "apartments_listed": 20,
+      "total_residential": 198,
+      "villa_percentage": 43.43,
+      "apartment_percentage": 56.57
+    },
+    {
+      "district_en": "Al Dahou Dist.",
+      "district_ar": "حي الدحو",
+      "villas": 164,
+      "apartments_landuse": 8,
+      "apartments_listed": 1,
+      "total_residential": 172,
+      "villa_percentage": 95.35,
+      "apartment_percentage": 4.65
+    },
+    {
+      "district_en": "Skirinah Dist.",
+      "district_ar": "حي سكيرينة",
+      "villas": 149,
+      "apartments_landuse": 5,
+      "apartments_listed": 19,
+      "total_residential": 154,
+      "villa_percentage": 96.75,
+      "apartment_percentage": 3.25
+    },
+    {
+      "district_en": "Siyah Dist.",
+      "district_ar": "حي صياح",
+      "villas": 142,
+      "apartments_landuse": 7,
+      "apartments_listed": 5,
+      "total_residential": 149,
+      "villa_percentage": 95.3,
+      "apartment_percentage": 4.7
+    },
+    {
+      "district_en": "Salam Park",
+      "district_ar": "منتزه سلام",
+      "villas": 71,
+      "apartments_landuse": 18,
+      "apartments_listed": 0,
+      "total_residential": 89,
+      "villa_percentage": 79.78,
+      "apartment_percentage": 20.22
+    },
+    {
+      "district_en": "Al Marqab Dist.",
+      "district_ar": "حي المرقب",
+      "villas": 60,
+      "apartments_landuse": 10,
+      "apartments_listed": 25,
+      "total_residential": 70,
+      "villa_percentage": 85.71,
+      "apartment_percentage": 14.29
+    },
+    {
+      "district_en": "Al Wisham Dist.",
+      "district_ar": "حي الوشام",
+      "villas": 52,
+      "apartments_landuse": 12,
+      "apartments_listed": 28,
+      "total_residential": 64,
+      "villa_percentage": 81.25,
+      "apartment_percentage": 18.75
+    },
+    {
+      "district_en": "Umm Al Shaal Dist.",
+      "district_ar": "حي ام الشعال",
+      "villas": 0,
+      "apartments_landuse": 54,
+      "apartments_listed": 1,
+      "total_residential": 54,
+      "villa_percentage": 0.0,
+      "apartment_percentage": 100.0
+    },
+    {
+      "district_en": "Jabrah Dist.",
+      "district_ar": "حي جبرة",
+      "villas": 7,
+      "apartments_landuse": 38,
+      "apartments_listed": 11,
+      "total_residential": 45,
+      "villa_percentage": 15.56,
+      "apartment_percentage": 84.44
+    },
+    {
+      "district_en": "Meakal Dist.",
+      "district_ar": "حي معكال",
+      "villas": 30,
+      "apartments_landuse": 5,
+      "apartments_listed": 1,
+      "total_residential": 35,
+      "villa_percentage": 85.71,
+      "apartment_percentage": 14.29
+    },
+    {
+      "district_en": "Wady Laban Dist.",
+      "district_ar": "حي وادي لبن",
+      "villas": 25,
+      "apartments_landuse": 0,
+      "apartments_listed": 0,
+      "total_residential": 25,
+      "villa_percentage": 100.0,
+      "apartment_percentage": 0.0
+    },
+    {
+      "district_en": "Mansuriyah Dist.",
+      "district_ar": "حي المنصورية",
+      "villas": 15,
+      "apartments_landuse": 0,
+      "apartments_listed": 6,
+      "total_residential": 15,
+      "villa_percentage": 100.0,
+      "apartment_percentage": 0.0
+    },
+    {
+      "district_en": "Al Dubiyah Dist.",
+      "district_ar": "حي الدوبية",
+      "villas": 9,
+      "apartments_landuse": 6,
+      "apartments_listed": 5,
+      "total_residential": 15,
+      "villa_percentage": 60.0,
+      "apartment_percentage": 40.0
+    },
+    {
+      "district_en": "Al Difaa Dist.",
+      "district_ar": "حي الدفاع",
+      "villas": 0,
+      "apartments_landuse": 13,
+      "apartments_listed": 12,
+      "total_residential": 13,
+      "villa_percentage": 0.0,
+      "apartment_percentage": 100.0
+    },
+    {
+      "district_en": "King Saud University",
+      "district_ar": "جامعة الملك سعود",
+      "villas": 0,
+      "apartments_landuse": 13,
+      "apartments_listed": 38,
+      "total_residential": 13,
+      "villa_percentage": 0.0,
+      "apartment_percentage": 100.0
+    },
+    {
+      "district_en": "Al Butaiha Dist.",
+      "district_ar": "حي البطيحا",
+      "villas": 9,
+      "apartments_landuse": 2,
+      "apartments_listed": 10,
+      "total_residential": 11,
+      "villa_percentage": 81.82,
+      "apartment_percentage": 18.18
+    },
+    {
+      "district_en": "Al Wusayta Dist.",
+      "district_ar": "حي الوسيطاء",
+      "villas": 2,
+      "apartments_landuse": 1,
+      "apartments_listed": 2,
+      "total_residential": 3,
+      "villa_percentage": 66.67,
+      "apartment_percentage": 33.33
+    },
+    {
+      "district_en": "Imam Muhammed Bin Saud Islamic University",
+      "district_ar": "جامعة الامام محمد بن سعود الاسلامية",
+      "villas": 0,
+      "apartments_landuse": 3,
+      "apartments_listed": 24,
+      "total_residential": 3,
+      "villa_percentage": 0.0,
+      "apartment_percentage": 100.0
+    },
+    {
+      "district_en": "Khashm Al An",
+      "district_ar": "خشم العان",
+      "villas": 0,
+      "apartments_landuse": 1,
+      "apartments_listed": 23,
+      "total_residential": 1,
+      "villa_percentage": 0.0,
+      "apartment_percentage": 100.0
+    },
+    {
+      "district_en": "Al Rimayah Dist.",
+      "district_ar": "حي الرماية",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_listed": 48,
+      "total_residential": 0,
+      "villa_percentage": 0,
+      "apartment_percentage": 0
+    },
+    {
+      "district_en": "Assafarat Dist.",
+      "district_ar": "حي السفارات",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_listed": 19,
+      "total_residential": 0,
+      "villa_percentage": 0,
+      "apartment_percentage": 0
+    },
+    {
+      "district_en": "Al Qura Dist.",
+      "district_ar": "حي القرى",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_listed": 0,
+      "total_residential": 0,
+      "villa_percentage": 0,
+      "apartment_percentage": 0
+    },
+    {
+      "district_en": "King Khalid International Airport",
+      "district_ar": "مطار الملك خالد",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_listed": 0,
+      "total_residential": 0,
+      "villa_percentage": 0,
+      "apartment_percentage": 0
+    },
+    {
+      "district_en": "Al Ammajiyah Dist.",
+      "district_ar": "حي العماجية",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_listed": 8,
+      "total_residential": 0,
+      "villa_percentage": 0,
+      "apartment_percentage": 0
+    },
+    {
+      "district_en": "Al Rabiyah Dist.",
+      "district_ar": "حي الرابية",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_listed": 2,
+      "total_residential": 0,
+      "villa_percentage": 0,
+      "apartment_percentage": 0
+    },
+    {
+      "district_en": "Al Sidrah Dist.",
+      "district_ar": "حي السدرة",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_listed": 0,
+      "total_residential": 0,
+      "villa_percentage": 0,
+      "apartment_percentage": 0
+    },
+    {
+      "district_en": "King Abdullah City For Energy",
+      "district_ar": "مدينة الملك عبدالله للطاقة",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_listed": 0,
+      "total_residential": 0,
+      "villa_percentage": 0,
+      "apartment_percentage": 0
+    },
+    {
+      "district_en": "Al Basatin Dist.",
+      "district_ar": "حي البساتين",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_listed": 0,
+      "total_residential": 0,
+      "villa_percentage": 0,
+      "apartment_percentage": 0
+    },
+    {
+      "district_en": "Al Rehab Dist.",
+      "district_ar": "حي الرحاب",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_listed": 0,
+      "total_residential": 0,
+      "villa_percentage": 0,
+      "apartment_percentage": 0
+    },
+    {
+      "district_en": "Al Danah Dist.",
+      "district_ar": "حي الدانة",
+      "villas": 0,
+      "apartments_landuse": 0,
+      "apartments_listed": 0,
+      "total_residential": 0,
+      "villa_percentage": 0,
+      "apartment_percentage": 0
+    }
+  ]
+}
