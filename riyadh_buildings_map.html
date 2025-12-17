@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Riyadh Buildings vs Land Use - Overlap Detection</title>
+    <title>Riyadh Buildings vs Land Use - Full Control</title>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1.0, width=device-width">
     <style>
@@ -13,7 +13,7 @@
             position: absolute; top: 10px; left: 10px;
             background: white; padding: 12px; border-radius: 10px;
             box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 1000;
-            max-width: 360px; max-height: 95vh; overflow-y: auto; font-size: 12px;
+            max-width: 380px; max-height: 95vh; overflow-y: auto; font-size: 12px;
         }
         .panel h2 { color: #1a73e8; margin-bottom: 8px; font-size: 15px; }
         
@@ -29,33 +29,45 @@
         
         .file-input { margin: 5px 0; }
         .file-input label { display: block; font-weight: 600; font-size: 11px; margin-bottom: 3px; }
-        .file-input input { font-size: 10px; width: 100%; }
+        .file-input input[type="file"] { font-size: 10px; width: 100%; }
         .file-status { font-size: 10px; color: #666; margin-top: 3px; }
         .file-status.loaded { color: #34a853; font-weight: bold; }
         
-        .count-row { display: flex; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
-        .count-box { flex: 1; min-width: 70px; padding: 8px; border-radius: 6px; text-align: center; color: white; }
-        .count-box.bldg { background: #9c27b0; }
-        .count-box.apt { background: #e74c3c; }
-        .count-box.villa { background: #27ae60; }
-        .count-box.land { background: #3498db; }
-        .count-box .num { font-size: 1.3em; font-weight: bold; }
-        .count-box .lbl { font-size: 9px; opacity: 0.9; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+        .stat-box { padding: 10px; border-radius: 6px; text-align: center; color: white; }
+        .stat-box .num { font-size: 1.4em; font-weight: bold; }
+        .stat-box .lbl { font-size: 9px; opacity: 0.9; }
+        .stat-box.bldg { background: #9c27b0; }
+        .stat-box.apt { background: #e74c3c; }
+        .stat-box.villa { background: #27ae60; }
+        .stat-box.land { background: #3498db; }
+        .stat-box.matched { background: #28a745; }
+        .stat-box.unmatched { background: #dc3545; }
+        
+        .layer-control { padding: 8px; margin: 5px 0; background: #f9f9f9; border-radius: 6px; }
+        .layer-control .header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+        .layer-control .dot { width: 14px; height: 14px; border-radius: 50%; }
+        .layer-control .name { font-weight: 600; flex: 1; }
+        .layer-control .count { font-size: 10px; color: #666; }
+        .layer-control .sliders { font-size: 10px; }
+        .layer-control input[type="range"] { width: 100%; margin: 2px 0; }
         
         .toggle-row { display: flex; align-items: center; gap: 6px; padding: 5px; cursor: pointer; border-radius: 4px; }
-        .toggle-row:hover { background: #f5f5f5; }
-        .toggle-row input { margin: 0; }
-        .toggle-dot { width: 12px; height: 12px; border-radius: 50%; }
-        
-        .legend { margin-top: 8px; padding: 8px; background: #f5f5f5; border-radius: 6px; }
-        .legend h4 { font-size: 11px; color: #666; margin-bottom: 5px; }
-        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 10px; padding: 2px 0; }
-        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .toggle-row:hover { background: #f0f0f0; }
         
         #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 450; }
         
-        input[type="range"] { width: 100%; }
-        .search-box { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; margin-bottom: 5px; }
+        .btn { padding: 8px 12px; margin: 3px 0; cursor: pointer; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; width: 100%; }
+        .btn:hover { background: #f0f0f0; }
+        .btn-primary { background: #1a73e8; color: white; border: none; }
+        .btn-danger { background: #dc3545; color: white; border: none; }
+        .btn-success { background: #28a745; color: white; border: none; }
+        .btn-warning { background: #ffc107; color: #000; border: none; }
+        
+        .filter-box { padding: 10px; background: #e3f2fd; border-radius: 6px; margin: 8px 0; }
+        .filter-box.warning { background: #fff3cd; }
+        .filter-box.danger { background: #f8d7da; }
+        .filter-box.success { background: #d4edda; }
         
         .loading-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -67,21 +79,16 @@
         .progress-bar { width: 300px; height: 20px; background: #333; border-radius: 10px; overflow: hidden; }
         .progress-fill { height: 100%; background: #4CAF50; transition: width 0.3s; }
         
-        .btn { padding: 8px 12px; margin: 3px 0; cursor: pointer; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; width: 100%; }
-        .btn:hover { background: #f0f0f0; }
-        .btn-primary { background: #1a73e8; color: white; border: none; }
-        .btn-primary:hover { background: #1557b0; }
-        .btn-danger { background: #dc3545; color: white; border: none; }
-        .btn-success { background: #28a745; color: white; border: none; }
+        .code-filters { max-height: 150px; overflow-y: auto; }
+        .code-item { display: flex; align-items: center; gap: 5px; padding: 3px 5px; font-size: 10px; }
+        .code-dot { width: 10px; height: 10px; border-radius: 50%; }
         
-        .overlap-box { padding: 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 8px 0; }
-        .overlap-box.success { background: #d4edda; border-color: #28a745; }
-        .overlap-box.danger { background: #f8d7da; border-color: #dc3545; }
+        .district-list { max-height: 150px; overflow-y: auto; }
+        .district-item { padding: 5px 8px; margin: 2px 0; background: #f5f5f5; border-radius: 4px; cursor: pointer; font-size: 10px; }
+        .district-item:hover { background: #e3f2fd; }
+        .district-item.selected { background: #1a73e8; color: white; }
         
-        .district-list { max-height: 200px; overflow-y: auto; }
-        .district-item { padding: 6px; margin: 3px 0; background: #f9f9f9; border-radius: 4px; cursor: pointer; font-size: 11px; }
-        .district-item:hover { background: #fff3e0; }
-        .district-item.selected { background: #ff9800; color: white; }
+        .search-box { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -96,16 +103,79 @@
     
     <div class="panel">
         <h2>Riyadh Buildings vs Land Use</h2>
-        <p style="font-size:10px;color:#666;margin-bottom:8px;">Detect overlaps between MS Buildings and Land Use parcels</p>
         
-        <!-- Summary -->
-        <div class="count-row">
-            <div class="count-box bldg"><div class="num" id="bldgCount">0</div><div class="lbl">MS Buildings</div></div>
-            <div class="count-box apt"><div class="num" id="aptCount">0</div><div class="lbl">Apartments</div></div>
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-box bldg"><div class="num" id="bldgCount">0</div><div class="lbl">MS Buildings</div></div>
+            <div class="stat-box apt"><div class="num" id="aptCount">0</div><div class="lbl">Apartments</div></div>
+            <div class="stat-box villa"><div class="num" id="villaCount">0</div><div class="lbl">Villas (LU)</div></div>
+            <div class="stat-box land"><div class="num" id="parcelCount">0</div><div class="lbl">Total Parcels</div></div>
         </div>
-        <div class="count-row">
-            <div class="count-box villa"><div class="num" id="villaCount">0</div><div class="lbl">Villas (LU)</div></div>
-            <div class="count-box land"><div class="num" id="parcelCount">0</div><div class="lbl">All Parcels</div></div>
+        
+        <!-- Overlap Stats (shown after detection) -->
+        <div id="overlapStats" class="stats-grid" style="display:none;">
+            <div class="stat-box matched"><div class="num" id="matchedCount">0</div><div class="lbl">Has Building</div></div>
+            <div class="stat-box unmatched"><div class="num" id="unmatchedCount">0</div><div class="lbl">No Building</div></div>
+        </div>
+        
+        <!-- Layer Controls -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                LAYER CONTROLS <span>v</span>
+            </div>
+            <div class="section-content open">
+                <!-- Buildings Layer -->
+                <div class="layer-control">
+                    <div class="header">
+                        <input type="checkbox" id="showBuildings" checked onchange="render()">
+                        <div class="dot" style="background:#9c27b0;"></div>
+                        <span class="name">MS Buildings</span>
+                        <span class="count" id="bldgLayerCount">0</span>
+                    </div>
+                    <div class="sliders">
+                        <div>Size: <span id="bldgSizeVal">2</span> <input type="range" id="bldgSize" min="0.5" max="8" value="2" step="0.5" oninput="updateSlider('bldg')"></div>
+                        <div>Opacity: <span id="bldgOpacityVal">40</span>% <input type="range" id="bldgOpacity" min="10" max="100" value="40" step="5" oninput="updateSlider('bldg')"></div>
+                    </div>
+                </div>
+                
+                <!-- Parcels Layer -->
+                <div class="layer-control">
+                    <div class="header">
+                        <input type="checkbox" id="showParcels" checked onchange="render()">
+                        <div class="dot" style="background:#27ae60;"></div>
+                        <span class="name">Land Use Parcels</span>
+                        <span class="count" id="parcelLayerCount">0</span>
+                    </div>
+                    <div class="sliders">
+                        <div>Size: <span id="parcelSizeVal">3</span> <input type="range" id="parcelSize" min="0.5" max="8" value="3" step="0.5" oninput="updateSlider('parcel')"></div>
+                        <div>Opacity: <span id="parcelOpacityVal">60</span>% <input type="range" id="parcelOpacity" min="10" max="100" value="60" step="5" oninput="updateSlider('parcel')"></div>
+                    </div>
+                </div>
+                
+                <!-- Apartments Layer -->
+                <div class="layer-control">
+                    <div class="header">
+                        <input type="checkbox" id="showApartments" checked onchange="render()">
+                        <div class="dot" style="background:#e74c3c;"></div>
+                        <span class="name">Apartments</span>
+                        <span class="count" id="aptLayerCount">0</span>
+                    </div>
+                    <div class="sliders">
+                        <div>Size: <span id="aptSizeVal">4</span> <input type="range" id="aptSize" min="0.5" max="8" value="4" step="0.5" oninput="updateSlider('apt')"></div>
+                        <div>Opacity: <span id="aptOpacityVal">80</span>% <input type="range" id="aptOpacity" min="10" max="100" value="80" step="5" oninput="updateSlider('apt')"></div>
+                    </div>
+                </div>
+                
+                <!-- Districts Layer -->
+                <div class="layer-control">
+                    <div class="header">
+                        <input type="checkbox" id="showDistricts" checked onchange="render()">
+                        <div class="dot" style="background:#ff9800;"></div>
+                        <span class="name">Districts</span>
+                        <span class="count" id="distLayerCount">0</span>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- Overlap Detection -->
@@ -115,100 +185,74 @@
             </div>
             <div class="section-content open">
                 <div style="font-size:11px;color:#666;margin-bottom:8px;">
-                    Detect land use parcels that have/don't have MS building footprints nearby
+                    Find parcels with/without MS building footprints nearby
                 </div>
+                
+                <div style="margin-bottom:8px;">
+                    <label style="font-size:11px;">Search Radius: <b id="radiusVal">30</b> meters</label>
+                    <input type="range" id="searchRadius" min="10" max="100" value="30" step="5" oninput="document.getElementById('radiusVal').textContent=this.value">
+                </div>
+                
                 <button class="btn btn-primary" onclick="detectOverlaps()">Detect Overlaps</button>
                 
-                <div id="overlapResults" class="overlap-box" style="display:none;">
-                    <div style="font-weight:600;margin-bottom:5px;">Overlap Results:</div>
-                    <div id="overlapStats"></div>
+                <!-- Filter Options (shown after detection) -->
+                <div id="filterOptions" style="display:none; margin-top:10px;">
+                    <div class="filter-box">
+                        <div style="font-weight:600;margin-bottom:8px;">Filter Parcels:</div>
+                        <label class="toggle-row"><input type="radio" name="parcelFilter" value="all" checked onchange="render()"> Show All</label>
+                        <label class="toggle-row"><input type="radio" name="parcelFilter" value="matched" onchange="render()"> <span style="color:#28a745;">With Building Only</span></label>
+                        <label class="toggle-row"><input type="radio" name="parcelFilter" value="unmatched" onchange="render()"> <span style="color:#dc3545;">No Building Only (Empty)</span></label>
+                    </div>
+                    
+                    <div class="filter-box warning">
+                        <div style="font-weight:600;margin-bottom:5px;">Remove from Data:</div>
+                        <button class="btn btn-danger" onclick="removeUnmatched()">Remove Parcels Without Buildings</button>
+                        <button class="btn btn-warning" onclick="removeMatched()">Remove Parcels With Buildings</button>
+                        <button class="btn" onclick="undoRemove()">Undo Last Remove</button>
+                    </div>
                 </div>
-                
-                <div style="margin-top:10px;">
-                    <label style="font-size:11px;">Search Radius (meters): <span id="radiusVal">30</span></label>
-                    <input type="range" id="searchRadius" min="10" max="100" value="30" step="5">
-                </div>
-                
-                <div style="margin-top:10px;padding:8px;background:#f5f5f5;border-radius:4px;">
-                    <div style="font-weight:600;font-size:11px;margin-bottom:5px;">Show Parcels:</div>
-                    <label class="toggle-row">
-                        <input type="radio" name="parcelFilter" value="all" checked onchange="render()">
-                        <span>All Parcels</span>
-                    </label>
-                    <label class="toggle-row">
-                        <input type="radio" name="parcelFilter" value="matched" onchange="render()">
-                        <span style="color:#28a745;">With Building (Matched)</span>
-                    </label>
-                    <label class="toggle-row">
-                        <input type="radio" name="parcelFilter" value="unmatched" onchange="render()">
-                        <span style="color:#dc3545;">No Building (Empty)</span>
-                    </label>
-                </div>
-                
-                <button class="btn btn-success" onclick="exportMatched()" style="margin-top:8px;">Export Matched CSV</button>
-                <button class="btn btn-danger" onclick="exportUnmatched()">Export Unmatched CSV</button>
             </div>
         </div>
         
-        <!-- Data Files Section -->
+        <!-- Export -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                Data Files <span>v</span>
+                EXPORT DATA <span>v</span>
             </div>
             <div class="section-content open">
+                <button class="btn btn-success" onclick="exportAllParcels()">Export All Parcels CSV</button>
+                <button class="btn btn-success" onclick="exportMatchedParcels()">Export Matched Only CSV</button>
+                <button class="btn btn-danger" onclick="exportUnmatchedParcels()">Export Unmatched Only CSV</button>
+                <button class="btn" onclick="exportBuildings()">Export Buildings CSV</button>
+                <div id="exportStatus" style="font-size:10px;color:#666;margin-top:5px;"></div>
+            </div>
+        </div>
+        
+        <!-- Data Files -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                DATA FILES <span>v</span>
+            </div>
+            <div class="section-content">
                 <div class="file-input">
                     <label>MS Buildings JSON:</label>
                     <input type="file" id="buildingsFile" accept=".json">
-                    <div id="buildingsStatus" class="file-status">Load riyadh_ms_buildings_all.json</div>
+                    <div id="buildingsStatus" class="file-status">riyadh_ms_buildings_all.json</div>
                 </div>
                 <div class="file-input">
                     <label>Land Use CSV:</label>
                     <input type="file" id="landFile" accept=".csv">
-                    <div id="landStatus" class="file-status">Load RIYADH_ALL_PARCELS_COMPLETE.csv</div>
+                    <div id="landStatus" class="file-status">RIYADH_ALL_PARCELS_COMPLETE.csv</div>
                 </div>
                 <div class="file-input">
                     <label>Apartments CSV:</label>
                     <input type="file" id="aptFile" accept=".csv">
-                    <div id="aptStatus" class="file-status">Load riyadh_apartments.csv</div>
+                    <div id="aptStatus" class="file-status">riyadh_apartments.csv</div>
                 </div>
                 <div class="file-input">
                     <label>Districts JSON:</label>
                     <input type="file" id="distFile" accept=".json">
-                    <div id="distStatus" class="file-status">Load riyadh_districts.json</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Layers Section -->
-        <div class="section">
-            <div class="section-header" onclick="toggleSection(this)">
-                Layers <span>v</span>
-            </div>
-            <div class="section-content open">
-                <label class="toggle-row">
-                    <input type="checkbox" id="showBuildings" checked>
-                    <span class="toggle-dot" style="background:#9c27b0;"></span>
-                    <span>MS Building Footprints</span>
-                </label>
-                <label class="toggle-row">
-                    <input type="checkbox" id="showLandUse" checked>
-                    <span class="toggle-dot" style="background:#27ae60;"></span>
-                    <span>Land Use Parcels</span>
-                </label>
-                <label class="toggle-row">
-                    <input type="checkbox" id="showApartments" checked>
-                    <span class="toggle-dot" style="background:#e74c3c;"></span>
-                    <span>Apartments</span>
-                </label>
-                <label class="toggle-row">
-                    <input type="checkbox" id="showDistricts" checked>
-                    <span class="toggle-dot" style="background:#ff9800;"></span>
-                    <span>District Boundaries</span>
-                </label>
-                
-                <div style="margin-top:8px;">
-                    <label style="font-size:11px;">Dot Size: <span id="dotSizeVal">3</span></label>
-                    <input type="range" id="dotSize" min="1" max="10" value="3" step="0.5">
+                    <div id="distStatus" class="file-status">riyadh_districts.json</div>
                 </div>
             </div>
         </div>
@@ -216,41 +260,45 @@
         <!-- Land Use Codes -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                Land Use Codes (<span id="codeCount">0</span>) <span>v</span>
+                LAND USE CODES (<span id="codeCount">0</span>) <span>v</span>
             </div>
             <div class="section-content">
-                <div style="display:flex; gap:5px; margin-bottom:5px;">
-                    <button onclick="selectAllCodes()" style="flex:1; padding:4px; font-size:10px; cursor:pointer;">All</button>
-                    <button onclick="selectVillasOnly()" style="flex:1; padding:4px; font-size:10px; cursor:pointer;">Villas</button>
-                    <button onclick="selectAptsOnly()" style="flex:1; padding:4px; font-size:10px; cursor:pointer;">Apts</button>
-                    <button onclick="clearAllCodes()" style="flex:1; padding:4px; font-size:10px; cursor:pointer;">Clear</button>
+                <div style="display:flex;gap:3px;margin-bottom:5px;flex-wrap:wrap;">
+                    <button onclick="selectAllCodes()" style="padding:3px 6px;font-size:9px;cursor:pointer;">All</button>
+                    <button onclick="selectVillasOnly()" style="padding:3px 6px;font-size:9px;cursor:pointer;">Villas</button>
+                    <button onclick="selectAptsOnly()" style="padding:3px 6px;font-size:9px;cursor:pointer;">Apts</button>
+                    <button onclick="selectCommercial()" style="padding:3px 6px;font-size:9px;cursor:pointer;">Commercial</button>
+                    <button onclick="clearAllCodes()" style="padding:3px 6px;font-size:9px;cursor:pointer;">Clear</button>
                 </div>
-                <div id="landCodeFilters" style="max-height:150px;overflow-y:auto;font-size:11px;"></div>
+                <div id="codeFilters" class="code-filters"></div>
             </div>
         </div>
         
         <!-- Districts -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                Districts (<span id="districtCount">0</span>) <span>v</span>
+                DISTRICTS (<span id="districtCount">0</span>) <span>v</span>
             </div>
             <div class="section-content">
-                <input type="text" class="search-box" id="districtSearch" placeholder="Search districts...">
-                <div class="district-list" id="districtList"></div>
+                <input type="text" class="search-box" id="districtSearch" placeholder="Search..." oninput="updateDistrictList()">
+                <div style="display:flex;gap:3px;margin-bottom:5px;">
+                    <button onclick="clearDistrictSelection()" style="padding:3px 6px;font-size:9px;cursor:pointer;">Clear Selection</button>
+                </div>
+                <div id="districtList" class="district-list"></div>
             </div>
         </div>
         
         <!-- Legend -->
-        <div class="legend">
-            <h4>Legend</h4>
-            <div class="legend-item"><div class="legend-dot" style="background:#9c27b0;"></div> MS Building</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#28a745;"></div> Parcel WITH building</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#dc3545;"></div> Parcel NO building (empty)</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#e74c3c;"></div> Apartment listing</div>
+        <div style="padding:8px;background:#f5f5f5;border-radius:6px;margin-top:8px;font-size:10px;">
+            <div style="font-weight:600;margin-bottom:5px;">Legend:</div>
+            <div style="display:flex;align-items:center;gap:5px;"><div style="width:10px;height:10px;border-radius:50%;background:#9c27b0;"></div> MS Building</div>
+            <div style="display:flex;align-items:center;gap:5px;"><div style="width:10px;height:10px;border-radius:50%;background:#28a745;"></div> Parcel WITH building</div>
+            <div style="display:flex;align-items:center;gap:5px;"><div style="width:10px;height:10px;border-radius:50%;background:#dc3545;"></div> Parcel NO building</div>
+            <div style="display:flex;align-items:center;gap:5px;"><div style="width:10px;height:10px;border-radius:50%;background:#e74c3c;"></div> Apartment listing</div>
         </div>
         
         <div style="margin-top:8px;font-size:10px;color:#888;">
-            Zoom: <span id="zoomLevel">0</span> | Visible: <span id="visibleCount">0</span>
+            Zoom: <span id="zoomLevel">0</span> | In view: <span id="visibleCount">0</span>
         </div>
     </div>
 
@@ -259,16 +307,16 @@
         let buildings = [];
         let apartments = [];
         let parcels = [];
+        let parcelsBackup = []; // For undo
         let districts = [];
         let allCodeCounts = {};
         let selectedCodes = new Set();
         let selectedDistricts = new Set();
-        let dotSize = 3;
         let overlapDetected = false;
         
-        // Spatial index for fast lookup
+        // Spatial index
         let buildingGrid = {};
-        const GRID_SIZE = 0.001; // ~100m grid cells
+        const GRID_SIZE = 0.001;
         
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -280,19 +328,17 @@
             '2000': { color: '#ea4335', name: 'Commercial' },
             '2285': { color: '#ff9800', name: 'Commercial Area' },
             '2633': { color: '#795548', name: 'Industrial' },
+            '2278': { color: '#795548', name: 'Industrial' },
         };
         
         function getCodeColor(code) {
-            if (landUseCodes[code]) return landUseCodes[code].color;
-            const num = parseInt(code) || 0;
-            return `hsl(${(num * 137) % 360}, 60%, 50%)`;
+            return landUseCodes[code]?.color || `hsl(${(parseInt(code)||0) * 137 % 360}, 60%, 50%)`;
         }
         
         function toggleSection(header) {
             const content = header.nextElementSibling;
-            const arrow = header.querySelector('span:last-child');
             content.classList.toggle('open');
-            arrow.textContent = content.classList.contains('open') ? 'v' : '>';
+            header.querySelector('span:last-child').textContent = content.classList.contains('open') ? 'v' : '>';
         }
         
         function showLoading(title) {
@@ -309,143 +355,145 @@
             document.getElementById('loadingOverlay').classList.add('hidden');
         }
         
-        // Build spatial index for buildings
+        function updateSlider(layer) {
+            document.getElementById(layer + 'SizeVal').textContent = document.getElementById(layer + 'Size').value;
+            document.getElementById(layer + 'OpacityVal').textContent = document.getElementById(layer + 'Opacity').value;
+            render();
+        }
+        
         function buildSpatialIndex() {
             buildingGrid = {};
             buildings.forEach((b, idx) => {
-                const gridKey = Math.floor(b[0] / GRID_SIZE) + ',' + Math.floor(b[1] / GRID_SIZE);
-                if (!buildingGrid[gridKey]) buildingGrid[gridKey] = [];
-                buildingGrid[gridKey].push(idx);
+                const key = Math.floor(b[0]/GRID_SIZE) + ',' + Math.floor(b[1]/GRID_SIZE);
+                if (!buildingGrid[key]) buildingGrid[key] = [];
+                buildingGrid[key].push(idx);
             });
         }
         
-        // Find buildings near a point
         function findNearbyBuildings(lat, lon, radiusMeters) {
-            const radiusDeg = radiusMeters / 111000; // approximate conversion
-            const nearby = [];
+            const radiusDeg = radiusMeters / 111000;
+            const cx = Math.floor(lat/GRID_SIZE), cy = Math.floor(lon/GRID_SIZE);
+            const cells = Math.ceil(radiusDeg/GRID_SIZE) + 1;
             
-            // Check surrounding grid cells
-            const centerGridX = Math.floor(lat / GRID_SIZE);
-            const centerGridY = Math.floor(lon / GRID_SIZE);
-            const cellsToCheck = Math.ceil(radiusDeg / GRID_SIZE) + 1;
-            
-            for (let dx = -cellsToCheck; dx <= cellsToCheck; dx++) {
-                for (let dy = -cellsToCheck; dy <= cellsToCheck; dy++) {
-                    const gridKey = (centerGridX + dx) + ',' + (centerGridY + dy);
-                    const cellBuildings = buildingGrid[gridKey] || [];
-                    
-                    cellBuildings.forEach(idx => {
+            for (let dx = -cells; dx <= cells; dx++) {
+                for (let dy = -cells; dy <= cells; dy++) {
+                    const cell = buildingGrid[(cx+dx)+','+(cy+dy)] || [];
+                    for (let idx of cell) {
                         const b = buildings[idx];
-                        const dist = Math.sqrt(Math.pow(b[0] - lat, 2) + Math.pow(b[1] - lon, 2));
-                        if (dist <= radiusDeg) {
-                            nearby.push(idx);
-                        }
-                    });
+                        if (Math.sqrt(Math.pow(b[0]-lat,2) + Math.pow(b[1]-lon,2)) <= radiusDeg) return true;
+                    }
                 }
             }
-            
-            return nearby;
+            return false;
         }
         
-        // Detect overlaps between land use and buildings
         function detectOverlaps() {
-            if (buildings.length === 0) {
-                alert('Please load MS Buildings JSON first!');
-                return;
-            }
-            if (parcels.length === 0) {
-                alert('Please load Land Use CSV first!');
-                return;
-            }
+            if (!buildings.length) return alert('Load MS Buildings first!');
+            if (!parcels.length) return alert('Load Land Use CSV first!');
             
             showLoading('Detecting Overlaps...');
-            setLoadingStatus('Building spatial index...', 10);
-            
             setTimeout(() => {
                 buildSpatialIndex();
-                
                 const radius = parseInt(document.getElementById('searchRadius').value);
                 let matched = 0, unmatched = 0;
-                let matchedByCode = {}, unmatchedByCode = {};
                 
-                parcels.forEach((p, idx) => {
-                    if (idx % 10000 === 0) {
-                        setLoadingStatus(`Processing ${idx.toLocaleString()} / ${parcels.length.toLocaleString()}...`, 10 + (idx / parcels.length * 80));
-                    }
-                    
-                    const nearby = findNearbyBuildings(p.lat, p.lon, radius);
-                    p.hasBuilding = nearby.length > 0;
-                    p.nearbyCount = nearby.length;
-                    
-                    if (p.hasBuilding) {
-                        matched++;
-                        matchedByCode[p.code] = (matchedByCode[p.code] || 0) + 1;
-                    } else {
-                        unmatched++;
-                        unmatchedByCode[p.code] = (unmatchedByCode[p.code] || 0) + 1;
-                    }
+                parcels.forEach((p, i) => {
+                    if (i % 50000 === 0) setLoadingStatus(`${i.toLocaleString()}/${parcels.length.toLocaleString()}`, 10 + i/parcels.length*80);
+                    p.hasBuilding = findNearbyBuildings(p.lat, p.lon, radius);
+                    if (p.hasBuilding) matched++; else unmatched++;
                 });
                 
                 overlapDetected = true;
+                document.getElementById('overlapStats').style.display = 'grid';
+                document.getElementById('matchedCount').textContent = matched.toLocaleString();
+                document.getElementById('unmatchedCount').textContent = unmatched.toLocaleString();
+                document.getElementById('filterOptions').style.display = 'block';
                 
-                // Show results
-                const matchPct = (matched / parcels.length * 100).toFixed(1);
-                const unmatchPct = (unmatched / parcels.length * 100).toFixed(1);
-                
-                let statsHtml = `
-                    <div style="color:#28a745;"><b>Matched (has building):</b> ${matched.toLocaleString()} (${matchPct}%)</div>
-                    <div style="color:#dc3545;"><b>Unmatched (empty):</b> ${unmatched.toLocaleString()} (${unmatchPct}%)</div>
-                    <div style="margin-top:8px;font-size:10px;">
-                        <b>Villas matched:</b> ${((matchedByCode['1000'] || 0) + (matchedByCode['1012'] || 0)).toLocaleString()}<br>
-                        <b>Villas unmatched:</b> ${((unmatchedByCode['1000'] || 0) + (unmatchedByCode['1012'] || 0)).toLocaleString()}<br>
-                        <b>Apts matched:</b> ${(matchedByCode['7510'] || 0).toLocaleString()}<br>
-                        <b>Apts unmatched:</b> ${(unmatchedByCode['7510'] || 0).toLocaleString()}
-                    </div>
-                `;
-                
-                document.getElementById('overlapResults').style.display = 'block';
-                document.getElementById('overlapStats').innerHTML = statsHtml;
-                
-                setLoadingStatus('Done!', 100);
-                setTimeout(hideLoading, 300);
+                hideLoading();
                 render();
-                
-            }, 100);
+            }, 50);
         }
         
-        function exportMatched() {
-            if (!overlapDetected) {
-                alert('Run overlap detection first!');
-                return;
-            }
-            
-            const matched = parcels.filter(p => p.hasBuilding);
-            exportCSV(matched, 'riyadh_matched_parcels.csv');
+        function removeUnmatched() {
+            if (!overlapDetected) return alert('Run overlap detection first!');
+            parcelsBackup = [...parcels];
+            const before = parcels.length;
+            parcels = parcels.filter(p => p.hasBuilding);
+            updateCounts();
+            alert(`Removed ${(before - parcels.length).toLocaleString()} parcels without buildings`);
+            render();
         }
         
-        function exportUnmatched() {
-            if (!overlapDetected) {
-                alert('Run overlap detection first!');
-                return;
+        function removeMatched() {
+            if (!overlapDetected) return alert('Run overlap detection first!');
+            parcelsBackup = [...parcels];
+            const before = parcels.length;
+            parcels = parcels.filter(p => !p.hasBuilding);
+            updateCounts();
+            alert(`Removed ${(before - parcels.length).toLocaleString()} parcels with buildings`);
+            render();
+        }
+        
+        function undoRemove() {
+            if (!parcelsBackup.length) return alert('Nothing to undo');
+            parcels = parcelsBackup;
+            parcelsBackup = [];
+            updateCounts();
+            render();
+            alert('Restored parcels');
+        }
+        
+        function updateCounts() {
+            allCodeCounts = {};
+            parcels.forEach(p => allCodeCounts[p.code] = (allCodeCounts[p.code]||0) + 1);
+            
+            const villas = (allCodeCounts['1000']||0) + (allCodeCounts['1012']||0);
+            document.getElementById('villaCount').textContent = villas.toLocaleString();
+            document.getElementById('parcelCount').textContent = parcels.length.toLocaleString();
+            document.getElementById('codeCount').textContent = Object.keys(allCodeCounts).length;
+            
+            if (overlapDetected) {
+                const matched = parcels.filter(p => p.hasBuilding).length;
+                document.getElementById('matchedCount').textContent = matched.toLocaleString();
+                document.getElementById('unmatchedCount').textContent = (parcels.length - matched).toLocaleString();
             }
             
-            const unmatched = parcels.filter(p => !p.hasBuilding);
-            exportCSV(unmatched, 'riyadh_unmatched_parcels.csv');
+            updateCodeFilters();
+        }
+        
+        function exportAllParcels() {
+            exportCSV(parcels, 'riyadh_parcels_all.csv');
+        }
+        
+        function exportMatchedParcels() {
+            if (!overlapDetected) return alert('Run overlap detection first!');
+            exportCSV(parcels.filter(p => p.hasBuilding), 'riyadh_parcels_matched.csv');
+        }
+        
+        function exportUnmatchedParcels() {
+            if (!overlapDetected) return alert('Run overlap detection first!');
+            exportCSV(parcels.filter(p => !p.hasBuilding), 'riyadh_parcels_unmatched.csv');
+        }
+        
+        function exportBuildings() {
+            let csv = 'lat,lon\n';
+            buildings.forEach(b => csv += `${b[0]},${b[1]}\n`);
+            downloadCSV(csv, 'riyadh_buildings.csv');
         }
         
         function exportCSV(data, filename) {
-            let csv = 'lat,lon,code,has_building,nearby_count\n';
-            data.forEach(p => {
-                csv += `${p.lat},${p.lon},${p.code},${p.hasBuilding},${p.nearbyCount || 0}\n`;
-            });
-            
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
+            let csv = 'lat,lon,code,has_building\n';
+            data.forEach(p => csv += `${p.lat},${p.lon},${p.code},${p.hasBuilding === true ? 'True' : p.hasBuilding === false ? 'False' : ''}\n`);
+            downloadCSV(csv, filename);
+        }
+        
+        function downloadCSV(csv, filename) {
+            const blob = new Blob([csv], {type: 'text/csv'});
             const a = document.createElement('a');
-            a.href = url;
+            a.href = URL.createObjectURL(blob);
             a.download = filename;
             a.click();
-            URL.revokeObjectURL(url);
+            document.getElementById('exportStatus').textContent = `Exported ${filename}`;
         }
         
         function render() {
@@ -463,235 +511,198 @@
             const zoom = map.getZoom();
             document.getElementById('zoomLevel').textContent = zoom.toFixed(1);
             
-            const topRight = proj.fromLatLngToPoint(bounds.getNorthEast());
-            const bottomLeft = proj.fromLatLngToPoint(bounds.getSouthWest());
+            const tr = proj.fromLatLngToPoint(bounds.getNorthEast());
+            const bl = proj.fromLatLngToPoint(bounds.getSouthWest());
             const scale = Math.pow(2, zoom);
-            const baseRadius = Math.max(1.5, zoom - 9) * dotSize / 3;
+            const baseSize = Math.max(1, zoom - 10);
             
             const showBldg = document.getElementById('showBuildings').checked;
+            const showParcel = document.getElementById('showParcels').checked;
             const showApt = document.getElementById('showApartments').checked;
-            const showLand = document.getElementById('showLandUse').checked;
             const showDist = document.getElementById('showDistricts').checked;
             
-            const parcelFilter = document.querySelector('input[name="parcelFilter"]:checked').value;
+            const bldgSize = parseFloat(document.getElementById('bldgSize').value) * baseSize / 2;
+            const bldgOpacity = parseInt(document.getElementById('bldgOpacity').value) / 100;
+            const parcelSize = parseFloat(document.getElementById('parcelSize').value) * baseSize / 2;
+            const parcelOpacity = parseInt(document.getElementById('parcelOpacity').value) / 100;
+            const aptSize = parseFloat(document.getElementById('aptSize').value) * baseSize / 2;
+            const aptOpacity = parseInt(document.getElementById('aptOpacity').value) / 100;
             
-            let visibleBuildings = 0, visibleParcels = 0;
+            const parcelFilter = document.querySelector('input[name="parcelFilter"]:checked')?.value || 'all';
             
-            // Draw district boundaries
-            if (showDist && districts.length > 0) {
+            let visBldg = 0, visParcel = 0, visApt = 0;
+            
+            // Districts
+            if (showDist && districts.length) {
+                ctx.strokeStyle = '#ff9800';
+                ctx.lineWidth = 1;
+                ctx.globalAlpha = 0.5;
                 districts.forEach(d => {
-                    if (selectedDistricts.size > 0 && !selectedDistricts.has(d.name_en)) return;
-                    const boundary = d.boundaries?.[0];
-                    if (!boundary || boundary.length < 3) return;
-                    
+                    if (selectedDistricts.size && !selectedDistricts.has(d.name_en)) return;
+                    const b = d.boundaries?.[0];
+                    if (!b || b.length < 3) return;
                     ctx.beginPath();
-                    let first = true;
-                    boundary.forEach(([lat, lon]) => {
-                        const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                        const x = (w.x - bottomLeft.x) * scale;
-                        const y = (w.y - topRight.y) * scale;
-                        if (first) { ctx.moveTo(x, y); first = false; }
-                        else ctx.lineTo(x, y);
+                    b.forEach(([lat,lon], i) => {
+                        const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat,lon));
+                        const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                        i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
                     });
                     ctx.closePath();
-                    ctx.strokeStyle = '#ff9800';
-                    ctx.lineWidth = 1;
-                    ctx.globalAlpha = 0.5;
                     ctx.stroke();
-                    ctx.globalAlpha = 1;
                 });
+                ctx.globalAlpha = 1;
             }
             
-            // Draw MS buildings
-            if (showBldg && buildings.length > 0) {
-                ctx.globalAlpha = 0.4;
+            // Buildings
+            if (showBldg && buildings.length) {
                 ctx.fillStyle = '#9c27b0';
+                ctx.globalAlpha = bldgOpacity;
                 buildings.forEach(b => {
-                    const lat = b[0], lon = b[1];
-                    if (lat < bounds.getSouthWest().lat() || lat > bounds.getNorthEast().lat() ||
-                        lon < bounds.getSouthWest().lng() || lon > bounds.getNorthEast().lng()) return;
-                    
-                    visibleBuildings++;
-                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                    const x = (w.x - bottomLeft.x) * scale;
-                    const y = (w.y - topRight.y) * scale;
-                    
+                    if (b[0] < bounds.getSouthWest().lat() || b[0] > bounds.getNorthEast().lat() ||
+                        b[1] < bounds.getSouthWest().lng() || b[1] > bounds.getNorthEast().lng()) return;
+                    visBldg++;
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(b[0], b[1]));
                     ctx.beginPath();
-                    ctx.arc(x, y, baseRadius * 0.5, 0, 2 * Math.PI);
+                    ctx.arc((w.x-bl.x)*scale, (w.y-tr.y)*scale, bldgSize, 0, Math.PI*2);
                     ctx.fill();
                 });
                 ctx.globalAlpha = 1;
             }
             
-            // Draw land use parcels
-            if (showLand && parcels.length > 0) {
+            // Parcels
+            if (showParcel && parcels.length) {
+                ctx.globalAlpha = parcelOpacity;
                 parcels.forEach(p => {
-                    if (selectedCodes.size > 0 && !selectedCodes.has(p.code)) return;
-                    
-                    // Apply parcel filter
+                    if (selectedCodes.size && !selectedCodes.has(p.code)) return;
                     if (overlapDetected) {
                         if (parcelFilter === 'matched' && !p.hasBuilding) return;
                         if (parcelFilter === 'unmatched' && p.hasBuilding) return;
                     }
-                    
                     if (p.lat < bounds.getSouthWest().lat() || p.lat > bounds.getNorthEast().lat() ||
                         p.lon < bounds.getSouthWest().lng() || p.lon > bounds.getNorthEast().lng()) return;
-                    
-                    visibleParcels++;
+                    visParcel++;
                     const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lon));
-                    const x = (w.x - bottomLeft.x) * scale;
-                    const y = (w.y - topRight.y) * scale;
-                    
                     ctx.beginPath();
-                    ctx.arc(x, y, baseRadius * 0.6, 0, 2 * Math.PI);
-                    
-                    // Color based on overlap status
-                    if (overlapDetected) {
-                        ctx.fillStyle = p.hasBuilding ? '#28a745' : '#dc3545';
-                        ctx.globalAlpha = p.hasBuilding ? 0.5 : 0.8;
-                    } else {
-                        ctx.fillStyle = getCodeColor(p.code);
-                        ctx.globalAlpha = 0.6;
-                    }
-                    ctx.fill();
-                    ctx.globalAlpha = 1;
-                });
-            }
-            
-            // Draw apartments
-            if (showApt && apartments.length > 0) {
-                ctx.fillStyle = '#e74c3c';
-                ctx.globalAlpha = 0.8;
-                apartments.forEach(a => {
-                    if (a.lat < bounds.getSouthWest().lat() || a.lat > bounds.getNorthEast().lat() ||
-                        a.lon < bounds.getSouthWest().lng() || a.lon > bounds.getNorthEast().lng()) return;
-                    
-                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(a.lat, a.lon));
-                    const x = (w.x - bottomLeft.x) * scale;
-                    const y = (w.y - topRight.y) * scale;
-                    
-                    ctx.beginPath();
-                    ctx.arc(x, y, baseRadius, 0, 2 * Math.PI);
+                    ctx.arc((w.x-bl.x)*scale, (w.y-tr.y)*scale, parcelSize, 0, Math.PI*2);
+                    ctx.fillStyle = overlapDetected ? (p.hasBuilding ? '#28a745' : '#dc3545') : getCodeColor(p.code);
                     ctx.fill();
                 });
                 ctx.globalAlpha = 1;
             }
             
-            document.getElementById('visibleCount').textContent = `${visibleBuildings.toLocaleString()} bldg, ${visibleParcels.toLocaleString()} parcels`;
+            // Apartments
+            if (showApt && apartments.length) {
+                ctx.fillStyle = '#e74c3c';
+                ctx.globalAlpha = aptOpacity;
+                apartments.forEach(a => {
+                    if (a.lat < bounds.getSouthWest().lat() || a.lat > bounds.getNorthEast().lat() ||
+                        a.lon < bounds.getSouthWest().lng() || a.lon > bounds.getNorthEast().lng()) return;
+                    visApt++;
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(a.lat, a.lon));
+                    ctx.beginPath();
+                    ctx.arc((w.x-bl.x)*scale, (w.y-tr.y)*scale, aptSize, 0, Math.PI*2);
+                    ctx.fill();
+                });
+                ctx.globalAlpha = 1;
+            }
+            
+            document.getElementById('bldgLayerCount').textContent = visBldg.toLocaleString();
+            document.getElementById('parcelLayerCount').textContent = visParcel.toLocaleString();
+            document.getElementById('aptLayerCount').textContent = visApt.toLocaleString();
+            document.getElementById('visibleCount').textContent = `${visBldg.toLocaleString()} bldg, ${visParcel.toLocaleString()} parcels`;
         }
         
-        function parseCSVLine(line) {
-            const vals = [];
-            let inQuote = false, current = '';
-            for (let c of line) {
-                if (c === '"') inQuote = !inQuote;
-                else if (c === ',' && !inQuote) { vals.push(current.trim()); current = ''; }
-                else current += c;
-            }
-            vals.push(current.trim());
-            return vals;
+        function parseCSV(text) {
+            return text.trim().split('\n').map(line => {
+                const vals = []; let q = false, cur = '';
+                for (let c of line) {
+                    if (c === '"') q = !q;
+                    else if (c === ',' && !q) { vals.push(cur.trim()); cur = ''; }
+                    else cur += c;
+                }
+                vals.push(cur.trim());
+                return vals;
+            });
         }
         
         // File loaders
-        document.getElementById('buildingsFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        document.getElementById('buildingsFile').addEventListener('change', e => {
+            const file = e.target.files[0]; if (!file) return;
             showLoading('Loading Buildings...');
-            
             const reader = new FileReader();
-            reader.onload = function(evt) {
-                setLoadingStatus('Parsing JSON...', 50);
+            reader.onload = evt => {
                 buildings = JSON.parse(evt.target.result);
                 document.getElementById('bldgCount').textContent = buildings.length.toLocaleString();
-                document.getElementById('buildingsStatus').textContent = `Loaded ${buildings.length.toLocaleString()}`;
+                document.getElementById('buildingsStatus').textContent = buildings.length.toLocaleString() + ' loaded';
                 document.getElementById('buildingsStatus').classList.add('loaded');
                 overlapDetected = false;
-                hideLoading();
-                render();
+                hideLoading(); render();
             };
             reader.readAsText(file);
         });
         
-        document.getElementById('landFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+        document.getElementById('landFile').addEventListener('change', e => {
+            const file = e.target.files[0]; if (!file) return;
             showLoading('Loading Land Use...');
-            
             const reader = new FileReader();
-            reader.onload = function(evt) {
-                const lines = evt.target.result.trim().split('\n');
-                const headers = lines[0].toLowerCase().split(',');
-                const latI = headers.findIndex(h => h.includes('lat'));
-                const lonI = headers.findIndex(h => h.includes('lon'));
-                const codeI = headers.findIndex(h => h.includes('code') || h.includes('land_use'));
+            reader.onload = evt => {
+                const rows = parseCSV(evt.target.result);
+                const h = rows[0].map(x => x.toLowerCase());
+                const latI = h.findIndex(x => x.includes('lat'));
+                const lonI = h.findIndex(x => x.includes('lon'));
+                const codeI = h.findIndex(x => x.includes('code'));
                 
-                parcels = [];
-                allCodeCounts = {};
-                selectedCodes.clear();
-                
-                for (let i = 1; i < lines.length; i++) {
-                    if (i % 100000 === 0) setLoadingStatus(`${i.toLocaleString()} rows...`, (i/lines.length*100));
-                    const vals = parseCSVLine(lines[i]);
-                    const lat = parseFloat(vals[latI]);
-                    const lon = parseFloat(vals[lonI]);
-                    const code = vals[codeI];
+                parcels = []; allCodeCounts = {}; selectedCodes.clear();
+                for (let i = 1; i < rows.length; i++) {
+                    if (i % 100000 === 0) setLoadingStatus(`${i.toLocaleString()} rows`, i/rows.length*100);
+                    const r = rows[i];
+                    const lat = parseFloat(r[latI]), lon = parseFloat(r[lonI]), code = r[codeI];
                     if (!isNaN(lat) && !isNaN(lon) && code) {
-                        parcels.push({ lat, lon, code, hasBuilding: null });
-                        allCodeCounts[code] = (allCodeCounts[code] || 0) + 1;
+                        parcels.push({lat, lon, code, hasBuilding: null});
+                        allCodeCounts[code] = (allCodeCounts[code]||0) + 1;
                     }
                 }
                 
-                let villaCount = (allCodeCounts['1000'] || 0) + (allCodeCounts['1012'] || 0);
-                document.getElementById('villaCount').textContent = villaCount.toLocaleString();
-                document.getElementById('parcelCount').textContent = parcels.length.toLocaleString();
-                
-                Object.keys(allCodeCounts).forEach(code => selectedCodes.add(code));
+                Object.keys(allCodeCounts).forEach(c => selectedCodes.add(c));
+                updateCounts();
                 updateCodeFilters();
-                
-                document.getElementById('landStatus').textContent = `Loaded ${parcels.length.toLocaleString()}`;
+                document.getElementById('landStatus').textContent = parcels.length.toLocaleString() + ' loaded';
                 document.getElementById('landStatus').classList.add('loaded');
                 overlapDetected = false;
-                hideLoading();
-                render();
+                hideLoading(); render();
             };
             reader.readAsText(file);
         });
         
-        document.getElementById('aptFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
+        document.getElementById('aptFile').addEventListener('change', e => {
+            const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(evt) {
-                const lines = evt.target.result.trim().split('\n');
-                const headers = lines[0].toLowerCase().split(',');
-                const latI = headers.findIndex(h => h.includes('lat'));
-                const lonI = headers.findIndex(h => h.includes('lon'));
-                
+            reader.onload = evt => {
+                const rows = parseCSV(evt.target.result);
+                const h = rows[0].map(x => x.toLowerCase());
+                const latI = h.findIndex(x => x.includes('lat'));
+                const lonI = h.findIndex(x => x.includes('lon'));
                 apartments = [];
-                for (let i = 1; i < lines.length; i++) {
-                    const vals = parseCSVLine(lines[i]);
-                    const lat = parseFloat(vals[latI]);
-                    const lon = parseFloat(vals[lonI]);
-                    if (!isNaN(lat) && !isNaN(lon)) apartments.push({ lat, lon });
+                for (let i = 1; i < rows.length; i++) {
+                    const lat = parseFloat(rows[i][latI]), lon = parseFloat(rows[i][lonI]);
+                    if (!isNaN(lat) && !isNaN(lon)) apartments.push({lat, lon});
                 }
-                
                 document.getElementById('aptCount').textContent = apartments.length.toLocaleString();
-                document.getElementById('aptStatus').textContent = `Loaded ${apartments.length.toLocaleString()}`;
+                document.getElementById('aptStatus').textContent = apartments.length.toLocaleString() + ' loaded';
                 document.getElementById('aptStatus').classList.add('loaded');
                 render();
             };
             reader.readAsText(file);
         });
         
-        document.getElementById('distFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
+        document.getElementById('distFile').addEventListener('change', e => {
+            const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(evt) {
+            reader.onload = evt => {
                 districts = JSON.parse(evt.target.result);
-                document.getElementById('distStatus').textContent = `Loaded ${districts.length}`;
+                document.getElementById('distLayerCount').textContent = districts.length;
+                document.getElementById('districtCount').textContent = districts.length;
+                document.getElementById('distStatus').textContent = districts.length + ' loaded';
                 document.getElementById('distStatus').classList.add('loaded');
                 updateDistrictList();
                 render();
@@ -699,114 +710,62 @@
             reader.readAsText(file);
         });
         
-        // Event listeners
-        document.getElementById('dotSize').addEventListener('input', e => {
-            dotSize = parseFloat(e.target.value);
-            document.getElementById('dotSizeVal').textContent = dotSize;
-            render();
-        });
-        
-        document.getElementById('searchRadius').addEventListener('input', e => {
-            document.getElementById('radiusVal').textContent = e.target.value;
-        });
-        
-        ['showBuildings', 'showApartments', 'showLandUse', 'showDistricts'].forEach(id => {
-            document.getElementById(id).addEventListener('change', render);
-        });
-        
-        document.getElementById('districtSearch').addEventListener('input', updateDistrictList);
-        
         function updateCodeFilters() {
-            const div = document.getElementById('landCodeFilters');
+            const div = document.getElementById('codeFilters');
             let html = '';
-            Object.entries(allCodeCounts).sort((a,b) => b[1] - a[1]).forEach(([code, count]) => {
-                const info = landUseCodes[code] || { name: code, color: getCodeColor(code) };
-                const checked = selectedCodes.has(code) ? 'checked' : '';
-                html += `<label class="toggle-row">
-                    <input type="checkbox" ${checked} onchange="toggleCode('${code}')">
-                    <span class="toggle-dot" style="background:${info.color};"></span>
-                    <span style="flex:1;">${code}</span>
-                    <span style="color:#666;">${count.toLocaleString()}</span>
+            Object.entries(allCodeCounts).sort((a,b) => b[1]-a[1]).forEach(([code, count]) => {
+                const info = landUseCodes[code] || {name: code, color: getCodeColor(code)};
+                html += `<label class="code-item">
+                    <input type="checkbox" ${selectedCodes.has(code)?'checked':''} onchange="toggleCode('${code}')">
+                    <span class="code-dot" style="background:${info.color}"></span>
+                    <span style="flex:1">${code}: ${info.name}</span>
+                    <span>${count.toLocaleString()}</span>
                 </label>`;
             });
             div.innerHTML = html || 'Load land use CSV';
-            document.getElementById('codeCount').textContent = Object.keys(allCodeCounts).length;
         }
         
-        function toggleCode(code) {
-            if (selectedCodes.has(code)) selectedCodes.delete(code);
-            else selectedCodes.add(code);
-            updateCodeFilters();
-            render();
-        }
-        
-        function selectAllCodes() {
-            Object.keys(allCodeCounts).forEach(c => selectedCodes.add(c));
-            updateCodeFilters();
-            render();
-        }
-        
-        function clearAllCodes() {
-            selectedCodes.clear();
-            updateCodeFilters();
-            render();
-        }
-        
-        function selectVillasOnly() {
-            selectedCodes.clear();
-            selectedCodes.add('1000');
-            selectedCodes.add('1012');
-            updateCodeFilters();
-            render();
-        }
-        
-        function selectAptsOnly() {
-            selectedCodes.clear();
-            selectedCodes.add('7510');
-            updateCodeFilters();
-            render();
-        }
+        function toggleCode(c) { selectedCodes.has(c) ? selectedCodes.delete(c) : selectedCodes.add(c); updateCodeFilters(); render(); }
+        function selectAllCodes() { Object.keys(allCodeCounts).forEach(c => selectedCodes.add(c)); updateCodeFilters(); render(); }
+        function clearAllCodes() { selectedCodes.clear(); updateCodeFilters(); render(); }
+        function selectVillasOnly() { selectedCodes.clear(); ['1000','1012'].forEach(c => selectedCodes.add(c)); updateCodeFilters(); render(); }
+        function selectAptsOnly() { selectedCodes.clear(); selectedCodes.add('7510'); updateCodeFilters(); render(); }
+        function selectCommercial() { selectedCodes.clear(); ['2000','2285'].forEach(c => selectedCodes.add(c)); updateCodeFilters(); render(); }
         
         function updateDistrictList() {
-            const list = document.getElementById('districtList');
             const search = document.getElementById('districtSearch').value.toLowerCase();
-            
+            const div = document.getElementById('districtList');
             let html = '';
-            districts.filter(d => d.name_en.toLowerCase().includes(search)).slice(0, 50).forEach(d => {
-                const sel = selectedDistricts.has(d.name_en) ? 'selected' : '';
-                html += `<div class="district-item ${sel}" onclick="zoomToDistrict('${d.name_en.replace(/'/g, "\\'")}')">${d.name_en}</div>`;
+            districts.filter(d => d.name_en.toLowerCase().includes(search)).slice(0,50).forEach(d => {
+                const sel = selectedDistricts.has(d.name_en);
+                html += `<div class="district-item ${sel?'selected':''}" onclick="selectDistrict('${d.name_en.replace(/'/g,"\\'")}')">${d.name_en}</div>`;
             });
-            list.innerHTML = html || 'Load districts JSON';
-            document.getElementById('districtCount').textContent = districts.length;
+            div.innerHTML = html || 'Load districts JSON';
         }
         
-        function zoomToDistrict(name) {
+        function selectDistrict(name) {
             const d = districts.find(x => x.name_en === name);
-            if (!d || !d.boundaries?.[0]) return;
-            
+            if (!d?.boundaries?.[0]) return;
             selectedDistricts.clear();
             selectedDistricts.add(name);
             updateDistrictList();
-            
             const bounds = new google.maps.LatLngBounds();
-            d.boundaries[0].forEach(([lat, lon]) => bounds.extend(new google.maps.LatLng(lat, lon)));
+            d.boundaries[0].forEach(([lat,lon]) => bounds.extend(new google.maps.LatLng(lat,lon)));
             map.fitBounds(bounds);
             render();
         }
         
+        function clearDistrictSelection() { selectedDistricts.clear(); updateDistrictList(); render(); }
+        
         window.initMap = function() {
             map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: 24.7136, lng: 46.6753 },
-                zoom: 11,
-                mapTypeControl: true,
-                gestureHandling: 'greedy'
+                center: {lat: 24.7136, lng: 46.6753}, zoom: 11,
+                mapTypeControl: true, gestureHandling: 'greedy'
             });
-            
             map.addListener('idle', render);
             window.addEventListener('resize', render);
         }
     </script>
-    
     <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js?callback=initMap" async defer></script>
 </body>
 </html>
