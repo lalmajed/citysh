@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Riyadh Buildings Map - All 866K Footprints</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, width=device-width">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; }
+        #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+        
+        .panel {
+            position: absolute; top: 10px; left: 10px;
+            background: white; padding: 12px; border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 1000;
+            max-width: 340px; max-height: 95vh; overflow-y: auto; font-size: 12px;
+        }
+        .panel h2 { color: #1a73e8; margin-bottom: 8px; font-size: 15px; }
+        
+        .section { margin: 8px 0; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+        .section-header {
+            background: #f5f5f5; padding: 8px 10px; cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: 600; font-size: 12px;
+        }
+        .section-header:hover { background: #e8e8e8; }
+        .section-content { padding: 8px; display: none; }
+        .section-content.open { display: block; }
+        
+        .file-input { margin: 5px 0; }
+        .file-input label { display: block; font-weight: 600; font-size: 11px; margin-bottom: 3px; }
+        .file-input input { font-size: 10px; width: 100%; }
+        .file-status { font-size: 10px; color: #666; margin-top: 3px; }
+        .file-status.loaded { color: #34a853; font-weight: bold; }
+        
+        .count-row { display: flex; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
+        .count-box { flex: 1; min-width: 70px; padding: 8px; border-radius: 6px; text-align: center; color: white; }
+        .count-box.bldg { background: #9c27b0; }
+        .count-box.apt { background: #e74c3c; }
+        .count-box.villa { background: #27ae60; }
+        .count-box.land { background: #3498db; }
+        .count-box .num { font-size: 1.3em; font-weight: bold; }
+        .count-box .lbl { font-size: 9px; opacity: 0.9; }
+        
+        .toggle-row { display: flex; align-items: center; gap: 6px; padding: 5px; cursor: pointer; border-radius: 4px; }
+        .toggle-row:hover { background: #f5f5f5; }
+        .toggle-row input { margin: 0; }
+        .toggle-dot { width: 12px; height: 12px; border-radius: 50%; }
+        
+        .district-list { max-height: 250px; overflow-y: auto; }
+        .district-item { padding: 6px; margin: 3px 0; background: #f9f9f9; border-radius: 4px; cursor: pointer; font-size: 11px; display: flex; align-items: center; gap: 6px; }
+        .district-item:hover { background: #fff3e0; }
+        .district-item.selected { background: #ff9800; color: white; }
+        .district-item input { margin: 0; }
+        .district-item .info { flex: 1; }
+        .district-item .name { font-weight: 600; }
+        .district-item .counts { color: #666; font-size: 10px; }
+        
+        .legend { margin-top: 8px; padding: 8px; background: #f5f5f5; border-radius: 6px; }
+        .legend h4 { font-size: 11px; color: #666; margin-bottom: 5px; }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 10px; padding: 2px 0; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+        
+        #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 450; }
+        
+        input[type="range"] { width: 100%; }
+        .search-box { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; margin-bottom: 5px; }
+        
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8); z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 18px; flex-direction: column; gap: 20px;
+        }
+        .loading-overlay.hidden { display: none; }
+        .progress-bar { width: 300px; height: 20px; background: #333; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #4CAF50; transition: width 0.3s; }
+        .btn { padding: 8px 12px; margin: 3px; cursor: pointer; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; }
+        .btn:hover { background: #f0f0f0; }
+        .btn-primary { background: #1a73e8; color: white; border: none; }
+        .btn-primary:hover { background: #1557b0; }
+    </style>
+</head>
+<body>
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div id="loadingTitle">Loading Buildings...</div>
+        <div class="progress-bar"><div id="progressFill" class="progress-fill" style="width: 0%"></div></div>
+        <div id="loadingStatus">Initializing...</div>
+    </div>
+    
+    <div id="map"></div>
+    <canvas id="canvas"></canvas>
+    
+    <div class="panel">
+        <h2>Riyadh Buildings Map</h2>
+        <p style="font-size:10px;color:#666;margin-bottom:8px;">MS Building Footprints + Apartments + Land Use</p>
+        
+        <!-- Summary -->
+        <div class="count-row">
+            <div class="count-box bldg"><div class="num" id="bldgCount">0</div><div class="lbl">Buildings</div></div>
+            <div class="count-box apt"><div class="num" id="aptCount">0</div><div class="lbl">Apartments</div></div>
+        </div>
+        <div class="count-row">
+            <div class="count-box villa"><div class="num" id="villaCount">0</div><div class="lbl">Villas (LU)</div></div>
+            <div class="count-box land"><div class="num" id="aptLUCount">0</div><div class="lbl">Apts (LU)</div></div>
+        </div>
+        
+        <!-- Data Files Section -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                Data Files <span>v</span>
+            </div>
+            <div class="section-content open">
+                <div class="file-input">
+                    <label>MS Buildings JSON (866K footprints):</label>
+                    <input type="file" id="buildingsFile" accept=".json">
+                    <div id="buildingsStatus" class="file-status">Load riyadh_ms_buildings_all.json</div>
+                </div>
+                <div class="file-input">
+                    <label>Apartments CSV:</label>
+                    <input type="file" id="aptFile" accept=".csv">
+                    <div id="aptStatus" class="file-status">Load riyadh_apartments (3).csv</div>
+                </div>
+                <div class="file-input">
+                    <label>Land Use CSV (for comparison):</label>
+                    <input type="file" id="landFile" accept=".csv">
+                    <div id="landStatus" class="file-status">Load RIYADH_ALL_PARCELS_COMPLETE.csv</div>
+                </div>
+                <div class="file-input">
+                    <label>Districts JSON:</label>
+                    <input type="file" id="distFile" accept=".json">
+                    <div id="distStatus" class="file-status">Load riyadh_districts.json</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Layers Section -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                Layers <span>v</span>
+            </div>
+            <div class="section-content open">
+                <label class="toggle-row">
+                    <input type="checkbox" id="showBuildings" checked>
+                    <span class="toggle-dot" style="background:#9c27b0;"></span>
+                    <span>MS Building Footprints</span>
+                </label>
+                <label class="toggle-row">
+                    <input type="checkbox" id="showApartments" checked>
+                    <span class="toggle-dot" style="background:#e74c3c;"></span>
+                    <span>Apartments</span>
+                </label>
+                <label class="toggle-row">
+                    <input type="checkbox" id="showLandUse" checked>
+                    <span class="toggle-dot" style="background:#27ae60;"></span>
+                    <span>Land Use Parcels</span>
+                </label>
+                <label class="toggle-row">
+                    <input type="checkbox" id="showDistricts" checked>
+                    <span class="toggle-dot" style="background:#ff9800;"></span>
+                    <span>District Boundaries</span>
+                </label>
+                <label class="toggle-row">
+                    <input type="checkbox" id="showPolygons">
+                    <span class="toggle-dot" style="background:#3388ff;"></span>
+                    <span>Building Polygons (zoom 16+)</span>
+                </label>
+                
+                <div style="margin-top:8px;">
+                    <label style="font-size:11px;">Dot Size: <span id="dotSizeVal">3</span></label>
+                    <input type="range" id="dotSize" min="1" max="10" value="3" step="0.5">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Land Use Codes Section -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                Land Use Codes (<span id="codeCount">0</span>) <span>v</span>
+            </div>
+            <div class="section-content">
+                <div style="display:flex; gap:5px; margin-bottom:5px;">
+                    <button onclick="selectAllCodes()" style="flex:1; padding:4px; font-size:10px; cursor:pointer;">Select All</button>
+                    <button onclick="clearAllCodes()" style="flex:1; padding:4px; font-size:10px; cursor:pointer;">Clear All</button>
+                    <button onclick="selectVillasOnly()" style="flex:1; padding:4px; font-size:10px; cursor:pointer;">Villas Only</button>
+                </div>
+                <input type="text" class="search-box" id="codeSearch" placeholder="Search codes...">
+                <div id="landCodeFilters" style="max-height:200px;overflow-y:auto;font-size:11px;color:#666;">Load land use CSV first</div>
+            </div>
+        </div>
+        
+        <!-- Districts Section -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                Districts (<span id="districtCount">0</span>) <span>v</span>
+            </div>
+            <div class="section-content">
+                <div style="display:flex; gap:5px; margin-bottom:5px;">
+                    <button onclick="selectAllDistricts()" style="flex:1; padding:4px; font-size:10px; cursor:pointer;">Select All</button>
+                    <button onclick="clearAllDistricts()" style="flex:1; padding:4px; font-size:10px; cursor:pointer;">Clear All</button>
+                </div>
+                <input type="text" class="search-box" id="districtSearch" placeholder="Search districts...">
+                <div class="district-list" id="districtList"></div>
+            </div>
+        </div>
+        
+        <!-- Stats Section -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                Visible Stats <span>v</span>
+            </div>
+            <div class="section-content open">
+                <div id="visibleStats" style="font-size:11px;">
+                    <div>Load data files to see stats</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Legend -->
+        <div class="legend">
+            <h4>Legend</h4>
+            <div class="legend-item"><div class="legend-dot" style="background:#9c27b0;"></div> MS Building Footprint</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#e74c3c;"></div> Apartment Listing</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#27ae60;"></div> Villa (Land Use 1000/1012)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#0077b6;"></div> Apartment (Land Use 7510)</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ff9800;"></div> District Boundary</div>
+        </div>
+        
+        <div style="margin-top:8px;font-size:10px;color:#888;">
+            Zoom: <span id="zoomLevel">0</span> | Visible: <span id="visibleCount">0</span>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let buildings = [];
+        let apartments = [];
+        let parcels = [];
+        let districts = [];
+        let districtVillaAnalysis = {};
+        let allCodeCounts = {};
+        let selectedCodes = new Set();
+        let selectedDistricts = new Set();
+        let dotSize = 3;
+        
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        const landUseCodes = {
+            '1000': { color: '#27ae60', name: 'Villas' },
+            '1012': { color: '#27ae60', name: 'Villas' },
+            '7510': { color: '#0077b6', name: 'Apartments' },
+            '2000': { color: '#ea4335', name: 'Commercial' },
+            '2285': { color: '#ff9800', name: 'Commercial Area' },
+            '2633': { color: '#795548', name: 'Industrial' },
+        };
+        
+        function getCodeColor(code) {
+            if (landUseCodes[code]) return landUseCodes[code].color;
+            const num = parseInt(code) || 0;
+            return `hsl(${(num * 137) % 360}, 60%, 50%)`;
+        }
+        
+        function toggleSection(header) {
+            const content = header.nextElementSibling;
+            const arrow = header.querySelector('span:last-child');
+            content.classList.toggle('open');
+            arrow.textContent = content.classList.contains('open') ? 'v' : '>';
+        }
+        
+        function showLoading(title) {
+            document.getElementById('loadingTitle').textContent = title;
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+        
+        function setLoadingStatus(msg, pct) {
+            document.getElementById('loadingStatus').textContent = msg;
+            document.getElementById('progressFill').style.width = pct + '%';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+        
+        function render() {
+            if (!map) return;
+            const bounds = map.getBounds();
+            if (!bounds) return;
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const proj = map.getProjection();
+            if (!proj) return;
+            
+            const zoom = map.getZoom();
+            document.getElementById('zoomLevel').textContent = zoom.toFixed(1);
+            
+            const topRight = proj.fromLatLngToPoint(bounds.getNorthEast());
+            const bottomLeft = proj.fromLatLngToPoint(bounds.getSouthWest());
+            const scale = Math.pow(2, zoom);
+            const baseRadius = Math.max(1.5, zoom - 9) * dotSize / 3;
+            
+            const showBldg = document.getElementById('showBuildings').checked;
+            const showApt = document.getElementById('showApartments').checked;
+            const showLand = document.getElementById('showLandUse').checked;
+            const showDist = document.getElementById('showDistricts').checked;
+            const showPolygons = document.getElementById('showPolygons').checked && zoom >= 16;
+            
+            let visibleBuildings = 0, visibleApartments = 0, visibleParcels = 0;
+            
+            // Draw district boundaries
+            if (showDist && districts.length > 0) {
+                const showAll = selectedDistricts.size === 0;
+                districts.forEach(d => {
+                    if (!showAll && !selectedDistricts.has(d.name_en)) return;
+                    const boundary = d.boundaries?.[0];
+                    if (!boundary || boundary.length < 3) return;
+                    
+                    if (selectedDistricts.has(d.name_en)) {
+                        ctx.beginPath();
+                        let first = true;
+                        boundary.forEach(([lat, lon]) => {
+                            const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                            const x = (w.x - bottomLeft.x) * scale;
+                            const y = (w.y - topRight.y) * scale;
+                            if (first) { ctx.moveTo(x, y); first = false; }
+                            else ctx.lineTo(x, y);
+                        });
+                        ctx.closePath();
+                        ctx.fillStyle = 'rgba(255, 152, 0, 0.15)';
+                        ctx.fill();
+                    }
+                    
+                    ctx.beginPath();
+                    let first = true;
+                    boundary.forEach(([lat, lon]) => {
+                        const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                        const x = (w.x - bottomLeft.x) * scale;
+                        const y = (w.y - topRight.y) * scale;
+                        if (first) { ctx.moveTo(x, y); first = false; }
+                        else ctx.lineTo(x, y);
+                    });
+                    ctx.closePath();
+                    ctx.strokeStyle = selectedDistricts.has(d.name_en) ? '#e65100' : '#ff9800';
+                    ctx.lineWidth = selectedDistricts.has(d.name_en) ? 2 : 1;
+                    ctx.globalAlpha = showAll ? 0.4 : 0.8;
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
+                });
+            }
+            
+            // Draw MS buildings
+            if (showBldg && buildings.length > 0) {
+                ctx.globalAlpha = 0.5;
+                buildings.forEach(b => {
+                    const lat = b[0], lon = b[1];
+                    if (lat < bounds.getSouthWest().lat() || lat > bounds.getNorthEast().lat() ||
+                        lon < bounds.getSouthWest().lng() || lon > bounds.getNorthEast().lng()) return;
+                    
+                    visibleBuildings++;
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    
+                    if (showPolygons && b[2] && b[2].length > 2) {
+                        ctx.beginPath();
+                        let first = true;
+                        b[2].forEach(coord => {
+                            const pw = proj.fromLatLngToPoint(new google.maps.LatLng(coord[1], coord[0]));
+                            const px = (pw.x - bottomLeft.x) * scale;
+                            const py = (pw.y - topRight.y) * scale;
+                            if (first) { ctx.moveTo(px, py); first = false; }
+                            else ctx.lineTo(px, py);
+                        });
+                        ctx.closePath();
+                        ctx.fillStyle = 'rgba(51, 136, 255, 0.4)';
+                        ctx.fill();
+                        ctx.strokeStyle = '#3388ff';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(x, y, baseRadius * 0.6, 0, 2 * Math.PI);
+                        ctx.fillStyle = '#9c27b0';
+                        ctx.fill();
+                    }
+                });
+                ctx.globalAlpha = 1;
+            }
+            
+            // Draw land use parcels
+            if (showLand && parcels.length > 0) {
+                ctx.globalAlpha = 0.6;
+                parcels.forEach(p => {
+                    if (selectedCodes.size > 0 && !selectedCodes.has(p.code)) return;
+                    if (p.lat < bounds.getSouthWest().lat() || p.lat > bounds.getNorthEast().lat() ||
+                        p.lon < bounds.getSouthWest().lng() || p.lon > bounds.getNorthEast().lng()) return;
+                    
+                    visibleParcels++;
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, baseRadius * 0.5, 0, 2 * Math.PI);
+                    ctx.fillStyle = getCodeColor(p.code);
+                    ctx.fill();
+                });
+                ctx.globalAlpha = 1;
+            }
+            
+            // Draw apartments
+            if (showApt && apartments.length > 0) {
+                apartments.forEach(a => {
+                    if (a.lat < bounds.getSouthWest().lat() || a.lat > bounds.getNorthEast().lat() ||
+                        a.lon < bounds.getSouthWest().lng() || a.lon > bounds.getNorthEast().lng()) return;
+                    
+                    visibleApartments++;
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(a.lat, a.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, baseRadius, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#e74c3c';
+                    ctx.globalAlpha = 0.8;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                });
+            }
+            
+            document.getElementById('visibleCount').textContent = 
+                `${visibleBuildings.toLocaleString()} bldg, ${visibleApartments} apt, ${visibleParcels} land`;
+            
+            updateVisibleStats(visibleBuildings, visibleApartments, visibleParcels);
+        }
+        
+        function updateVisibleStats(bldg, apt, parc) {
+            const stats = document.getElementById('visibleStats');
+            let html = `<div><b>In View:</b></div>`;
+            html += `<div>Buildings: ${bldg.toLocaleString()}</div>`;
+            html += `<div>Apartments: ${apt.toLocaleString()}</div>`;
+            html += `<div>Land Parcels: ${parc.toLocaleString()}</div>`;
+            stats.innerHTML = html;
+        }
+        
+        function parseCSVLine(line) {
+            const vals = [];
+            let inQuote = false, current = '';
+            for (let c of line) {
+                if (c === '"') inQuote = !inQuote;
+                else if (c === ',' && !inQuote) { vals.push(current.trim()); current = ''; }
+                else current += c;
+            }
+            vals.push(current.trim());
+            return vals;
+        }
+        
+        // File loaders
+        document.getElementById('buildingsFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            showLoading('Loading Buildings...');
+            setLoadingStatus('Reading file...', 10);
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                setLoadingStatus('Parsing JSON...', 50);
+                buildings = JSON.parse(evt.target.result);
+                document.getElementById('bldgCount').textContent = buildings.length.toLocaleString();
+                document.getElementById('buildingsStatus').textContent = `Loaded ${buildings.length.toLocaleString()} buildings`;
+                document.getElementById('buildingsStatus').classList.add('loaded');
+                setLoadingStatus('Done!', 100);
+                setTimeout(hideLoading, 300);
+                render();
+            };
+            reader.readAsText(file);
+        });
+        
+        document.getElementById('aptFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            document.getElementById('aptStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const lines = evt.target.result.trim().split('\n');
+                const headers = lines[0].toLowerCase().split(',');
+                const latI = headers.findIndex(h => h.includes('lat'));
+                const lonI = headers.findIndex(h => h.includes('lon'));
+                
+                apartments = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const vals = parseCSVLine(lines[i]);
+                    const lat = parseFloat(vals[latI]);
+                    const lon = parseFloat(vals[lonI]);
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                        apartments.push({ lat, lon });
+                    }
+                }
+                
+                document.getElementById('aptCount').textContent = apartments.length.toLocaleString();
+                document.getElementById('aptStatus').textContent = `Loaded ${apartments.length.toLocaleString()} apartments`;
+                document.getElementById('aptStatus').classList.add('loaded');
+                render();
+            };
+            reader.readAsText(file);
+        });
+        
+        document.getElementById('landFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            showLoading('Loading Land Use Data...');
+            setLoadingStatus('Reading file...', 10);
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                setLoadingStatus('Parsing CSV...', 30);
+                const lines = evt.target.result.trim().split('\n');
+                const headers = lines[0].toLowerCase().split(',');
+                const latI = headers.findIndex(h => h.includes('lat'));
+                const lonI = headers.findIndex(h => h.includes('lon'));
+                const codeI = headers.findIndex(h => h.includes('code') || h.includes('land_use'));
+                
+                parcels = [];
+                allCodeCounts = {};
+                selectedCodes.clear();
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (i % 100000 === 0) setLoadingStatus(`Processing ${i.toLocaleString()} / ${lines.length.toLocaleString()}...`, 30 + (i/lines.length * 60));
+                    const vals = parseCSVLine(lines[i]);
+                    const lat = parseFloat(vals[latI]);
+                    const lon = parseFloat(vals[lonI]);
+                    const code = vals[codeI];
+                    if (!isNaN(lat) && !isNaN(lon) && code) {
+                        parcels.push({ lat, lon, code });
+                        allCodeCounts[code] = (allCodeCounts[code] || 0) + 1;
+                    }
+                }
+                
+                // Count villas and apartments
+                let villaCount = 0, aptLUCount = 0;
+                Object.entries(allCodeCounts).forEach(([code, count]) => {
+                    if (code === '1000' || code === '1012') villaCount += count;
+                    if (code === '7510') aptLUCount += count;
+                });
+                document.getElementById('villaCount').textContent = villaCount.toLocaleString();
+                document.getElementById('aptLUCount').textContent = aptLUCount.toLocaleString();
+                
+                Object.keys(allCodeCounts).forEach(code => selectedCodes.add(code));
+                updateCodeFilters();
+                
+                document.getElementById('landStatus').textContent = `Loaded ${parcels.length.toLocaleString()} parcels`;
+                document.getElementById('landStatus').classList.add('loaded');
+                document.getElementById('codeCount').textContent = Object.keys(allCodeCounts).length;
+                setLoadingStatus('Done!', 100);
+                setTimeout(hideLoading, 300);
+                render();
+            };
+            reader.readAsText(file);
+        });
+        
+        document.getElementById('distFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                districts = JSON.parse(evt.target.result);
+                document.getElementById('distStatus').textContent = `Loaded ${districts.length} districts`;
+                document.getElementById('distStatus').classList.add('loaded');
+                updateDistrictList();
+                render();
+            };
+            reader.readAsText(file);
+        });
+        
+        // Event listeners
+        document.getElementById('dotSize').addEventListener('input', e => {
+            dotSize = parseFloat(e.target.value);
+            document.getElementById('dotSizeVal').textContent = dotSize;
+            render();
+        });
+        
+        ['showBuildings', 'showApartments', 'showLandUse', 'showDistricts', 'showPolygons'].forEach(id => {
+            document.getElementById(id).addEventListener('change', render);
+        });
+        
+        document.getElementById('districtSearch').addEventListener('input', updateDistrictList);
+        document.getElementById('codeSearch').addEventListener('input', updateCodeFilters);
+        
+        function updateDistrictList() {
+            const list = document.getElementById('districtList');
+            const search = document.getElementById('districtSearch').value.toLowerCase();
+            
+            let html = '';
+            const filtered = districts.filter(d => 
+                d.name_en.toLowerCase().includes(search) || 
+                (d.name_ar && d.name_ar.includes(search))
+            );
+            
+            filtered.slice(0, 100).forEach(d => {
+                const isSelected = selectedDistricts.has(d.name_en);
+                const escapedName = d.name_en.replace(/'/g, "\\'");
+                
+                html += `<div class="district-item ${isSelected ? 'selected' : ''}">
+                    <input type="checkbox" ${isSelected ? 'checked' : ''} onclick="toggleDistrict('${escapedName}', event)">
+                    <div class="info" onclick="zoomToDistrict('${escapedName}')">
+                        <div class="name">${d.name_en}</div>
+                    </div>
+                </div>`;
+            });
+            
+            list.innerHTML = html || '<div style="color:#999;padding:10px;">Load districts JSON</div>';
+            document.getElementById('districtCount').textContent = districts.length;
+        }
+        
+        function toggleDistrict(name, event) {
+            event.stopPropagation();
+            if (selectedDistricts.has(name)) selectedDistricts.delete(name);
+            else selectedDistricts.add(name);
+            updateDistrictList();
+            render();
+        }
+        
+        function selectAllDistricts() {
+            districts.forEach(d => selectedDistricts.add(d.name_en));
+            updateDistrictList();
+            render();
+        }
+        
+        function clearAllDistricts() {
+            selectedDistricts.clear();
+            updateDistrictList();
+            render();
+        }
+        
+        function zoomToDistrict(name) {
+            const d = districts.find(x => x.name_en === name);
+            if (!d || !d.boundaries?.[0]) return;
+            
+            selectedDistricts.clear();
+            selectedDistricts.add(name);
+            updateDistrictList();
+            
+            const bounds = new google.maps.LatLngBounds();
+            d.boundaries[0].forEach(([lat, lon]) => {
+                bounds.extend(new google.maps.LatLng(lat, lon));
+            });
+            map.fitBounds(bounds);
+            render();
+        }
+        
+        function updateCodeFilters() {
+            const filterDiv = document.getElementById('landCodeFilters');
+            const search = (document.getElementById('codeSearch').value || '').toLowerCase();
+            
+            if (Object.keys(allCodeCounts).length === 0) {
+                filterDiv.innerHTML = '<div style="color:#666;">Load land use CSV first</div>';
+                return;
+            }
+            
+            let html = '';
+            const sorted = Object.entries(allCodeCounts).sort((a,b) => b[1] - a[1]);
+            
+            sorted.forEach(([code, count]) => {
+                const info = landUseCodes[code] || { name: code, color: getCodeColor(code) };
+                const label = `${code}: ${info.name}`;
+                if (search && !label.toLowerCase().includes(search)) return;
+                
+                const isSelected = selectedCodes.has(code);
+                html += `<label class="toggle-row" style="${isSelected ? 'background:#e3f2fd;' : ''}">
+                    <input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleCode('${code}')">
+                    <span class="toggle-dot" style="background:${info.color};"></span>
+                    <span style="flex:1;">${code}: ${info.name}</span>
+                    <span style="color:#666;">${count.toLocaleString()}</span>
+                </label>`;
+            });
+            
+            filterDiv.innerHTML = html;
+        }
+        
+        function toggleCode(code) {
+            if (selectedCodes.has(code)) selectedCodes.delete(code);
+            else selectedCodes.add(code);
+            updateCodeFilters();
+            render();
+        }
+        
+        function selectAllCodes() {
+            Object.keys(allCodeCounts).forEach(code => selectedCodes.add(code));
+            updateCodeFilters();
+            render();
+        }
+        
+        function clearAllCodes() {
+            selectedCodes.clear();
+            updateCodeFilters();
+            render();
+        }
+        
+        function selectVillasOnly() {
+            selectedCodes.clear();
+            selectedCodes.add('1000');
+            selectedCodes.add('1012');
+            updateCodeFilters();
+            render();
+        }
+        
+        window.initMap = function() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 24.7136, lng: 46.6753 },
+                zoom: 11,
+                mapTypeControl: true,
+                gestureHandling: 'greedy'
+            });
+            
+            map.addListener('idle', render);
+            window.addEventListener('resize', render);
+        }
+    </script>
+    
+    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js?callback=initMap" async defer></script>
+</body>
+</html>
