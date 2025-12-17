@@ -299,7 +299,8 @@
             'office:government': { color: '#8B0000', name: 'Government', emoji: '🏛️' },
             'office:telecommunication': { color: '#FF4500', name: 'Telecom', emoji: '📡' },
             'office': { color: '#B22222', name: 'Office', emoji: '🏢' },
-            // Amenity categories
+            'local_government_office': { color: '#8B0000', name: 'Government', emoji: '🏛️' },
+            // Amenity categories (OSM style)
             'amenity:restaurant': { color: '#FF6347', name: 'Restaurant', emoji: '🍽️' },
             'amenity:fast_food': { color: '#FF7F50', name: 'Fast Food', emoji: '🍔' },
             'amenity:cafe': { color: '#D2691E', name: 'Cafe', emoji: '☕' },
@@ -315,7 +316,7 @@
             'amenity:fuel': { color: '#FF8C00', name: 'Fuel Station', emoji: '⛽' },
             'amenity:car_wash': { color: '#00CED1', name: 'Car Wash', emoji: '🚗' },
             'amenity': { color: '#20B2AA', name: 'Amenity', emoji: '🏪' },
-            // Shop categories
+            // Shop categories (OSM style)
             'shop:supermarket': { color: '#00BFFF', name: 'Supermarket', emoji: '🛒' },
             'shop:mall': { color: '#1E90FF', name: 'Mall', emoji: '🏬' },
             'shop:jewelry': { color: '#FFD700', name: 'Jewelry', emoji: '💎' },
@@ -324,15 +325,45 @@
             'shop:hardware': { color: '#808000', name: 'Hardware', emoji: '🔨' },
             'shop:travel_agency': { color: '#00FA9A', name: 'Travel', emoji: '✈️' },
             'shop': { color: '#87CEEB', name: 'Shop', emoji: '🛍️' },
-            // Tourism
+            // Tourism (OSM style)
             'tourism:hotel': { color: '#9932CC', name: 'Hotel', emoji: '🏨' },
             'tourism:apartment': { color: '#8A2BE2', name: 'Apartment', emoji: '🏢' },
             'tourism': { color: '#9370DB', name: 'Tourism', emoji: '🗺️' },
-            // Leisure
+            // Leisure (OSM style)
             'leisure:park': { color: '#228B22', name: 'Park', emoji: '🌳' },
             'leisure': { color: '#32CD32', name: 'Leisure', emoji: '🎡' },
             // Place (generic)
-            'place': { color: '#A9A9A9', name: 'Place/Street', emoji: '📍' }
+            'place': { color: '#A9A9A9', name: 'Place/Street', emoji: '📍' },
+            
+            // Google Places types (direct)
+            'restaurant': { color: '#FF6347', name: 'Restaurant', emoji: '🍽️' },
+            'food': { color: '#FF7F50', name: 'Food', emoji: '🍔' },
+            'cafe': { color: '#D2691E', name: 'Cafe', emoji: '☕' },
+            'electronics_store': { color: '#4169E1', name: 'Electronics', emoji: '📱' },
+            'shopping_mall': { color: '#1E90FF', name: 'Mall', emoji: '🏬' },
+            'clothing_store': { color: '#FF69B4', name: 'Clothing', emoji: '👕' },
+            'supermarket': { color: '#00BFFF', name: 'Supermarket', emoji: '🛒' },
+            'grocery_or_supermarket': { color: '#00BFFF', name: 'Grocery', emoji: '🛒' },
+            'store': { color: '#87CEEB', name: 'Store', emoji: '🏪' },
+            'point_of_interest': { color: '#FF8C00', name: 'Point of Interest', emoji: '📍' },
+            'establishment': { color: '#808080', name: 'Establishment', emoji: '🏢' },
+            'lodging': { color: '#9932CC', name: 'Lodging', emoji: '🏨' },
+            'mosque': { color: '#9400D3', name: 'Mosque', emoji: '🕌' },
+            'bank': { color: '#DAA520', name: 'Bank', emoji: '🏦' },
+            'atm': { color: '#FFD700', name: 'ATM', emoji: '🏧' },
+            'gas_station': { color: '#FF8C00', name: 'Gas Station', emoji: '⛽' },
+            'car_repair': { color: '#4682B4', name: 'Car Repair', emoji: '🔧' },
+            'car_dealer': { color: '#5F9EA0', name: 'Car Dealer', emoji: '🚗' },
+            'pharmacy': { color: '#00CED1', name: 'Pharmacy', emoji: '💊' },
+            'hospital': { color: '#DC143C', name: 'Hospital', emoji: '🏥' },
+            'school': { color: '#32CD32', name: 'School', emoji: '🏫' },
+            'park': { color: '#228B22', name: 'Park', emoji: '🌳' },
+            'gym': { color: '#FF4500', name: 'Gym', emoji: '🏋️' },
+            'beauty_salon': { color: '#FF69B4', name: 'Beauty Salon', emoji: '💇' },
+            'hair_care': { color: '#FF69B4', name: 'Hair Care', emoji: '💇' },
+            'jewelry_store': { color: '#FFD700', name: 'Jewelry', emoji: '💎' },
+            'furniture_store': { color: '#8B4513', name: 'Furniture', emoji: '🪑' },
+            'home_goods_store': { color: '#A0522D', name: 'Home Goods', emoji: '🏠' }
         };
         
         function getPoiColor(category, subcategory) {
@@ -825,17 +856,35 @@
                     // Show category toggles
                     const catDiv = document.getElementById('poiCategories');
                     catDiv.style.display = 'block';
-                    let html = '<div style="margin-bottom:3px;"><button onclick="toggleAllPOI(true)" style="font-size:8px;padding:1px 3px;">All</button> <button onclick="toggleAllPOI(false)" style="font-size:8px;padding:1px 3px;">None</button></div>';
+                    catDiv.innerHTML = '<div style="margin-bottom:3px;"><button id="poiAllBtn" style="font-size:8px;padding:1px 3px;">All</button> <button id="poiNoneBtn" style="font-size:8px;padding:1px 3px;">None</button></div>';
+                    
+                    document.getElementById('poiAllBtn').onclick = () => toggleAllPOI(true);
+                    document.getElementById('poiNoneBtn').onclick = () => toggleAllPOI(false);
                     
                     Object.entries(catCounts).sort((a,b) => b[1] - a[1]).forEach(([key, count]) => {
                         const info = getPoiInfo(key.split(':')[0], key.split(':')[1]);
-                        html += `<label style="display:flex;align-items:center;gap:3px;font-size:9px;cursor:pointer;">
-                            <input type="checkbox" checked data-poicat="${key}" onchange="togglePOICat('${key}',this.checked)">
-                            <span style="width:8px;height:8px;border-radius:50%;background:${info.color};"></span>
-                            ${info.emoji} ${info.name} (${count})
-                        </label>`;
+                        const label = document.createElement('label');
+                        label.style.cssText = 'display:flex;align-items:center;gap:3px;font-size:9px;cursor:pointer;';
+                        
+                        const cb = document.createElement('input');
+                        cb.type = 'checkbox';
+                        cb.checked = true;
+                        cb.dataset.poicat = key;
+                        cb.addEventListener('change', function() {
+                            poiVisible[key] = this.checked;
+                            render();
+                        });
+                        
+                        const dot = document.createElement('span');
+                        dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:${info.color};`;
+                        
+                        const text = document.createTextNode(` ${info.emoji} ${info.name} (${count})`);
+                        
+                        label.appendChild(cb);
+                        label.appendChild(dot);
+                        label.appendChild(text);
+                        catDiv.appendChild(label);
                     });
-                    catDiv.innerHTML = html;
                     
                     hideLoading();
                     render();
