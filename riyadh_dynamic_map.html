@@ -91,6 +91,11 @@
 <body>
     <div id="map"></div>
     <canvas id="canvas"></canvas>
+    <div id="mapError" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:30px; border-radius:10px; box-shadow:0 4px 20px rgba(0,0,0,0.3); z-index:9999; text-align:center;">
+        <h3 style="color:#d32f2f;">⚠️ Map Loading Issue</h3>
+        <p style="margin:10px 0; color:#666;">Google Maps API may be blocked.</p>
+        <button onclick="location.reload()" style="padding:10px 20px; background:#1a73e8; color:white; border:none; border-radius:5px; cursor:pointer;">Retry</button>
+    </div>
     
     <!-- District Stats Panel -->
     <div id="districtPanel" class="district-panel">
@@ -756,6 +761,16 @@
             map.setCenter({ lat: 24.7136, lng: 46.6753 });
             map.setZoom(11);
         }
+        
+        // Wait for Google Maps to load
+        window.initMap = initMap;
+        
+        // Check if map loaded after 10 seconds
+        setTimeout(function() {
+            if (!map) {
+                document.getElementById('mapError').style.display = 'block';
+            }
+        }, 10000);
     </script>
     <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js?callback=initMap" async defer></script>
 </body>
