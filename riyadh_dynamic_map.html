@@ -313,13 +313,14 @@
 
     <script>
         let map;
-        let buildings = [];    // [[lat, lng], ...]
+        let buildings = [];    // GeoJSON features with polygon coordinates
         let parcels = [];      // {lat, lng, type: 'apt'|'villa'|'other', ...}
         let poiData = [];      // {lat, lng, layer, name_ar, name_en}
         let districts = [];    // GeoJSON features
         let selectedDistrict = null;
         let activePoiCategories = new Set();
         let infoPopup = null;
+        let buildingsFileName = '';
         
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -482,16 +483,36 @@
                 });
             }
             
-            // Draw buildings
+            // Draw buildings as polygons
             if (showBldg && buildings.length) {
-                ctx.fillStyle = '#9c27b0';
+                ctx.strokeStyle = '#9c27b0';
+                ctx.lineWidth = bldgSize;
                 ctx.globalAlpha = bldgOpacity;
+                
                 buildings.forEach(b => {
-                    if (b[0] < sw.lat() || b[0] > ne.lat() || b[1] < sw.lng() || b[1] > ne.lng()) return;
+                    const coords = b.geometry?.coordinates?.[0];
+                    if (!coords || coords.length < 3) return;
+                    
+                    // Quick bounds check using first coordinate
+                    const [firstLon, firstLat] = coords[0];
+                    if (firstLat < sw.lat() - 0.01 || firstLat > ne.lat() + 0.01 ||
+                        firstLon < sw.lng() - 0.01 || firstLon > ne.lng() + 0.01) return;
+                    
                     viewBldg++;
-                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(b[0], b[1]));
-                    const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
-                    ctx.beginPath(); ctx.arc(x, y, bldgSize, 0, Math.PI * 2); ctx.fill();
+                    
+                    ctx.fillStyle = 'rgba(156, 39, 176, 0.3)';
+                    ctx.beginPath();
+                    
+                    coords.forEach(([lon, lat], i) => {
+                        const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                        const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    });
+                    
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
                 });
                 ctx.globalAlpha = 1;
             }
@@ -568,7 +589,11 @@
             let bldg = 0, apt = 0, villa = 0, other = 0, poi = 0;
             
             buildings.forEach(b => {
-                if (pointInPolygon(b[0], b[1], poly)) bldg++;
+                const coords = b.geometry?.coordinates?.[0];
+                if (!coords || coords.length === 0) return;
+                // Use first coordinate of building polygon for point-in-polygon check
+                const [lon, lat] = coords[0];
+                if (pointInPolygon(lat, lon, poly)) bldg++;
             });
             
             parcels.forEach(p => {
@@ -603,19 +628,54 @@
         document.getElementById('buildingsFile').addEventListener('change', function(e) {
             const file = e.target.files[0]; if (!file) return;
             showLoading('Loading Buildings...');
+            buildingsFileName = file.name;
             
             const reader = new FileReader();
             reader.onload = function(evt) {
-                buildings = JSON.parse(evt.target.result);
+                const data = JSON.parse(evt.target.result);
+                
+                // Handle different formats:
+                // 1. GeoJSON FeatureCollection
+                // 2. Array of features
+                // 3. Array of [lat, lng] (convert to simple markers)
+                if (data.type === 'FeatureCollection' && data.features) {
+                    buildings = data.features.filter(f => 
+                        f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon')
+                    );
+                } else if (Array.isArray(data) && data[0]?.geometry) {
+                    buildings = data.filter(f => 
+                        f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon')
+                    );
+                } else if (Array.isArray(data) && Array.isArray(data[0])) {
+                    // Array of [lat, lng] - convert to fake polygon for backwards compatibility
+                    buildings = data.map(([lat, lng]) => ({
+                        geometry: {
+                            type: 'Polygon',
+                            coordinates: [[[lng, lat], [lng+0.00005, lat], [lng+0.00005, lat+0.00005], [lng, lat+0.00005], [lng, lat]]]
+                        }
+                    }));
+                } else {
+                    buildings = [];
+                }
+                
                 document.getElementById('totalBldg').textContent = buildings.length.toLocaleString();
-                document.getElementById('buildingsStatus').textContent = `✓ ${buildings.length.toLocaleString()} loaded`;
+                document.getElementById('buildingsStatus').innerHTML = `✓ <b>${file.name}</b><br>${buildings.length.toLocaleString()} building polygons loaded`;
                 document.getElementById('buildingsStatus').classList.add('loaded');
                 hideLoading();
+                showToast(`🏗️ Loaded ${buildings.length.toLocaleString()} buildings`, '#9c27b0');
                 calculateDistrictStats();
                 render();
             };
             reader.readAsText(file);
         });
+        
+        function showToast(msg, color) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `position:fixed;top:20px;left:50%;transform:translateX(-50%);background:${color};color:white;padding:15px 30px;border-radius:8px;font-weight:bold;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);`;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
         
         document.getElementById('parcelsFile').addEventListener('change', function(e) {
             const file = e.target.files[0]; if (!file) return;
@@ -663,8 +723,9 @@
                     parcels.push({ lat, lng, type, landuse: landUse, district_id: row.district_id || '' });
                 }
                 
-                document.getElementById('parcelsStatus').textContent = `✓ ${parcels.length.toLocaleString()} loaded`;
+                document.getElementById('parcelsStatus').innerHTML = `✓ <b>${file.name}</b><br>${parcels.length.toLocaleString()} parcels loaded`;
                 document.getElementById('parcelsStatus').classList.add('loaded');
+                showToast(`📊 Loaded ${parcels.length.toLocaleString()} parcels`, '#4CAF50');
                 document.getElementById('totalParcels').textContent = parcels.length.toLocaleString();
                 document.getElementById('totalApt').textContent = aptCount.toLocaleString();
                 document.getElementById('totalVilla').textContent = villaCount.toLocaleString();
@@ -886,11 +947,22 @@
                 }
             }
             
-            // Check buildings
+            // Check buildings (polygon click)
             for (const b of buildings) {
-                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(b[0], b[1]));
-                if (Math.abs(pt.x - clickPt.x) < tolerance && Math.abs(pt.y - clickPt.y) < tolerance) {
-                    return { type: 'building', data: { lat: b[0], lng: b[1] } };
+                const coords = b.geometry?.coordinates?.[0];
+                if (!coords || coords.length < 3) continue;
+                
+                // Convert building polygon to screen coordinates
+                const screenPoly = coords.map(([lon, lat]) => {
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                    return { x: (w.x - bounds.getSouthWest().lng) * scale, y: (w.y - bounds.getNorthEast().lat) * scale };
+                });
+                
+                // Simple bounds check first
+                const [lon, lat] = coords[0];
+                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                if (Math.abs(pt.x - clickPt.x) < tolerance * 3 && Math.abs(pt.y - clickPt.y) < tolerance * 3) {
+                    return { type: 'building', data: { lat: lat, lng: lon } };
                 }
             }
             
@@ -962,55 +1034,24 @@
             }
         }
         
-        function initMap() {
+        window.initMap = function() {
             map = new google.maps.Map(document.getElementById('map'), {
                 center: { lat: 24.7136, lng: 46.6753 },
                 zoom: 11,
-                mapTypeId: 'roadmap',
-                styles: [
-                    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-                    { featureType: 'transit', stylers: [{ visibility: 'off' }] }
-                ]
+                mapTypeControl: true,
+                gestureHandling: 'greedy'
             });
             
             map.addListener('idle', render);
             map.addListener('click', handleMapClick);
             
-            window.addEventListener('resize', render);
+            window.addEventListener('resize', () => {
+                render();
+            });
+            
             console.log('Map ready. Upload your data files.');
         }
-        
-        window.initMap = initMap;
-        
-        // Show error if map doesn't load
-        setTimeout(function() {
-            if (!map) {
-                document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;font-family:Arial;"><h2 style="color:#d32f2f;">⚠️ Google Maps Failed to Load</h2><p style="color:#666;margin:20px;">The keyless API may be blocked. Try:</p><ol style="color:#333;text-align:left;"><li>Refresh the page</li><li>Try a different browser</li><li>Disable ad blockers</li></ol><button onclick="location.reload()" style="margin-top:20px;padding:10px 30px;font-size:16px;cursor:pointer;">🔄 Retry</button></div>';
-            }
-        }, 15000);
     </script>
-    <script>
-        // Try loading keyless Google Maps
-        (function() {
-            var loaded = false;
-            
-            // Method 1: Keyless API
-            var s1 = document.createElement('script');
-            s1.src = 'https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js?callback=initMap';
-            s1.async = true;
-            s1.defer = true;
-            s1.onload = function() { loaded = true; };
-            s1.onerror = function() {
-                console.log('Keyless API failed, trying alternative...');
-                // Method 2: Direct Google Maps (may show "For development purposes only")
-                var s2 = document.createElement('script');
-                s2.src = 'https://maps.googleapis.com/maps/api/js?callback=initMap&v=weekly';
-                s2.async = true;
-                s2.defer = true;
-                document.head.appendChild(s2);
-            };
-            document.head.appendChild(s1);
-        })();
-    </script>
+    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js?callback=initMap" async defer></script>
 </body>
 </html>
