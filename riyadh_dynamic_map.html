@@ -4,20 +4,17 @@
     <title>Riyadh Map - Dynamic Counts</title>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1.0, width=device-width">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; }
         #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
-        #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 450; }
+        #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1; }
         
         .panel {
-            position: absolute; top: 10px; left: 60px;
+            position: absolute; top: 10px; left: 10px;
             background: white; padding: 15px; border-radius: 10px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 1000;
-            max-width: 320px; max-height: 90vh; overflow-y: auto; font-size: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 5;
+            max-width: 300px; max-height: 90vh; overflow-y: auto; font-size: 12px;
         }
         .panel h2 { color: #1a73e8; margin-bottom: 8px; font-size: 15px; }
         
@@ -72,7 +69,7 @@
         /* District panel */
         .district-panel {
             position: absolute; top: 10px; right: 10px; background: white; padding: 15px;
-            border-radius: 10px; box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 1000;
+            border-radius: 10px; box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 5;
             min-width: 250px; display: none;
         }
         .district-panel.show { display: block; }
@@ -198,7 +195,7 @@
                     <div id="poiStatus" class="file-status">Upload riyadh_pois.csv</div>
                 </div>
                 <div class="file-row">
-                    <label>🗺️ Districts JSON:</label>
+                    <label>🗺️ Districts GeoJSON:</label>
                     <input type="file" id="districtsFile" accept=".json,.geojson">
                     <div id="districtsStatus" class="file-status">Upload districts GeoJSON</div>
                 </div>
@@ -224,35 +221,28 @@
             </div>
             <div class="section-content">
                 <div id="districtList" style="max-height:150px; overflow-y:auto;">
-                    <div style="color:#999; font-size:10px; padding:10px;">Load Districts JSON</div>
+                    <div style="color:#999; font-size:10px; padding:10px;">Load Districts GeoJSON</div>
                 </div>
             </div>
         </div>
         
         <div style="margin-top:10px; font-size:10px; color:#888; text-align:center;">
             Zoom: <span id="zoomLevel">11</span> | 
-            <a href="#" onclick="resetView()">Reset View</a>
+            <a href="#" onclick="resetView(); return false;">Reset View</a>
         </div>
     </div>
     
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script>
-        // ============== INITIALIZATION ==============
-        const map = L.map('map').setView([24.7136, 46.6753], 11);
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '© OpenStreetMap © CARTO',
-            maxZoom: 19
-        }).addTo(map);
+        // ============== GLOBALS ==============
+        let map;
+        let canvas, ctx;
+        let overlay;
         
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        // ============== DATA STORAGE ==============
-        let parcelsData = [];  // [{lat, lng, type: 'apt'|'villa'|'other', district_id, ...}]
-        let poiData = [];      // [{lat, lng, layer, name_ar, name_en, ...}]
-        let districtsData = null; // GeoJSON
-        let districtLayer = null;
+        // Data storage
+        let parcelsData = [];
+        let poiData = [];
+        let districtsData = null;
+        let districtPolygons = [];
         
         // POI Colors by layer
         const poiColors = {
@@ -274,21 +264,60 @@
             'default': '#9C27B0'
         };
         
-        // Active POI categories
         let activePoiCategories = new Set();
         
-        // ============== CANVAS RENDERING ==============
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+        // ============== INIT MAP ==============
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 24.7136, lng: 46.6753 },
+                zoom: 11,
+                mapTypeId: 'roadmap',
+                styles: [
+                    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+                    { featureType: 'transit', stylers: [{ visibility: 'off' }] }
+                ]
+            });
+            
+            // Canvas overlay
+            canvas = document.getElementById('canvas');
+            ctx = canvas.getContext('2d');
+            
+            // Create overlay
+            overlay = new google.maps.OverlayView();
+            overlay.onAdd = function() {};
+            overlay.draw = function() { render(); };
+            overlay.onRemove = function() {};
+            overlay.setMap(map);
+            
+            // Events
+            map.addListener('idle', render);
+            map.addListener('zoom_changed', function() {
+                document.getElementById('zoomLevel').textContent = map.getZoom();
+            });
+            
+            window.addEventListener('resize', render);
+            
+            // Setup all event listeners
+            setupEventListeners();
+            
+            console.log('Google Maps initialized. Upload your data files.');
         }
         
+        // ============== RENDER ==============
         function render() {
-            resizeCanvas();
+            if (!map || !overlay.getProjection()) return;
+            
+            // Resize canvas
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             const bounds = map.getBounds();
-            const zoom = map.getZoom();
+            if (!bounds) return;
+            
+            const ne = bounds.getNorthEast();
+            const sw = bounds.getSouthWest();
+            const projection = overlay.getProjection();
             
             let viewApt = 0, viewVilla = 0, viewOther = 0, viewPoi = 0;
             
@@ -304,27 +333,27 @@
             
             // Draw parcels
             parcelsData.forEach(p => {
-                if (p.lat < bounds.getSouth() || p.lat > bounds.getNorth() ||
-                    p.lng < bounds.getWest() || p.lng > bounds.getEast()) return;
+                if (p.lat < sw.lat() || p.lat > ne.lat() || p.lng < sw.lng() || p.lng > ne.lng()) return;
                 
-                const pt = map.latLngToContainerPoint([p.lat, p.lng]);
+                const point = projection.fromLatLngToContainerPixel(new google.maps.LatLng(p.lat, p.lng));
+                if (!point) return;
                 
                 if (p.type === 'apt' && showApt) {
                     ctx.fillStyle = 'rgba(33, 150, 243, 0.6)';
                     ctx.beginPath();
-                    ctx.arc(pt.x, pt.y, sizeApt, 0, Math.PI * 2);
+                    ctx.arc(point.x, point.y, sizeApt, 0, Math.PI * 2);
                     ctx.fill();
                     viewApt++;
                 } else if (p.type === 'villa' && showVilla) {
                     ctx.fillStyle = 'rgba(76, 175, 80, 0.6)';
                     ctx.beginPath();
-                    ctx.arc(pt.x, pt.y, sizeVilla, 0, Math.PI * 2);
+                    ctx.arc(point.x, point.y, sizeVilla, 0, Math.PI * 2);
                     ctx.fill();
                     viewVilla++;
                 } else if (p.type === 'other' && showOther) {
                     ctx.fillStyle = 'rgba(255, 152, 0, 0.4)';
                     ctx.beginPath();
-                    ctx.arc(pt.x, pt.y, sizeOther, 0, Math.PI * 2);
+                    ctx.arc(point.x, point.y, sizeOther, 0, Math.PI * 2);
                     ctx.fill();
                     viewOther++;
                 }
@@ -333,27 +362,26 @@
             // Draw POIs
             if (showPoi) {
                 poiData.forEach(p => {
-                    if (p.lat < bounds.getSouth() || p.lat > bounds.getNorth() ||
-                        p.lng < bounds.getWest() || p.lng > bounds.getEast()) return;
-                    
+                    if (p.lat < sw.lat() || p.lat > ne.lat() || p.lng < sw.lng() || p.lng > ne.lng()) return;
                     if (activePoiCategories.size > 0 && !activePoiCategories.has(p.layer)) return;
                     
-                    const pt = map.latLngToContainerPoint([p.lat, p.lng]);
+                    const point = projection.fromLatLngToContainerPixel(new google.maps.LatLng(p.lat, p.lng));
+                    if (!point) return;
+                    
                     const color = poiColors[p.layer] || poiColors['default'];
                     
-                    // Draw POI with border for visibility
                     ctx.fillStyle = color;
                     ctx.strokeStyle = 'white';
                     ctx.lineWidth = 1;
                     ctx.beginPath();
-                    ctx.arc(pt.x, pt.y, sizePoi, 0, Math.PI * 2);
+                    ctx.arc(point.x, point.y, sizePoi, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.stroke();
                     viewPoi++;
                 });
             }
             
-            // Update view counts
+            // Update counts
             document.getElementById('viewParcels').textContent = (viewApt + viewVilla + viewOther).toLocaleString();
             document.getElementById('viewApt').textContent = viewApt.toLocaleString();
             document.getElementById('viewVilla').textContent = viewVilla.toLocaleString();
@@ -362,262 +390,301 @@
         }
         
         // ============== FILE LOADING ==============
-        
-        // Parse Parcels CSV
-        document.getElementById('parcelsFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            document.getElementById('parcelsStatus').textContent = 'Loading...';
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const lines = e.target.result.split('\n');
-                const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+        function setupEventListeners() {
+            // Parcels CSV
+            document.getElementById('parcelsFile').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
                 
-                parcelsData = [];
-                let aptCount = 0, villaCount = 0, otherCount = 0;
+                document.getElementById('parcelsStatus').textContent = 'Loading...';
                 
-                for (let i = 1; i < lines.length; i++) {
-                    if (!lines[i].trim()) continue;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const lines = e.target.result.split('\n');
+                    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
                     
-                    const values = parseCSVLine(lines[i]);
-                    const row = {};
-                    headers.forEach((h, idx) => row[h] = values[idx]);
+                    parcelsData = [];
+                    let aptCount = 0, villaCount = 0, otherCount = 0;
                     
-                    const lat = parseFloat(row.latitude || row.lat);
-                    const lng = parseFloat(row.longitude || row.lng || row.lon);
-                    
-                    if (isNaN(lat) || isNaN(lng)) continue;
-                    
-                    // Determine type based on is_apartment field or land use
-                    let type = 'other';
-                    const isApt = row.is_apartment;
-                    const landUse = (row.mainlanduse || row.land_use || row.landuse || '').toString();
-                    const subtype = (row.subtype || '').toString().toLowerCase();
-                    const floors = parseInt(row.nooffloors || row.floors || 0);
-                    const units = parseInt(row.residentialunits || row.units || 0);
-                    
-                    // Apartment detection
-                    if (isApt === 'True' || isApt === 'true' || isApt === '1' || 
-                        subtype.includes('شقق') || subtype.includes('apartment') ||
-                        (landUse === '1000' && floors >= 3) || units >= 4) {
-                        type = 'apt';
-                        aptCount++;
-                    }
-                    // Villa detection
-                    else if (subtype.includes('فيلا') || subtype.includes('villa') ||
-                             (landUse === '1000' && floors <= 2 && units <= 2)) {
-                        type = 'villa';
-                        villaCount++;
-                    } else {
-                        otherCount++;
-                    }
-                    
-                    parcelsData.push({
-                        lat, lng, type,
-                        district_id: row.district_id || row.district,
-                        name: row.name || row.parcel_name || '',
-                        landuse: landUse
-                    });
-                }
-                
-                document.getElementById('parcelsStatus').textContent = `✓ ${parcelsData.length.toLocaleString()} parcels loaded`;
-                document.getElementById('parcelsStatus').classList.add('loaded');
-                
-                document.getElementById('totalParcels').textContent = parcelsData.length.toLocaleString();
-                document.getElementById('totalApt').textContent = aptCount.toLocaleString();
-                document.getElementById('totalVilla').textContent = villaCount.toLocaleString();
-                document.getElementById('totalOther').textContent = otherCount.toLocaleString();
-                
-                render();
-            };
-            reader.readAsText(file);
-        });
-        
-        // Parse POI CSV
-        document.getElementById('poiFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            document.getElementById('poiStatus').textContent = 'Loading...';
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const lines = e.target.result.split('\n');
-                const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
-                
-                poiData = [];
-                const categories = {};
-                
-                for (let i = 1; i < lines.length; i++) {
-                    if (!lines[i].trim()) continue;
-                    
-                    const values = parseCSVLine(lines[i]);
-                    const row = {};
-                    headers.forEach((h, idx) => row[h] = values[idx]);
-                    
-                    const lat = parseFloat(row.latitude || row.lat);
-                    const lng = parseFloat(row.longitude || row.lng || row.lon);
-                    
-                    if (isNaN(lat) || isNaN(lng)) continue;
-                    
-                    const layer = row.layer || 'Unknown';
-                    categories[layer] = (categories[layer] || 0) + 1;
-                    
-                    poiData.push({
-                        lat, lng, layer,
-                        name_ar: row.name_ar || '',
-                        name_en: row.name_en || '',
-                        category: row.main_category_en || layer
-                    });
-                }
-                
-                document.getElementById('poiStatus').textContent = `✓ ${poiData.length.toLocaleString()} POIs loaded`;
-                document.getElementById('poiStatus').classList.add('loaded');
-                
-                // Build category list
-                const catContainer = document.getElementById('poiCategories');
-                catContainer.innerHTML = '';
-                document.getElementById('poiCatCount').textContent = Object.keys(categories).length;
-                
-                // All categories active by default
-                activePoiCategories = new Set(Object.keys(categories));
-                
-                Object.entries(categories)
-                    .sort((a, b) => b[1] - a[1])
-                    .forEach(([cat, count]) => {
-                        const div = document.createElement('div');
-                        div.className = 'poi-cat';
-                        const color = poiColors[cat] || poiColors['default'];
-                        div.innerHTML = `
-                            <input type="checkbox" checked data-cat="${cat}">
-                            <div class="layer-dot" style="background:${color};width:10px;height:10px;"></div>
-                            <span>${cat}</span>
-                            <span class="count">${count.toLocaleString()}</span>
-                        `;
-                        div.querySelector('input').addEventListener('change', function() {
-                            if (this.checked) {
-                                activePoiCategories.add(cat);
-                            } else {
-                                activePoiCategories.delete(cat);
-                            }
-                            render();
+                    for (let i = 1; i < lines.length; i++) {
+                        if (!lines[i].trim()) continue;
+                        
+                        const values = parseCSVLine(lines[i]);
+                        const row = {};
+                        headers.forEach((h, idx) => row[h] = values[idx]);
+                        
+                        const lat = parseFloat(row.latitude || row.lat);
+                        const lng = parseFloat(row.longitude || row.lng || row.lon);
+                        
+                        if (isNaN(lat) || isNaN(lng)) continue;
+                        
+                        let type = 'other';
+                        const isApt = row.is_apartment;
+                        const landUse = (row.mainlanduse || row.land_use || row.landuse || '').toString();
+                        const subtype = (row.subtype || '').toString().toLowerCase();
+                        const floors = parseInt(row.nooffloors || row.floors || 0);
+                        const units = parseInt(row.residentialunits || row.units || 0);
+                        
+                        if (isApt === 'True' || isApt === 'true' || isApt === '1' || 
+                            subtype.includes('شقق') || subtype.includes('apartment') ||
+                            (landUse === '1000' && floors >= 3) || units >= 4) {
+                            type = 'apt';
+                            aptCount++;
+                        } else if (subtype.includes('فيلا') || subtype.includes('villa') ||
+                                   (landUse === '1000' && floors <= 2 && units <= 2)) {
+                            type = 'villa';
+                            villaCount++;
+                        } else {
+                            otherCount++;
+                        }
+                        
+                        parcelsData.push({
+                            lat, lng, type,
+                            district_id: row.district_id || row.district,
+                            name: row.name || row.parcel_name || '',
+                            landuse: landUse
                         });
-                        catContainer.appendChild(div);
-                    });
-                
-                render();
-            };
-            reader.readAsText(file);
-        });
-        
-        // Parse Districts JSON
-        document.getElementById('districtsFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            document.getElementById('districtsStatus').textContent = 'Loading...';
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    districtsData = JSON.parse(e.target.result);
-                    
-                    const count = districtsData.features ? districtsData.features.length : 0;
-                    document.getElementById('districtsStatus').textContent = `✓ ${count} districts loaded`;
-                    document.getElementById('districtsStatus').classList.add('loaded');
-                    document.getElementById('districtCount').textContent = count;
-                    
-                    // Add to map if checkbox is checked
-                    if (document.getElementById('showDistricts').checked) {
-                        showDistrictBoundaries();
                     }
                     
-                    // Build district list
-                    const listContainer = document.getElementById('districtList');
-                    listContainer.innerHTML = '';
+                    document.getElementById('parcelsStatus').textContent = `✓ ${parcelsData.length.toLocaleString()} parcels`;
+                    document.getElementById('parcelsStatus').classList.add('loaded');
                     
-                    districtsData.features.forEach((f, idx) => {
-                        const name = f.properties.name || f.properties.NAME || f.properties.district_name || `District ${idx + 1}`;
-                        const div = document.createElement('div');
-                        div.style.cssText = 'padding:5px 8px; font-size:11px; cursor:pointer; border-bottom:1px solid #eee;';
-                        div.textContent = name;
-                        div.addEventListener('click', () => zoomToDistrict(f));
-                        listContainer.appendChild(div);
-                    });
+                    document.getElementById('totalParcels').textContent = parcelsData.length.toLocaleString();
+                    document.getElementById('totalApt').textContent = aptCount.toLocaleString();
+                    document.getElementById('totalVilla').textContent = villaCount.toLocaleString();
+                    document.getElementById('totalOther').textContent = otherCount.toLocaleString();
                     
-                } catch (err) {
-                    document.getElementById('districtsStatus').textContent = 'Error: Invalid JSON';
-                    console.error(err);
+                    render();
+                };
+                reader.readAsText(file);
+            });
+            
+            // POI CSV
+            document.getElementById('poiFile').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                document.getElementById('poiStatus').textContent = 'Loading...';
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const lines = e.target.result.split('\n');
+                    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+                    
+                    poiData = [];
+                    const categories = {};
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        if (!lines[i].trim()) continue;
+                        
+                        const values = parseCSVLine(lines[i]);
+                        const row = {};
+                        headers.forEach((h, idx) => row[h] = values[idx]);
+                        
+                        const lat = parseFloat(row.latitude || row.lat);
+                        const lng = parseFloat(row.longitude || row.lng || row.lon);
+                        
+                        if (isNaN(lat) || isNaN(lng)) continue;
+                        
+                        const layer = row.layer || 'Unknown';
+                        categories[layer] = (categories[layer] || 0) + 1;
+                        
+                        poiData.push({
+                            lat, lng, layer,
+                            name_ar: row.name_ar || '',
+                            name_en: row.name_en || '',
+                            category: row.main_category_en || layer
+                        });
+                    }
+                    
+                    document.getElementById('poiStatus').textContent = `✓ ${poiData.length.toLocaleString()} POIs`;
+                    document.getElementById('poiStatus').classList.add('loaded');
+                    
+                    // Build category list
+                    const catContainer = document.getElementById('poiCategories');
+                    catContainer.innerHTML = '';
+                    document.getElementById('poiCatCount').textContent = Object.keys(categories).length;
+                    
+                    activePoiCategories = new Set(Object.keys(categories));
+                    
+                    Object.entries(categories)
+                        .sort((a, b) => b[1] - a[1])
+                        .forEach(([cat, count]) => {
+                            const div = document.createElement('div');
+                            div.className = 'poi-cat';
+                            const color = poiColors[cat] || poiColors['default'];
+                            div.innerHTML = `
+                                <input type="checkbox" checked data-cat="${cat}">
+                                <div class="layer-dot" style="background:${color};width:10px;height:10px;"></div>
+                                <span>${cat}</span>
+                                <span class="count">${count.toLocaleString()}</span>
+                            `;
+                            div.querySelector('input').addEventListener('change', function() {
+                                if (this.checked) {
+                                    activePoiCategories.add(cat);
+                                } else {
+                                    activePoiCategories.delete(cat);
+                                }
+                                render();
+                            });
+                            catContainer.appendChild(div);
+                        });
+                    
+                    render();
+                };
+                reader.readAsText(file);
+            });
+            
+            // Districts JSON
+            document.getElementById('districtsFile').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                document.getElementById('districtsStatus').textContent = 'Loading...';
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        districtsData = JSON.parse(e.target.result);
+                        
+                        const count = districtsData.features ? districtsData.features.length : 0;
+                        document.getElementById('districtsStatus').textContent = `✓ ${count} districts`;
+                        document.getElementById('districtsStatus').classList.add('loaded');
+                        document.getElementById('districtCount').textContent = count;
+                        
+                        if (document.getElementById('showDistricts').checked) {
+                            showDistrictBoundaries();
+                        }
+                        
+                        // Build district list
+                        const listContainer = document.getElementById('districtList');
+                        listContainer.innerHTML = '';
+                        
+                        districtsData.features.forEach((f, idx) => {
+                            const name = f.properties.name || f.properties.NAME || f.properties.DISTRICT_NAME || `District ${idx + 1}`;
+                            const div = document.createElement('div');
+                            div.style.cssText = 'padding:5px 8px; font-size:11px; cursor:pointer; border-bottom:1px solid #eee;';
+                            div.textContent = name;
+                            div.addEventListener('click', () => zoomToDistrict(f));
+                            listContainer.appendChild(div);
+                        });
+                        
+                    } catch (err) {
+                        document.getElementById('districtsStatus').textContent = 'Error: Invalid JSON';
+                        console.error(err);
+                    }
+                };
+                reader.readAsText(file);
+            });
+            
+            // Layer toggles
+            ['showApt', 'showVilla', 'showOther', 'showPoi'].forEach(id => {
+                document.getElementById(id).addEventListener('change', render);
+            });
+            
+            // Size sliders
+            ['sizeApt', 'sizeVilla', 'sizeOther', 'sizePoi'].forEach(id => {
+                const slider = document.getElementById(id);
+                const valSpan = document.getElementById(id + 'Val');
+                slider.addEventListener('input', function() {
+                    valSpan.textContent = this.value;
+                    render();
+                });
+            });
+            
+            // District toggle
+            document.getElementById('showDistricts').addEventListener('change', function() {
+                if (this.checked) {
+                    showDistrictBoundaries();
+                } else {
+                    hideDistrictBoundaries();
                 }
-            };
-            reader.readAsText(file);
-        });
+            });
+        }
         
         // ============== DISTRICT FUNCTIONS ==============
         function showDistrictBoundaries() {
-            if (districtLayer) {
-                map.removeLayer(districtLayer);
-            }
+            hideDistrictBoundaries();
             if (!districtsData) return;
             
-            districtLayer = L.geoJSON(districtsData, {
-                style: {
-                    color: '#607D8B',
-                    weight: 2,
-                    fillOpacity: 0.1
-                },
-                onEachFeature: function(feature, layer) {
-                    const name = feature.properties.name || feature.properties.NAME || 'District';
-                    layer.bindTooltip(name, {sticky: true});
-                    
-                    layer.on('click', function() {
-                        if (document.getElementById('enableDistrictClick').checked) {
-                            showDistrictStats(feature);
-                        }
+            districtsData.features.forEach(feature => {
+                const coords = [];
+                const geometry = feature.geometry;
+                
+                if (geometry.type === 'Polygon') {
+                    geometry.coordinates[0].forEach(c => {
+                        coords.push({ lat: c[1], lng: c[0] });
+                    });
+                } else if (geometry.type === 'MultiPolygon') {
+                    geometry.coordinates[0][0].forEach(c => {
+                        coords.push({ lat: c[1], lng: c[0] });
                     });
                 }
-            }).addTo(map);
+                
+                const polygon = new google.maps.Polygon({
+                    paths: coords,
+                    strokeColor: '#607D8B',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: '#607D8B',
+                    fillOpacity: 0.1
+                });
+                
+                polygon.setMap(map);
+                polygon.feature = feature;
+                
+                polygon.addListener('click', function() {
+                    if (document.getElementById('enableDistrictClick').checked) {
+                        showDistrictStats(feature);
+                    }
+                });
+                
+                districtPolygons.push(polygon);
+            });
         }
         
         function hideDistrictBoundaries() {
-            if (districtLayer) {
-                map.removeLayer(districtLayer);
-                districtLayer = null;
-            }
+            districtPolygons.forEach(p => p.setMap(null));
+            districtPolygons = [];
         }
         
         function zoomToDistrict(feature) {
-            const layer = L.geoJSON(feature);
-            map.fitBounds(layer.getBounds());
+            const bounds = new google.maps.LatLngBounds();
+            const geometry = feature.geometry;
+            
+            const coords = geometry.type === 'Polygon' ? geometry.coordinates[0] : geometry.coordinates[0][0];
+            coords.forEach(c => {
+                bounds.extend(new google.maps.LatLng(c[1], c[0]));
+            });
+            
+            map.fitBounds(bounds);
             showDistrictStats(feature);
         }
         
         function showDistrictStats(feature) {
             const name = feature.properties.name || feature.properties.NAME || 'District';
-            const districtId = feature.properties.district_id || feature.properties.DISTRICT_ID || '';
             
-            // Count parcels in this district
-            let apt = 0, villa = 0, other = 0;
+            // Get bounds
+            const bounds = new google.maps.LatLngBounds();
+            const geometry = feature.geometry;
+            const coords = geometry.type === 'Polygon' ? geometry.coordinates[0] : geometry.coordinates[0][0];
+            coords.forEach(c => bounds.extend(new google.maps.LatLng(c[1], c[0])));
             
-            // Use turf.js or simple bounds check
-            const bounds = L.geoJSON(feature).getBounds();
+            const ne = bounds.getNorthEast();
+            const sw = bounds.getSouthWest();
+            
+            let apt = 0, villa = 0, other = 0, poiCount = 0;
             
             parcelsData.forEach(p => {
-                if (p.lat >= bounds.getSouth() && p.lat <= bounds.getNorth() &&
-                    p.lng >= bounds.getWest() && p.lng <= bounds.getEast()) {
+                if (p.lat >= sw.lat() && p.lat <= ne.lat() && p.lng >= sw.lng() && p.lng <= ne.lng()) {
                     if (p.type === 'apt') apt++;
                     else if (p.type === 'villa') villa++;
                     else other++;
                 }
             });
             
-            // Count POIs
-            let poiCount = 0;
             poiData.forEach(p => {
-                if (p.lat >= bounds.getSouth() && p.lat <= bounds.getNorth() &&
-                    p.lng >= bounds.getWest() && p.lng <= bounds.getEast()) {
+                if (p.lat >= sw.lat() && p.lat <= ne.lat() && p.lng >= sw.lng() && p.lng <= ne.lng()) {
                     poiCount++;
                 }
             });
@@ -686,46 +753,10 @@
         }
         
         function resetView() {
-            map.setView([24.7136, 46.6753], 11);
+            map.setCenter({ lat: 24.7136, lng: 46.6753 });
+            map.setZoom(11);
         }
-        
-        // ============== EVENT LISTENERS ==============
-        map.on('move', render);
-        map.on('zoom', function() {
-            document.getElementById('zoomLevel').textContent = map.getZoom();
-            render();
-        });
-        window.addEventListener('resize', render);
-        
-        // Layer toggles
-        ['showApt', 'showVilla', 'showOther', 'showPoi'].forEach(id => {
-            document.getElementById(id).addEventListener('change', render);
-        });
-        
-        // Size sliders
-        ['sizeApt', 'sizeVilla', 'sizeOther', 'sizePoi'].forEach(id => {
-            const slider = document.getElementById(id);
-            const valSpan = document.getElementById(id + 'Val');
-            slider.addEventListener('input', function() {
-                valSpan.textContent = this.value;
-                render();
-            });
-        });
-        
-        // District toggle
-        document.getElementById('showDistricts').addEventListener('change', function() {
-            if (this.checked) {
-                showDistrictBoundaries();
-            } else {
-                hideDistrictBoundaries();
-            }
-        });
-        
-        // Initial render
-        resizeCanvas();
-        render();
-        
-        console.log('Riyadh Dynamic Map initialized. Upload your data files to begin.');
     </script>
+    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js?callback=initMap" async defer></script>
 </body>
 </html>
