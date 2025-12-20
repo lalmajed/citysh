@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Google Maps Keyless</title>
+    <style>
+        #map { width: 100%; height: 500px; }
+        #status { padding: 20px; font-family: Arial; }
+    </style>
+</head>
+<body>
+    <div id="status">Loading Google Maps...</div>
+    <div id="map"></div>
+    
+    <script>
+        function initMap() {
+            document.getElementById('status').innerHTML = '✅ Google Maps loaded successfully!';
+            document.getElementById('status').style.color = 'green';
+            
+            var map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 24.7136, lng: 46.6753 },
+                zoom: 11
+            });
+        }
+        
+        window.initMap = initMap;
+        
+        setTimeout(function() {
+            if (!window.google) {
+                document.getElementById('status').innerHTML = '❌ Google Maps failed to load after 10 seconds';
+                document.getElementById('status').style.color = 'red';
+            }
+        }, 10000);
+    </script>
+    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js?callback=initMap" async defer></script>
+</body>
+</html>
