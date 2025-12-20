@@ -252,9 +252,9 @@
                     <div id="buildingsStatus" class="file-status">Upload buildings JSON</div>
                 </div>
                 <div class="file-input">
-                    <label>📊 Parcels CSV (riyadh_all_parcels_final.csv):</label>
+                    <label>📊 Parcels CSV:</label>
                     <input type="file" id="parcelsFile" accept=".csv">
-                    <div id="parcelsStatus" class="file-status">Upload parcels CSV</div>
+                    <div id="parcelsStatus" class="file-status">Use <b>riyadh_parcels_classified.csv</b> for best results</div>
                 </div>
                 <div class="file-input">
                     <label>📍 POI CSV (riyadh_pois.csv):</label>
@@ -700,25 +700,30 @@
                     const lng = parseFloat(row.longitude || row.lng || row.lon);
                     if (isNaN(lat) || isNaN(lng)) continue;
                     
-                    // Classify parcel
+                    // Classify parcel - check for pre-classified 'parcel_type' column first
                     let type = 'other';
-                    const isApt = row.is_apartment;
-                    const landUse = (row.mainlanduse || row.land_use || '').toString();
-                    const subtype = (row.subtype || '').toString().toLowerCase();
-                    const floors = parseInt(row.nooffloors || row.floors || 0);
-                    const units = parseInt(row.residentialunits || row.units || 0);
+                    const parcelType = (row.parcel_type || '').toLowerCase();
                     
-                    if (isApt === 'True' || isApt === 'true' || isApt === '1' || 
-                        subtype.includes('شقق') || subtype.includes('apartment') ||
-                        landUse === '7510' || (landUse === '1000' && floors >= 3) || units >= 4) {
-                        type = 'apt'; aptCount++;
-                    } else if (subtype.includes('فيلا') || subtype.includes('villa') ||
-                               landUse === '1000' || landUse === '1012' ||
-                               (landUse === '1000' && floors <= 2 && units <= 2)) {
-                        type = 'villa'; villaCount++;
+                    if (parcelType === 'villa' || parcelType === 'apartment' || parcelType === 'other') {
+                        // Use pre-classified type from riyadh_parcels_classified.csv
+                        type = parcelType === 'apartment' ? 'apt' : parcelType;
                     } else {
-                        otherCount++;
+                        // Fallback classification for other CSV files
+                        const isApt = row.is_apartment;
+                        const landUse = (row.mainlanduse || row.land_use || '').toString();
+                        
+                        if (landUse === '100000' && isApt === 'False') {
+                            type = 'villa';
+                        } else if (isApt === 'True' || isApt === 'true' || isApt === '1') {
+                            type = 'apt';
+                        } else {
+                            type = 'other';
+                        }
                     }
+                    
+                    if (type === 'villa') villaCount++;
+                    else if (type === 'apt') aptCount++;
+                    else otherCount++;
                     
                     parcels.push({ lat, lng, type, landuse: landUse, district_id: row.district_id || '' });
                 }
