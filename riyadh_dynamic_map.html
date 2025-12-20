@@ -981,7 +981,36 @@
         }
         
         window.initMap = initMap;
+        
+        // Show error if map doesn't load
+        setTimeout(function() {
+            if (!map) {
+                document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;font-family:Arial;"><h2 style="color:#d32f2f;">⚠️ Google Maps Failed to Load</h2><p style="color:#666;margin:20px;">The keyless API may be blocked. Try:</p><ol style="color:#333;text-align:left;"><li>Refresh the page</li><li>Try a different browser</li><li>Disable ad blockers</li></ol><button onclick="location.reload()" style="margin-top:20px;padding:10px 30px;font-size:16px;cursor:pointer;">🔄 Retry</button></div>';
+            }
+        }, 15000);
     </script>
-    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js?callback=initMap" async defer></script>
+    <script>
+        // Try loading keyless Google Maps
+        (function() {
+            var loaded = false;
+            
+            // Method 1: Keyless API
+            var s1 = document.createElement('script');
+            s1.src = 'https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js?callback=initMap';
+            s1.async = true;
+            s1.defer = true;
+            s1.onload = function() { loaded = true; };
+            s1.onerror = function() {
+                console.log('Keyless API failed, trying alternative...');
+                // Method 2: Direct Google Maps (may show "For development purposes only")
+                var s2 = document.createElement('script');
+                s2.src = 'https://maps.googleapis.com/maps/api/js?callback=initMap&v=weekly';
+                s2.async = true;
+                s2.defer = true;
+                document.head.appendChild(s2);
+            };
+            document.head.appendChild(s1);
+        })();
+    </script>
 </body>
 </html>
