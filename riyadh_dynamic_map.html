@@ -447,20 +447,19 @@
             
             // Draw districts
             if (showDist && districts.length) {
-                districts.forEach(d => {
-                    const dName = getDistrictName(d);
-                    if (selectedDistrict && dName !== selectedDistrict) return;
-                    
-                    const geom = getDistrictGeometry(d);
-                    if (!geom) return;
-                    
-                    const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
-                                   geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
-                    if (!coords || coords.length < 3) return;
-                    
-                    // Fill for selected
-                    if (selectedDistrict) {
-                        ctx.fillStyle = 'rgba(255, 152, 0, 0.15)';
+                // First pass: draw non-selected districts (faint)
+                if (!selectedDistrict) {
+                    districts.forEach(d => {
+                        const geom = getDistrictGeometry(d);
+                        if (!geom) return;
+                        
+                        const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
+                                       geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
+                        if (!coords || coords.length < 3) return;
+                        
+                        ctx.strokeStyle = '#607D8B';
+                        ctx.lineWidth = 1;
+                        ctx.globalAlpha = 0.4;
                         ctx.beginPath();
                         coords.forEach(([lon, lat], i) => {
                             const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
@@ -468,23 +467,56 @@
                             i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
                         });
                         ctx.closePath();
-                        ctx.fill();
-                    }
-                    
-                    // Stroke
-                    ctx.strokeStyle = selectedDistrict ? '#ff5722' : '#607D8B';
-                    ctx.lineWidth = selectedDistrict ? 3 : 1;
-                    ctx.globalAlpha = selectedDistrict ? 1 : 0.5;
-                    ctx.beginPath();
-                    coords.forEach(([lon, lat], i) => {
-                        const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                        const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
-                        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                        ctx.stroke();
                     });
-                    ctx.closePath();
-                    ctx.stroke();
                     ctx.globalAlpha = 1;
-                });
+                }
+                
+                // Second pass: draw selected district prominently
+                if (selectedDistrict && selectedDistrictObj) {
+                    const geom = getDistrictGeometry(selectedDistrictObj);
+                    if (geom) {
+                        const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
+                                       geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
+                        if (coords && coords.length >= 3) {
+                            // Fill
+                            ctx.fillStyle = 'rgba(255, 87, 34, 0.15)';
+                            ctx.beginPath();
+                            coords.forEach(([lon, lat], i) => {
+                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                                const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                            });
+                            ctx.closePath();
+                            ctx.fill();
+                            
+                            // Thick orange border
+                            ctx.strokeStyle = '#FF5722';
+                            ctx.lineWidth = 4;
+                            ctx.setLineDash([]);
+                            ctx.beginPath();
+                            coords.forEach(([lon, lat], i) => {
+                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                                const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                            });
+                            ctx.closePath();
+                            ctx.stroke();
+                            
+                            // Inner white border for visibility
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            coords.forEach(([lon, lat], i) => {
+                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                                const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                            });
+                            ctx.closePath();
+                            ctx.stroke();
+                        }
+                    }
+                }
             }
             
             // Draw buildings (polygons or points)
@@ -984,19 +1016,53 @@
             } else {
                 selectedDistrict = name;
                 selectedDistrictObj = districtObj || districts.find(d => getDistrictName(d) === name);
+                
+                // Zoom to district
+                if (selectedDistrictObj) {
+                    zoomToDistrict(selectedDistrictObj);
+                }
             }
             updateDistrictList();
             calculateDistrictStats();
             render();
         }
         
+        function zoomToDistrict(d) {
+            const geom = getDistrictGeometry(d);
+            if (!geom) return;
+            
+            const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
+                           geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
+            if (!coords || coords.length < 3) return;
+            
+            // Calculate bounds
+            let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+            coords.forEach(([lon, lat]) => {
+                if (lat < minLat) minLat = lat;
+                if (lat > maxLat) maxLat = lat;
+                if (lon < minLng) minLng = lon;
+                if (lon > maxLng) maxLng = lon;
+            });
+            
+            // Fit bounds with padding
+            const bounds = new google.maps.LatLngBounds(
+                new google.maps.LatLng(minLat, minLng),
+                new google.maps.LatLng(maxLat, maxLng)
+            );
+            map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 400 });
+        }
+        
         let selectedDistrictObj = null;
         
         function clearDistrictSelection() {
             selectedDistrict = null;
+            selectedDistrictObj = null;
             updateDistrictList();
             calculateDistrictStats();
             render();
+            // Reset view to all Riyadh
+            map.setCenter({ lat: 24.7136, lng: 46.6753 });
+            map.setZoom(11);
         }
         
         function selectAllPoi() {
