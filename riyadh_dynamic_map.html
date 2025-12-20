@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Riyadh Map - Dynamic Counts</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, width=device-width">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; }
+        #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+        #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 450; }
+        
+        .panel {
+            position: absolute; top: 10px; left: 60px;
+            background: white; padding: 15px; border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 1000;
+            max-width: 320px; max-height: 90vh; overflow-y: auto; font-size: 12px;
+        }
+        .panel h2 { color: #1a73e8; margin-bottom: 8px; font-size: 15px; }
+        
+        /* Big Stats */
+        .big-stats { text-align: center; margin: 10px 0; padding: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; color: white; }
+        .big-number { font-size: 28px; font-weight: 700; }
+        .big-label { font-size: 10px; opacity: 0.9; }
+        
+        .mini-stats { display: flex; gap: 5px; margin: 8px 0; }
+        .mini-stat { flex: 1; text-align: center; padding: 8px 4px; border-radius: 6px; }
+        .mini-stat.apt { background: #e3f2fd; border-left: 3px solid #2196F3; }
+        .mini-stat.villa { background: #e8f5e9; border-left: 3px solid #4CAF50; }
+        .mini-stat.other { background: #fff3e0; border-left: 3px solid #FF9800; }
+        .mini-stat b { display: block; font-size: 14px; }
+        .mini-stat small { color: #666; font-size: 9px; }
+        
+        /* View Stats */
+        .view-stats { background: #f5f5f5; padding: 10px; border-radius: 8px; margin: 10px 0; }
+        .view-stats-title { font-weight: 600; font-size: 11px; color: #666; margin-bottom: 8px; }
+        .view-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; }
+        .view-row span:first-child { color: #666; }
+        .view-row span:last-child { font-weight: 600; }
+        
+        /* Collapsible Sections */
+        .section { margin: 10px 0; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+        .section-header { background: #f5f5f5; padding: 10px; font-weight: 600; font-size: 11px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .section-header:hover { background: #e8e8e8; }
+        .section-content { padding: 10px; display: none; }
+        .section-content.open { display: block; }
+        
+        /* File inputs */
+        .file-row { margin: 8px 0; }
+        .file-row label { display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: #333; }
+        .file-row input[type="file"] { font-size: 10px; width: 100%; }
+        .file-status { font-size: 10px; color: #666; margin-top: 3px; }
+        .file-status.loaded { color: #4CAF50; font-weight: 600; }
+        
+        /* Layer controls */
+        .layer-control { display: flex; align-items: center; gap: 8px; padding: 8px; background: #fafafa; border-radius: 6px; margin: 5px 0; }
+        .layer-control input[type="checkbox"] { margin: 0; }
+        .layer-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .layer-label { flex: 1; font-size: 11px; }
+        .layer-control input[type="range"] { width: 60px; }
+        .layer-control .size-val { font-size: 10px; color: #666; width: 20px; }
+        
+        /* POI Categories */
+        .poi-cats { max-height: 150px; overflow-y: auto; margin-top: 8px; }
+        .poi-cat { display: flex; align-items: center; gap: 5px; padding: 4px 8px; font-size: 10px; cursor: pointer; }
+        .poi-cat:hover { background: #f0f0f0; }
+        .poi-cat .count { margin-left: auto; color: #999; }
+        
+        /* District panel */
+        .district-panel {
+            position: absolute; top: 10px; right: 10px; background: white; padding: 15px;
+            border-radius: 10px; box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 1000;
+            min-width: 250px; display: none;
+        }
+        .district-panel.show { display: block; }
+        .district-panel h3 { color: #1a73e8; font-size: 14px; margin-bottom: 10px; }
+        .district-panel .close { position: absolute; top: 8px; right: 10px; cursor: pointer; color: #999; font-size: 18px; }
+        .district-stats { margin: 10px 0; }
+        .district-stat-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 12px; }
+        .district-stat-row:last-child { border: none; }
+        .district-stat-row .label { display: flex; align-items: center; gap: 6px; }
+        .district-stat-row .value { font-weight: 700; }
+        
+        /* Colors */
+        .dot-apt { background: #2196F3; }
+        .dot-villa { background: #4CAF50; }
+        .dot-other { background: #FF9800; }
+        .dot-poi { background: #9C27B0; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <canvas id="canvas"></canvas>
+    
+    <!-- District Stats Panel -->
+    <div id="districtPanel" class="district-panel">
+        <span class="close" onclick="closeDistrictPanel()">&times;</span>
+        <h3 id="districtName">📍 District Name</h3>
+        <div class="district-stats" id="districtStatsContent"></div>
+    </div>
+    
+    <div class="panel">
+        <h2>🏙️ Riyadh Map - Dynamic Counts</h2>
+        
+        <!-- Big Stats -->
+        <div class="big-stats">
+            <div class="big-number" id="totalParcels">0</div>
+            <div class="big-label">TOTAL PARCELS LOADED</div>
+        </div>
+        
+        <div class="mini-stats">
+            <div class="mini-stat apt">
+                <b id="totalApt">0</b>
+                <small>🏢 Apartments</small>
+            </div>
+            <div class="mini-stat villa">
+                <b id="totalVilla">0</b>
+                <small>🏠 Villas</small>
+            </div>
+            <div class="mini-stat other">
+                <b id="totalOther">0</b>
+                <small>📦 Other</small>
+            </div>
+        </div>
+        
+        <!-- In View Stats -->
+        <div class="view-stats">
+            <div class="view-stats-title">📍 IN CURRENT VIEW</div>
+            <div class="view-row"><span>Parcels:</span><span id="viewParcels">0</span></div>
+            <div class="view-row"><span>Apartments:</span><span id="viewApt">0</span></div>
+            <div class="view-row"><span>Villas:</span><span id="viewVilla">0</span></div>
+            <div class="view-row"><span>Other:</span><span id="viewOther">0</span></div>
+            <div class="view-row"><span>POIs:</span><span id="viewPoi">0</span></div>
+        </div>
+        
+        <!-- LAYERS Section -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                🎨 LAYERS <span>▼</span>
+            </div>
+            <div class="section-content open">
+                <div class="layer-control">
+                    <input type="checkbox" id="showApt" checked>
+                    <div class="layer-dot dot-apt"></div>
+                    <span class="layer-label">Apartments</span>
+                    <input type="range" id="sizeApt" min="1" max="8" value="3">
+                    <span class="size-val" id="sizeAptVal">3</span>
+                </div>
+                <div class="layer-control">
+                    <input type="checkbox" id="showVilla" checked>
+                    <div class="layer-dot dot-villa"></div>
+                    <span class="layer-label">Villas</span>
+                    <input type="range" id="sizeVilla" min="1" max="8" value="3">
+                    <span class="size-val" id="sizeVillaVal">3</span>
+                </div>
+                <div class="layer-control">
+                    <input type="checkbox" id="showOther" checked>
+                    <div class="layer-dot dot-other"></div>
+                    <span class="layer-label">Other Parcels</span>
+                    <input type="range" id="sizeOther" min="1" max="8" value="2">
+                    <span class="size-val" id="sizeOtherVal">2</span>
+                </div>
+                <div class="layer-control">
+                    <input type="checkbox" id="showPoi" checked>
+                    <div class="layer-dot dot-poi"></div>
+                    <span class="layer-label">POIs</span>
+                    <input type="range" id="sizePoi" min="2" max="10" value="4">
+                    <span class="size-val" id="sizePoiVal">4</span>
+                </div>
+                <div class="layer-control">
+                    <input type="checkbox" id="showDistricts">
+                    <div class="layer-dot" style="background:#607D8B;"></div>
+                    <span class="layer-label">District Boundaries</span>
+                </div>
+                <div style="margin-top:8px; padding:8px; background:#e3f2fd; border-radius:6px; font-size:10px;">
+                    <label><input type="checkbox" id="enableDistrictClick"> 🖱️ Click district for stats</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- DATA FILES Section -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                📂 DATA FILES <span>▼</span>
+            </div>
+            <div class="section-content open">
+                <div class="file-row">
+                    <label>🏗️ Parcels CSV:</label>
+                    <input type="file" id="parcelsFile" accept=".csv">
+                    <div id="parcelsStatus" class="file-status">Upload riyadh_all_parcels_final.csv</div>
+                </div>
+                <div class="file-row">
+                    <label>📍 POI CSV:</label>
+                    <input type="file" id="poiFile" accept=".csv">
+                    <div id="poiStatus" class="file-status">Upload riyadh_pois.csv</div>
+                </div>
+                <div class="file-row">
+                    <label>🗺️ Districts JSON:</label>
+                    <input type="file" id="districtsFile" accept=".json,.geojson">
+                    <div id="districtsStatus" class="file-status">Upload districts GeoJSON</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- POI CATEGORIES Section -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                📍 POI CATEGORIES (<span id="poiCatCount">0</span>) <span>▼</span>
+            </div>
+            <div class="section-content">
+                <div class="poi-cats" id="poiCategories">
+                    <div style="color:#999; font-size:10px; padding:10px;">Load POI CSV to see categories</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- DISTRICTS Section -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                🏘️ DISTRICTS (<span id="districtCount">0</span>) <span>▼</span>
+            </div>
+            <div class="section-content">
+                <div id="districtList" style="max-height:150px; overflow-y:auto;">
+                    <div style="color:#999; font-size:10px; padding:10px;">Load Districts JSON</div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top:10px; font-size:10px; color:#888; text-align:center;">
+            Zoom: <span id="zoomLevel">11</span> | 
+            <a href="#" onclick="resetView()">Reset View</a>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script>
+        // ============== INITIALIZATION ==============
+        const map = L.map('map').setView([24.7136, 46.6753], 11);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap © CARTO',
+            maxZoom: 19
+        }).addTo(map);
+        
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // ============== DATA STORAGE ==============
+        let parcelsData = [];  // [{lat, lng, type: 'apt'|'villa'|'other', district_id, ...}]
+        let poiData = [];      // [{lat, lng, layer, name_ar, name_en, ...}]
+        let districtsData = null; // GeoJSON
+        let districtLayer = null;
+        
+        // POI Colors by layer
+        const poiColors = {
+            'Religious': '#8B4513',
+            'EatAndDrink': '#E91E63',
+            'Educational': '#3F51B5',
+            'HealthCare': '#F44336',
+            'Commercial': '#9C27B0',
+            'Financial': '#00BCD4',
+            'Industry': '#795548',
+            'Sports': '#4CAF50',
+            'Government': '#607D8B',
+            'ParksAndSquares': '#8BC34A',
+            'GasStationsAndAutoServices': '#FF5722',
+            'HotelsAndHospitalityServices': '#FFC107',
+            'Transportation': '#2196F3',
+            'Entertainment': '#E040FB',
+            'Cultural': '#FF9800',
+            'default': '#9C27B0'
+        };
+        
+        // Active POI categories
+        let activePoiCategories = new Set();
+        
+        // ============== CANVAS RENDERING ==============
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        function render() {
+            resizeCanvas();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const bounds = map.getBounds();
+            const zoom = map.getZoom();
+            
+            let viewApt = 0, viewVilla = 0, viewOther = 0, viewPoi = 0;
+            
+            const showApt = document.getElementById('showApt').checked;
+            const showVilla = document.getElementById('showVilla').checked;
+            const showOther = document.getElementById('showOther').checked;
+            const showPoi = document.getElementById('showPoi').checked;
+            
+            const sizeApt = parseInt(document.getElementById('sizeApt').value);
+            const sizeVilla = parseInt(document.getElementById('sizeVilla').value);
+            const sizeOther = parseInt(document.getElementById('sizeOther').value);
+            const sizePoi = parseInt(document.getElementById('sizePoi').value);
+            
+            // Draw parcels
+            parcelsData.forEach(p => {
+                if (p.lat < bounds.getSouth() || p.lat > bounds.getNorth() ||
+                    p.lng < bounds.getWest() || p.lng > bounds.getEast()) return;
+                
+                const pt = map.latLngToContainerPoint([p.lat, p.lng]);
+                
+                if (p.type === 'apt' && showApt) {
+                    ctx.fillStyle = 'rgba(33, 150, 243, 0.6)';
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, sizeApt, 0, Math.PI * 2);
+                    ctx.fill();
+                    viewApt++;
+                } else if (p.type === 'villa' && showVilla) {
+                    ctx.fillStyle = 'rgba(76, 175, 80, 0.6)';
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, sizeVilla, 0, Math.PI * 2);
+                    ctx.fill();
+                    viewVilla++;
+                } else if (p.type === 'other' && showOther) {
+                    ctx.fillStyle = 'rgba(255, 152, 0, 0.4)';
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, sizeOther, 0, Math.PI * 2);
+                    ctx.fill();
+                    viewOther++;
+                }
+            });
+            
+            // Draw POIs
+            if (showPoi) {
+                poiData.forEach(p => {
+                    if (p.lat < bounds.getSouth() || p.lat > bounds.getNorth() ||
+                        p.lng < bounds.getWest() || p.lng > bounds.getEast()) return;
+                    
+                    if (activePoiCategories.size > 0 && !activePoiCategories.has(p.layer)) return;
+                    
+                    const pt = map.latLngToContainerPoint([p.lat, p.lng]);
+                    const color = poiColors[p.layer] || poiColors['default'];
+                    
+                    // Draw POI with border for visibility
+                    ctx.fillStyle = color;
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(pt.x, pt.y, sizePoi, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                    viewPoi++;
+                });
+            }
+            
+            // Update view counts
+            document.getElementById('viewParcels').textContent = (viewApt + viewVilla + viewOther).toLocaleString();
+            document.getElementById('viewApt').textContent = viewApt.toLocaleString();
+            document.getElementById('viewVilla').textContent = viewVilla.toLocaleString();
+            document.getElementById('viewOther').textContent = viewOther.toLocaleString();
+            document.getElementById('viewPoi').textContent = viewPoi.toLocaleString();
+        }
+        
+        // ============== FILE LOADING ==============
+        
+        // Parse Parcels CSV
+        document.getElementById('parcelsFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('parcelsStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const lines = e.target.result.split('\n');
+                const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+                
+                parcelsData = [];
+                let aptCount = 0, villaCount = 0, otherCount = 0;
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    
+                    const values = parseCSVLine(lines[i]);
+                    const row = {};
+                    headers.forEach((h, idx) => row[h] = values[idx]);
+                    
+                    const lat = parseFloat(row.latitude || row.lat);
+                    const lng = parseFloat(row.longitude || row.lng || row.lon);
+                    
+                    if (isNaN(lat) || isNaN(lng)) continue;
+                    
+                    // Determine type based on is_apartment field or land use
+                    let type = 'other';
+                    const isApt = row.is_apartment;
+                    const landUse = (row.mainlanduse || row.land_use || row.landuse || '').toString();
+                    const subtype = (row.subtype || '').toString().toLowerCase();
+                    const floors = parseInt(row.nooffloors || row.floors || 0);
+                    const units = parseInt(row.residentialunits || row.units || 0);
+                    
+                    // Apartment detection
+                    if (isApt === 'True' || isApt === 'true' || isApt === '1' || 
+                        subtype.includes('شقق') || subtype.includes('apartment') ||
+                        (landUse === '1000' && floors >= 3) || units >= 4) {
+                        type = 'apt';
+                        aptCount++;
+                    }
+                    // Villa detection
+                    else if (subtype.includes('فيلا') || subtype.includes('villa') ||
+                             (landUse === '1000' && floors <= 2 && units <= 2)) {
+                        type = 'villa';
+                        villaCount++;
+                    } else {
+                        otherCount++;
+                    }
+                    
+                    parcelsData.push({
+                        lat, lng, type,
+                        district_id: row.district_id || row.district,
+                        name: row.name || row.parcel_name || '',
+                        landuse: landUse
+                    });
+                }
+                
+                document.getElementById('parcelsStatus').textContent = `✓ ${parcelsData.length.toLocaleString()} parcels loaded`;
+                document.getElementById('parcelsStatus').classList.add('loaded');
+                
+                document.getElementById('totalParcels').textContent = parcelsData.length.toLocaleString();
+                document.getElementById('totalApt').textContent = aptCount.toLocaleString();
+                document.getElementById('totalVilla').textContent = villaCount.toLocaleString();
+                document.getElementById('totalOther').textContent = otherCount.toLocaleString();
+                
+                render();
+            };
+            reader.readAsText(file);
+        });
+        
+        // Parse POI CSV
+        document.getElementById('poiFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('poiStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const lines = e.target.result.split('\n');
+                const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+                
+                poiData = [];
+                const categories = {};
+                
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    
+                    const values = parseCSVLine(lines[i]);
+                    const row = {};
+                    headers.forEach((h, idx) => row[h] = values[idx]);
+                    
+                    const lat = parseFloat(row.latitude || row.lat);
+                    const lng = parseFloat(row.longitude || row.lng || row.lon);
+                    
+                    if (isNaN(lat) || isNaN(lng)) continue;
+                    
+                    const layer = row.layer || 'Unknown';
+                    categories[layer] = (categories[layer] || 0) + 1;
+                    
+                    poiData.push({
+                        lat, lng, layer,
+                        name_ar: row.name_ar || '',
+                        name_en: row.name_en || '',
+                        category: row.main_category_en || layer
+                    });
+                }
+                
+                document.getElementById('poiStatus').textContent = `✓ ${poiData.length.toLocaleString()} POIs loaded`;
+                document.getElementById('poiStatus').classList.add('loaded');
+                
+                // Build category list
+                const catContainer = document.getElementById('poiCategories');
+                catContainer.innerHTML = '';
+                document.getElementById('poiCatCount').textContent = Object.keys(categories).length;
+                
+                // All categories active by default
+                activePoiCategories = new Set(Object.keys(categories));
+                
+                Object.entries(categories)
+                    .sort((a, b) => b[1] - a[1])
+                    .forEach(([cat, count]) => {
+                        const div = document.createElement('div');
+                        div.className = 'poi-cat';
+                        const color = poiColors[cat] || poiColors['default'];
+                        div.innerHTML = `
+                            <input type="checkbox" checked data-cat="${cat}">
+                            <div class="layer-dot" style="background:${color};width:10px;height:10px;"></div>
+                            <span>${cat}</span>
+                            <span class="count">${count.toLocaleString()}</span>
+                        `;
+                        div.querySelector('input').addEventListener('change', function() {
+                            if (this.checked) {
+                                activePoiCategories.add(cat);
+                            } else {
+                                activePoiCategories.delete(cat);
+                            }
+                            render();
+                        });
+                        catContainer.appendChild(div);
+                    });
+                
+                render();
+            };
+            reader.readAsText(file);
+        });
+        
+        // Parse Districts JSON
+        document.getElementById('districtsFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('districtsStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    districtsData = JSON.parse(e.target.result);
+                    
+                    const count = districtsData.features ? districtsData.features.length : 0;
+                    document.getElementById('districtsStatus').textContent = `✓ ${count} districts loaded`;
+                    document.getElementById('districtsStatus').classList.add('loaded');
+                    document.getElementById('districtCount').textContent = count;
+                    
+                    // Add to map if checkbox is checked
+                    if (document.getElementById('showDistricts').checked) {
+                        showDistrictBoundaries();
+                    }
+                    
+                    // Build district list
+                    const listContainer = document.getElementById('districtList');
+                    listContainer.innerHTML = '';
+                    
+                    districtsData.features.forEach((f, idx) => {
+                        const name = f.properties.name || f.properties.NAME || f.properties.district_name || `District ${idx + 1}`;
+                        const div = document.createElement('div');
+                        div.style.cssText = 'padding:5px 8px; font-size:11px; cursor:pointer; border-bottom:1px solid #eee;';
+                        div.textContent = name;
+                        div.addEventListener('click', () => zoomToDistrict(f));
+                        listContainer.appendChild(div);
+                    });
+                    
+                } catch (err) {
+                    document.getElementById('districtsStatus').textContent = 'Error: Invalid JSON';
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        // ============== DISTRICT FUNCTIONS ==============
+        function showDistrictBoundaries() {
+            if (districtLayer) {
+                map.removeLayer(districtLayer);
+            }
+            if (!districtsData) return;
+            
+            districtLayer = L.geoJSON(districtsData, {
+                style: {
+                    color: '#607D8B',
+                    weight: 2,
+                    fillOpacity: 0.1
+                },
+                onEachFeature: function(feature, layer) {
+                    const name = feature.properties.name || feature.properties.NAME || 'District';
+                    layer.bindTooltip(name, {sticky: true});
+                    
+                    layer.on('click', function() {
+                        if (document.getElementById('enableDistrictClick').checked) {
+                            showDistrictStats(feature);
+                        }
+                    });
+                }
+            }).addTo(map);
+        }
+        
+        function hideDistrictBoundaries() {
+            if (districtLayer) {
+                map.removeLayer(districtLayer);
+                districtLayer = null;
+            }
+        }
+        
+        function zoomToDistrict(feature) {
+            const layer = L.geoJSON(feature);
+            map.fitBounds(layer.getBounds());
+            showDistrictStats(feature);
+        }
+        
+        function showDistrictStats(feature) {
+            const name = feature.properties.name || feature.properties.NAME || 'District';
+            const districtId = feature.properties.district_id || feature.properties.DISTRICT_ID || '';
+            
+            // Count parcels in this district
+            let apt = 0, villa = 0, other = 0;
+            
+            // Use turf.js or simple bounds check
+            const bounds = L.geoJSON(feature).getBounds();
+            
+            parcelsData.forEach(p => {
+                if (p.lat >= bounds.getSouth() && p.lat <= bounds.getNorth() &&
+                    p.lng >= bounds.getWest() && p.lng <= bounds.getEast()) {
+                    if (p.type === 'apt') apt++;
+                    else if (p.type === 'villa') villa++;
+                    else other++;
+                }
+            });
+            
+            // Count POIs
+            let poiCount = 0;
+            poiData.forEach(p => {
+                if (p.lat >= bounds.getSouth() && p.lat <= bounds.getNorth() &&
+                    p.lng >= bounds.getWest() && p.lng <= bounds.getEast()) {
+                    poiCount++;
+                }
+            });
+            
+            const total = apt + villa + other;
+            const villaPercent = total > 0 ? ((villa / total) * 100).toFixed(1) : 0;
+            const aptPercent = total > 0 ? ((apt / total) * 100).toFixed(1) : 0;
+            
+            document.getElementById('districtName').textContent = `📍 ${name}`;
+            document.getElementById('districtStatsContent').innerHTML = `
+                <div class="district-stat-row">
+                    <span class="label"><div class="layer-dot dot-apt"></div> Apartments</span>
+                    <span class="value">${apt.toLocaleString()} (${aptPercent}%)</span>
+                </div>
+                <div class="district-stat-row">
+                    <span class="label"><div class="layer-dot dot-villa"></div> Villas</span>
+                    <span class="value">${villa.toLocaleString()} (${villaPercent}%)</span>
+                </div>
+                <div class="district-stat-row">
+                    <span class="label"><div class="layer-dot dot-other"></div> Other</span>
+                    <span class="value">${other.toLocaleString()}</span>
+                </div>
+                <div class="district-stat-row" style="border-top:2px solid #eee; margin-top:5px; padding-top:8px;">
+                    <span class="label"><b>Total Parcels</b></span>
+                    <span class="value">${total.toLocaleString()}</span>
+                </div>
+                <div class="district-stat-row">
+                    <span class="label"><div class="layer-dot dot-poi"></div> POIs</span>
+                    <span class="value">${poiCount.toLocaleString()}</span>
+                </div>
+            `;
+            
+            document.getElementById('districtPanel').classList.add('show');
+        }
+        
+        function closeDistrictPanel() {
+            document.getElementById('districtPanel').classList.remove('show');
+        }
+        
+        // ============== HELPERS ==============
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+        
+        function toggleSection(header) {
+            const content = header.nextElementSibling;
+            const arrow = header.querySelector('span');
+            content.classList.toggle('open');
+            arrow.textContent = content.classList.contains('open') ? '▼' : '▶';
+        }
+        
+        function resetView() {
+            map.setView([24.7136, 46.6753], 11);
+        }
+        
+        // ============== EVENT LISTENERS ==============
+        map.on('move', render);
+        map.on('zoom', function() {
+            document.getElementById('zoomLevel').textContent = map.getZoom();
+            render();
+        });
+        window.addEventListener('resize', render);
+        
+        // Layer toggles
+        ['showApt', 'showVilla', 'showOther', 'showPoi'].forEach(id => {
+            document.getElementById(id).addEventListener('change', render);
+        });
+        
+        // Size sliders
+        ['sizeApt', 'sizeVilla', 'sizeOther', 'sizePoi'].forEach(id => {
+            const slider = document.getElementById(id);
+            const valSpan = document.getElementById(id + 'Val');
+            slider.addEventListener('input', function() {
+                valSpan.textContent = this.value;
+                render();
+            });
+        });
+        
+        // District toggle
+        document.getElementById('showDistricts').addEventListener('change', function() {
+            if (this.checked) {
+                showDistrictBoundaries();
+            } else {
+                hideDistrictBoundaries();
+            }
+        });
+        
+        // Initial render
+        resizeCanvas();
+        render();
+        
+        console.log('Riyadh Dynamic Map initialized. Upload your data files to begin.');
+    </script>
+</body>
+</html>
