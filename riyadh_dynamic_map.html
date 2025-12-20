@@ -27,7 +27,7 @@
         .section-content { padding: 8px; display: none; }
         .section-content.open { display: block; }
         
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin: 8px 0; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin: 8px 0; }
         .stat-box { padding: 8px; border-radius: 6px; text-align: center; color: white; }
         .stat-box .num { font-size: 1.2em; font-weight: bold; }
         .stat-box .lbl { font-size: 9px; opacity: 0.9; }
@@ -87,6 +87,27 @@
         .poi-cat { display: flex; align-items: center; gap: 5px; padding: 3px 5px; font-size: 10px; cursor: pointer; }
         .poi-cat:hover { background: #f0f0f0; }
         .poi-cat .cnt { margin-left: auto; color: #999; }
+        
+        .info-popup {
+            position: absolute; background: white; padding: 12px 15px; border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 2000; min-width: 280px; max-width: 350px;
+            font-size: 12px; display: none; border-left: 4px solid #1a73e8;
+        }
+        .info-popup.show { display: block; }
+        .info-popup h3 { margin: 0 0 8px 0; color: #1a73e8; font-size: 14px; }
+        .info-popup .close { position: absolute; top: 5px; right: 8px; cursor: pointer; color: #999; font-size: 18px; }
+        .info-popup .close:hover { color: #333; }
+        .info-popup table { width: 100%; border-collapse: collapse; }
+        .info-popup td { padding: 4px 5px; border-bottom: 1px solid #eee; font-size: 11px; }
+        .info-popup td:first-child { font-weight: 600; color: #555; width: 35%; }
+        .info-popup .type-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; color: white; font-size: 10px; }
+        .info-popup .type-apt { background: #2196F3; }
+        .info-popup .type-villa { background: #4CAF50; }
+        .info-popup .type-other { background: #FF9800; }
+        .info-popup .type-poi { background: #9C27B0; }
+        
+        .click-toggle { background: #fff3e0; padding: 8px; border-radius: 6px; margin: 8px 0; }
+        .click-toggle label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -99,11 +120,19 @@
     <div id="map"></div>
     <canvas id="canvas"></canvas>
     
+    <!-- Info Popup for clicked items -->
+    <div id="infoPopup" class="info-popup">
+        <span class="close" onclick="closeInfoPopup()">&times;</span>
+        <h3 id="popupTitle">📍 Details</h3>
+        <div id="popupContent"></div>
+    </div>
+    
     <div class="panel">
         <h2>Riyadh Map - Dynamic Counts</h2>
         
         <!-- Total Stats -->
         <div class="stats-grid">
+            <div class="stat-box" style="background:#9c27b0;"><div class="num" id="totalBldg">0</div><div class="lbl">🏗️ Buildings</div></div>
             <div class="stat-box apt"><div class="num" id="totalApt">0</div><div class="lbl">🏢 Apartments</div></div>
             <div class="stat-box villa"><div class="num" id="totalVilla">0</div><div class="lbl">🏠 Villas</div></div>
             <div class="stat-box other"><div class="num" id="totalOther">0</div><div class="lbl">📦 Other</div></div>
@@ -115,6 +144,7 @@
         <!-- Selected District Stats -->
         <div class="district-stats" id="districtStats">
             <h3 id="districtStatsTitle">📍 DISTRICT: None</h3>
+            <div class="row" style="color:#9c27b0;"><span>🏗️ Buildings:</span><span id="distBldg">0</span></div>
             <div class="row" style="color:#2196F3;"><span>🏢 Apartments:</span><span id="distApt">0</span></div>
             <div class="row" style="color:#4CAF50;"><span>🏠 Villas:</span><span id="distVilla">0</span></div>
             <div class="row" style="color:#FF9800;"><span>📦 Other:</span><span id="distOther">0</span></div>
@@ -127,6 +157,7 @@
         <!-- Dynamic Counts (In View) -->
         <div class="dynamic-stats">
             <h3>📍 IN CURRENT VIEW</h3>
+            <div class="row" style="color:#9c27b0;"><span>🏗️ Buildings:</span><span id="viewBldg">0</span></div>
             <div class="row" style="color:#2196F3;"><span>🏢 Apartments:</span><span id="viewApt">0</span></div>
             <div class="row" style="color:#4CAF50;"><span>🏠 Villas:</span><span id="viewVilla">0</span></div>
             <div class="row" style="color:#FF9800;"><span>📦 Other:</span><span id="viewOther">0</span></div>
@@ -141,6 +172,17 @@
                 🎨 LAYERS <span>▼</span>
             </div>
             <div class="section-content open">
+                <div class="layer-control">
+                    <div class="header">
+                        <input type="checkbox" id="showBldg" checked onchange="render()">
+                        <div class="dot" style="background:#9c27b0;"></div>
+                        <span class="name">MS Buildings</span>
+                    </div>
+                    <div style="font-size:10px;">
+                        Size: <span id="bldgSizeVal">2</span> <input type="range" id="bldgSize" min="0.5" max="8" value="2" step="0.5" oninput="updateSlider('bldg')">
+                        Opacity: <span id="bldgOpacityVal">40</span>% <input type="range" id="bldgOpacity" min="10" max="100" value="40" step="5" oninput="updateSlider('bldg')">
+                    </div>
+                </div>
                 <div class="layer-control">
                     <div class="header">
                         <input type="checkbox" id="showApt" checked onchange="render()">
@@ -188,8 +230,11 @@
                         <div class="dot" style="background:#607D8B;"></div>
                         <span class="name">Districts</span>
                     </div>
-                    <div style="font-size:10px;margin-top:5px;">
-                        <label><input type="checkbox" id="enableDistrictClick" checked> Click district for stats</label>
+                </div>
+                <div class="click-toggle">
+                    <label><input type="checkbox" id="enableClick" checked> 🖱️ Enable click to view details</label>
+                    <div style="font-size:9px;color:#666;margin-top:3px;margin-left:20px;">
+                        Click on POI/Parcel/District to see info. Disable to freely pan/zoom.
                     </div>
                 </div>
             </div>
@@ -202,7 +247,12 @@
             </div>
             <div class="section-content open">
                 <div class="file-input">
-                    <label>🏗️ Parcels CSV (riyadh_all_parcels_final.csv):</label>
+                    <label>🏗️ MS Buildings JSON:</label>
+                    <input type="file" id="buildingsFile" accept=".json">
+                    <div id="buildingsStatus" class="file-status">Upload buildings JSON</div>
+                </div>
+                <div class="file-input">
+                    <label>📊 Parcels CSV (riyadh_all_parcels_final.csv):</label>
                     <input type="file" id="parcelsFile" accept=".csv">
                     <div id="parcelsStatus" class="file-status">Upload parcels CSV</div>
                 </div>
@@ -263,11 +313,13 @@
 
     <script>
         let map;
+        let buildings = [];    // [[lat, lng], ...]
         let parcels = [];      // {lat, lng, type: 'apt'|'villa'|'other', ...}
         let poiData = [];      // {lat, lng, layer, name_ar, name_en}
         let districts = [];    // GeoJSON features
         let selectedDistrict = null;
         let activePoiCategories = new Set();
+        let infoPopup = null;
         
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -316,6 +368,9 @@
         
         function updateSlider(layer) {
             document.getElementById(layer + 'SizeVal').textContent = document.getElementById(layer + 'Size').value;
+            const opacityEl = document.getElementById(layer + 'Opacity');
+            const opacityVal = document.getElementById(layer + 'OpacityVal');
+            if (opacityEl && opacityVal) opacityVal.textContent = opacityEl.value;
             render();
         }
         
@@ -373,18 +428,21 @@
             const scale = Math.pow(2, zoom);
             const baseSize = Math.max(1, zoom - 10);
             
+            const showBldg = document.getElementById('showBldg').checked;
             const showApt = document.getElementById('showApt').checked;
             const showVilla = document.getElementById('showVilla').checked;
             const showOther = document.getElementById('showOther').checked;
             const showPoi = document.getElementById('showPoi').checked;
             const showDist = document.getElementById('showDistricts').checked;
             
+            const bldgSize = parseFloat(document.getElementById('bldgSize').value) * baseSize / 2;
+            const bldgOpacity = parseInt(document.getElementById('bldgOpacity').value) / 100;
             const aptSize = parseFloat(document.getElementById('aptSize').value) * baseSize / 2;
             const villaSize = parseFloat(document.getElementById('villaSize').value) * baseSize / 2;
             const otherSize = parseFloat(document.getElementById('otherSize').value) * baseSize / 2;
             const poiSize = parseFloat(document.getElementById('poiSize').value) * baseSize / 2;
             
-            let viewApt = 0, viewVilla = 0, viewOther = 0, viewPoi = 0;
+            let viewBldg = 0, viewApt = 0, viewVilla = 0, viewOther = 0, viewPoi = 0;
             
             // Draw districts
             if (showDist && districts.length) {
@@ -422,6 +480,20 @@
                     ctx.stroke();
                     ctx.globalAlpha = 1;
                 });
+            }
+            
+            // Draw buildings
+            if (showBldg && buildings.length) {
+                ctx.fillStyle = '#9c27b0';
+                ctx.globalAlpha = bldgOpacity;
+                buildings.forEach(b => {
+                    if (b[0] < sw.lat() || b[0] > ne.lat() || b[1] < sw.lng() || b[1] > ne.lng()) return;
+                    viewBldg++;
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(b[0], b[1]));
+                    const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                    ctx.beginPath(); ctx.arc(x, y, bldgSize, 0, Math.PI * 2); ctx.fill();
+                });
+                ctx.globalAlpha = 1;
             }
             
             // Draw parcels
@@ -467,6 +539,7 @@
             const viewTotal = viewApt + viewVilla + viewOther;
             const villaPct = viewTotal > 0 ? (viewVilla / viewTotal * 100).toFixed(1) : 0;
             
+            document.getElementById('viewBldg').textContent = viewBldg.toLocaleString();
             document.getElementById('viewApt').textContent = viewApt.toLocaleString();
             document.getElementById('viewVilla').textContent = viewVilla.toLocaleString();
             document.getElementById('viewOther').textContent = viewOther.toLocaleString();
@@ -492,7 +565,11 @@
             // Convert to [lat, lon] for pointInPolygon
             const poly = coords.map(([lon, lat]) => [lon, lat]);
             
-            let apt = 0, villa = 0, other = 0, poi = 0;
+            let bldg = 0, apt = 0, villa = 0, other = 0, poi = 0;
+            
+            buildings.forEach(b => {
+                if (pointInPolygon(b[0], b[1], poly)) bldg++;
+            });
             
             parcels.forEach(p => {
                 if (pointInPolygon(p.lat, p.lng, poly)) {
@@ -511,6 +588,7 @@
             const aptPct = total > 0 ? (apt / total * 100).toFixed(1) : 0;
             
             document.getElementById('districtStatsTitle').textContent = '📍 DISTRICT: ' + selectedDistrict;
+            document.getElementById('distBldg').textContent = bldg.toLocaleString();
             document.getElementById('distApt').textContent = apt.toLocaleString();
             document.getElementById('distVilla').textContent = villa.toLocaleString();
             document.getElementById('distOther').textContent = other.toLocaleString();
@@ -522,6 +600,23 @@
         }
         
         // File loaders
+        document.getElementById('buildingsFile').addEventListener('change', function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            showLoading('Loading Buildings...');
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                buildings = JSON.parse(evt.target.result);
+                document.getElementById('totalBldg').textContent = buildings.length.toLocaleString();
+                document.getElementById('buildingsStatus').textContent = `✓ ${buildings.length.toLocaleString()} loaded`;
+                document.getElementById('buildingsStatus').classList.add('loaded');
+                hideLoading();
+                calculateDistrictStats();
+                render();
+            };
+            reader.readAsText(file);
+        });
+        
         document.getElementById('parcelsFile').addEventListener('change', function(e) {
             const file = e.target.files[0]; if (!file) return;
             showLoading('Loading Parcels...');
@@ -565,7 +660,7 @@
                         otherCount++;
                     }
                     
-                    parcels.push({ lat, lng, type });
+                    parcels.push({ lat, lng, type, landuse: landUse, district_id: row.district_id || '' });
                 }
                 
                 document.getElementById('parcelsStatus').textContent = `✓ ${parcels.length.toLocaleString()} loaded`;
@@ -742,6 +837,131 @@
             a.click();
         }
         
+        // Info popup functions
+        function showInfoPopup(x, y, title, content) {
+            const popup = document.getElementById('infoPopup');
+            document.getElementById('popupTitle').innerHTML = title;
+            document.getElementById('popupContent').innerHTML = content;
+            
+            // Position popup
+            let left = x + 15;
+            let top = y + 15;
+            if (left + 300 > window.innerWidth) left = x - 315;
+            if (top + 200 > window.innerHeight) top = y - 215;
+            
+            popup.style.left = left + 'px';
+            popup.style.top = top + 'px';
+            popup.classList.add('show');
+        }
+        
+        function closeInfoPopup() {
+            document.getElementById('infoPopup').classList.remove('show');
+        }
+        
+        function findClickedItem(lat, lng, pixelTolerance) {
+            if (!map) return null;
+            
+            const proj = map.getProjection();
+            const zoom = map.getZoom();
+            const scale = Math.pow(2, zoom);
+            const clickPt = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
+            
+            // Tolerance in world coordinates
+            const tolerance = pixelTolerance / scale;
+            
+            // Check POIs first (on top)
+            for (const p of poiData) {
+                if (activePoiCategories.size > 0 && !activePoiCategories.has(p.layer)) continue;
+                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
+                if (Math.abs(pt.x - clickPt.x) < tolerance && Math.abs(pt.y - clickPt.y) < tolerance) {
+                    return { type: 'poi', data: p };
+                }
+            }
+            
+            // Check parcels
+            for (const p of parcels) {
+                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
+                if (Math.abs(pt.x - clickPt.x) < tolerance && Math.abs(pt.y - clickPt.y) < tolerance) {
+                    return { type: 'parcel', data: p };
+                }
+            }
+            
+            // Check buildings
+            for (const b of buildings) {
+                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(b[0], b[1]));
+                if (Math.abs(pt.x - clickPt.x) < tolerance && Math.abs(pt.y - clickPt.y) < tolerance) {
+                    return { type: 'building', data: { lat: b[0], lng: b[1] } };
+                }
+            }
+            
+            // Check districts
+            for (const d of districts) {
+                const coords = d.geometry.type === 'Polygon' ? d.geometry.coordinates[0] : 
+                               d.geometry.type === 'MultiPolygon' ? d.geometry.coordinates[0][0] : null;
+                if (!coords) continue;
+                const poly = coords.map(([lon, lat]) => [lon, lat]);
+                if (pointInPolygon(lat, lng, poly)) {
+                    return { type: 'district', data: d };
+                }
+            }
+            
+            return null;
+        }
+        
+        function handleMapClick(e) {
+            if (!document.getElementById('enableClick').checked) return;
+            
+            closeInfoPopup();
+            
+            const lat = e.latLng.lat();
+            const lng = e.latLng.lng();
+            const item = findClickedItem(lat, lng, 15);
+            
+            if (!item) return;
+            
+            const pixelX = e.pixel.x;
+            const pixelY = e.pixel.y;
+            
+            if (item.type === 'poi') {
+                const p = item.data;
+                const color = poiColors[p.layer] || poiColors['default'];
+                showInfoPopup(pixelX, pixelY, 
+                    `<span class="type-badge type-poi">${p.layer}</span> POI`,
+                    `<table>
+                        <tr><td>Name (AR)</td><td>${p.name_ar || '-'}</td></tr>
+                        <tr><td>Name (EN)</td><td>${p.name_en || '-'}</td></tr>
+                        <tr><td>Category</td><td>${p.layer}</td></tr>
+                        <tr><td>Location</td><td>${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</td></tr>
+                    </table>`
+                );
+            } else if (item.type === 'parcel') {
+                const p = item.data;
+                const typeClass = p.type === 'apt' ? 'type-apt' : p.type === 'villa' ? 'type-villa' : 'type-other';
+                const typeName = p.type === 'apt' ? 'Apartment' : p.type === 'villa' ? 'Villa' : 'Other';
+                showInfoPopup(pixelX, pixelY,
+                    `<span class="type-badge ${typeClass}">${typeName}</span> Parcel`,
+                    `<table>
+                        <tr><td>Type</td><td>${typeName}</td></tr>
+                        <tr><td>Location</td><td>${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</td></tr>
+                        ${p.landuse ? `<tr><td>Land Use</td><td>${p.landuse}</td></tr>` : ''}
+                        ${p.district_id ? `<tr><td>District ID</td><td>${p.district_id}</td></tr>` : ''}
+                    </table>`
+                );
+            } else if (item.type === 'building') {
+                const b = item.data;
+                showInfoPopup(pixelX, pixelY,
+                    `<span class="type-badge" style="background:#9c27b0;">Building</span> MS Building`,
+                    `<table>
+                        <tr><td>Location</td><td>${b.lat.toFixed(6)}, ${b.lng.toFixed(6)}</td></tr>
+                    </table>`
+                );
+            } else if (item.type === 'district') {
+                const d = item.data;
+                const name = d.properties.name || d.properties.NAME || 'Unknown';
+                selectDistrict(name);
+            }
+        }
+        
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
                 center: { lat: 24.7136, lng: 46.6753 },
@@ -754,22 +974,7 @@
             });
             
             map.addListener('idle', render);
-            map.addListener('click', function(e) {
-                if (!document.getElementById('enableDistrictClick').checked) return;
-                
-                // Find clicked district
-                const lat = e.latLng.lat(), lng = e.latLng.lng();
-                for (const d of districts) {
-                    const coords = d.geometry.type === 'Polygon' ? d.geometry.coordinates[0] : 
-                                   d.geometry.type === 'MultiPolygon' ? d.geometry.coordinates[0][0] : null;
-                    if (!coords) continue;
-                    const poly = coords.map(([lon, lat]) => [lon, lat]);
-                    if (pointInPolygon(lat, lng, poly)) {
-                        selectDistrict(d.properties.name || d.properties.NAME);
-                        return;
-                    }
-                }
-            });
+            map.addListener('click', handleMapClick);
             
             window.addEventListener('resize', render);
             console.log('Map ready. Upload your data files.');
