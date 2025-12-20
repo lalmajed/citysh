@@ -448,10 +448,14 @@
             // Draw districts
             if (showDist && districts.length) {
                 districts.forEach(d => {
-                    if (selectedDistrict && d.properties.name !== selectedDistrict) return;
+                    const dName = getDistrictName(d);
+                    if (selectedDistrict && dName !== selectedDistrict) return;
                     
-                    const coords = d.geometry.type === 'Polygon' ? d.geometry.coordinates[0] : 
-                                   d.geometry.type === 'MultiPolygon' ? d.geometry.coordinates[0][0] : null;
+                    const geom = getDistrictGeometry(d);
+                    if (!geom) return;
+                    
+                    const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
+                                   geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
                     if (!coords || coords.length < 3) return;
                     
                     // Fill for selected
@@ -576,14 +580,23 @@
                 return;
             }
             
-            const d = districts.find(x => x.properties.name === selectedDistrict);
-            if (!d) return;
+            const d = selectedDistrictObj || districts.find(x => getDistrictName(x) === selectedDistrict);
+            if (!d) {
+                console.log('District not found:', selectedDistrict);
+                return;
+            }
             
-            const coords = d.geometry.type === 'Polygon' ? d.geometry.coordinates[0] : 
-                           d.geometry.type === 'MultiPolygon' ? d.geometry.coordinates[0][0] : null;
+            const geom = getDistrictGeometry(d);
+            if (!geom) {
+                console.log('No geometry for district:', selectedDistrict);
+                return;
+            }
+            
+            const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
+                           geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
             if (!coords) return;
             
-            // Convert to [lat, lon] for pointInPolygon
+            // Convert to [lon, lat] for pointInPolygon
             const poly = coords.map(([lon, lat]) => [lon, lat]);
             
             let bldg = 0, apt = 0, villa = 0, other = 0, poi = 0;
@@ -818,46 +831,116 @@
             reader.onload = function(evt) {
                 try {
                     const data = JSON.parse(evt.target.result);
-                    districts = data.features || [];
                     
-                    document.getElementById('distStatus').textContent = `✓ ${districts.length} loaded`;
-                    document.getElementById('distStatus').classList.add('loaded');
+                    // Handle different formats
+                    if (data.type === 'FeatureCollection' && data.features) {
+                        // Standard GeoJSON FeatureCollection
+                        districts = data.features;
+                    } else if (Array.isArray(data) && data[0]?.geometry) {
+                        // Array of GeoJSON features
+                        districts = data;
+                    } else if (Array.isArray(data) && data[0]?.boundaries) {
+                        // Custom format with boundaries array (like your labeler)
+                        districts = data.map(d => ({
+                            type: 'Feature',
+                            properties: { 
+                                name: d.name_en || d.name || d.name_ar,
+                                name_ar: d.name_ar,
+                                name_en: d.name_en
+                            },
+                            geometry: {
+                                type: 'Polygon',
+                                coordinates: [d.boundaries[0].map(([lat, lon]) => [lon, lat])]
+                            }
+                        }));
+                    } else if (Array.isArray(data)) {
+                        // Try to use as-is
+                        districts = data;
+                    } else {
+                        districts = [];
+                    }
+                    
+                    console.log('Districts loaded:', districts.length, 'Sample:', districts[0]);
+                    
+                    if (districts.length === 0) {
+                        document.getElementById('distStatus').innerHTML = `⚠️ <b>${file.name}</b><br>No districts found. Check format.`;
+                    } else {
+                        document.getElementById('distStatus').innerHTML = `✓ <b>${file.name}</b><br>${districts.length} districts loaded`;
+                        document.getElementById('distStatus').classList.add('loaded');
+                        showToast(`🗺️ Loaded ${districts.length} districts`, '#607D8B');
+                    }
                     document.getElementById('districtCount').textContent = districts.length;
                     
                     updateDistrictList();
                     render();
                 } catch(err) {
-                    document.getElementById('distStatus').textContent = 'Error: Invalid JSON';
+                    console.error('District load error:', err);
+                    document.getElementById('distStatus').innerHTML = `❌ <b>${file.name}</b><br>Error: ${err.message}`;
                 }
             };
             reader.readAsText(file);
         });
+        
+        function getDistrictName(d) {
+            if (d.properties) {
+                return d.properties.name || d.properties.NAME || d.properties.name_en || 
+                       d.properties.name_ar || d.properties.DISTRICT_NAME || d.properties.district_name;
+            }
+            return d.name || d.name_en || d.name_ar || 'Unknown';
+        }
         
         function updateDistrictList() {
             const search = document.getElementById('districtSearch').value.toLowerCase();
             const container = document.getElementById('districtList');
             container.innerHTML = '';
             
-            districts.forEach(d => {
-                const name = d.properties.name || d.properties.NAME || 'Unknown';
+            if (districts.length === 0) {
+                container.innerHTML = '<div style="color:#999;font-size:10px;padding:10px;">No districts loaded</div>';
+                return;
+            }
+            
+            districts.forEach((d, idx) => {
+                const name = getDistrictName(d) || `District ${idx + 1}`;
                 if (search && !name.toLowerCase().includes(search)) return;
                 
                 const div = document.createElement('div');
                 div.className = 'district-item' + (selectedDistrict === name ? ' selected' : '');
                 div.textContent = name;
-                div.onclick = () => selectDistrict(name);
+                div.onclick = () => selectDistrict(name, d);
                 container.appendChild(div);
             });
         }
         
+        function getDistrictGeometry(d) {
+            // Handle different geometry formats
+            if (d.geometry) {
+                return d.geometry;
+            }
+            if (d.boundaries && d.boundaries[0]) {
+                return {
+                    type: 'Polygon',
+                    coordinates: [d.boundaries[0].map(([lat, lon]) => [lon, lat])]
+                };
+            }
+            return null;
+        }
+        
         function filterDistricts() { updateDistrictList(); }
         
-        function selectDistrict(name) {
-            selectedDistrict = (selectedDistrict === name) ? null : name;
+        function selectDistrict(name, districtObj) {
+            if (selectedDistrict === name) {
+                selectedDistrict = null;
+                selectedDistrictObj = null;
+            } else {
+                selectedDistrict = name;
+                selectedDistrictObj = districtObj || districts.find(d => getDistrictName(d) === name);
+            }
             updateDistrictList();
             calculateDistrictStats();
             render();
         }
+        
+        let selectedDistrictObj = null;
         
         function clearDistrictSelection() {
             selectedDistrict = null;
