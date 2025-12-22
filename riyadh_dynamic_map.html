@@ -813,14 +813,21 @@
                         let type = 2; // 0=villa, 1=apt, 2=other
                         
                         if (typeIdx >= 0) {
+                            // Use pre-classified parcel_type column
                             const t = values[typeIdx];
                             if (t === 'villa') type = 0;
                             else if (t === 'apartment') type = 1;
-                        } else if (aptIdx >= 0) {
+                        } else if (aptIdx >= 0 && luIdx >= 0) {
+                            // Fallback: only residential (100000/1000000) can be villa/apt
                             const isApt = values[aptIdx];
-                            const lu = luIdx >= 0 ? values[luIdx] : '';
-                            if (lu === '100000' && isApt === 'False') type = 0;
-                            else if (isApt === 'True') type = 1;
+                            const lu = values[luIdx];
+                            const isResidential = (lu === '100000' || lu === '1000000');
+                            
+                            if (isResidential) {
+                                if (isApt === 'True') type = 1; // apartment
+                                else type = 0; // villa
+                            }
+                            // else: stays as other (type=2)
                         }
                         
                         if (type === 0) villaCount++;
