@@ -786,11 +786,14 @@
                     const headers = headerLine.split(',');
                     
                     // Find column indices once
-                    const latIdx = headers.findIndex(h => h.includes('lat'));
+                    const latIdx = headers.findIndex(h => h.includes('lat') && !h.includes('parcel'));
                     const lngIdx = headers.findIndex(h => h.includes('lon') || h === 'lng');
                     const typeIdx = headers.findIndex(h => h.includes('parcel_type'));
                     const aptIdx = headers.findIndex(h => h.includes('is_apartment'));
                     const luIdx = headers.findIndex(h => h.includes('mainlanduse') || h.includes('land_use'));
+                    
+                    console.log('CSV Headers:', headers);
+                    console.log('Column indices - lat:', latIdx, 'lng:', lngIdx, 'type:', typeIdx, 'apt:', aptIdx, 'lu:', luIdx);
                     
                     // Pre-allocate array
                     parcels = new Array(lines.length - 1);
@@ -814,9 +817,11 @@
                         
                         if (typeIdx >= 0) {
                             // Use pre-classified parcel_type column
-                            const t = (values[typeIdx] || '').trim();
+                            const t = (values[typeIdx] || '').trim().toLowerCase();
                             if (t === 'villa') type = 0;
                             else if (t === 'apartment') type = 1;
+                            // Debug first few rows
+                            if (i < 5) console.log('Row', i, 'parcel_type:', t, '-> type:', type);
                         } else if (aptIdx >= 0 && luIdx >= 0) {
                             // Fallback: only residential (100000/1000000) can be villa/apt
                             const isApt = values[aptIdx];
