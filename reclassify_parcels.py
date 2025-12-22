@@ -1,10 +1,28 @@
 #!/usr/bin/env python3
 """
-Reclassify parcels into Villa/Apartment/Other with POI cross-reference.
+Reclassify parcels into Villa/Apartment/Other with improved logic.
+
+Land Use Codes (mainlanduse):
+- 100000: Residential
+- 200000: Commercial  
+- 300000: Industrial
+- 400000: Government/Institutional
+- 500000: Agricultural
+- 600000: Religious
+- 800000: Transport/Utilities
+- 1000000: Special Residential
+
+Subtype Codes:
+- 101000: Single-family residential
+- 102000: Multi-family residential
+- 207000: Mixed-use commercial
 """
 
 import csv
 from math import radians, sin, cos, sqrt, atan2
+
+# Residential land use codes
+RESIDENTIAL_LANDUSE = {'100000', '1000000'}
 
 # POI layers that indicate NON-residential use
 NON_RESIDENTIAL_POI_LAYERS = {
@@ -15,7 +33,7 @@ NON_RESIDENTIAL_POI_LAYERS = {
 
 def haversine(lat1, lon1, lat2, lon2):
     """Calculate distance in meters between two points."""
-    R = 6371000  # Earth radius in meters
+    R = 6371000
     lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
     dlat = lat2 - lat1
     dlon = lon2 - lon1
@@ -24,41 +42,39 @@ def haversine(lat1, lon1, lat2, lon2):
 
 def main():
     print("=" * 60)
-    print("RECLASSIFYING PARCELS")
+    print("RECLASSIFYING PARCELS (Improved Logic)")
     print("=" * 60)
     
-    # Load POIs that indicate non-residential
+    # Load POIs
     print("\n1. Loading POIs...")
     poi_locations = []
-    with open('riyadh_pois.csv', 'r', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            layer = row.get('layer', '')
-            if layer in NON_RESIDENTIAL_POI_LAYERS:
-                try:
-                    lat = float(row.get('latitude', 0))
-                    lon = float(row.get('longitude', 0))
-                    if lat and lon:
-                        poi_locations.append((lat, lon, layer))
-                except:
-                    pass
-    print(f"   Loaded {len(poi_locations):,} non-residential POIs")
+    try:
+        with open('riyadh_pois.csv', 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                layer = row.get('layer', '')
+                if layer in NON_RESIDENTIAL_POI_LAYERS:
+                    try:
+                        lat = float(row.get('latitude', 0))
+                        lon = float(row.get('longitude', 0))
+                        if lat and lon:
+                            poi_locations.append((lat, lon, layer))
+                    except:
+                        pass
+        print(f"   Loaded {len(poi_locations):,} non-residential POIs")
+    except FileNotFoundError:
+        print("   No POI file found, skipping POI override")
     
-    # Build spatial index (simple grid)
-    print("\n2. Building POI spatial index...")
+    # Build spatial index
     poi_grid = {}
     for lat, lon, layer in poi_locations:
-        # Grid cell of ~100m
         cell = (round(lat * 100), round(lon * 100))
         if cell not in poi_grid:
             poi_grid[cell] = []
         poi_grid[cell].append((lat, lon, layer))
-    print(f"   {len(poi_grid):,} grid cells")
     
-    def find_nearby_poi(lat, lon, radius=30):
-        """Find POI within radius meters."""
+    def find_nearby_poi(lat, lon, radius=25):
         cell = (round(lat * 100), round(lon * 100))
-        # Check surrounding cells
         for dx in [-1, 0, 1]:
             for dy in [-1, 0, 1]:
                 check_cell = (cell[0] + dx, cell[1] + dy)
@@ -69,12 +85,30 @@ def main():
         return None
     
     # Process parcels
-    print("\n3. Processing parcels...")
+    print("\n2. Processing parcels with IMPROVED classification...")
+    print("   Classification Rules:")
+    print("   - VILLA: Residential (100000) + subtype 101000 + is_apartment=False")
+    print("   - APARTMENT: Residential (100000/1000000) + is_apartment=True")
+    print("   - OTHER: Non-residential OR near commercial POI")
     
     villa_count = 0
     apt_count = 0
     other_count = 0
     overridden_by_poi = 0
+    
+    # Track reasons
+    reasons = {
+        'villa_residential': 0,
+        'apt_residential': 0,
+        'apt_special': 0,
+        'other_commercial': 0,
+        'other_industrial': 0,
+        'other_govt': 0,
+        'other_transport': 0,
+        'other_agricultural': 0,
+        'other_unknown': 0,
+        'other_poi_override': 0
+    }
     
     output_rows = []
     
@@ -83,28 +117,66 @@ def main():
         headers = reader.fieldnames + ['parcel_type']
         
         for i, row in enumerate(reader):
-            if i % 100000 == 0:
+            if i % 100000 == 0 and i > 0:
                 print(f"   Processed {i:,} parcels...")
             
-            mainlanduse = row.get('mainlanduse', '')
-            is_apartment = row.get('is_apartment', '')
-            lat = float(row.get('lat', 0) or 0)
-            lon = float(row.get('lon', 0) or 0)
+            mainlanduse = row.get('mainlanduse', '').strip()
+            subtype = row.get('subtype', '').strip()
+            is_apartment = row.get('is_apartment', '').strip()
             
-            # Initial classification
-            if mainlanduse == '100000' and is_apartment == 'False':
-                parcel_type = 'villa'
-            elif is_apartment == 'True':
-                parcel_type = 'apartment'
+            try:
+                units = int(row.get('units', 0) or 0)
+            except:
+                units = 0
+            
+            try:
+                lat = float(row.get('lat', 0) or 0)
+                lon = float(row.get('lon', 0) or 0)
+            except:
+                lat, lon = 0, 0
+            
+            # ============ IMPROVED CLASSIFICATION ============
+            
+            # Check if it's residential first
+            is_residential = mainlanduse in RESIDENTIAL_LANDUSE
+            
+            if is_residential:
+                # It's a residential parcel
+                if is_apartment == 'True':
+                    # Marked as apartment
+                    parcel_type = 'apartment'
+                    if mainlanduse == '1000000':
+                        reasons['apt_special'] += 1
+                    else:
+                        reasons['apt_residential'] += 1
+                else:
+                    # Not marked as apartment - it's a villa/single-family
+                    parcel_type = 'villa'
+                    reasons['villa_residential'] += 1
             else:
+                # NOT residential - classify as other
                 parcel_type = 'other'
+                
+                if mainlanduse == '200000':
+                    reasons['other_commercial'] += 1
+                elif mainlanduse == '300000':
+                    reasons['other_industrial'] += 1
+                elif mainlanduse == '400000':
+                    reasons['other_govt'] += 1
+                elif mainlanduse == '800000':
+                    reasons['other_transport'] += 1
+                elif mainlanduse == '500000':
+                    reasons['other_agricultural'] += 1
+                else:
+                    reasons['other_unknown'] += 1
             
-            # Check if POI overrides (only for "residential" types)
-            if parcel_type in ('villa', 'apartment') and lat and lon:
+            # POI override: if residential but near commercial POI, mark as other
+            if parcel_type in ('villa', 'apartment') and lat and lon and poi_grid:
                 nearby_poi = find_nearby_poi(lat, lon, radius=25)
                 if nearby_poi:
                     parcel_type = 'other'
                     overridden_by_poi += 1
+                    reasons['other_poi_override'] += 1
             
             # Count
             if parcel_type == 'villa':
@@ -118,7 +190,7 @@ def main():
             output_rows.append(row)
     
     # Write output
-    print("\n4. Writing output...")
+    print("\n3. Writing output...")
     with open('riyadh_parcels_classified.csv', 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=headers)
         writer.writeheader()
@@ -134,9 +206,19 @@ def main():
     print(f"📦 Other:      {other_count:>10,} ({other_count/total*100:.1f}%)")
     print(f"{'─' * 40}")
     print(f"   TOTAL:      {total:>10,}")
-    print()
-    print(f"⚠️  Overridden by POI: {overridden_by_poi:,}")
-    print(f"   (Parcels near commercial/tourism POIs changed to 'other')")
+    
+    print("\n📊 BREAKDOWN:")
+    print(f"   Villas (residential):      {reasons['villa_residential']:>10,}")
+    print(f"   Apartments (residential):  {reasons['apt_residential']:>10,}")
+    print(f"   Apartments (special):      {reasons['apt_special']:>10,}")
+    print(f"   Other - Commercial:        {reasons['other_commercial']:>10,}")
+    print(f"   Other - Industrial:        {reasons['other_industrial']:>10,}")
+    print(f"   Other - Government:        {reasons['other_govt']:>10,}")
+    print(f"   Other - Transport:         {reasons['other_transport']:>10,}")
+    print(f"   Other - Agricultural:      {reasons['other_agricultural']:>10,}")
+    print(f"   Other - Unknown:           {reasons['other_unknown']:>10,}")
+    print(f"   Other - POI Override:      {reasons['other_poi_override']:>10,}")
+    
     print()
     print(f"✅ Saved to: riyadh_parcels_classified.csv")
 
