@@ -115,6 +115,9 @@
         <div id="loadingTitle">Processing...</div>
         <div class="progress-bar"><div id="progressFill" class="progress-fill" style="width: 0%"></div></div>
         <div id="loadingStatus">Please wait...</div>
+        <div style="font-size: 12px; color: #aaa; max-width: 400px; text-align: center; margin-top: 10px;">
+            💡 Large files with 900K+ rows may take 5-15 seconds to load
+        </div>
     </div>
     
     <div id="map"></div>
@@ -380,16 +383,21 @@
             map.setZoom(11);
         }
         
-        // CSV Parser
+        // FAST CSV Parser - simple split for speed
         function parseCSVLine(line) {
+            // Fast path: no quotes
+            if (line.indexOf('"') === -1) {
+                return line.split(',');
+            }
+            // Slow path: handle quotes
             const result = []; let current = ''; let inQuotes = false;
             for (let i = 0; i < line.length; i++) {
                 const char = line[i];
                 if (char === '"') inQuotes = !inQuotes;
-                else if (char === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+                else if (char === ',' && !inQuotes) { result.push(current); current = ''; }
                 else current += char;
             }
-            result.push(current.trim());
+            result.push(current);
             return result;
         }
         
@@ -407,7 +415,15 @@
             return inside;
         }
         
+        let renderPending = false;
         function render() {
+            if (renderPending) return;
+            renderPending = true;
+            requestAnimationFrame(doRender);
+        }
+        
+        function doRender() {
+            renderPending = false;
             if (!map) return;
             const bounds = map.getBounds();
             if (!bounds) return;
@@ -519,94 +535,102 @@
                 }
             }
             
-            // Draw buildings (polygons or points)
+            // Draw buildings (polygons or points) - OPTIMIZED
             if (showBldg && buildings.length) {
                 ctx.globalAlpha = bldgOpacity;
+                ctx.fillStyle = 'rgba(156, 39, 176, 0.5)';
+                ctx.strokeStyle = '#9c27b0';
+                ctx.lineWidth = Math.max(1, bldgSize / 2);
                 
-                buildings.forEach(b => {
-                    // Handle point format [[lat, lng], ...]
-                    if (b.isPoint || (b.lat !== undefined && b.lng !== undefined)) {
-                        const lat = b.lat || b[0];
-                        const lng = b.lng || b[1];
-                        if (lat < sw.lat() || lat > ne.lat() || lng < sw.lng() || lng > ne.lng()) return;
+                const swLat = sw.lat(), neLat = ne.lat(), swLng = sw.lng(), neLng = ne.lng();
+                
+                for (let i = 0; i < buildings.length; i++) {
+                    const b = buildings[i];
+                    
+                    // Fast check: is it a simple [lat, lng] array?
+                    if (Array.isArray(b) && typeof b[0] === 'number') {
+                        const lat = b[0], lng = b[1];
+                        if (lat < swLat || lat > neLat || lng < swLng || lng > neLng) continue;
                         
                         viewBldg++;
                         const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
-                        const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
-                        
-                        ctx.fillStyle = 'rgba(156, 39, 176, 0.6)';
                         ctx.beginPath();
-                        ctx.arc(x, y, bldgSize, 0, Math.PI * 2);
+                        ctx.arc((w.x - bl.x) * scale, (w.y - tr.y) * scale, bldgSize, 0, 6.28);
                         ctx.fill();
-                        return;
+                        continue;
                     }
                     
-                    // Handle polygon format
+                    // Polygon format
                     const coords = b.geometry?.coordinates?.[0];
-                    if (!coords || coords.length < 3) return;
+                    if (!coords || coords.length < 3) continue;
                     
-                    const [firstLon, firstLat] = coords[0];
-                    if (firstLat < sw.lat() - 0.01 || firstLat > ne.lat() + 0.01 ||
-                        firstLon < sw.lng() - 0.01 || firstLon > ne.lng() + 0.01) return;
+                    const firstLat = coords[0][1];
+                    if (firstLat < swLat - 0.01 || firstLat > neLat + 0.01) continue;
                     
                     viewBldg++;
-                    
-                    ctx.strokeStyle = '#9c27b0';
-                    ctx.lineWidth = Math.max(1, bldgSize / 2);
-                    ctx.fillStyle = 'rgba(156, 39, 176, 0.3)';
                     ctx.beginPath();
-                    
-                    coords.forEach(([lon, lat], i) => {
-                        const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                    for (let j = 0; j < coords.length; j++) {
+                        const w = proj.fromLatLngToPoint(new google.maps.LatLng(coords[j][1], coords[j][0]));
                         const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
-                        if (i === 0) ctx.moveTo(x, y);
-                        else ctx.lineTo(x, y);
-                    });
-                    
+                        j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                    }
                     ctx.closePath();
                     ctx.fill();
                     ctx.stroke();
-                });
+                }
                 ctx.globalAlpha = 1;
             }
             
-            // Draw parcels
-            parcels.forEach(p => {
-                if (p.lat < sw.lat() || p.lat > ne.lat() || p.lng < sw.lng() || p.lng > ne.lng()) return;
+            // Draw parcels - OPTIMIZED (batch by color to minimize state changes)
+            const swLat = sw.lat(), neLat = ne.lat(), swLng = sw.lng(), neLng = ne.lng();
+            const aptPts = [], villaPts = [], otherPts = [];
+            const pi2 = 6.28;
+            
+            for (let i = 0; i < parcels.length; i++) {
+                const p = parcels[i];
+                if (p.lat < swLat || p.lat > neLat || p.lng < swLng || p.lng > neLng) continue;
                 
                 const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
                 const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
                 
-                if (p.type === 'apt' && showApt) {
-                    ctx.fillStyle = 'rgba(33, 150, 243, 0.6)';
-                    ctx.beginPath(); ctx.arc(x, y, aptSize, 0, Math.PI * 2); ctx.fill();
-                    viewApt++;
-                } else if (p.type === 'villa' && showVilla) {
-                    ctx.fillStyle = 'rgba(76, 175, 80, 0.6)';
-                    ctx.beginPath(); ctx.arc(x, y, villaSize, 0, Math.PI * 2); ctx.fill();
-                    viewVilla++;
-                } else if (p.type === 'other' && showOther) {
-                    ctx.fillStyle = 'rgba(255, 152, 0, 0.4)';
-                    ctx.beginPath(); ctx.arc(x, y, otherSize, 0, Math.PI * 2); ctx.fill();
-                    viewOther++;
-                }
-            });
+                if (p.type === 'apt' && showApt) { aptPts.push(x, y); viewApt++; }
+                else if (p.type === 'villa' && showVilla) { villaPts.push(x, y); viewVilla++; }
+                else if (p.type === 'other' && showOther) { otherPts.push(x, y); viewOther++; }
+            }
             
-            // Draw POIs
-            if (showPoi) {
-                poiData.forEach(p => {
-                    if (p.lat < sw.lat() || p.lat > ne.lat() || p.lng < sw.lng() || p.lng > ne.lng()) return;
-                    if (activePoiCategories.size > 0 && !activePoiCategories.has(p.layer)) return;
+            // Batch draw by color
+            ctx.fillStyle = 'rgba(255, 152, 0, 0.4)';
+            for (let i = 0; i < otherPts.length; i += 2) { ctx.beginPath(); ctx.arc(otherPts[i], otherPts[i+1], otherSize, 0, pi2); ctx.fill(); }
+            ctx.fillStyle = 'rgba(76, 175, 80, 0.6)';
+            for (let i = 0; i < villaPts.length; i += 2) { ctx.beginPath(); ctx.arc(villaPts[i], villaPts[i+1], villaSize, 0, pi2); ctx.fill(); }
+            ctx.fillStyle = 'rgba(33, 150, 243, 0.6)';
+            for (let i = 0; i < aptPts.length; i += 2) { ctx.beginPath(); ctx.arc(aptPts[i], aptPts[i+1], aptSize, 0, pi2); ctx.fill(); }
+            
+            // Draw POIs - OPTIMIZED (group by layer color)
+            if (showPoi && poiData.length) {
+                const poiByColor = {};
+                for (let i = 0; i < poiData.length; i++) {
+                    const p = poiData[i];
+                    if (p.lat < swLat || p.lat > neLat || p.lng < swLng || p.lng > neLng) continue;
+                    if (activePoiCategories.size > 0 && !activePoiCategories.has(p.layer)) continue;
+                    
+                    const color = poiColors[p.layer] || poiColors['default'];
+                    if (!poiByColor[color]) poiByColor[color] = [];
                     
                     const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
-                    const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
-                    
-                    ctx.fillStyle = poiColors[p.layer] || poiColors['default'];
-                    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath(); ctx.arc(x, y, poiSize, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                    poiByColor[color].push((w.x - bl.x) * scale, (w.y - tr.y) * scale);
                     viewPoi++;
-                });
+                }
+                
+                ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+                ctx.lineWidth = 1;
+                for (const color in poiByColor) {
+                    ctx.fillStyle = color;
+                    const pts = poiByColor[color];
+                    for (let i = 0; i < pts.length; i += 2) {
+                        ctx.beginPath(); ctx.arc(pts[i], pts[i+1], poiSize, 0, pi2); ctx.fill(); ctx.stroke();
+                    }
+                }
             }
             
             // Update view counts
@@ -690,56 +714,50 @@
         document.getElementById('buildingsFile').addEventListener('change', function(e) {
             const file = e.target.files[0]; if (!file) return;
             showLoading('Loading Buildings...');
-            setLoadingStatus(`Reading ${(file.size/1024/1024).toFixed(1)} MB...`, 5);
+            setLoadingStatus(`Reading ${(file.size/1024/1024).toFixed(1)} MB...`, 10);
             buildingsFileName = file.name;
             
             const reader = new FileReader();
             reader.onload = function(evt) {
-                setLoadingStatus('Parsing JSON...', 20);
+                setLoadingStatus('Parsing JSON (this may take a moment)...', 30);
                 
                 setTimeout(() => {
                     try {
+                        const startTime = performance.now();
                         const data = JSON.parse(evt.target.result);
-                        setLoadingStatus('Processing buildings...', 50);
+                        console.log(`JSON parsed in ${(performance.now() - startTime).toFixed(0)}ms`);
                         
-                        setTimeout(() => {
-                            // Handle different formats
-                            if (data.type === 'FeatureCollection' && data.features) {
-                                buildings = data.features.filter(f => 
-                                    f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon')
-                                );
-                            } else if (Array.isArray(data) && data[0]?.geometry) {
-                                buildings = data.filter(f => 
-                                    f.geometry && (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon')
-                                );
-                            } else if (Array.isArray(data) && Array.isArray(data[0])) {
-                                // Array of [lat, lng] - just store as points, draw as dots
-                                buildings = data.map(([lat, lng]) => ({
-                                    isPoint: true,
-                                    lat: lat,
-                                    lng: lng
-                                }));
+                        setLoadingStatus('Processing...', 70);
+                        
+                        // Handle different formats - direct assignment (faster)
+                        if (data.type === 'FeatureCollection' && data.features) {
+                            buildings = data.features;
+                        } else if (Array.isArray(data) && data.length > 0) {
+                            if (data[0]?.geometry) {
+                                buildings = data;
+                            } else if (Array.isArray(data[0])) {
+                                // Array of [lat, lng] - store directly
+                                buildings = data;
                             } else {
-                                buildings = [];
+                                buildings = data;
                             }
-                            
-                            setLoadingStatus(`Loaded ${buildings.length.toLocaleString()} buildings`, 100);
-                            
-                            document.getElementById('totalBldg').textContent = buildings.length.toLocaleString();
-                            document.getElementById('buildingsStatus').innerHTML = `✓ <b>${file.name}</b><br>${buildings.length.toLocaleString()} buildings`;
-                            document.getElementById('buildingsStatus').classList.add('loaded');
-                            
-                            hideLoading();
-                            showToast(`🏗️ Loaded ${buildings.length.toLocaleString()} buildings`, '#9c27b0');
-                            calculateDistrictStats();
-                            render();
-                        }, 50);
+                        } else {
+                            buildings = [];
+                        }
+                        
+                        document.getElementById('totalBldg').textContent = buildings.length.toLocaleString();
+                        document.getElementById('buildingsStatus').innerHTML = `✓ <b>${file.name}</b><br>${buildings.length.toLocaleString()} buildings`;
+                        document.getElementById('buildingsStatus').classList.add('loaded');
+                        
+                        hideLoading();
+                        showToast(`🏗️ ${buildings.length.toLocaleString()} buildings!`, '#9c27b0');
+                        render();
                     } catch(err) {
                         hideLoading();
                         document.getElementById('buildingsStatus').innerHTML = `❌ Error: ${err.message}`;
                         console.error('Buildings load error:', err);
                     }
-                }, 50);
+                }, 10);
             };
             reader.readAsText(file);
         });
@@ -759,82 +777,73 @@
             
             const reader = new FileReader();
             reader.onload = function(evt) {
-                setLoadingStatus('Parsing CSV...', 15);
+                setLoadingStatus('Parsing...', 10);
                 
-                // Use setTimeout to allow UI to update
                 setTimeout(() => {
                     const text = evt.target.result;
                     const lines = text.split('\n');
-                    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+                    const headerLine = lines[0].toLowerCase();
+                    const headers = headerLine.split(',');
                     
-                    parcels = [];
+                    // Find column indices once
+                    const latIdx = headers.findIndex(h => h.includes('lat'));
+                    const lngIdx = headers.findIndex(h => h.includes('lon') || h === 'lng');
+                    const typeIdx = headers.findIndex(h => h.includes('parcel_type'));
+                    const aptIdx = headers.findIndex(h => h.includes('is_apartment'));
+                    const luIdx = headers.findIndex(h => h.includes('mainlanduse') || h.includes('land_use'));
+                    
+                    // Pre-allocate array
+                    parcels = new Array(lines.length - 1);
                     let aptCount = 0, villaCount = 0, otherCount = 0;
-                    const totalLines = lines.length;
+                    let validCount = 0;
                     
-                    // Process in chunks to not block UI
-                    let i = 1;
-                    const chunkSize = 50000;
+                    setLoadingStatus('Processing rows...', 20);
                     
-                    function processChunk() {
-                        const end = Math.min(i + chunkSize, totalLines);
+                    // Process ALL at once (faster than chunks for this size)
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i];
+                        if (!line || line.length < 10) continue;
                         
-                        for (; i < end; i++) {
-                            if (!lines[i] || !lines[i].trim()) continue;
-                            
-                            const values = parseCSVLine(lines[i]);
-                            const row = {}; headers.forEach((h, idx) => row[h] = values[idx]);
-                            
-                            const lat = parseFloat(row.latitude || row.lat);
-                            const lng = parseFloat(row.longitude || row.lng || row.lon);
-                            if (isNaN(lat) || isNaN(lng)) continue;
-                            
-                            // Classify parcel
-                            let type = 'other';
-                            const parcelType = (row.parcel_type || '').toLowerCase();
-                            
-                            if (parcelType === 'villa' || parcelType === 'apartment' || parcelType === 'other') {
-                                type = parcelType === 'apartment' ? 'apt' : parcelType;
-                            } else {
-                                const isApt = row.is_apartment;
-                                const landUse = (row.mainlanduse || row.land_use || '').toString();
-                                
-                                if (landUse === '100000' && isApt === 'False') {
-                                    type = 'villa';
-                                } else if (isApt === 'True' || isApt === 'true' || isApt === '1') {
-                                    type = 'apt';
-                                }
-                            }
-                            
-                            if (type === 'villa') villaCount++;
-                            else if (type === 'apt') aptCount++;
-                            else otherCount++;
-                            
-                            parcels.push({ lat, lng, type });
+                        const values = line.split(',');
+                        const lat = +values[latIdx];
+                        const lng = +values[lngIdx];
+                        if (lat !== lat || lng !== lng) continue; // NaN check
+                        
+                        // Fast type classification
+                        let type = 2; // 0=villa, 1=apt, 2=other
+                        
+                        if (typeIdx >= 0) {
+                            const t = values[typeIdx];
+                            if (t === 'villa') type = 0;
+                            else if (t === 'apartment') type = 1;
+                        } else if (aptIdx >= 0) {
+                            const isApt = values[aptIdx];
+                            const lu = luIdx >= 0 ? values[luIdx] : '';
+                            if (lu === '100000' && isApt === 'False') type = 0;
+                            else if (isApt === 'True') type = 1;
                         }
                         
-                        const pct = Math.round(15 + (i / totalLines) * 80);
-                        setLoadingStatus(`Processing: ${parcels.length.toLocaleString()} parcels...`, pct);
+                        if (type === 0) villaCount++;
+                        else if (type === 1) aptCount++;
+                        else otherCount++;
                         
-                        if (i < totalLines) {
-                            setTimeout(processChunk, 0);
-                        } else {
-                            // Done
-                            document.getElementById('parcelsStatus').innerHTML = `✓ <b>${file.name}</b><br>${parcels.length.toLocaleString()} parcels`;
-                            document.getElementById('parcelsStatus').classList.add('loaded');
-                            document.getElementById('totalParcels').textContent = parcels.length.toLocaleString();
-                            document.getElementById('totalApt').textContent = aptCount.toLocaleString();
-                            document.getElementById('totalVilla').textContent = villaCount.toLocaleString();
-                            document.getElementById('totalOther').textContent = otherCount.toLocaleString();
-                            
-                            hideLoading();
-                            showToast(`📊 Loaded ${parcels.length.toLocaleString()} parcels`, '#4CAF50');
-                            calculateDistrictStats();
-                            render();
-                        }
+                        parcels[validCount++] = { lat, lng, type: type === 0 ? 'villa' : type === 1 ? 'apt' : 'other' };
                     }
                     
-                    processChunk();
-                }, 50);
+                    // Trim array to actual size
+                    parcels.length = validCount;
+                    
+                    document.getElementById('parcelsStatus').innerHTML = `✓ <b>${file.name}</b><br>${parcels.length.toLocaleString()} parcels`;
+                    document.getElementById('parcelsStatus').classList.add('loaded');
+                    document.getElementById('totalParcels').textContent = parcels.length.toLocaleString();
+                    document.getElementById('totalApt').textContent = aptCount.toLocaleString();
+                    document.getElementById('totalVilla').textContent = villaCount.toLocaleString();
+                    document.getElementById('totalOther').textContent = otherCount.toLocaleString();
+                    
+                    hideLoading();
+                    showToast(`📊 ${parcels.length.toLocaleString()} parcels loaded!`, '#4CAF50');
+                    render();
+                }, 10);
             };
             reader.readAsText(file);
         });
@@ -842,35 +851,42 @@
         document.getElementById('poiFile').addEventListener('change', function(e) {
             const file = e.target.files[0]; if (!file) return;
             showLoading('Loading POIs...');
-            setLoadingStatus(`Reading ${(file.size/1024/1024).toFixed(1)} MB...`, 5);
+            setLoadingStatus(`Reading ${(file.size/1024/1024).toFixed(1)} MB...`, 10);
             
             const reader = new FileReader();
             reader.onload = function(evt) {
-                setLoadingStatus('Parsing CSV...', 15);
+                setLoadingStatus('Processing...', 30);
                 
                 setTimeout(() => {
                     const lines = evt.target.result.split('\n');
-                    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+                    const headers = lines[0].toLowerCase().split(',');
                     
-                    poiData = [];
+                    // Find indices once
+                    const latIdx = headers.findIndex(h => h.includes('lat'));
+                    const lngIdx = headers.findIndex(h => h.includes('lon') || h === 'lng');
+                    const layerIdx = headers.findIndex(h => h === 'layer');
+                    const nameArIdx = headers.findIndex(h => h === 'name_ar');
+                    const nameEnIdx = headers.findIndex(h => h === 'name_en');
+                    
+                    poiData = new Array(lines.length);
                     const categories = {};
-                    const totalLines = lines.length;
+                    let count = 0;
                     
-                    for (let i = 1; i < totalLines; i++) {
-                        if (!lines[i] || !lines[i].trim()) continue;
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i];
+                        if (!line || line.length < 5) continue;
                         
-                        const values = parseCSVLine(lines[i]);
-                        const row = {}; headers.forEach((h, idx) => row[h] = values[idx]);
+                        const values = line.split(',');
+                        const lat = +values[latIdx];
+                        const lng = +values[lngIdx];
+                        if (lat !== lat || lng !== lng) continue;
                         
-                        const lat = parseFloat(row.latitude || row.lat);
-                        const lng = parseFloat(row.longitude || row.lng || row.lon);
-                        if (isNaN(lat) || isNaN(lng)) continue;
-                        
-                        const layer = row.layer || 'Unknown';
+                        const layer = values[layerIdx] || 'Unknown';
                         categories[layer] = (categories[layer] || 0) + 1;
                         
-                        poiData.push({ lat, lng, layer, name_ar: row.name_ar || '', name_en: row.name_en || '' });
+                        poiData[count++] = { lat, lng, layer, name_ar: values[nameArIdx] || '', name_en: values[nameEnIdx] || '' };
                     }
+                    poiData.length = count;
                     
                     document.getElementById('poiStatus').innerHTML = `✓ <b>${file.name}</b><br>${poiData.length.toLocaleString()} POIs`;
                     document.getElementById('poiStatus').classList.add('loaded');
@@ -878,30 +894,27 @@
                     document.getElementById('poiCount').textContent = poiData.length.toLocaleString();
                     document.getElementById('poiCatCount').textContent = Object.keys(categories).length;
                     
-                    // Build category checkboxes
                     activePoiCategories = new Set(Object.keys(categories));
                     const catContainer = document.getElementById('poiCategories');
-                    catContainer.innerHTML = '';
-                    
-                    Object.entries(categories).sort((a,b) => b[1]-a[1]).forEach(([cat, count]) => {
-                        const div = document.createElement('div');
-                        div.className = 'poi-cat';
+                    catContainer.innerHTML = Object.entries(categories).sort((a,b) => b[1]-a[1]).map(([cat, cnt]) => {
                         const color = poiColors[cat] || poiColors['default'];
-                        div.innerHTML = `<input type="checkbox" checked data-cat="${cat}">
+                        return `<div class="poi-cat"><input type="checkbox" checked data-cat="${cat}">
                             <div class="dot" style="background:${color};width:10px;height:10px;border-radius:50%;"></div>
-                            <span>${cat}</span><span class="cnt">${count.toLocaleString()}</span>`;
-                        div.querySelector('input').addEventListener('change', function() {
-                            if (this.checked) activePoiCategories.add(cat);
-                            else activePoiCategories.delete(cat);
+                            <span>${cat}</span><span class="cnt">${cnt.toLocaleString()}</span></div>`;
+                    }).join('');
+                    
+                    catContainer.querySelectorAll('input').forEach(cb => {
+                        cb.addEventListener('change', function() {
+                            const cat = this.dataset.cat;
+                            this.checked ? activePoiCategories.add(cat) : activePoiCategories.delete(cat);
                             render();
                         });
-                        catContainer.appendChild(div);
                     });
                     
                     hideLoading();
-                    showToast(`📍 Loaded ${poiData.length.toLocaleString()} POIs`, '#9C27B0');
+                    showToast(`📍 ${poiData.length.toLocaleString()} POIs!`, '#9C27B0');
                     render();
-                }, 50);
+                }, 10);
             };
             reader.readAsText(file);
         });
