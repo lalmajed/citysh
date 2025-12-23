@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Riyadh Map - Apartments & Land Use</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, width=device-width">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; }
+        #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+        
+        .panel {
+            position: absolute; top: 10px; left: 60px;
+            background: white; padding: 15px; border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 1000;
+            max-width: 380px; max-height: 90vh; overflow-y: auto; font-size: 13px;
+        }
+        .panel h2 { color: #1a73e8; margin-bottom: 10px; font-size: 16px; }
+        
+        .file-section { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; }
+        .file-section label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 12px; }
+        .file-section input[type="file"] { font-size: 11px; width: 100%; }
+        .file-status { font-size: 11px; color: #666; margin-top: 5px; }
+        .file-status.loaded { color: #34a853; font-weight: bold; }
+        
+        .stats { margin: 10px 0; }
+        .stat-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee; font-size: 11px; }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-value { color: #1a73e8; font-weight: bold; }
+        
+        .total-counts { display: flex; gap: 10px; margin: 10px 0; }
+        .count-box {
+            flex: 1; padding: 12px; border-radius: 8px; text-align: center; color: white;
+        }
+        .count-box.apartments { background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%); }
+        .count-box.landuse { background: linear-gradient(135deg, #34a853 0%, #1e8e3e 100%); }
+        .count-box.businesses { background: linear-gradient(135deg, #c2185b 0%, #880e4f 100%); }
+        .count-box .number { font-size: 1.5em; font-weight: bold; }
+        .count-box .label { font-size: 0.8em; opacity: 0.9; }
+        
+        .filter-section { margin: 10px 0; padding: 10px; background: #f0f7ff; border-radius: 8px; }
+        .filter-section h3 { font-size: 12px; color: #1a73e8; margin-bottom: 8px; }
+        .filter-btn {
+            padding: 4px 8px; margin: 2px; border: none; border-radius: 12px;
+            cursor: pointer; font-size: 10px; background: #e3f2fd; color: #1a73e8;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover { background: #1a73e8; color: white; }
+        .filter-btn.active { background: #1a73e8; color: white; }
+        
+        .layer-toggle {
+            display: flex; align-items: center; gap: 8px; padding: 8px;
+            background: #fff3cd; border-radius: 6px; margin: 5px 0; cursor: pointer;
+        }
+        .layer-toggle.apartments { background: #e0f7fa; }
+        .layer-toggle.landuse { background: #e8f5e9; }
+        
+        .info-popup {
+            position: absolute; background: white; padding: 12px 15px; border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 2000; min-width: 280px;
+            font-size: 12px; display: none; border-left: 4px solid #1a73e8;
+        }
+        .info-popup.show { display: block; }
+        .info-popup h3 { margin: 0 0 8px 0; color: #1a73e8; font-size: 14px; }
+        .info-popup .close { position: absolute; top: 5px; right: 8px; cursor: pointer; color: #999; font-size: 16px; }
+        .info-popup .price { color: #00b4d8; font-size: 1.2em; font-weight: bold; margin: 5px 0; }
+        .info-popup table { width: 100%; border-collapse: collapse; }
+        .info-popup td { padding: 3px 5px; border-bottom: 1px solid #eee; font-size: 11px; }
+        .info-popup td:first-child { font-weight: 600; color: #555; width: 35%; }
+        
+        #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 450; touch-action: none; }
+        
+        .loading-msg {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: white; padding: 30px; border-radius: 10px; text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 2000;
+        }
+        
+        input[type="range"] {
+            -webkit-appearance: none; appearance: none;
+            height: 6px; background: #ddd; border-radius: 3px; outline: none; width: 100%;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 16px; height: 16px; background: #1a73e8; border-radius: 50%; cursor: pointer;
+        }
+        
+        .legend { margin-top: 10px; padding: 8px; background: #f5f5f5; border-radius: 6px; font-size: 10px; }
+        .legend h4 { font-size: 11px; color: #666; margin-bottom: 5px; }
+        .legend-item { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+        
+        .code-filters { max-height: 150px; overflow-y: auto; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <canvas id="canvas"></canvas>
+    
+    <div id="infoPopup" class="info-popup">
+        <span class="close" onclick="closeInfoPopup()">&times;</span>
+        <h3 id="popupTitle">📍 Details</h3>
+        <div id="popupContent"></div>
+    </div>
+    
+    <div class="panel">
+        <h2>🗺️ Riyadh Map <span style="font-size:10px;color:#999;">Multi-Layer</span></h2>
+        
+        <!-- Apartments File -->
+        <div class="file-section" style="background: #e0f7fa; border: 2px dashed #00b4d8;">
+            <label>🏢 Apartments CSV (lat, lon):</label>
+            <input type="file" id="apartmentsFile" accept=".csv">
+            <div id="aptStatus" class="file-status">Upload riyadh_apartments.csv</div>
+        </div>
+        
+        <!-- Land Use File -->
+        <div class="file-section" style="background: #e8f5e9; border: 2px dashed #34a853;">
+            <label>📊 Land Use CSV (lat, lon, land_use_code):</label>
+            <input type="file" id="landUseFile" accept=".csv">
+            <div id="landStatus" class="file-status">Upload land use parcels CSV</div>
+        </div>
+        
+        <!-- Businesses File -->
+        <div class="file-section" style="background: #fce4ec; border: 2px dashed #c2185b;">
+            <label>🏪 Businesses JSON/CSV:</label>
+            <input type="file" id="businessFile" accept=".json,.csv">
+            <div id="bizStatus" class="file-status">Upload businesses file</div>
+        </div>
+        
+        <!-- Counts -->
+        <div class="total-counts" id="countsSection" style="display:none;">
+            <div class="count-box apartments">
+                <div class="number" id="aptCount">0</div>
+                <div class="label">Apartments</div>
+            </div>
+            <div class="count-box landuse">
+                <div class="number" id="landCount">0</div>
+                <div class="label">Parcels</div>
+            </div>
+            <div class="count-box businesses" id="bizCountBox" style="display:none;">
+                <div class="number" id="bizCount">0</div>
+                <div class="label">Businesses</div>
+            </div>
+        </div>
+        
+        <!-- Layer Toggles -->
+        <div id="layerToggles" style="display:none;">
+            <label class="layer-toggle apartments">
+                <input type="checkbox" id="showApartments" checked>
+                <span style="color:#0077b6; font-weight:600;">🏢 Show Apartments</span>
+            </label>
+            <label class="layer-toggle landuse">
+                <input type="checkbox" id="showLandUse" checked>
+                <span style="color:#34a853; font-weight:600;">📊 Show Land Use</span>
+            </label>
+            <label class="layer-toggle businesses" id="bizToggle" style="display:none; background:#fce4ec;">
+                <input type="checkbox" id="showBusinesses" checked>
+                <span style="color:#c2185b; font-weight:600;">🏪 Show Businesses</span>
+            </label>
+        </div>
+        
+        <!-- Room Filters -->
+        <div class="filter-section" id="roomFilters" style="display:none;">
+            <h3>🛏️ Filter Apartments by Rooms</h3>
+            <div id="roomButtons"></div>
+        </div>
+        
+        <!-- Land Use Code Filters -->
+        <div class="filter-section" id="codeFilters" style="display:none;">
+            <h3>🏷️ Filter by Land Use Code</h3>
+            <div id="codeButtons" class="code-filters"></div>
+        </div>
+        
+        <!-- Neighborhood Stats -->
+        <div class="filter-section" id="neighborhoodSection" style="display:none;">
+            <h3>📍 Top Neighborhoods</h3>
+            <div class="stats" id="neighborhoodStats"></div>
+        </div>
+        
+        <!-- Dot Size -->
+        <div style="margin: 10px 0; padding: 8px; background: #f8f9fa; border-radius: 6px;">
+            <label style="display: block; font-weight: 600; font-size: 11px; margin-bottom: 5px;">
+                📍 Dot Size: <span id="dotSizeValue">3</span>x
+            </label>
+            <input type="range" id="dotSize" min="1" max="10" value="3" step="0.5">
+        </div>
+        
+        <!-- Click Toggle -->
+        <div style="margin: 8px 0; padding: 6px; background: #e8f0fe; border-radius: 6px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 11px;">
+                <input type="checkbox" id="enableClick">
+                <span style="font-weight: 600;">🖱️ Click to show details</span>
+            </label>
+            <div style="font-size:9px; color:#666; margin-top:3px; margin-left:24px;">
+                ⚡ Uncheck to freely zoom & pan the map
+            </div>
+        </div>
+        
+        <!-- Legends -->
+        <div class="legend" id="aptLegend" style="display:none;">
+            <h4>🏢 Apartments (by Rooms)</h4>
+            <div class="legend-item"><div class="legend-dot" style="background:#00b4d8;"></div> 1-2 Bedrooms</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#0077b6;"></div> 3-4 Bedrooms</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#023e8a;"></div> 5+ Bedrooms</div>
+        </div>
+        
+        <div class="legend" id="landLegend" style="display:none;">
+            <h4>📊 Land Use Codes</h4>
+            <div id="landLegendItems"></div>
+        </div>
+        
+        <div style="margin-top:8px;font-size:10px;color:#888;">
+            Visible: <span id="visible">0</span> | Zoom: <span id="zoom">0</span>
+        </div>
+    </div>
+    
+    <div id="loadingMsg" class="loading-msg">
+        <p>📂 Load your CSV files</p>
+        <p style="font-size:12px;color:#666;margin-top:10px;">
+            <strong>Apartments:</strong> lat, lon, title, price, rooms...<br>
+            <strong>Land Use:</strong> lat, lon, land_use_code, district...
+        </p>
+    </div>
+
+    <script>
+        let map;
+        let apartments = [], filteredApartments = [];
+        let parcels = [], filteredParcels = [];
+        let businesses = [];
+        let activeRoomFilter = null;
+        let activeCodeFilters = {};
+        
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let dotSizeMultiplier = 3;
+        
+        // Land use colors
+        const landUseColors = {
+            '1000': { color: '#34a853', name: 'Villas', emoji: '🏠' },
+            '1012': { color: '#2e7d32', name: 'Residential Commercial', emoji: '🏠' },
+            '7510': { color: '#4285f4', name: 'Vacant Land', emoji: '📦' },
+            '2000': { color: '#ea4335', name: 'Commercial', emoji: '🏪' },
+            '4010': { color: '#9334e6', name: 'Commercial Centers', emoji: '🏢' },
+            '1098': { color: '#f9a825', name: 'Muezzin Residence', emoji: '🕌' },
+            '1099': { color: '#ff6f00', name: 'Imam Residence', emoji: '🕌' }
+        };
+        
+        function getColorForCode(code) {
+            if (landUseColors[code]) return landUseColors[code].color;
+            const numCode = parseInt(code) || 0;
+            const hue = (numCode * 137) % 360;
+            return `hsl(${hue}, 70%, 50%)`;
+        }
+        
+        function getAptColor(rooms) {
+            if (!rooms || rooms <= 2) return '#00b4d8';
+            if (rooms <= 4) return '#0077b6';
+            return '#023e8a';
+        }
+        
+        function formatPrice(price, frequency) {
+            if (!price) return 'Price on request';
+            const num = parseFloat(price);
+            if (isNaN(num)) return price;
+            const formatted = num.toLocaleString('en-SA');
+            const period = frequency === 'monthly' ? '/mo' : '/yr';
+            return `SAR ${formatted}${period}`;
+        }
+        
+        function closeInfoPopup() {
+            document.getElementById('infoPopup').classList.remove('show');
+        }
+        
+        function showApartmentInfo(apt, x, y) {
+            document.getElementById('popupTitle').textContent = '🏢 Apartment Details';
+            document.getElementById('popupContent').innerHTML = `
+                <div class="price">${formatPrice(apt.price, apt.rent_frequency)}</div>
+                <table>
+                    <tr><td>Title</td><td>${apt.title || 'N/A'}</td></tr>
+                    <tr><td>Rooms</td><td>${apt.rooms || 'N/A'} 🛏️</td></tr>
+                    <tr><td>Baths</td><td>${apt.baths || 'N/A'} 🚿</td></tr>
+                    <tr><td>Area</td><td>${apt.area ? apt.area + ' m²' : 'N/A'}</td></tr>
+                    <tr><td>Location</td><td>${apt.location || 'N/A'}</td></tr>
+                    <tr><td>ID</td><td>${apt.external_id || 'N/A'}</td></tr>
+                </table>
+            `;
+            showPopupAt(x, y);
+        }
+        
+        function showParcelInfo(parcel, x, y) {
+            const codeInfo = landUseColors[parcel.code] || { name: 'Unknown', emoji: '📍' };
+            document.getElementById('popupTitle').textContent = `${codeInfo.emoji} Parcel Details`;
+            document.getElementById('popupContent').innerHTML = `
+                <table>
+                    <tr><td>Land Use</td><td><strong>${parcel.code}</strong> - ${codeInfo.name}</td></tr>
+                    ${parcel.district ? `<tr><td>District</td><td>${parcel.district}</td></tr>` : ''}
+                    ${parcel.parcel_id ? `<tr><td>Parcel ID</td><td>${parcel.parcel_id}</td></tr>` : ''}
+                    ${parcel.block_no ? `<tr><td>Block No</td><td>${parcel.block_no}</td></tr>` : ''}
+                    ${parcel.plan_no ? `<tr><td>Plan No</td><td>${parcel.plan_no}</td></tr>` : ''}
+                    <tr><td>Coordinates</td><td>${parcel.lat.toFixed(6)}, ${parcel.lon.toFixed(6)}</td></tr>
+                </table>
+            `;
+            showPopupAt(x, y);
+        }
+        
+        function showBusinessInfo(biz, x, y) {
+            document.getElementById('popupTitle').textContent = '🏪 Business Details';
+            document.getElementById('popupContent').innerHTML = `
+                <table>
+                    <tr><td>Name</td><td><strong>${biz.name || 'Unknown'}</strong></td></tr>
+                    <tr><td>Category</td><td>${biz.category || 'N/A'}</td></tr>
+                    ${biz.subcategory ? `<tr><td>Type</td><td>${biz.subcategory}</td></tr>` : ''}
+                    <tr><td>Coordinates</td><td>${biz.lat.toFixed(6)}, ${biz.lon.toFixed(6)}</td></tr>
+                </table>
+            `;
+            showPopupAt(x, y);
+        }
+        
+        function showPopupAt(x, y) {
+            const popup = document.getElementById('infoPopup');
+            popup.style.left = Math.min(x + 10, window.innerWidth - 320) + 'px';
+            popup.style.top = Math.min(y + 10, window.innerHeight - 250) + 'px';
+            popup.classList.add('show');
+        }
+        
+        function render() {
+            if (!map) return;
+            
+            const bounds = map.getBounds();
+            if (!bounds) return;
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const proj = map.getProjection();
+            if (!proj) return;
+            
+            const zoom = map.getZoom();
+            document.getElementById('zoom').textContent = zoom.toFixed(1);
+            
+            const topRight = proj.fromLatLngToPoint(bounds.getNorthEast());
+            const bottomLeft = proj.fromLatLngToPoint(bounds.getSouthWest());
+            const scale = Math.pow(2, zoom);
+            
+            let visibleCount = 0;
+            const baseRadius = Math.max(2, zoom - 9) * dotSizeMultiplier / 3;
+            
+            const showApt = document.getElementById('showApartments')?.checked !== false;
+            const showLand = document.getElementById('showLandUse')?.checked !== false;
+            const showBiz = document.getElementById('showBusinesses')?.checked !== false;
+            
+            // Render businesses first (background layer)
+            if (showBiz && businesses.length > 0) {
+                businesses.forEach(biz => {
+                    if (biz.lat < bounds.getSouthWest().lat() || biz.lat > bounds.getNorthEast().lat() ||
+                        biz.lon < bounds.getSouthWest().lng() || biz.lon > bounds.getNorthEast().lng()) {
+                        return;
+                    }
+                    
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(biz.lat, biz.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, baseRadius * 0.7, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#c2185b';
+                    ctx.globalAlpha = 0.6;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    
+                    visibleCount++;
+                });
+            }
+            
+            // Render land use parcels
+            if (showLand && parcels.length > 0) {
+                const dataToRender = Object.keys(activeCodeFilters).length > 0 ? filteredParcels : parcels;
+                
+                dataToRender.forEach(parcel => {
+                    if (parcel.lat < bounds.getSouthWest().lat() || parcel.lat > bounds.getNorthEast().lat() ||
+                        parcel.lon < bounds.getSouthWest().lng() || parcel.lon > bounds.getNorthEast().lng()) {
+                        return;
+                    }
+                    
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(parcel.lat, parcel.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, baseRadius * 0.8, 0, 2 * Math.PI);
+                    ctx.fillStyle = getColorForCode(parcel.code);
+                    ctx.globalAlpha = 0.6;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    
+                    visibleCount++;
+                });
+            }
+            
+            // Render apartments on top
+            if (showApt && apartments.length > 0) {
+                const aptData = activeRoomFilter !== null ? filteredApartments : apartments;
+                
+                aptData.forEach(apt => {
+                    if (apt.lat < bounds.getSouthWest().lat() || apt.lat > bounds.getNorthEast().lat() ||
+                        apt.lon < bounds.getSouthWest().lng() || apt.lon > bounds.getNorthEast().lng()) {
+                        return;
+                    }
+                    
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(apt.lat, apt.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, baseRadius, 0, 2 * Math.PI);
+                    ctx.fillStyle = getAptColor(apt.rooms);
+                    ctx.globalAlpha = 0.75;
+                    ctx.fill();
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                    ctx.globalAlpha = 1;
+                    
+                    visibleCount++;
+                });
+            }
+            
+            document.getElementById('visible').textContent = visibleCount.toLocaleString();
+        }
+        
+        function updateNeighborhoodStats() {
+            const data = activeRoomFilter !== null ? filteredApartments : apartments;
+            if (data.length === 0) return;
+            
+            const neighborhoods = {};
+            data.forEach(apt => {
+                const loc = apt.location || '';
+                const parts = loc.split(' > ');
+                const neighborhood = parts[3] || parts[2] || 'Unknown';
+                neighborhoods[neighborhood] = (neighborhoods[neighborhood] || 0) + 1;
+            });
+            
+            const sorted = Object.entries(neighborhoods).sort((a, b) => b[1] - a[1]).slice(0, 8);
+            document.getElementById('neighborhoodStats').innerHTML = sorted.map(([name, count]) => `
+                <div class="stat-row">
+                    <span>${name}</span>
+                    <span class="stat-value">${count.toLocaleString()}</span>
+                </div>
+            `).join('');
+        }
+        
+        function filterByRooms(rooms) {
+            activeRoomFilter = rooms;
+            document.querySelectorAll('#roomButtons .filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.rooms === String(rooms));
+            });
+            
+            filteredApartments = rooms === null ? [] : apartments.filter(apt => apt.rooms === rooms);
+            document.getElementById('aptCount').textContent = 
+                (filteredApartments.length || apartments.length).toLocaleString();
+            
+            updateNeighborhoodStats();
+            render();
+        }
+        
+        function toggleCodeFilter(code) {
+            if (activeCodeFilters[code]) {
+                delete activeCodeFilters[code];
+            } else {
+                activeCodeFilters[code] = true;
+            }
+            
+            document.querySelectorAll('#codeButtons .filter-btn').forEach(btn => {
+                btn.classList.toggle('active', activeCodeFilters[btn.dataset.code]);
+            });
+            
+            if (Object.keys(activeCodeFilters).length === 0) {
+                filteredParcels = [];
+            } else {
+                filteredParcels = parcels.filter(p => activeCodeFilters[p.code]);
+            }
+            
+            document.getElementById('landCount').textContent = 
+                (filteredParcels.length || parcels.length).toLocaleString();
+            
+            render();
+        }
+        
+        // Handle canvas click - only intercept when click mode is enabled
+        function updateCanvasPointerEvents() {
+            canvas.style.pointerEvents = document.getElementById('enableClick').checked ? 'auto' : 'none';
+        }
+        
+        document.getElementById('enableClick').addEventListener('change', updateCanvasPointerEvents);
+        
+        canvas.addEventListener('click', function(e) {
+            if (!document.getElementById('enableClick').checked) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+            
+            const bounds = map.getBounds();
+            const proj = map.getProjection();
+            if (!proj || !bounds) return;
+            
+            const zoom = map.getZoom();
+            const topRight = proj.fromLatLngToPoint(bounds.getNorthEast());
+            const bottomLeft = proj.fromLatLngToPoint(bounds.getSouthWest());
+            const scale = Math.pow(2, zoom);
+            const baseRadius = Math.max(2, zoom - 9) * dotSizeMultiplier / 3;
+            
+            const showApt = document.getElementById('showApartments')?.checked !== false;
+            const showLand = document.getElementById('showLandUse')?.checked !== false;
+            const showBiz = document.getElementById('showBusinesses')?.checked !== false;
+            
+            // Check apartments first (they're on top)
+            if (showApt && apartments.length > 0) {
+                const aptData = activeRoomFilter !== null ? filteredApartments : apartments;
+                for (const apt of aptData) {
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(apt.lat, apt.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    const dist = Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2);
+                    if (dist < baseRadius + 5) {
+                        showApartmentInfo(apt, e.clientX, e.clientY);
+                        return;
+                    }
+                }
+            }
+            
+            // Check parcels
+            if (showLand && parcels.length > 0) {
+                const parcelData = Object.keys(activeCodeFilters).length > 0 ? filteredParcels : parcels;
+                for (const parcel of parcelData) {
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(parcel.lat, parcel.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    const dist = Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2);
+                    if (dist < baseRadius + 5) {
+                        showParcelInfo(parcel, e.clientX, e.clientY);
+                        return;
+                    }
+                }
+            }
+            
+            // Check businesses
+            if (showBiz && businesses.length > 0) {
+                for (const biz of businesses) {
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(biz.lat, biz.lon));
+                    const x = (w.x - bottomLeft.x) * scale;
+                    const y = (w.y - topRight.y) * scale;
+                    const dist = Math.sqrt((clickX - x) ** 2 + (clickY - y) ** 2);
+                    if (dist < baseRadius + 5) {
+                        showBusinessInfo(biz, e.clientX, e.clientY);
+                        return;
+                    }
+                }
+            }
+            
+            closeInfoPopup();
+        });
+        
+        // Dot size slider
+        document.getElementById('dotSize').addEventListener('input', function(e) {
+            dotSizeMultiplier = parseFloat(e.target.value);
+            document.getElementById('dotSizeValue').textContent = dotSizeMultiplier;
+            render();
+        });
+        
+        // Layer toggles
+        document.getElementById('showApartments')?.addEventListener('change', render);
+        document.getElementById('showLandUse')?.addEventListener('change', render);
+        document.getElementById('showBusinesses')?.addEventListener('change', render);
+        
+        window.initMap = function() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 24.7136, lng: 46.6753 },
+                zoom: 11,
+                mapTypeControl: true,
+                streetViewControl: true,
+                fullscreenControl: true,
+                gestureHandling: 'greedy'  // Allow easy zoom/pan
+            });
+            
+            map.addListener('idle', render);
+            window.addEventListener('resize', render);
+            
+            // Initialize canvas pointer events
+            updateCanvasPointerEvents();
+        }
+        
+        // Parse CSV handling quoted fields
+        function parseCSVLine(line) {
+            const vals = [];
+            let inQuote = false;
+            let current = '';
+            for (let c of line) {
+                if (c === '"') {
+                    inQuote = !inQuote;
+                } else if (c === ',' && !inQuote) {
+                    vals.push(current.trim());
+                    current = '';
+                } else {
+                    current += c;
+                }
+            }
+            vals.push(current.trim());
+            return vals;
+        }
+        
+        // Apartments file loader
+        document.getElementById('apartmentsFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('aptStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const lines = evt.target.result.trim().split('\n');
+                    const headers = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
+                    
+                    const latI = headers.findIndex(h => h === 'lat' || h === 'latitude');
+                    const lonI = headers.findIndex(h => h === 'lon' || h === 'lng' || h === 'longitude');
+                    const titleI = headers.findIndex(h => h === 'title');
+                    const priceI = headers.findIndex(h => h === 'price');
+                    const roomsI = headers.findIndex(h => h === 'rooms');
+                    const bathsI = headers.findIndex(h => h === 'baths');
+                    const areaI = headers.findIndex(h => h === 'area');
+                    const locationI = headers.findIndex(h => h === 'location');
+                    const freqI = headers.findIndex(h => h === 'rent_frequency');
+                    const idI = headers.findIndex(h => h === 'external_id');
+                    
+                    if (latI < 0 || lonI < 0) throw new Error('Need lat and lon columns');
+                    
+                    apartments = [];
+                    const roomCounts = {};
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        const vals = parseCSVLine(lines[i]);
+                        const lat = parseFloat(vals[latI]);
+                        const lon = parseFloat(vals[lonI]);
+                        
+                        if (!isNaN(lat) && !isNaN(lon)) {
+                            const rooms = roomsI >= 0 ? parseInt(vals[roomsI]) : null;
+                            apartments.push({
+                                lat, lon,
+                                title: titleI >= 0 ? vals[titleI] : '',
+                                price: priceI >= 0 ? parseFloat(vals[priceI]) : null,
+                                rooms: rooms,
+                                baths: bathsI >= 0 ? parseInt(vals[bathsI]) : null,
+                                area: areaI >= 0 ? parseFloat(vals[areaI]) : null,
+                                location: locationI >= 0 ? vals[locationI] : '',
+                                rent_frequency: freqI >= 0 ? vals[freqI] : '',
+                                external_id: idI >= 0 ? vals[idI] : ''
+                            });
+                            if (rooms) roomCounts[rooms] = (roomCounts[rooms] || 0) + 1;
+                        }
+                    }
+                    
+                    document.getElementById('aptStatus').textContent = `✅ ${apartments.length.toLocaleString()} apartments`;
+                    document.getElementById('aptStatus').classList.add('loaded');
+                    document.getElementById('loadingMsg').style.display = 'none';
+                    
+                    // Show UI elements
+                    document.getElementById('countsSection').style.display = 'flex';
+                    document.getElementById('aptCount').textContent = apartments.length.toLocaleString();
+                    document.getElementById('layerToggles').style.display = 'block';
+                    document.getElementById('aptLegend').style.display = 'block';
+                    
+                    // Room filters
+                    const roomDiv = document.getElementById('roomFilters');
+                    roomDiv.style.display = 'block';
+                    const btns = document.getElementById('roomButtons');
+                    btns.innerHTML = '<button class="filter-btn active" data-rooms="null" onclick="filterByRooms(null)">All</button>';
+                    Object.keys(roomCounts).sort((a, b) => a - b).slice(0, 7).forEach(r => {
+                        btns.innerHTML += `<button class="filter-btn" data-rooms="${r}" onclick="filterByRooms(${r})">${r}BR (${roomCounts[r]})</button>`;
+                    });
+                    
+                    document.getElementById('neighborhoodSection').style.display = 'block';
+                    updateNeighborhoodStats();
+                    render();
+                    
+                } catch (err) {
+                    document.getElementById('aptStatus').textContent = '❌ ' + err.message;
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        // Land Use file loader
+        document.getElementById('landUseFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('landStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const lines = evt.target.result.trim().split('\n');
+                    const headers = lines[0].toLowerCase().split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
+                    
+                    const latI = headers.findIndex(h => h === 'lat' || h === 'latitude');
+                    const lonI = headers.findIndex(h => h === 'lon' || h === 'lng' || h === 'longitude');
+                    const codeI = headers.findIndex(h => h === 'land_use_code' || h === 'landusecode' || h === 'code');
+                    const districtI = headers.findIndex(h => h === 'district');
+                    const parcelIdI = headers.findIndex(h => h === 'parcel_id');
+                    const blockNoI = headers.findIndex(h => h === 'block_no');
+                    const planNoI = headers.findIndex(h => h === 'plan_no');
+                    
+                    if (latI < 0 || lonI < 0) throw new Error('Need lat and lon columns');
+                    if (codeI < 0) throw new Error('Need land_use_code column');
+                    
+                    parcels = [];
+                    const codeCounts = {};
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        const vals = parseCSVLine(lines[i]);
+                        const lat = parseFloat(vals[latI]);
+                        const lon = parseFloat(vals[lonI]);
+                        const code = vals[codeI];
+                        
+                        if (!isNaN(lat) && !isNaN(lon) && code) {
+                            parcels.push({
+                                lat, lon, code,
+                                district: districtI >= 0 ? vals[districtI] : '',
+                                parcel_id: parcelIdI >= 0 ? vals[parcelIdI] : '',
+                                block_no: blockNoI >= 0 ? vals[blockNoI] : '',
+                                plan_no: planNoI >= 0 ? vals[planNoI] : ''
+                            });
+                            codeCounts[code] = (codeCounts[code] || 0) + 1;
+                        }
+                    }
+                    
+                    document.getElementById('landStatus').textContent = `✅ ${parcels.length.toLocaleString()} parcels`;
+                    document.getElementById('landStatus').classList.add('loaded');
+                    document.getElementById('loadingMsg').style.display = 'none';
+                    
+                    // Show UI
+                    document.getElementById('countsSection').style.display = 'flex';
+                    document.getElementById('landCount').textContent = parcels.length.toLocaleString();
+                    document.getElementById('layerToggles').style.display = 'block';
+                    document.getElementById('landLegend').style.display = 'block';
+                    
+                    // Code filters
+                    const codeDiv = document.getElementById('codeFilters');
+                    codeDiv.style.display = 'block';
+                    const cbtns = document.getElementById('codeButtons');
+                    cbtns.innerHTML = '';
+                    
+                    const sorted = Object.entries(codeCounts).sort((a, b) => b[1] - a[1]).slice(0, 15);
+                    sorted.forEach(([code, count]) => {
+                        const info = landUseColors[code] || { name: code, color: getColorForCode(code) };
+                        cbtns.innerHTML += `<button class="filter-btn" data-code="${code}" onclick="toggleCodeFilter('${code}')" style="border-left: 3px solid ${info.color};">${code} (${count.toLocaleString()})</button>`;
+                    });
+                    
+                    // Legend
+                    document.getElementById('landLegendItems').innerHTML = sorted.slice(0, 6).map(([code]) => {
+                        const info = landUseColors[code] || { name: code };
+                        return `<div class="legend-item"><div class="legend-dot" style="background:${getColorForCode(code)};"></div> ${code}: ${info.name}</div>`;
+                    }).join('');
+                    
+                    render();
+                    
+                } catch (err) {
+                    document.getElementById('landStatus').textContent = '❌ ' + err.message;
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        // Businesses file loader (JSON or CSV)
+        document.getElementById('businessFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            document.getElementById('bizStatus').textContent = 'Loading...';
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const content = evt.target.result;
+                    businesses = [];
+                    
+                    if (file.name.endsWith('.json')) {
+                        // JSON format: array of [lat, lon, name, category, subcategory] or objects
+                        const data = JSON.parse(content);
+                        
+                        if (Array.isArray(data)) {
+                            data.forEach(item => {
+                                if (Array.isArray(item) && item.length >= 2) {
+                                    // Array format: [lat, lon, name, category, subcategory]
+                                    businesses.push({
+                                        lat: item[0],
+                                        lon: item[1],
+                                        name: item[2] || 'Unknown',
+                                        category: item[3] || '',
+                                        subcategory: item[4] || ''
+                                    });
+                                } else if (item.lat && (item.lon || item.lng)) {
+                                    // Object format
+                                    businesses.push({
+                                        lat: item.lat,
+                                        lon: item.lon || item.lng,
+                                        name: item.name || 'Unknown',
+                                        category: item.category || '',
+                                        subcategory: item.subcategory || item.type || ''
+                                    });
+                                }
+                            });
+                        }
+                    } else {
+                        // CSV format
+                        const lines = content.trim().split('\n');
+                        const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+                        
+                        const latI = headers.findIndex(h => h === 'lat' || h === 'latitude');
+                        const lonI = headers.findIndex(h => h === 'lon' || h === 'lng' || h === 'longitude');
+                        const nameI = headers.findIndex(h => h === 'name');
+                        const catI = headers.findIndex(h => h === 'category');
+                        const subI = headers.findIndex(h => h === 'subcategory' || h === 'type' || h === 'sub_category');
+                        
+                        if (latI < 0 || lonI < 0) throw new Error('Need lat and lon columns');
+                        
+                        for (let i = 1; i < lines.length; i++) {
+                            const vals = parseCSVLine(lines[i]);
+                            const lat = parseFloat(vals[latI]);
+                            const lon = parseFloat(vals[lonI]);
+                            
+                            if (!isNaN(lat) && !isNaN(lon)) {
+                                businesses.push({
+                                    lat, lon,
+                                    name: nameI >= 0 ? vals[nameI] : 'Unknown',
+                                    category: catI >= 0 ? vals[catI] : '',
+                                    subcategory: subI >= 0 ? vals[subI] : ''
+                                });
+                            }
+                        }
+                    }
+                    
+                    document.getElementById('bizStatus').textContent = `✅ ${businesses.length.toLocaleString()} businesses`;
+                    document.getElementById('bizStatus').classList.add('loaded');
+                    document.getElementById('loadingMsg').style.display = 'none';
+                    
+                    // Show UI
+                    document.getElementById('countsSection').style.display = 'flex';
+                    document.getElementById('bizCountBox').style.display = 'block';
+                    document.getElementById('bizCount').textContent = businesses.length.toLocaleString();
+                    document.getElementById('layerToggles').style.display = 'block';
+                    document.getElementById('bizToggle').style.display = 'block';
+                    
+                    render();
+                    
+                } catch (err) {
+                    document.getElementById('bizStatus').textContent = '❌ ' + err.message;
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
+        });
+    </script>
+    
+    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js?callback=initMap" async defer></script>
+</body>
+</html>

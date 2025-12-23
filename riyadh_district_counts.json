@@ -1,0 +1,867 @@
+{
+  "Al Amal Dist.": {
+    "apartments": 2,
+    "complexes": 2,
+    "businesses": 22
+  },
+  "Al Namudhajiyah Dist.": {
+    "apartments": 4,
+    "complexes": 4,
+    "businesses": 62
+  },
+  "Al Jarradiyah Dist.": {
+    "apartments": 11,
+    "complexes": 4,
+    "businesses": 16
+  },
+  "Al Sinaiyah Dist.": {
+    "apartments": 2,
+    "complexes": 0,
+    "businesses": 17
+  },
+  "Manfuha Al Jadidah Dist.": {
+    "apartments": 1,
+    "complexes": 15,
+    "businesses": 12
+  },
+  "Al Fakhiriyah Dist.": {
+    "apartments": 2,
+    "complexes": 0,
+    "businesses": 12
+  },
+  "Al Dirah Dist.": {
+    "apartments": 8,
+    "complexes": 3,
+    "businesses": 36
+  },
+  "East Umm Al Hamam Dist.": {
+    "apartments": 3,
+    "complexes": 12,
+    "businesses": 13
+  },
+  "Al Sharafiyah Dist.": {
+    "apartments": 4,
+    "complexes": 1,
+    "businesses": 2
+  },
+  "Al Hada Dist.": {
+    "apartments": 1,
+    "complexes": 0,
+    "businesses": 71
+  },
+  "North Mathar Dist.": {
+    "apartments": 42,
+    "complexes": 1,
+    "businesses": 68
+  },
+  "West Umm Al Hamam Dist.": {
+    "apartments": 78,
+    "complexes": 3,
+    "businesses": 35
+  },
+  "Ar Rahmaniyah Dist.": {
+    "apartments": 25,
+    "complexes": 3,
+    "businesses": 50
+  },
+  "Laban Dist.": {
+    "apartments": 30,
+    "complexes": 7,
+    "businesses": 33
+  },
+  "Ar Rafiah Dist.": {
+    "apartments": 7,
+    "complexes": 3,
+    "businesses": 28
+  },
+  "Al Shohda Dist.": {
+    "apartments": 130,
+    "complexes": 1,
+    "businesses": 99
+  },
+  "King Fahd Dist.": {
+    "apartments": 52,
+    "complexes": 7,
+    "businesses": 122
+  },
+  "Al Suwaidi Dist.": {
+    "apartments": 238,
+    "complexes": 2,
+    "businesses": 74
+  },
+  "Al Hazm Dist.": {
+    "apartments": 384,
+    "complexes": 0,
+    "businesses": 47
+  },
+  "Utayqah Dist.": {
+    "apartments": 1,
+    "complexes": 4,
+    "businesses": 9
+  },
+  "Al Murabba Dist.": {
+    "apartments": 54,
+    "complexes": 2,
+    "businesses": 251
+  },
+  "Al Falah Dist.": {
+    "apartments": 69,
+    "complexes": 0,
+    "businesses": 27
+  },
+  "Al Nada Dist.": {
+    "apartments": 128,
+    "complexes": 3,
+    "businesses": 60
+  },
+  "Al Mursalat Dist.": {
+    "apartments": 14,
+    "complexes": 4,
+    "businesses": 211
+  },
+  "Al Nuzha Dist.": {
+    "apartments": 158,
+    "complexes": 8,
+    "businesses": 89
+  },
+  "Al Woroud Dist.": {
+    "apartments": 35,
+    "complexes": 5,
+    "businesses": 104
+  },
+  "King Faisal Dist.": {
+    "apartments": 143,
+    "complexes": 3,
+    "businesses": 46
+  },
+  "2nd Industrial City": {
+    "apartments": 0,
+    "complexes": 3,
+    "businesses": 29
+  },
+  "Al Aziziyah Dist.": {
+    "apartments": 63,
+    "complexes": 4,
+    "businesses": 176
+  },
+  "Al Mansurah Dist.": {
+    "apartments": 19,
+    "complexes": 1,
+    "businesses": 83
+  },
+  "Ghobairah Dist.": {
+    "apartments": 9,
+    "complexes": 13,
+    "businesses": 20
+  },
+  "Al Farooq Dist.": {
+    "apartments": 10,
+    "complexes": 0,
+    "businesses": 12
+  },
+  "Al Faisaliyah Dist.": {
+    "apartments": 0,
+    "complexes": 1,
+    "businesses": 23
+  },
+  "Al Khalidiyah Dist.": {
+    "apartments": 3,
+    "complexes": 9,
+    "businesses": 25
+  },
+  "Al Jazeerah Dist.": {
+    "apartments": 8,
+    "complexes": 0,
+    "businesses": 91
+  },
+  "Al Saadah Dist.": {
+    "apartments": 118,
+    "complexes": 10,
+    "businesses": 105
+  },
+  "Al Nasiriyah Dist.": {
+    "apartments": 0,
+    "complexes": 2,
+    "businesses": 21
+  },
+  "Al Manakh Dist.": {
+    "apartments": 0,
+    "complexes": 1,
+    "businesses": 47
+  },
+  "Al Difaa Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 28
+  },
+  "Al Noor Dist.": {
+    "apartments": 0,
+    "complexes": 1,
+    "businesses": 8
+  },
+  "King Abdullah Dist.": {
+    "apartments": 30,
+    "complexes": 0,
+    "businesses": 118
+  },
+  "Al Wahah Dist.": {
+    "apartments": 16,
+    "complexes": 0,
+    "businesses": 24
+  },
+  "Salahuddin Dist.": {
+    "apartments": 18,
+    "complexes": 1,
+    "businesses": 56
+  },
+  "King Abdulaziz Dist.": {
+    "apartments": 24,
+    "complexes": 0,
+    "businesses": 50
+  },
+  "Al Wizarat Dist.": {
+    "apartments": 106,
+    "complexes": 15,
+    "businesses": 59
+  },
+  "Skirinah Dist.": {
+    "apartments": 1,
+    "complexes": 0,
+    "businesses": 0
+  },
+  "Ar Rabwah Dist.": {
+    "apartments": 14,
+    "complexes": 0,
+    "businesses": 206
+  },
+  "Jareer Dist.": {
+    "apartments": 73,
+    "complexes": 8,
+    "businesses": 56
+  },
+  "Al Mathar Dist.": {
+    "apartments": 7,
+    "complexes": 2,
+    "businesses": 59
+  },
+  "As Salhiyah Dist.": {
+    "apartments": 2,
+    "complexes": 8,
+    "businesses": 3
+  },
+  "Al Malaz Dist.": {
+    "apartments": 136,
+    "complexes": 12,
+    "businesses": 200
+  },
+  "Manfuhah Dist.": {
+    "apartments": 8,
+    "complexes": 20,
+    "businesses": 21
+  },
+  "Olaishah Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 18
+  },
+  "Al Nahdah Dist.": {
+    "apartments": 121,
+    "complexes": 9,
+    "businesses": 48
+  },
+  "Al Khaleej Dist.": {
+    "apartments": 252,
+    "complexes": 7,
+    "businesses": 95
+  },
+  "Al Dhubbat Dist.": {
+    "apartments": 98,
+    "complexes": 16,
+    "businesses": 66
+  },
+  "West Suwaidi Dist.": {
+    "apartments": 60,
+    "complexes": 4,
+    "businesses": 77
+  },
+  "Dirab Dist.": {
+    "apartments": 80,
+    "complexes": 0,
+    "businesses": 18
+  },
+  "Ohod Dist.": {
+    "apartments": 6,
+    "complexes": 0,
+    "businesses": 20
+  },
+  "Namar Dist.": {
+    "apartments": 5,
+    "complexes": 0,
+    "businesses": 45
+  },
+  "Al Shifa Dist.": {
+    "apartments": 47,
+    "complexes": 7,
+    "businesses": 37
+  },
+  "Al Muhammadiyah Dist.": {
+    "apartments": 43,
+    "complexes": 3,
+    "businesses": 124
+  },
+  "Al Sulaimaniyah Dist.": {
+    "apartments": 222,
+    "complexes": 6,
+    "businesses": 242
+  },
+  "Al Marwah Dist.": {
+    "apartments": 49,
+    "complexes": 2,
+    "businesses": 32
+  },
+  "Okaz Dist.": {
+    "apartments": 135,
+    "complexes": 1,
+    "businesses": 19
+  },
+  "Shubra Dist.": {
+    "apartments": 20,
+    "complexes": 0,
+    "businesses": 76
+  },
+  "Al Zahrah Dist.": {
+    "apartments": 28,
+    "complexes": 7,
+    "businesses": 38
+  },
+  "Siyah Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 7
+  },
+  "Sultanah Dist.": {
+    "apartments": 21,
+    "complexes": 9,
+    "businesses": 27
+  },
+  "Al Yamamah Dist.": {
+    "apartments": 14,
+    "complexes": 15,
+    "businesses": 9
+  },
+  "Al Badiah Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 30
+  },
+  "Al Masani Dist.": {
+    "apartments": 0,
+    "complexes": 6,
+    "businesses": 32
+  },
+  "Al Qadisiyah Dist.": {
+    "apartments": 231,
+    "complexes": 7,
+    "businesses": 63
+  },
+  "Al Safa Dist.": {
+    "apartments": 23,
+    "complexes": 1,
+    "businesses": 10
+  },
+  "Al Olaya Dist.": {
+    "apartments": 272,
+    "complexes": 12,
+    "businesses": 625
+  },
+  "Al Duraihemiyah Dist.": {
+    "apartments": 11,
+    "complexes": 1,
+    "businesses": 46
+  },
+  "Al Iskan Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 147
+  },
+  "Al Salam Dist.": {
+    "apartments": 49,
+    "complexes": 13,
+    "businesses": 66
+  },
+  "Al Manar Dist.": {
+    "apartments": 28,
+    "complexes": 6,
+    "businesses": 62
+  },
+  "East Naseem Dist.": {
+    "apartments": 87,
+    "complexes": 13,
+    "businesses": 151
+  },
+  "Al Quds Dist.": {
+    "apartments": 122,
+    "complexes": 16,
+    "businesses": 62
+  },
+  "Al Wadi Dist.": {
+    "apartments": 374,
+    "complexes": 1,
+    "businesses": 36
+  },
+  "Al Nafel Dist.": {
+    "apartments": 192,
+    "complexes": 3,
+    "businesses": 48
+  },
+  "Al Maseef Dist.": {
+    "apartments": 222,
+    "complexes": 8,
+    "businesses": 106
+  },
+  "Al Taawun Dist.": {
+    "apartments": 132,
+    "complexes": 4,
+    "businesses": 80
+  },
+  "Al Ezdihar Dist.": {
+    "apartments": 208,
+    "complexes": 3,
+    "businesses": 68
+  },
+  "Al Andalus Dist.": {
+    "apartments": 47,
+    "complexes": 3,
+    "businesses": 52
+  },
+  "Al Rawdah Dist.": {
+    "apartments": 137,
+    "complexes": 9,
+    "businesses": 68
+  },
+  "Al Rawabi Dist.": {
+    "apartments": 49,
+    "complexes": 3,
+    "businesses": 121
+  },
+  "Al Rayan Dist.": {
+    "apartments": 50,
+    "complexes": 1,
+    "businesses": 65
+  },
+  "Dhahrat Al Badeah Dist.": {
+    "apartments": 27,
+    "complexes": 7,
+    "businesses": 62
+  },
+  "Al Nadheem Dist.": {
+    "apartments": 27,
+    "complexes": 0,
+    "businesses": 81
+  },
+  "Al Rimayah Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 157
+  },
+  "Al Bariyah Dist.": {
+    "apartments": 10,
+    "complexes": 0,
+    "businesses": 60
+  },
+  "Taybah Dist.": {
+    "apartments": 100,
+    "complexes": 0,
+    "businesses": 10
+  },
+  "Mansuriyah Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 7
+  },
+  "Dahiyat Namar Dist.": {
+    "apartments": 165,
+    "complexes": 4,
+    "businesses": 102
+  },
+  "Al Misfat Dist.": {
+    "apartments": 1,
+    "complexes": 13,
+    "businesses": 30
+  },
+  "Assafarat Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 274
+  },
+  "Khashm Al An": {
+    "apartments": 1,
+    "complexes": 0,
+    "businesses": 451
+  },
+  "Qurtubah Dist.": {
+    "apartments": 531,
+    "complexes": 7,
+    "businesses": 237
+  },
+  "Tuwaiq Dist.": {
+    "apartments": 462,
+    "complexes": 31,
+    "businesses": 277
+  },
+  "Al Awaly Dist.": {
+    "apartments": 138,
+    "complexes": 7,
+    "businesses": 54
+  },
+  "Ar Rabie Dist.": {
+    "apartments": 94,
+    "complexes": 2,
+    "businesses": 170
+  },
+  "Al Mughrazat Dist.": {
+    "apartments": 128,
+    "complexes": 0,
+    "businesses": 70
+  },
+  "Al Sulay Dist.": {
+    "apartments": 1,
+    "complexes": 5,
+    "businesses": 35
+  },
+  "Al Aqeeq Dist.": {
+    "apartments": 782,
+    "complexes": 21,
+    "businesses": 88
+  },
+  "Al Nakheel Dist.": {
+    "apartments": 112,
+    "complexes": 4,
+    "businesses": 93
+  },
+  "Al Ghadeer Dist.": {
+    "apartments": 85,
+    "complexes": 1,
+    "businesses": 45
+  },
+  "Al Muruj Dist.": {
+    "apartments": 80,
+    "complexes": 6,
+    "businesses": 124
+  },
+  "Al Oud Dist.": {
+    "apartments": 1,
+    "complexes": 11,
+    "businesses": 16
+  },
+  "Thulaim Dist.": {
+    "apartments": 5,
+    "complexes": 9,
+    "businesses": 3
+  },
+  "Al Shumaisi Dist.": {
+    "apartments": 4,
+    "complexes": 11,
+    "businesses": 11
+  },
+  "Al Wisham Dist.": {
+    "apartments": 3,
+    "complexes": 2,
+    "businesses": 22
+  },
+  "Salam Park": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 2
+  },
+  "Al Dubiyah Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 1
+  },
+  "Meakal Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 2
+  },
+  "Jabrah Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 4
+  },
+  "Al Qura Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 4
+  },
+  "Al Marqab Dist.": {
+    "apartments": 5,
+    "complexes": 12,
+    "businesses": 6
+  },
+  "Al Futah Dist.": {
+    "apartments": 3,
+    "complexes": 0,
+    "businesses": 41
+  },
+  "Umm Saleem Dist.": {
+    "apartments": 1,
+    "complexes": 4,
+    "businesses": 4
+  },
+  "Al Sahafah Dist.": {
+    "apartments": 259,
+    "complexes": 20,
+    "businesses": 400
+  },
+  "Al Raed Dist.": {
+    "apartments": 10,
+    "complexes": 1,
+    "businesses": 53
+  },
+  "West Oraija Dist.": {
+    "apartments": 34,
+    "complexes": 14,
+    "businesses": 161
+  },
+  "Al Uraija Dist.": {
+    "apartments": 0,
+    "complexes": 1,
+    "businesses": 11
+  },
+  "Middle Oraija Dist.": {
+    "apartments": 14,
+    "complexes": 7,
+    "businesses": 108
+  },
+  "Al Hamra Dist.": {
+    "apartments": 80,
+    "complexes": 5,
+    "businesses": 80
+  },
+  "Al Dar Al Baida Dist.": {
+    "apartments": 146,
+    "complexes": 13,
+    "businesses": 61
+  },
+  "Al Butaiha Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 1
+  },
+  "Al Zahra Dist.": {
+    "apartments": 3,
+    "complexes": 1,
+    "businesses": 37
+  },
+  "Al Fayha Dist.": {
+    "apartments": 85,
+    "complexes": 11,
+    "businesses": 61
+  },
+  "Al Mutamarat Dist.": {
+    "apartments": 7,
+    "complexes": 0,
+    "businesses": 17
+  },
+  "Al Wusayta Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 1
+  },
+  "Al Janadriyah Dist.": {
+    "apartments": 492,
+    "complexes": 16,
+    "businesses": 188
+  },
+  "Ishbiliyah Dist.": {
+    "apartments": 174,
+    "complexes": 8,
+    "businesses": 117
+  },
+  "Al Maizalah Dist.": {
+    "apartments": 71,
+    "complexes": 6,
+    "businesses": 101
+  },
+  "Al Yarmuk Dist.": {
+    "apartments": 650,
+    "complexes": 7,
+    "businesses": 168
+  },
+  "Al Munisiyah Dist.": {
+    "apartments": 953,
+    "complexes": 20,
+    "businesses": 127
+  },
+  "Al Khuzama Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 15
+  },
+  "Irqah": {
+    "apartments": 113,
+    "complexes": 4,
+    "businesses": 74
+  },
+  "Dhahrat Laban Dist.": {
+    "apartments": 543,
+    "complexes": 49,
+    "businesses": 167
+  },
+  "Hiteen Dist.": {
+    "apartments": 481,
+    "complexes": 19,
+    "businesses": 261
+  },
+  "Al Malqa Dist.": {
+    "apartments": 1362,
+    "complexes": 18,
+    "businesses": 109
+  },
+  "Al Qairawan Dist.": {
+    "apartments": 339,
+    "complexes": 3,
+    "businesses": 278
+  },
+  "Al Yasmeen Dist.": {
+    "apartments": 689,
+    "complexes": 8,
+    "businesses": 215
+  },
+  "Al Arid Dist.": {
+    "apartments": 994,
+    "complexes": 40,
+    "businesses": 116
+  },
+  "Al Narjis Dist.": {
+    "apartments": 1568,
+    "complexes": 27,
+    "businesses": 166
+  },
+  "Imam Muhammed Bin Saud Islamic University": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 82
+  },
+  "Banban Dist.": {
+    "apartments": 1,
+    "complexes": 0,
+    "businesses": 96
+  },
+  "Al Rimal Dist.": {
+    "apartments": 1119,
+    "complexes": 36,
+    "businesses": 148
+  },
+  "Ghirnatah Dist.": {
+    "apartments": 98,
+    "complexes": 2,
+    "businesses": 77
+  },
+  "Al Dahou Dist.": {
+    "apartments": 1,
+    "complexes": 1,
+    "businesses": 4
+  },
+  "Al Ammajiyah Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 2
+  },
+  "Hyt Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 6
+  },
+  "Al Haer Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 60
+  },
+  "Al Ghannamiyah Dist.": {
+    "apartments": 0,
+    "complexes": 1,
+    "businesses": 2
+  },
+  "Oraid Dist.": {
+    "apartments": 4,
+    "complexes": 1,
+    "businesses": 5
+  },
+  "Badr Dist.": {
+    "apartments": 463,
+    "complexes": 21,
+    "businesses": 108
+  },
+  "Al Mahdiyah Dist.": {
+    "apartments": 1938,
+    "complexes": 106,
+    "businesses": 3
+  },
+  "King Saud University": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 190
+  },
+  "West Naseem Dist.": {
+    "apartments": 54,
+    "complexes": 12,
+    "businesses": 42
+  },
+  "Al Mishael Dist.": {
+    "apartments": 0,
+    "complexes": 2,
+    "businesses": 36
+  },
+  "Al Nadwah Dist.": {
+    "apartments": 91,
+    "complexes": 1,
+    "businesses": 28
+  },
+  "Al Rabiyah Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 44
+  },
+  "Wady Laban Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 5
+  },
+  "King Abdullah City For Energy": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 7
+  },
+  "Al Khair Dist.": {
+    "apartments": 3,
+    "complexes": 2,
+    "businesses": 1
+  },
+  "Al Zaher Dist.": {
+    "apartments": 1,
+    "complexes": 0,
+    "businesses": 0
+  },
+  "Al Marjan Dist.": {
+    "apartments": 47,
+    "complexes": 0,
+    "businesses": 0
+  },
+  "Al Bayan Dist.": {
+    "apartments": 115,
+    "complexes": 13,
+    "businesses": 4
+  },
+  "Al Sahab Dist.": {
+    "apartments": 0,
+    "complexes": 0,
+    "businesses": 5
+  },
+  "Al Wasam Dist.": {
+    "apartments": 5,
+    "complexes": 0,
+    "businesses": 0
+  }
+}
