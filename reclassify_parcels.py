@@ -48,10 +48,13 @@ def main():
     # 2. Load commercial POIs
     print("\n2. Loading POIs...")
     poi_grid = {}
+    # ALL non-residential POI layers
     commercial_layers = {
         'EatAndDrink', 'Commercial', 'Industry', 'Financial', 
         'GasStationsAndAutoServices', 'HotelsAndHospitalityServices', 
-        'TravelAndTourism', 'Entertainment', 'BusinessFirms', 'FreightServices', 'Media'
+        'TravelAndTourism', 'Entertainment', 'BusinessFirms', 'FreightServices', 
+        'Media', 'HealthCare', 'Educational', 'Sports', 'Government',
+        'Facilities', 'Transportation', 'Cultural', 'SocialServices'
     }
     poi_count = 0
     with open('riyadh_pois.csv', 'r', encoding='utf-8') as f:
@@ -90,7 +93,7 @@ def main():
                             best_floors = bfloors
         return best_class, best_floors
     
-    def has_commercial_poi_nearby(lat, lon, radius=25):
+    def has_commercial_poi_nearby(lat, lon, radius=40):
         """Check if commercial POI within radius."""
         cell = (round(lat * 1000), round(lon * 1000))
         for dx in [-1, 0, 1]:
@@ -198,7 +201,7 @@ def main():
                 
                 # POI override: commercial POI nearby = other
                 if parcel_type in ('villa', 'apartment') and lat and lon:
-                    if has_commercial_poi_nearby(lat, lon, 20):
+                    if has_commercial_poi_nearby(lat, lon, 40):
                         parcel_type = 'other'
                         reason = 'poi_commercial'
             
