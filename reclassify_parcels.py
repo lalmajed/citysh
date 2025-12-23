@@ -22,33 +22,91 @@ def main():
     print("Using: Parcels + Buildings + POIs + Names")
     print("=" * 60)
     
-    # Keywords that indicate non-residential use
+    # Keywords that indicate non-residential use - EXPANDED
     COMMERCIAL_KEYWORDS = [
-        'ورش', 'تجاري', 'تجارى', 'محل', 'مطعم', 'مقهى', 'سوق', 'مركز تجار', 'بقالة',
-        'صيدلية', 'بنك', 'فندق', 'مخبز', 'مغسلة', 'صناع', 'صناعات', 'معدنية',
-        'استثمار', 'مختلط', 'حدادة', 'المنيوم', 'سيارات', 'وقود', 'بنزين',
-        'مستودع', 'مخزن', 'تموين', 'كهربائ', 'تكييف', 'أدوات', 'معرض',
-        'workshop', 'commercial', 'shop', 'store', 'restaurant', 'cafe',
-        'market', 'mall', 'pharmacy', 'bank', 'hotel', 'bakery', 'warehouse'
+        # Arabic - Workshops/Industrial
+        'ورش', 'ورشة', 'صناع', 'صناعات', 'صناعية', 'معدنية', 'حدادة', 'المنيوم', 'نجارة',
+        'مصنع', 'مصانع', 'إصلاح', 'صيانة',
+        # Arabic - Commercial
+        'تجاري', 'تجارى', 'محل', 'محلات', 'دكان', 'متجر', 'سوق', 'أسواق', 'اسواق',
+        'مركز تجار', 'مركز تسوق', 'مول', 'بقالة', 'تموينات', 'تموين', 'سوبرماركت',
+        'صيدلية', 'صيدليات', 'بنك', 'بنوك', 'مصرف', 'فندق', 'فنادق', 'شقق مفروشة',
+        'مخبز', 'مخابز', 'مطعم', 'مطاعم', 'مقهى', 'كافيه', 'بوفيه', 'بوفية', 'كافتيريا',
+        'مغسلة', 'مغاسل', 'خياط', 'خياطة', 'حلاق', 'حلاقة', 'صالون', 'كوافير',
+        # Arabic - Stores/Supplies
+        'معرض', 'معارض', 'مستودع', 'مستودعات', 'مخزن', 'مخازن', 'ثلاجة',
+        'كهربائ', 'أدوات كهربائية', 'مواد كهربائية', 'توصيلات', 'لوازم كهربائية',
+        'الكترون', 'إلكترون', 'أجهزة', 'اجهزة', 'أدوات', 'ادوات',
+        'تكييف', 'تبريد', 'سباكة', 'دهانات', 'بويات', 'سيراميك', 'بلاط', 'رخام', 'جرانيت',
+        'أثاث', 'اثاث', 'مفروشات', 'ستائر', 'سجاد', 'موكيت',
+        'قطع غيار', 'اطارات', 'إطارات', 'بطاريات', 'زيوت', 'سيارات', 'معدات',
+        # Arabic - Gas/Fuel
+        'وقود', 'بنزين', 'محروقات', 'محطة وقود', 'محطة بنزين', 'غاز',
+        # Arabic - Investment/Mixed
+        'استثمار', 'استثماري', 'استثمارى', 'مختلط', 'تجاري سكني', 'سكني تجاري',
+        # Arabic - Other commercial
+        'مؤسسة', 'شركة', 'مكتب', 'مكاتب', 'عقار', 'عقارات',
+        'حراج', 'مزاد', 'بورصة', 'صراف', 'صرافة', 'تحويل',
+        # English
+        'workshop', 'commercial', 'shop', 'store', 'restaurant', 'cafe', 'coffee',
+        'market', 'mall', 'supermarket', 'grocery', 'pharmacy', 'bank', 'hotel',
+        'bakery', 'warehouse', 'factory', 'industrial', 'retail', 'wholesale',
+        'electrical', 'electronics', 'appliance', 'furniture', 'supplies', 'equipment',
+        'gas station', 'fuel', 'petrol', 'auto', 'car parts', 'garage',
+        'office', 'company', 'firm', 'business', 'trading', 'investment'
     ]
     SERVICE_KEYWORDS = [
-        'مسجد', 'جامع', 'مدرسة', 'مستشفى', 'عيادة', 'حكوم', 'بلدية', 'شرطة',
-        'مستوصف', 'جامعة', 'كلية', 'معهد', 'روضة', 'حضانة', 'صحى', 'صحي',
-        'دفاع مدن', 'بريد', 'تعليم', 'ابتدائ', 'متوسط', 'ثانو', 'مرفق',
-        'إمام', 'مؤذن', 'خدمات',
-        'mosque', 'school', 'hospital', 'clinic', 'government', 'police',
-        'university', 'college', 'nursery', 'health'
+        # Arabic - Religious
+        'مسجد', 'جامع', 'مصلى', 'مصلي',
+        # Arabic - Education
+        'مدرسة', 'مدارس', 'جامعة', 'جامعات', 'كلية', 'كليات', 'معهد', 'معاهد',
+        'روضة', 'روضات', 'حضانة', 'تحفيظ', 'قرآن', 'تعليم', 'تعليمي', 'تعليمى',
+        'ابتدائ', 'متوسط', 'ثانو', 'أكاديمية', 'اكاديمية',
+        # Arabic - Health
+        'مستشفى', 'مستشفي', 'عيادة', 'عيادات', 'مستوصف', 'صحى', 'صحي', 'طبي', 'طبى',
+        'صحة', 'علاج', 'مركز صحي', 'رعاية صحية', 'طوارئ', 'إسعاف', 'اسعاف',
+        # Arabic - Government
+        'حكوم', 'بلدية', 'أمانة', 'امانة', 'وزارة', 'إمارة', 'امارة', 'إدارة', 'ادارة',
+        'شرطة', 'مرور', 'أمن', 'امن', 'دفاع مدن', 'دفاع مدني', 'إطفاء', 'اطفاء', 'مطافي',
+        'جوازات', 'أحوال', 'احوال', 'بريد', 'هاتف', 'اتصالات',
+        # Arabic - Other services
+        'مرفق', 'مرافق', 'خدمات', 'خدمة', 'عامة', 'إمام', 'مؤذن', 'سكن إمام', 'سكن مؤذن',
+        'نادي', 'نادى', 'رياضي', 'رياضى', 'ملعب', 'استاد', 'مكتبة', 'ثقافي', 'ثقافى',
+        'جمعية', 'خيرية', 'تطوعي', 'اجتماعي', 'اجتماعى',
+        # English
+        'mosque', 'school', 'university', 'college', 'institute', 'academy',
+        'hospital', 'clinic', 'health', 'medical', 'emergency',
+        'government', 'police', 'fire', 'post', 'municipality',
+        'nursery', 'kindergarten', 'library', 'club', 'sports', 'cultural'
     ]
     INFRASTRUCTURE_KEYWORDS = [
-        'مواقف', 'حديقة', 'حدائق', 'ممر', 'رصيف', 'ميدان', 'دوار', 'ساحة',
-        'غرفة كهرباء', 'محطة كهرباء', 'خزان', 'منتزه', 'منتزة', 'ملاعب',
-        'جزيرة', 'وادي', 'وادى', 'حرم', 'زائدة', 'زوائد', 'أنابيب', 'فضاء',
-        'دورات مياة', 'مياه', 'صرف', 'كهرباء رئيس', 'أبراج',
-        'parking', 'park', 'road', 'garden', 'square', 'roundabout'
+        # Arabic - Parking/Roads
+        'مواقف', 'موقف', 'جراج', 'كراج', 'انتظار سيارات',
+        'ممر', 'رصيف', 'طريق', 'شارع', 'دوار', 'ميدان', 'جزيرة', 'كوبري', 'جسر', 'نفق',
+        # Arabic - Parks/Open spaces
+        'حديقة', 'حدائق', 'منتزه', 'منتزة', 'متنزه', 'ملاعب', 'ملعب أطفال',
+        'ساحة', 'مناطق مفتوحة', 'مساحة خضراء', 'مسطحات خضراء', 'حزام أخضر',
+        # Arabic - Utilities
+        'غرفة كهرباء', 'محطة كهرباء', 'كهرباء رئيس', 'أبراج كهرباء', 'برج كهرباء',
+        'خزان', 'مياه', 'مياة', 'صرف', 'معالجة', 'ضخ', 'محطة',
+        'دورات مياة', 'دورات مياه', 'دورة مياه',
+        # Arabic - Natural/Land
+        'وادي', 'وادى', 'شعيب', 'مجرى', 'سيل', 'حرم', 'جبل',
+        'زائدة', 'زوائد', 'أنابيب', 'فضاء', 'أرض فضاء',
+        'مزرعة', 'مزارع', 'بستان', 'نخيل', 'زراعي', 'زراعى',
+        'مقبرة', 'مقابر', 'جبانة',
+        # Arabic - Other
+        'قصر', 'استراحة', 'شاليه', 'مخيم',
+        # English
+        'parking', 'park', 'garden', 'road', 'street', 'square', 'roundabout',
+        'utility', 'electricity', 'water', 'sewage', 'pump',
+        'valley', 'farm', 'cemetery', 'palace', 'chalet'
     ]
     APARTMENT_KEYWORDS = [
-        'شقق', 'عمارة', 'عمائر', 'سكني تجاري', 'سكنى تجارى', 'وحدات سكنية',
-        'مجمع سكني', 'برج سكني', 'apartment', 'residential tower', 'flats'
+        'شقق', 'عمارة', 'عمارات', 'عمائر', 'برج سكني', 'أبراج سكنية',
+        'سكني تجاري', 'سكنى تجارى', 'تجاري سكني', 'وحدات سكنية',
+        'مجمع سكني', 'سكن عمال',
+        'apartment', 'flats', 'residential tower', 'building'
     ]
     
     # 1. Load building classifications into spatial grid
@@ -172,12 +230,14 @@ def main():
             reason = 'default'
             
             # FIRST: Check parcel name for classification
+            # Order: Infrastructure -> Service -> Commercial -> Apartment
+            # (Infrastructure first to catch utility names like غرفة كهرباء before commercial)
             if parcel_name:
                 name_lower = parcel_name
-                # Commercial keywords = other
-                if any(kw in name_lower for kw in COMMERCIAL_KEYWORDS):
+                # Infrastructure keywords = other (check FIRST for utility names)
+                if any(kw in name_lower for kw in INFRASTRUCTURE_KEYWORDS):
                     parcel_type = 'other'
-                    reason = 'name_commercial'
+                    reason = 'name_infrastructure'
                     stats[parcel_type] += 1
                     reasons[reason] = reasons.get(reason, 0) + 1
                     row['parcel_type'] = parcel_type
@@ -194,10 +254,10 @@ def main():
                     row['reason'] = reason
                     output_rows.append(row)
                     continue
-                # Infrastructure keywords = other
-                if any(kw in name_lower for kw in INFRASTRUCTURE_KEYWORDS):
+                # Commercial keywords = other
+                if any(kw in name_lower for kw in COMMERCIAL_KEYWORDS):
                     parcel_type = 'other'
-                    reason = 'name_infrastructure'
+                    reason = 'name_commercial'
                     stats[parcel_type] += 1
                     reasons[reason] = reasons.get(reason, 0) + 1
                     row['parcel_type'] = parcel_type
