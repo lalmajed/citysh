@@ -24,20 +24,31 @@ def main():
     
     # Keywords that indicate non-residential use
     COMMERCIAL_KEYWORDS = [
-        'ورش', 'تجاري', 'محل', 'مطعم', 'مقهى', 'سوق', 'مركز', 'بقالة',
-        'صيدلية', 'بنك', 'فندق', 'مخبز', 'مغسلة', 'كهرباء', 'صناع',
+        'ورش', 'تجاري', 'تجارى', 'محل', 'مطعم', 'مقهى', 'سوق', 'مركز تجار', 'بقالة',
+        'صيدلية', 'بنك', 'فندق', 'مخبز', 'مغسلة', 'صناع', 'صناعات', 'معدنية',
+        'استثمار', 'مختلط', 'حدادة', 'المنيوم', 'سيارات', 'وقود', 'بنزين',
+        'مستودع', 'مخزن', 'تموين', 'كهربائ', 'تكييف', 'أدوات', 'معرض',
         'workshop', 'commercial', 'shop', 'store', 'restaurant', 'cafe',
-        'market', 'mall', 'pharmacy', 'bank', 'hotel', 'bakery'
+        'market', 'mall', 'pharmacy', 'bank', 'hotel', 'bakery', 'warehouse'
     ]
     SERVICE_KEYWORDS = [
-        'مسجد', 'مدرسة', 'مستشفى', 'عيادة', 'حكوم', 'بلدية', 'شرطة',
-        'مستوصف', 'جامعة', 'كلية', 'معهد', 'روضة', 'حضانة',
+        'مسجد', 'جامع', 'مدرسة', 'مستشفى', 'عيادة', 'حكوم', 'بلدية', 'شرطة',
+        'مستوصف', 'جامعة', 'كلية', 'معهد', 'روضة', 'حضانة', 'صحى', 'صحي',
+        'دفاع مدن', 'بريد', 'تعليم', 'ابتدائ', 'متوسط', 'ثانو', 'مرفق',
+        'إمام', 'مؤذن', 'خدمات',
         'mosque', 'school', 'hospital', 'clinic', 'government', 'police',
-        'university', 'college', 'nursery'
+        'university', 'college', 'nursery', 'health'
     ]
     INFRASTRUCTURE_KEYWORDS = [
-        'مواقف', 'حديقة', 'ممر', 'رصيف', 'ميدان', 'دوار', 'ساحة',
-        'غرفة كهرباء', 'محطة', 'خزان', 'parking', 'park', 'road'
+        'مواقف', 'حديقة', 'حدائق', 'ممر', 'رصيف', 'ميدان', 'دوار', 'ساحة',
+        'غرفة كهرباء', 'محطة كهرباء', 'خزان', 'منتزه', 'منتزة', 'ملاعب',
+        'جزيرة', 'وادي', 'وادى', 'حرم', 'زائدة', 'زوائد', 'أنابيب', 'فضاء',
+        'دورات مياة', 'مياه', 'صرف', 'كهرباء رئيس', 'أبراج',
+        'parking', 'park', 'road', 'garden', 'square', 'roundabout'
+    ]
+    APARTMENT_KEYWORDS = [
+        'شقق', 'عمارة', 'عمائر', 'سكني تجاري', 'سكنى تجارى', 'وحدات سكنية',
+        'مجمع سكني', 'برج سكني', 'apartment', 'residential tower', 'flats'
     ]
     
     # 1. Load building classifications into spatial grid
@@ -160,9 +171,10 @@ def main():
             parcel_type = 'other'
             reason = 'default'
             
-            # FIRST: Check parcel name for obvious non-residential
+            # FIRST: Check parcel name for classification
             if parcel_name:
-                name_lower = parcel_name.lower()
+                name_lower = parcel_name
+                # Commercial keywords = other
                 if any(kw in name_lower for kw in COMMERCIAL_KEYWORDS):
                     parcel_type = 'other'
                     reason = 'name_commercial'
@@ -172,6 +184,7 @@ def main():
                     row['reason'] = reason
                     output_rows.append(row)
                     continue
+                # Service keywords = other
                 if any(kw in name_lower for kw in SERVICE_KEYWORDS):
                     parcel_type = 'other'
                     reason = 'name_service'
@@ -181,9 +194,20 @@ def main():
                     row['reason'] = reason
                     output_rows.append(row)
                     continue
+                # Infrastructure keywords = other
                 if any(kw in name_lower for kw in INFRASTRUCTURE_KEYWORDS):
                     parcel_type = 'other'
                     reason = 'name_infrastructure'
+                    stats[parcel_type] += 1
+                    reasons[reason] = reasons.get(reason, 0) + 1
+                    row['parcel_type'] = parcel_type
+                    row['reason'] = reason
+                    output_rows.append(row)
+                    continue
+                # Apartment keywords = apartment
+                if any(kw in name_lower for kw in APARTMENT_KEYWORDS):
+                    parcel_type = 'apartment'
+                    reason = 'name_apartment'
                     stats[parcel_type] += 1
                     reasons[reason] = reasons.get(reason, 0) + 1
                     row['parcel_type'] = parcel_type
