@@ -19,8 +19,26 @@ def haversine(lat1, lon1, lat2, lon2):
 def main():
     print("=" * 60)
     print("FINAL PARCEL CLASSIFICATION")
-    print("Using: Parcels + Buildings + POIs")
+    print("Using: Parcels + Buildings + POIs + Names")
     print("=" * 60)
+    
+    # Keywords that indicate non-residential use
+    COMMERCIAL_KEYWORDS = [
+        'ورش', 'تجاري', 'محل', 'مطعم', 'مقهى', 'سوق', 'مركز', 'بقالة',
+        'صيدلية', 'بنك', 'فندق', 'مخبز', 'مغسلة', 'كهرباء', 'صناع',
+        'workshop', 'commercial', 'shop', 'store', 'restaurant', 'cafe',
+        'market', 'mall', 'pharmacy', 'bank', 'hotel', 'bakery'
+    ]
+    SERVICE_KEYWORDS = [
+        'مسجد', 'مدرسة', 'مستشفى', 'عيادة', 'حكوم', 'بلدية', 'شرطة',
+        'مستوصف', 'جامعة', 'كلية', 'معهد', 'روضة', 'حضانة',
+        'mosque', 'school', 'hospital', 'clinic', 'government', 'police',
+        'university', 'college', 'nursery'
+    ]
+    INFRASTRUCTURE_KEYWORDS = [
+        'مواقف', 'حديقة', 'ممر', 'رصيف', 'ميدان', 'دوار', 'ساحة',
+        'غرفة كهرباء', 'محطة', 'خزان', 'parking', 'park', 'road'
+    ]
     
     # 1. Load building classifications into spatial grid
     print("\n1. Loading building data...")
@@ -123,6 +141,7 @@ def main():
             mainlanduse = str(row.get('mainlanduse', '')).strip()
             subtype = str(row.get('subtype', '')).strip()
             is_apt = row.get('is_apartment', '')
+            parcel_name = str(row.get('name', '')).strip().lower()
             try:
                 units = int(row.get('units') or 0)
             except:
@@ -140,6 +159,37 @@ def main():
             # Default
             parcel_type = 'other'
             reason = 'default'
+            
+            # FIRST: Check parcel name for obvious non-residential
+            if parcel_name:
+                name_lower = parcel_name.lower()
+                if any(kw in name_lower for kw in COMMERCIAL_KEYWORDS):
+                    parcel_type = 'other'
+                    reason = 'name_commercial'
+                    stats[parcel_type] += 1
+                    reasons[reason] = reasons.get(reason, 0) + 1
+                    row['parcel_type'] = parcel_type
+                    row['reason'] = reason
+                    output_rows.append(row)
+                    continue
+                if any(kw in name_lower for kw in SERVICE_KEYWORDS):
+                    parcel_type = 'other'
+                    reason = 'name_service'
+                    stats[parcel_type] += 1
+                    reasons[reason] = reasons.get(reason, 0) + 1
+                    row['parcel_type'] = parcel_type
+                    row['reason'] = reason
+                    output_rows.append(row)
+                    continue
+                if any(kw in name_lower for kw in INFRASTRUCTURE_KEYWORDS):
+                    parcel_type = 'other'
+                    reason = 'name_infrastructure'
+                    stats[parcel_type] += 1
+                    reasons[reason] = reasons.get(reason, 0) + 1
+                    row['parcel_type'] = parcel_type
+                    row['reason'] = reason
+                    output_rows.append(row)
+                    continue
             
             # Check if residential land use
             is_residential = mainlanduse in ('100000', '1000000')
