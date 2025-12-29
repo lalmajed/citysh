@@ -49,7 +49,7 @@
         .detail td:first-child { color: #8b949e; width: 70px; }
         .map-area { flex: 1; position: relative; }
         #map { width: 100%; height: 100%; }
-        #canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: auto; z-index: 500; }
+        #canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 500; }
         .legend { position: absolute; bottom: 10px; right: 10px; background: rgba(13,17,23,0.95); border: 1px solid #30363d; border-radius: 6px; padding: 10px; z-index: 1000; font-size: 9px; }
         .legend b { color: #58a6ff; }
         .leg-row { display: flex; align-items: center; margin: 3px 0; }
@@ -135,6 +135,7 @@ var DATA = {"edges": [{"x1": 46.8493022483241, "y1": 24.701475446932697, "x2": 4
 var map, canvas, ctx, osmLayer;
 var currentRoute = null, paths = [], selectedTrip = -1, selectedPath = -1;
 var colors = ['#e94560','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#c0392b'];
+var routeMarkers = [];
 
 function init() {
     map = L.map('map', {center: [24.7, 46.75], zoom: 11});
@@ -152,8 +153,8 @@ function init() {
     
     map.on('move', draw);
     map.on('zoom', draw);
+    map.on('click', onMapClick);
     window.addEventListener('resize', resize);
-    canvas.addEventListener('click', onCanvasClick);
     resize();
 }
 
@@ -173,6 +174,7 @@ function latlng2px(lat, lng) {
 }
 
 function loadRoute() {
+    clearMarkers();
     var idx = document.getElementById('routeSel').value;
     if (idx === '') {
         currentRoute = null;
@@ -184,6 +186,44 @@ function loadRoute() {
     currentRoute = DATA.trips[parseInt(idx)];
     document.getElementById('routeInfo').style.display = 'block';
     applyRules();
+    addMarkers();
+}
+
+function clearMarkers() {
+    routeMarkers.forEach(function(m) { map.removeLayer(m); });
+    routeMarkers = [];
+}
+
+function addMarkers() {
+    if (!currentRoute) return;
+    var segs = currentRoute.segments;
+    
+    // Add clickable circle markers for each point
+    segs.forEach(function(s, i) {
+        // Start point
+        if (i === 0) {
+            var startMarker = L.circleMarker([s.start[1], s.start[0]], {
+                radius: 12, color: '#006400', fillColor: '#00ff00', fillOpacity: 1, weight: 3
+            }).addTo(map);
+            startMarker.bindPopup('<b>Route Start</b><br>Trip 1 start');
+            startMarker.on('click', function() { selTrip(0); });
+            routeMarkers.push(startMarker);
+        }
+        
+        // End point of this segment = start of next (or route end)
+        var isLast = (i === segs.length - 1);
+        var marker = L.circleMarker([s.end[1], s.end[0]], {
+            radius: isLast ? 12 : 6,
+            color: isLast ? '#8b0000' : '#2980b9',
+            fillColor: isLast ? '#ff0000' : '#3498db',
+            fillOpacity: 1,
+            weight: isLast ? 3 : 2
+        }).addTo(map);
+        
+        marker.bindPopup('<b>' + (isLast ? 'Route End' : 'Point ' + (i+1)) + '</b><br>Trip ' + (i+1) + ' end');
+        marker.on('click', function() { selTrip(i); });
+        routeMarkers.push(marker);
+    });
 }
 
 function applyRules() {
@@ -306,6 +346,7 @@ function draw() {
     if (!currentRoute) return;
     var segs = currentRoute.segments;
     
+    // Draw route lines
     segs.forEach(function(s, i) {
         var pi = 0;
         for (var p = 0; p < paths.length; p++) {
@@ -314,35 +355,36 @@ function draw() {
         var p1 = latlng2px(s.start[1], s.start[0]), p2 = latlng2px(s.end[1], s.end[0]);
         
         if (i === selectedTrip) {
-            ctx.strokeStyle = '#fff'; ctx.lineWidth = 8;
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 10;
             ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
         }
         ctx.strokeStyle = colors[pi % colors.length];
-        ctx.lineWidth = i === selectedTrip ? 5 : (pi === selectedPath ? 4 : 3);
+        ctx.lineWidth = i === selectedTrip ? 6 : (pi === selectedPath ? 5 : 3);
         ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
     });
+}
+
+function onMapClick(e) {
+    if (!currentRoute) return;
     
-    // Waypoints
-    segs.forEach(function(s, i) {
-        if (i > 0) {
-            var p = latlng2px(s.start[1], s.start[0]);
-            ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
-            ctx.fillStyle = '#3498db'; ctx.fill();
-        }
+    var clickLat = e.latlng.lat, clickLng = e.latlng.lng;
+    var best = 0.001, bestI = -1; // ~100m threshold
+    
+    currentRoute.segments.forEach(function(s, i) {
+        // Check distance to line segment
+        var d = distToSegmentLatLng(clickLat, clickLng, s.start[1], s.start[0], s.end[1], s.end[0]);
+        if (d < best) { best = d; bestI = i; }
     });
     
-    // Start/End
-    if (segs.length > 0) {
-        var ps = latlng2px(segs[0].start[1], segs[0].start[0]);
-        ctx.beginPath(); ctx.arc(ps.x, ps.y, 10, 0, Math.PI*2);
-        ctx.fillStyle = '#00ff00'; ctx.fill();
-        ctx.strokeStyle = '#006400'; ctx.lineWidth = 2; ctx.stroke();
-        
-        var pe = latlng2px(segs[segs.length-1].end[1], segs[segs.length-1].end[0]);
-        ctx.beginPath(); ctx.arc(pe.x, pe.y, 10, 0, Math.PI*2);
-        ctx.fillStyle = '#ff0000'; ctx.fill();
-        ctx.strokeStyle = '#8b0000'; ctx.lineWidth = 2; ctx.stroke();
-    }
+    if (bestI >= 0) selTrip(bestI);
+}
+
+function distToSegmentLatLng(px, py, x1, y1, x2, y2) {
+    var A = px - x1, B = py - y1, C = x2 - x1, D = y2 - y1;
+    var dot = A*C + B*D, len = C*C + D*D;
+    var t = len > 0 ? Math.max(0, Math.min(1, dot/len)) : 0;
+    var xx = x1 + t*C, yy = y1 + t*D;
+    return Math.sqrt((px-xx)*(px-xx) + (py-yy)*(py-yy));
 }
 
 function parseTime(s) {
@@ -363,27 +405,6 @@ function zoomRoute() {
     if (bounds.length) map.fitBounds(bounds, {padding: [50, 50]});
 }
 function resetView() { map.setView([24.7, 46.75], 11); }
-
-function onCanvasClick(e) {
-    if (!currentRoute) return;
-    var rect = canvas.getBoundingClientRect();
-    var mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    var best = 15, bestI = -1;
-    currentRoute.segments.forEach(function(s, i) {
-        var p1 = latlng2px(s.start[1], s.start[0]), p2 = latlng2px(s.end[1], s.end[0]);
-        var d = distToLine(mx, my, p1.x, p1.y, p2.x, p2.y);
-        if (d < best) { best = d; bestI = i; }
-    });
-    if (bestI >= 0) selTrip(bestI);
-}
-
-function distToLine(px, py, x1, y1, x2, y2) {
-    var A = px-x1, B = py-y1, C = x2-x1, D = y2-y1;
-    var dot = A*C + B*D, len = C*C + D*D;
-    var t = len > 0 ? Math.max(0, Math.min(1, dot/len)) : 0;
-    var xx = x1 + t*C, yy = y1 + t*D;
-    return Math.sqrt((px-xx)*(px-xx) + (py-yy)*(py-yy));
-}
 
 init();
 </script>
