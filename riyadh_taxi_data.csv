@@ -1,0 +1,1 @@
+trip_id,pickup_lat,pickup_lon,pickup_time,dropoff_lat,dropoff_lon,dropoff_time,distance_km,duration_sec,car_model,cost,gender
