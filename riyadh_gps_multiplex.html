@@ -101,7 +101,7 @@
                 </div>
             </div>
             <div class="section">
-                <h3>Paths</h3>
+                <h3>Paths (click to highlight on map)</h3>
                 <div class="path-list" id="pathList"></div>
             </div>
             <div class="detail" id="tripDetail">
@@ -136,6 +136,7 @@ var map, canvas, ctx, osmLayer;
 var currentRoute = null, paths = [], selectedTrip = -1, selectedPath = -1;
 var colors = ['#e94560','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#c0392b'];
 var routeMarkers = [];
+var pathPolylines = [];
 
 function init() {
     map = L.map('map', {center: [24.7, 46.75], zoom: 11});
@@ -153,7 +154,6 @@ function init() {
     
     map.on('move', draw);
     map.on('zoom', draw);
-    map.on('click', onMapClick);
     window.addEventListener('resize', resize);
     resize();
 }
@@ -173,8 +173,15 @@ function latlng2px(lat, lng) {
     return {x: p.x, y: p.y};
 }
 
+function clearMapElements() {
+    routeMarkers.forEach(function(m) { map.removeLayer(m); });
+    routeMarkers = [];
+    pathPolylines.forEach(function(p) { map.removeLayer(p); });
+    pathPolylines = [];
+}
+
 function loadRoute() {
-    clearMarkers();
+    clearMapElements();
     var idx = document.getElementById('routeSel').value;
     if (idx === '') {
         currentRoute = null;
@@ -186,48 +193,66 @@ function loadRoute() {
     currentRoute = DATA.trips[parseInt(idx)];
     document.getElementById('routeInfo').style.display = 'block';
     applyRules();
-    addMarkers();
 }
 
-function clearMarkers() {
-    routeMarkers.forEach(function(m) { map.removeLayer(m); });
-    routeMarkers = [];
-}
-
-function addMarkers() {
+function addMapElements() {
     if (!currentRoute) return;
     var segs = currentRoute.segments;
     
-    // Add clickable circle markers for each point
+    // Add polylines for each path
+    paths.forEach(function(path, pi) {
+        var latlngs = [];
+        path.trips.forEach(function(ti) {
+            var s = segs[ti];
+            if (latlngs.length === 0) latlngs.push([s.start[1], s.start[0]]);
+            latlngs.push([s.end[1], s.end[0]]);
+        });
+        
+        var polyline = L.polyline(latlngs, {
+            color: colors[pi % colors.length],
+            weight: 4,
+            opacity: 0.8
+        }).addTo(map);
+        
+        polyline.on('click', function() {
+            togglePath(pi);
+            zoomToPath(pi);
+        });
+        
+        pathPolylines.push(polyline);
+    });
+    
+    // Add markers for points
     segs.forEach(function(s, i) {
         // Start point
         if (i === 0) {
             var startMarker = L.circleMarker([s.start[1], s.start[0]], {
-                radius: 12, color: '#006400', fillColor: '#00ff00', fillOpacity: 1, weight: 3
+                radius: 14, color: '#006400', fillColor: '#00ff00', fillOpacity: 1, weight: 3
             }).addTo(map);
-            startMarker.bindPopup('<b>Route Start</b><br>Trip 1 start');
-            startMarker.on('click', function() { selTrip(0); });
+            startMarker.bindPopup('<b>Route Start</b><br>Click to select Trip 1');
+            startMarker.on('click', function() { selTrip(0); zoomToTrip(0); });
             routeMarkers.push(startMarker);
         }
         
-        // End point of this segment = start of next (or route end)
+        // End point of segment
         var isLast = (i === segs.length - 1);
         var marker = L.circleMarker([s.end[1], s.end[0]], {
-            radius: isLast ? 12 : 6,
+            radius: isLast ? 14 : 7,
             color: isLast ? '#8b0000' : '#2980b9',
             fillColor: isLast ? '#ff0000' : '#3498db',
             fillOpacity: 1,
             weight: isLast ? 3 : 2
         }).addTo(map);
         
-        marker.bindPopup('<b>' + (isLast ? 'Route End' : 'Point ' + (i+1)) + '</b><br>Trip ' + (i+1) + ' end');
-        marker.on('click', function() { selTrip(i); });
+        marker.bindPopup('<b>' + (isLast ? 'Route End' : 'Point ' + (i+1)) + '</b><br>Click to select Trip ' + (i+1));
+        marker.on('click', function() { selTrip(i); zoomToTrip(i); });
         routeMarkers.push(marker);
     });
 }
 
 function applyRules() {
     if (!currentRoute) return;
+    clearMapElements();
     
     var segs = currentRoute.segments;
     var rule = document.getElementById('ruleSel').value;
@@ -271,14 +296,14 @@ function applyRules() {
     var html = '';
     paths.forEach(function(path, pi) {
         var col = colors[pi % colors.length];
-        html += '<div class="path-hdr" onclick="togglePath('+pi+')" id="ph'+pi+'" style="border-left:3px solid '+col+'">';
+        html += '<div class="path-hdr" onclick="selectPath('+pi+')" id="ph'+pi+'" style="border-left:3px solid '+col+'">';
         html += '<span class="name">Path '+(pi+1)+'</span>';
         html += '<span class="meta">'+path.trips.length+' trips, '+path.time+'s, '+(path.dist/1000).toFixed(2)+'km</span>';
         html += '</div>';
         html += '<div class="path-trips" id="pt'+pi+'">';
         path.trips.forEach(function(ti) {
             var s = segs[ti];
-            html += '<div class="trip-item" onclick="event.stopPropagation();selTrip('+ti+')" id="tr'+ti+'">';
+            html += '<div class="trip-item" onclick="event.stopPropagation();selectTripAndZoom('+ti+')" id="tr'+ti+'">';
             html += '<span class="idx">T'+(ti+1)+'</span>';
             html += '<span>'+s.distance_m.toFixed(0)+'m @ '+s.speed_kmh.toFixed(0)+' km/h</span>';
             html += '</div>';
@@ -290,7 +315,14 @@ function applyRules() {
     selectedTrip = -1;
     selectedPath = -1;
     document.getElementById('tripDetail').classList.remove('show');
+    
+    addMapElements();
     draw();
+}
+
+function selectPath(pi) {
+    togglePath(pi);
+    zoomToPath(pi);
 }
 
 function togglePath(i) {
@@ -298,9 +330,55 @@ function togglePath(i) {
     var isOpen = el.classList.contains('show');
     document.querySelectorAll('.path-trips').forEach(function(e){e.classList.remove('show');});
     document.querySelectorAll('.path-hdr').forEach(function(e){e.classList.remove('active');});
-    if (!isOpen) { el.classList.add('show'); hdr.classList.add('active'); selectedPath = i; }
-    else { selectedPath = -1; }
+    
+    if (!isOpen) { 
+        el.classList.add('show'); 
+        hdr.classList.add('active'); 
+        selectedPath = i;
+    } else { 
+        selectedPath = -1; 
+    }
+    
+    // Highlight path on map
+    highlightPath(selectedPath);
     draw();
+}
+
+function highlightPath(pi) {
+    pathPolylines.forEach(function(polyline, idx) {
+        if (pi === -1) {
+            polyline.setStyle({weight: 4, opacity: 0.8});
+        } else if (idx === pi) {
+            polyline.setStyle({weight: 8, opacity: 1});
+            polyline.bringToFront();
+        } else {
+            polyline.setStyle({weight: 2, opacity: 0.3});
+        }
+    });
+}
+
+function zoomToPath(pi) {
+    if (pi < 0 || pi >= paths.length) return;
+    var segs = currentRoute.segments;
+    var bounds = [];
+    paths[pi].trips.forEach(function(ti) {
+        var s = segs[ti];
+        bounds.push([s.start[1], s.start[0]]);
+        bounds.push([s.end[1], s.end[0]]);
+    });
+    if (bounds.length) map.fitBounds(bounds, {padding: [80, 80]});
+}
+
+function zoomToTrip(ti) {
+    if (!currentRoute || ti < 0) return;
+    var s = currentRoute.segments[ti];
+    var bounds = [[s.start[1], s.start[0]], [s.end[1], s.end[0]]];
+    map.fitBounds(bounds, {padding: [100, 100], maxZoom: 16});
+}
+
+function selectTripAndZoom(ti) {
+    selTrip(ti);
+    zoomToTrip(ti);
 }
 
 function selTrip(ti) {
@@ -309,9 +387,15 @@ function selTrip(ti) {
     var el = document.getElementById('tr'+ti);
     if (el) { el.classList.add('active'); el.scrollIntoView({behavior:'smooth',block:'nearest'}); }
     
+    // Open parent path
     for (var p = 0; p < paths.length; p++) {
         if (paths[p].trips.indexOf(ti) >= 0) {
-            if (!document.getElementById('pt'+p).classList.contains('show')) togglePath(p);
+            if (!document.getElementById('pt'+p).classList.contains('show')) {
+                document.getElementById('pt'+p).classList.add('show');
+                document.getElementById('ph'+p).classList.add('active');
+                selectedPath = p;
+                highlightPath(p);
+            }
             break;
         }
     }
@@ -343,48 +427,22 @@ function draw() {
         });
     }
     
-    if (!currentRoute) return;
-    var segs = currentRoute.segments;
-    
-    // Draw route lines
-    segs.forEach(function(s, i) {
-        var pi = 0;
-        for (var p = 0; p < paths.length; p++) {
-            if (paths[p].trips.indexOf(i) >= 0) { pi = p; break; }
-        }
+    // Draw selected trip highlight
+    if (currentRoute && selectedTrip >= 0) {
+        var s = currentRoute.segments[selectedTrip];
         var p1 = latlng2px(s.start[1], s.start[0]), p2 = latlng2px(s.end[1], s.end[0]);
         
-        if (i === selectedTrip) {
-            ctx.strokeStyle = '#fff'; ctx.lineWidth = 10;
-            ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
-        }
-        ctx.strokeStyle = colors[pi % colors.length];
-        ctx.lineWidth = i === selectedTrip ? 6 : (pi === selectedPath ? 5 : 3);
+        // White glow
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 12;
+        ctx.lineCap = 'round';
         ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
-    });
-}
-
-function onMapClick(e) {
-    if (!currentRoute) return;
-    
-    var clickLat = e.latlng.lat, clickLng = e.latlng.lng;
-    var best = 0.001, bestI = -1; // ~100m threshold
-    
-    currentRoute.segments.forEach(function(s, i) {
-        // Check distance to line segment
-        var d = distToSegmentLatLng(clickLat, clickLng, s.start[1], s.start[0], s.end[1], s.end[0]);
-        if (d < best) { best = d; bestI = i; }
-    });
-    
-    if (bestI >= 0) selTrip(bestI);
-}
-
-function distToSegmentLatLng(px, py, x1, y1, x2, y2) {
-    var A = px - x1, B = py - y1, C = x2 - x1, D = y2 - y1;
-    var dot = A*C + B*D, len = C*C + D*D;
-    var t = len > 0 ? Math.max(0, Math.min(1, dot/len)) : 0;
-    var xx = x1 + t*C, yy = y1 + t*D;
-    return Math.sqrt((px-xx)*(px-xx) + (py-yy)*(py-yy));
+        
+        // Yellow highlight
+        ctx.strokeStyle = '#ffff00';
+        ctx.lineWidth = 8;
+        ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+    }
 }
 
 function parseTime(s) {
@@ -404,7 +462,17 @@ function zoomRoute() {
     });
     if (bounds.length) map.fitBounds(bounds, {padding: [50, 50]});
 }
-function resetView() { map.setView([24.7, 46.75], 11); }
+function resetView() { 
+    map.setView([24.7, 46.75], 11); 
+    selectedPath = -1;
+    selectedTrip = -1;
+    highlightPath(-1);
+    document.querySelectorAll('.path-trips').forEach(function(e){e.classList.remove('show');});
+    document.querySelectorAll('.path-hdr').forEach(function(e){e.classList.remove('active');});
+    document.querySelectorAll('.trip-item').forEach(function(e){e.classList.remove('active');});
+    document.getElementById('tripDetail').classList.remove('show');
+    draw();
+}
 
 init();
 </script>
