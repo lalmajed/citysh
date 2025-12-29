@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test Rules</title></head>
+<body>
+<h3>Test Path Splitting</h3>
+<div>
+    <input type="radio" name="rule" id="rule_none" value="none" checked> None
+    <input type="radio" name="rule" id="rule_count" value="count"> Count
+</div>
+<div>
+    <label>Trips per path: <input type="number" id="countThresh" value="5"></label>
+</div>
+<button onclick="test()">Test</button>
+<pre id="output"></pre>
+
+<script>
+var segs = [];
+for (var i = 0; i < 21; i++) {
+    segs.push({id: i, time: (i+1)*10, period: 10});
+}
+
+function test() {
+    var rule = document.getElementById('rule_count').checked ? 'count' : 'none';
+    var countThresh = parseInt(document.getElementById('countThresh').value) || 5;
+    
+    var out = 'Rule: ' + rule + '\n';
+    out += 'Count threshold: ' + countThresh + '\n';
+    out += 'Total segments: ' + segs.length + '\n\n';
+    
+    var paths = [];
+    var currentPath = [];
+    
+    for (var i = 0; i < segs.length; i++) {
+        var shouldSplit = false;
+        
+        if (rule === 'count') {
+            if (currentPath.length >= countThresh) {
+                shouldSplit = true;
+            }
+        }
+        
+        if (shouldSplit && currentPath.length > 0) {
+            paths.push(currentPath.slice());
+            currentPath = [];
+        }
+        currentPath.push(i);
+    }
+    if (currentPath.length > 0) {
+        paths.push(currentPath);
+    }
+    
+    out += 'Paths created: ' + paths.length + '\n';
+    paths.forEach(function(p, i) {
+        out += 'Path ' + (i+1) + ': trips ' + p.join(', ') + '\n';
+    });
+    
+    document.getElementById('output').textContent = out;
+}
+</script>
+</body>
+</html>
