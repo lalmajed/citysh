@@ -6,7 +6,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #0d1117; color: #c9d1d9; }
         
-        .header { background: linear-gradient(135deg, #1a365d, #2d3748); padding: 15px 20px; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; }
+        .header { background: linear-gradient(135deg, #1a365d, #2d3748); padding: 15px 20px; border-bottom: 1px solid #30363d; }
         .header h1 { font-size: 18px; color: white; }
         
         .container { display: flex; height: calc(100vh - 60px); }
@@ -25,11 +25,12 @@
         .btn { padding: 6px 12px; border: 1px solid #30363d; background: #21262d; color: #c9d1d9; border-radius: 4px; cursor: pointer; font-size: 11px; }
         .btn:hover { background: #30363d; }
         
-        .segment-list { max-height: 300px; overflow-y: auto; border: 1px solid #30363d; border-radius: 4px; background: #0d1117; }
+        .segment-list { max-height: 250px; overflow-y: auto; border: 1px solid #30363d; border-radius: 4px; background: #0d1117; }
         .segment-item { padding: 8px 10px; border-bottom: 1px solid #21262d; font-size: 11px; cursor: pointer; }
         .segment-item:hover { background: #21262d; }
         .segment-item.active { background: #1f6feb; color: white; }
         .segment-item .idx { color: #58a6ff; font-weight: bold; margin-right: 5px; }
+        .segment-item.active .idx { color: #fff; }
         .segment-item .meta { color: #8b949e; font-size: 10px; }
         
         .trip-stats { background: #0d1117; border: 1px solid #30363d; border-radius: 4px; padding: 10px; margin-top: 10px; }
@@ -37,6 +38,13 @@
         .trip-stats td { padding: 4px 0; }
         .trip-stats td:first-child { color: #8b949e; }
         .trip-stats td:last-child { text-align: right; font-weight: bold; }
+        
+        .seg-detail { background: #1f6feb22; border: 1px solid #1f6feb; border-radius: 4px; padding: 10px; margin-top: 10px; display: none; }
+        .seg-detail.show { display: block; }
+        .seg-detail h4 { font-size: 12px; color: #58a6ff; margin-bottom: 8px; }
+        .seg-detail table { width: 100%; font-size: 11px; }
+        .seg-detail td { padding: 3px 0; }
+        .seg-detail td:first-child { color: #8b949e; }
         
         .canvas-area { flex: 1; position: relative; }
         canvas { width: 100%; height: 100%; background: white; cursor: grab; }
@@ -84,10 +92,21 @@
             </div>
             
             <div class="section" id="segmentSection" style="display:none">
-                <h3>Trip Segments</h3>
+                <h3>Trip Segments (click on map or list)</h3>
                 <div class="segment-list" id="segmentList"></div>
                 
-                <div class="trip-stats" id="tripStats">
+                <div class="seg-detail" id="segDetail">
+                    <h4>Segment #<span id="segNum">-</span></h4>
+                    <table>
+                        <tr><td>Start</td><td id="segStart">-</td></tr>
+                        <tr><td>End</td><td id="segEnd">-</td></tr>
+                        <tr><td>Distance</td><td id="segDist">-</td></tr>
+                        <tr><td>Time</td><td id="segTime">-</td></tr>
+                        <tr><td>Speed</td><td id="segSpeed">-</td></tr>
+                    </table>
+                </div>
+                
+                <div class="trip-stats">
                     <table>
                         <tr><td>Total Segments</td><td id="statSegs">-</td></tr>
                         <tr><td>Total Distance</td><td id="statDist">-</td></tr>
@@ -100,7 +119,7 @@
         
         <div class="canvas-area">
             <canvas id="canvas"></canvas>
-            <div class="hint">Drag to pan • Scroll to zoom</div>
+            <div class="hint">Drag to pan • Scroll to zoom • Click segments/points on route</div>
             
             <div class="legend">
                 <h4>Road Network</h4>
@@ -125,10 +144,8 @@
         var ctx = canvas.getContext('2d');
         var view = { x1:46.5, x2:47.0, y1:24.5, y2:25.0 };
         var selectedSegment = -1;
-        
-        // Pan/zoom state
         var isDragging = false;
-        var lastX, lastY;
+        var dragStartX, dragStartY, didDrag = false;
         
         function resize() {
             canvas.width = canvas.parentElement.clientWidth;
@@ -158,7 +175,6 @@
             var showRoads = document.getElementById('showRoads').checked;
             var tripIdx = parseInt(document.getElementById('trip').value);
             
-            // Draw road network
             if (showRoads) {
                 edges.forEach(e => {
                     ctx.beginPath();
@@ -170,11 +186,9 @@
                 });
             }
             
-            // Draw trip segments
             if (tripIdx >= 0) {
                 var trip = trips[tripIdx];
                 
-                // Draw each segment
                 trip.segments.forEach((seg, i) => {
                     var isSelected = (i === selectedSegment);
                     
@@ -182,15 +196,20 @@
                     ctx.moveTo(tx(seg.start[0]), ty(seg.start[1]));
                     ctx.lineTo(tx(seg.end[0]), ty(seg.end[1]));
                     ctx.strokeStyle = isSelected ? '#9b59b6' : '#e74c3c';
-                    ctx.lineWidth = isSelected ? 5 : 3;
+                    ctx.lineWidth = isSelected ? 6 : 3;
                     ctx.stroke();
-                    
-                    // Joint point
+                });
+                
+                // Draw joint points
+                trip.segments.forEach((seg, i) => {
                     if (i > 0) {
                         ctx.beginPath();
-                        ctx.arc(tx(seg.start[0]), ty(seg.start[1]), 3, 0, Math.PI*2);
-                        ctx.fillStyle = '#3498db';
+                        ctx.arc(tx(seg.start[0]), ty(seg.start[1]), 5, 0, Math.PI*2);
+                        ctx.fillStyle = (i === selectedSegment || i-1 === selectedSegment) ? '#f39c12' : '#3498db';
                         ctx.fill();
+                        ctx.strokeStyle = '#fff';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
                     }
                 });
                 
@@ -198,17 +217,16 @@
                 if (trip.segments.length > 0) {
                     var first = trip.segments[0];
                     ctx.beginPath();
-                    ctx.arc(tx(first.start[0]), ty(first.start[1]), 8, 0, Math.PI*2);
+                    ctx.arc(tx(first.start[0]), ty(first.start[1]), 10, 0, Math.PI*2);
                     ctx.fillStyle = '#00ff00';
                     ctx.fill();
                     ctx.strokeStyle = '#006400';
                     ctx.lineWidth = 2;
                     ctx.stroke();
                     
-                    // End marker
                     var last = trip.segments[trip.segments.length-1];
                     ctx.beginPath();
-                    ctx.arc(tx(last.end[0]), ty(last.end[1]), 8, 0, Math.PI*2);
+                    ctx.arc(tx(last.end[0]), ty(last.end[1]), 10, 0, Math.PI*2);
                     ctx.fillStyle = '#ff0000';
                     ctx.fill();
                     ctx.strokeStyle = '#8b0000';
@@ -216,20 +234,20 @@
                     ctx.stroke();
                 }
                 
-                // Highlight selected segment ends
+                // Selected segment highlight
                 if (selectedSegment >= 0 && selectedSegment < trip.segments.length) {
                     var seg = trip.segments[selectedSegment];
                     
                     ctx.beginPath();
-                    ctx.arc(tx(seg.start[0]), ty(seg.start[1]), 6, 0, Math.PI*2);
+                    ctx.arc(tx(seg.start[0]), ty(seg.start[1]), 7, 0, Math.PI*2);
                     ctx.fillStyle = '#f39c12';
                     ctx.fill();
                     ctx.strokeStyle = '#000';
-                    ctx.lineWidth = 1;
+                    ctx.lineWidth = 2;
                     ctx.stroke();
                     
                     ctx.beginPath();
-                    ctx.arc(tx(seg.end[0]), ty(seg.end[1]), 6, 0, Math.PI*2);
+                    ctx.arc(tx(seg.end[0]), ty(seg.end[1]), 7, 0, Math.PI*2);
                     ctx.fillStyle = '#9b59b6';
                     ctx.fill();
                     ctx.stroke();
@@ -243,6 +261,7 @@
             var list = document.getElementById('segmentList');
             
             selectedSegment = -1;
+            document.getElementById('segDetail').classList.remove('show');
             
             if (tripIdx >= 0) {
                 section.style.display = 'block';
@@ -275,9 +294,27 @@
         
         function selectSegment(idx) {
             document.querySelectorAll('.segment-item').forEach(el => el.classList.remove('active'));
-            document.getElementById('seg'+idx).classList.add('active');
+            var el = document.getElementById('seg'+idx);
+            if (el) {
+                el.classList.add('active');
+                el.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+            }
             selectedSegment = idx;
-            draw();  // Just redraw, no zoom
+            
+            // Show segment detail
+            var tripIdx = parseInt(document.getElementById('trip').value);
+            if (tripIdx >= 0) {
+                var seg = trips[tripIdx].segments[idx];
+                document.getElementById('segDetail').classList.add('show');
+                document.getElementById('segNum').textContent = idx + 1;
+                document.getElementById('segStart').textContent = seg.start[0].toFixed(5) + ', ' + seg.start[1].toFixed(5);
+                document.getElementById('segEnd').textContent = seg.end[0].toFixed(5) + ', ' + seg.end[1].toFixed(5);
+                document.getElementById('segDist').textContent = seg.distance.toFixed(1) + ' m';
+                document.getElementById('segTime').textContent = seg.time.toFixed(1) + ' s';
+                document.getElementById('segSpeed').textContent = (seg.speed * 3600).toFixed(1) + ' km/h';
+            }
+            
+            draw();
         }
         
         function zoomToTrip() {
@@ -298,33 +335,82 @@
             view={x1:46.5, x2:47.0, y1:24.5, y2:25.0}; 
             selectedSegment = -1;
             document.querySelectorAll('.segment-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('segDetail').classList.remove('show');
             draw(); 
         }
         
-        // Pan handlers
+        // Distance from point to line segment
+        function distToSegment(px, py, x1, y1, x2, y2) {
+            var A = px - x1, B = py - y1, C = x2 - x1, D = y2 - y1;
+            var dot = A*C + B*D;
+            var len_sq = C*C + D*D;
+            var param = len_sq !== 0 ? dot / len_sq : -1;
+            var xx, yy;
+            if (param < 0) { xx = x1; yy = y1; }
+            else if (param > 1) { xx = x2; yy = y2; }
+            else { xx = x1 + param*C; yy = y1 + param*D; }
+            var dx = px - xx, dy = py - yy;
+            return Math.sqrt(dx*dx + dy*dy);
+        }
+        
+        // Click on map to select segment
+        function handleClick(e) {
+            if (didDrag) return;  // Don't click after drag
+            
+            var tripIdx = parseInt(document.getElementById('trip').value);
+            if (tripIdx < 0) return;
+            
+            var rect = canvas.getBoundingClientRect();
+            var mx = e.clientX - rect.left;
+            var my = e.clientY - rect.top;
+            
+            var trip = trips[tripIdx];
+            var bestDist = Infinity;
+            var bestIdx = -1;
+            
+            // Check each segment
+            trip.segments.forEach((seg, i) => {
+                var x1 = tx(seg.start[0]), y1 = ty(seg.start[1]);
+                var x2 = tx(seg.end[0]), y2 = ty(seg.end[1]);
+                var d = distToSegment(mx, my, x1, y1, x2, y2);
+                if (d < bestDist) {
+                    bestDist = d;
+                    bestIdx = i;
+                }
+            });
+            
+            // If close enough, select it
+            if (bestDist < 15 && bestIdx >= 0) {
+                selectSegment(bestIdx);
+            }
+        }
+        
         canvas.addEventListener('mousedown', function(e) {
             isDragging = true;
-            lastX = e.clientX;
-            lastY = e.clientY;
+            didDrag = false;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
             canvas.style.cursor = 'grabbing';
         });
         
         canvas.addEventListener('mousemove', function(e) {
             if (!isDragging) return;
-            var dx = e.clientX - lastX;
-            var dy = e.clientY - lastY;
+            var dx = e.clientX - dragStartX;
+            var dy = e.clientY - dragStartY;
+            if (Math.abs(dx) > 3 || Math.abs(dy) > 3) didDrag = true;
             var dlon = -dx / canvas.width * (view.x2 - view.x1);
             var dlat = dy / canvas.height * (view.y2 - view.y1);
             view.x1 += dlon; view.x2 += dlon;
             view.y1 += dlat; view.y2 += dlat;
-            lastX = e.clientX;
-            lastY = e.clientY;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
             draw();
         });
         
-        canvas.addEventListener('mouseup', function() {
+        canvas.addEventListener('mouseup', function(e) {
             isDragging = false;
             canvas.style.cursor = 'grab';
+            handleClick(e);
         });
         
         canvas.addEventListener('mouseleave', function() {
@@ -332,7 +418,6 @@
             canvas.style.cursor = 'grab';
         });
         
-        // Zoom handler
         canvas.addEventListener('wheel', function(e) {
             e.preventDefault();
             var rect = canvas.getBoundingClientRect();
@@ -345,7 +430,6 @@
             var w = (view.x2 - view.x1) * factor;
             var h = (view.y2 - view.y1) * factor;
             
-            // Zoom centered on mouse
             var rx = mx / canvas.width;
             var ry = 1 - my / canvas.height;
             view.x1 = lon - w * rx;
