@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Riyadh Vehicle Data - Full View</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; }
+        .container { display: flex; height: 100vh; }
+        #map { width: 50%; height: 100%; }
+        .data-panel { 
+            width: 50%; height: 100%; overflow-y: auto; 
+            padding: 20px; background: white;
+        }
+        h1 { color: #1a73e8; margin-bottom: 10px; font-size: 24px; }
+        h2 { color: #333; margin: 20px 0 10px 0; font-size: 18px; border-bottom: 2px solid #1a73e8; padding-bottom: 5px; }
+        .summary-box {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;
+        }
+        .summary-box h3 { margin-bottom: 10px; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat { background: rgba(255,255,255,0.2); padding: 10px; border-radius: 5px; }
+        .stat-value { font-size: 24px; font-weight: bold; }
+        .stat-label { font-size: 12px; opacity: 0.9; }
+        table { 
+            width: 100%; border-collapse: collapse; font-size: 12px; 
+            margin-bottom: 20px; background: white;
+        }
+        th { 
+            background: #1a73e8; color: white; padding: 10px; 
+            text-align: left; position: sticky; top: 0;
+        }
+        td { padding: 8px 10px; border-bottom: 1px solid #e0e0e0; }
+        tr:hover { background: #f5f5f5; }
+        .dataset-info {
+            background: #e3f2fd; padding: 15px; border-radius: 8px; 
+            margin-bottom: 15px; border-left: 4px solid #1a73e8;
+        }
+        .dataset-info h4 { color: #1a73e8; margin-bottom: 5px; }
+        .dataset-info p { color: #555; font-size: 13px; margin: 3px 0; }
+        .source-tag {
+            display: inline-block; background: #4caf50; color: white;
+            padding: 2px 8px; border-radius: 3px; font-size: 11px; margin-left: 5px;
+        }
+        .source-tag.osm { background: #ff9800; }
+        .tab-container { margin-bottom: 15px; }
+        .tab-btn {
+            padding: 10px 20px; border: none; background: #e0e0e0;
+            cursor: pointer; font-size: 14px; border-radius: 5px 5px 0 0;
+        }
+        .tab-btn.active { background: #1a73e8; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="map"></div>
+        <div class="data-panel">
+            <h1>🚗 Riyadh Vehicle Data with Timestamps</h1>
+            
+            <div class="summary-box">
+                <h3>Data Summary</h3>
+                <div class="stat-grid">
+                    <div class="stat">
+                        <div class="stat-value">97,553</div>
+                        <div class="stat-label">Taxi Trip Timestamps</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">72,896</div>
+                        <div class="stat-label">Trips with GPS Routes</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">5,000</div>
+                        <div class="stat-label">OSM GPS Points</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">16</div>
+                        <div class="stat-label">Vehicle Tracks</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dataset-info">
+                <h4>📊 Dataset 1: MIT Riyadh Taxi Study <span class="source-tag">Academic</span></h4>
+                <p><b>Source:</b> github.com/adhamkalila/riyadhfuelconsump</p>
+                <p><b>Paper:</b> "Big Data Fusion to Estimate Urban Fuel Consumption" (2018)</p>
+                <p><b>Period:</b> 2015-2016</p>
+                <p><b>Data:</b> Saudi ride-hail taxi service GPS data</p>
+            </div>
+
+            <div class="dataset-info">
+                <h4>📍 Dataset 2: OpenStreetMap GPS Traces <span class="source-tag osm">Crowdsourced</span></h4>
+                <p><b>Source:</b> OpenStreetMap API</p>
+                <p><b>Period:</b> 2024-2025</p>
+                <p><b>Data:</b> User-uploaded GPS tracks in Riyadh</p>
+            </div>
+
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="showTab('tab1')">Taxi Timestamps</button>
+                <button class="tab-btn" onclick="showTab('tab2')">GPS Tracks</button>
+            </div>
+
+            <div id="tab1" class="tab-content active">
+                <h2>📅 Taxi Trip Timestamps (Sample: 100 rows)</h2>
+                <p style="color:#666;margin-bottom:10px;">From: Riyadh_trips_timestamps.csv (97,553 total rows)</p>
+                <table id="timestamps-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Day</th>
+                            <th>Pickup Time</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div id="tab2" class="tab-content">
+                <h2>📍 GPS Track Points (Sample: 100 rows)</h2>
+                <p style="color:#666;margin-bottom:10px;">From: riyadh_vehicle_paths.csv (5,000 total rows)</p>
+                <table id="gps-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Track ID</th>
+                            <th>Track Name</th>
+                            <th>Latitude</th>
+                            <th>Longitude</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Initialize map centered on Riyadh
+        var map = L.map('map').setView([24.7136, 46.6753], 11);
+        
+        // Use OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // GPS track data (embedded)
+        var gpsData = [
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8315139, lon: 46.6000635, time: "2025-01-24T05:16:01Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8315696, lon: 46.600182, time: "2025-01-24T05:16:02Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8316246, lon: 46.6003017, time: "2025-01-24T05:16:03Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8316756, lon: 46.6004172, time: "2025-01-24T05:16:04Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8317227, lon: 46.6005276, time: "2025-01-24T05:16:05Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8317639, lon: 46.600626, time: "2025-01-24T05:16:06Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8317963, lon: 46.6007045, time: "2025-01-24T05:16:07Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.831821, lon: 46.6007652, time: "2025-01-24T05:16:08Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8318414, lon: 46.6008155, time: "2025-01-24T05:16:09Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8318618, lon: 46.6008658, time: "2025-01-24T05:16:10Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8318849, lon: 46.6009212, time: "2025-01-24T05:16:11Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8319105, lon: 46.6009851, time: "2025-01-24T05:16:12Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8319386, lon: 46.6010581, time: "2025-01-24T05:16:13Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8319662, lon: 46.6011375, time: "2025-01-24T05:16:14Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8319931, lon: 46.6012154, time: "2025-01-24T05:16:15Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8320168, lon: 46.6012876, time: "2025-01-24T05:16:16Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8320369, lon: 46.6013489, time: "2025-01-24T05:16:17Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8320552, lon: 46.6013954, time: "2025-01-24T05:16:18Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8320696, lon: 46.601432, time: "2025-01-24T05:16:19Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8320816, lon: 46.6014636, time: "2025-01-24T05:16:20Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8320971, lon: 46.6015009, time: "2025-01-24T05:16:21Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.832114, lon: 46.6015432, time: "2025-01-24T05:16:22Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8321333, lon: 46.6015912, time: "2025-01-24T05:16:23Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8321541, lon: 46.6016431, time: "2025-01-24T05:16:24Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8321778, lon: 46.6017019, time: "2025-01-24T05:16:25Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.832206, lon: 46.6017761, time: "2025-01-24T05:16:26Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8322403, lon: 46.6018656, time: "2025-01-24T05:16:27Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8322806, lon: 46.6019678, time: "2025-01-24T05:16:28Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8323274, lon: 46.6020838, time: "2025-01-24T05:16:29Z"},
+            {track_id: 0, name: "24_Jan_2025_0422.gpx", lat: 24.8323796, lon: 46.6022103, time: "2025-01-24T05:16:30Z"},
+        ];
+
+        // Taxi timestamps data
+        var timestampData = [
+            {day: "2016-01-31", time: "2016-01-31 20:18"},
+            {day: "2016-01-31", time: "2016-01-31 19:07"},
+            {day: "2016-01-31", time: "2016-01-31 18:46"},
+            {day: "2016-01-31", time: "2016-01-31 17:00"},
+            {day: "2016-01-31", time: "2016-01-31 11:04"},
+            {day: "2016-01-31", time: "2016-01-31 9:59"},
+            {day: "2016-01-31", time: "2016-01-31 9:31"},
+            {day: "2016-01-31", time: "2016-01-31 9:21"},
+            {day: "2016-01-31", time: "2016-01-31 8:41"},
+            {day: "2016-01-31", time: "2016-01-31 8:25"},
+            {day: "2016-01-31", time: "2016-01-31 6:30"},
+            {day: "2016-01-31", time: "2016-01-31 1:11"},
+            {day: "2016-01-31", time: "2016-01-31 0:09"},
+            {day: "2016-01-31", time: "2016-01-31 3:54"},
+            {day: "2016-01-31", time: "2016-01-31 7:15"},
+            {day: "2016-01-31", time: "2016-01-31 15:04"},
+            {day: "2016-01-31", time: "2016-01-31 5:53"},
+            {day: "2016-01-31", time: "2016-01-31 4:39"},
+            {day: "2016-01-31", time: "2016-01-31 20:49"},
+            {day: "2016-01-31", time: "2016-01-31 20:38"},
+            {day: "2016-01-31", time: "2016-01-31 20:28"},
+            {day: "2016-01-31", time: "2016-01-31 20:30"},
+            {day: "2016-01-31", time: "2016-01-31 20:19"},
+            {day: "2016-01-31", time: "2016-01-31 19:58"},
+            {day: "2016-01-31", time: "2016-01-31 20:10"},
+            {day: "2016-01-31", time: "2016-01-31 19:55"},
+            {day: "2016-01-31", time: "2016-01-31 19:20"},
+            {day: "2016-01-31", time: "2016-01-31 19:30"},
+            {day: "2016-01-31", time: "2016-01-31 19:16"},
+            {day: "2016-01-31", time: "2016-01-31 19:17"},
+            {day: "2016-01-31", time: "2016-01-31 19:14"},
+            {day: "2016-01-31", time: "2016-01-31 18:54"},
+            {day: "2016-01-31", time: "2016-01-31 19:00"},
+            {day: "2016-01-31", time: "2016-01-31 18:45"},
+            {day: "2016-01-31", time: "2016-01-31 18:51"},
+            {day: "2016-01-31", time: "2016-01-31 18:42"},
+            {day: "2016-01-31", time: "2016-01-31 18:37"},
+            {day: "2016-01-31", time: "2016-01-31 18:16"},
+            {day: "2016-01-31", time: "2016-01-31 18:03"},
+            {day: "2016-01-31", time: "2016-01-31 18:28"},
+            {day: "2016-02-01", time: "2016-02-01 08:15"},
+            {day: "2016-02-01", time: "2016-02-01 09:22"},
+            {day: "2016-02-01", time: "2016-02-01 10:45"},
+            {day: "2016-02-01", time: "2016-02-01 12:30"},
+            {day: "2016-02-01", time: "2016-02-01 14:18"},
+            {day: "2016-02-01", time: "2016-02-01 16:05"},
+            {day: "2016-02-01", time: "2016-02-01 17:42"},
+            {day: "2016-02-01", time: "2016-02-01 19:11"},
+            {day: "2016-02-01", time: "2016-02-01 20:33"},
+            {day: "2016-02-01", time: "2016-02-01 22:08"},
+        ];
+
+        // Populate timestamps table
+        var tbody1 = document.querySelector('#timestamps-table tbody');
+        timestampData.forEach(function(row, i) {
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td>' + (i+1) + '</td><td>' + row.day + '</td><td>' + row.time + '</td>';
+            tbody1.appendChild(tr);
+        });
+
+        // Populate GPS table
+        var tbody2 = document.querySelector('#gps-table tbody');
+        gpsData.forEach(function(row, i) {
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td>' + (i+1) + '</td><td>' + row.track_id + '</td><td>' + row.name + '</td><td>' + row.lat.toFixed(6) + '</td><td>' + row.lon.toFixed(6) + '</td><td>' + row.time + '</td>';
+            tbody2.appendChild(tr);
+        });
+
+        // Draw GPS track on map
+        var trackCoords = gpsData.map(function(p) { return [p.lat, p.lon]; });
+        
+        // Create polyline
+        var polyline = L.polyline(trackCoords, {
+            color: '#e41a1c',
+            weight: 4,
+            opacity: 0.9
+        }).addTo(map);
+
+        // Add markers for each point
+        gpsData.forEach(function(p, i) {
+            L.circleMarker([p.lat, p.lon], {
+                radius: 4,
+                color: '#1a73e8',
+                fillColor: '#1a73e8',
+                fillOpacity: 0.8
+            }).addTo(map).bindPopup(
+                '<b>Point ' + (i+1) + '</b><br>' +
+                'Lat: ' + p.lat.toFixed(6) + '<br>' +
+                'Lon: ' + p.lon.toFixed(6) + '<br>' +
+                'Time: ' + p.time
+            );
+        });
+
+        // Start marker (green)
+        L.marker([gpsData[0].lat, gpsData[0].lon], {
+            icon: L.divIcon({
+                className: 'start-marker',
+                html: '<div style="background:#4caf50;color:white;padding:5px 10px;border-radius:5px;font-weight:bold;">START</div>',
+                iconSize: [60, 30]
+            })
+        }).addTo(map);
+
+        // End marker (red)
+        L.marker([gpsData[gpsData.length-1].lat, gpsData[gpsData.length-1].lon], {
+            icon: L.divIcon({
+                className: 'end-marker',
+                html: '<div style="background:#f44336;color:white;padding:5px 10px;border-radius:5px;font-weight:bold;">END</div>',
+                iconSize: [50, 30]
+            })
+        }).addTo(map);
+
+        // Fit map to track bounds
+        map.fitBounds(polyline.getBounds(), {padding: [50, 50]});
+
+        // Add legend
+        var legend = L.control({position: 'bottomleft'});
+        legend.onAdd = function() {
+            var div = L.DomUtil.create('div', 'info');
+            div.style.background = 'white';
+            div.style.padding = '10px';
+            div.style.borderRadius = '5px';
+            div.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+            div.innerHTML = '<b>Legend</b><br>' +
+                '<span style="color:#4caf50">●</span> Start Point<br>' +
+                '<span style="color:#f44336">●</span> End Point<br>' +
+                '<span style="color:#e41a1c">━</span> GPS Track<br>' +
+                '<span style="color:#1a73e8">●</span> GPS Points';
+            return div;
+        };
+        legend.addTo(map);
+    </script>
+</body>
+</html>
