@@ -1,27 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Path Split - Time Debug</title>
+<title>Path Split - All Rules</title>
 <style>
 * { box-sizing: border-box; }
 body { font-family: Arial; margin: 0; padding: 20px; background: #111; color: #eee; }
-.row { display: flex; gap: 20px; margin: 10px 0; align-items: center; flex-wrap: wrap; }
+.row { display: flex; gap: 15px; margin: 10px 0; align-items: center; flex-wrap: wrap; }
 select, input { padding: 8px; font-size: 14px; background: #222; color: #eee; border: 1px solid #444; }
-button { padding: 10px 20px; background: #e94560; color: white; border: none; cursor: pointer; font-size: 16px; font-weight: bold; }
+input[type=number] { width: 70px; }
+button { padding: 10px 20px; background: #e94560; color: white; border: none; cursor: pointer; font-size: 14px; font-weight: bold; }
 button:hover { background: #ff6b6b; }
-#log { background: #222; padding: 15px; font-family: monospace; font-size: 12px; white-space: pre-wrap; height: 350px; overflow-y: auto; border: 2px solid #333; }
+#log { background: #222; padding: 15px; font-family: monospace; font-size: 11px; white-space: pre-wrap; height: 300px; overflow-y: auto; border: 2px solid #333; }
 .path-box { display: inline-block; margin: 5px; padding: 10px 15px; border-radius: 5px; font-weight: bold; }
 h3 { color: #e94560; margin-top: 20px; }
-.warn { background: #553300; border: 1px solid #aa6600; padding: 10px; margin: 10px 0; }
+.info { background: #1a3a1a; border: 1px solid #2a5a2a; padding: 10px; margin: 10px 0; font-size: 12px; }
+label { font-size: 13px; }
 </style>
 </head>
 <body>
 
-<h2>Path Splitting - Time & Count Rules</h2>
+<h2>Path Splitting Rules</h2>
 
-<div class="warn">
-<b>Important:</b> This taxi GPS data is sampled every 10 seconds with NO GAPS between points. 
-Time-based splitting won't find any breaks because gap = 0 for all trips.
+<div class="info">
+Each trip has: <b>time</b> (cumulative seconds from route start), <b>period</b> (duration, always 10s)
 </div>
 
 <div class="row">
@@ -32,30 +33,33 @@ Time-based splitting won't find any breaks because gap = 0 for all trips.
 </div>
 
 <div class="row">
-    <label>Rule:</label>
+    <label>Split Rule:</label>
     <select id="ruleSel">
-        <option value="none">No splitting</option>
-        <option value="count">Split every N trips</option>
-        <option value="time">Split on time gap >= T seconds</option>
+        <option value="none">No splitting (1 path)</option>
+        <option value="count">Every N trips</option>
+        <option value="elapsed">Every T seconds elapsed</option>
+        <option value="distance">Every D meters</option>
     </select>
 </div>
 
 <div class="row">
-    <label>N (trips):</label>
-    <input type="number" id="nVal" value="5" style="width:60px">
-    <label>T (seconds):</label>
-    <input type="number" id="tVal" value="60" style="width:60px">
+    <label>N trips:</label>
+    <input type="number" id="nVal" value="5">
+    <label>T seconds:</label>
+    <input type="number" id="tVal" value="60">
+    <label>D meters:</label>
+    <input type="number" id="dVal" value="500">
 </div>
 
 <div class="row">
-    <button onclick="runSplit()">RUN SPLIT</button>
-    <button onclick="showGaps()" style="background:#3498db">SHOW ALL TIME GAPS</button>
+    <button onclick="runSplit()">APPLY SPLIT RULE</button>
+    <button onclick="showData()" style="background:#3498db">SHOW SEGMENT DATA</button>
 </div>
 
 <h3>Log:</h3>
-<div id="log">Select a route and click a button.</div>
+<div id="log">Select a route and click APPLY SPLIT RULE</div>
 
-<h3>Result:</h3>
+<h3>Paths:</h3>
 <div id="visual"></div>
 
 <script>
@@ -80,7 +84,7 @@ function clearLog() {
     document.getElementById('visual').innerHTML = '';
 }
 
-function showGaps() {
+function showData() {
     clearLog();
     var routeIdx = document.getElementById('routeSel').value;
     if (routeIdx === '') { log('Select a route first!'); return; }
@@ -88,23 +92,25 @@ function showGaps() {
     var route = TRIPS[parseInt(routeIdx)];
     var segs = route.segments;
     
-    log('Route ' + route.id + ' - Time gaps between trips:\n');
-    log('Trip | End Time | Next Start | Gap (sec)');
-    log('-----|----------|------------|----------');
+    log('Route ' + route.id + ' segment data:\n');
+    log('Trip | Time(s) | Period(s) | Distance(m) | Speed(km/h)');
+    log('-----|---------|-----------|-------------|------------');
     
-    var totalGap = 0;
-    for (var i = 0; i < segs.length - 1; i++) {
-        var thisEnd = segs[i].time;
-        var nextStart = segs[i+1].time - segs[i+1].period;
-        var gap = nextStart - thisEnd;
-        totalGap += gap;
-        log((i+1).toString().padStart(4) + ' | ' + thisEnd.toString().padStart(8) + 's | ' + nextStart.toString().padStart(10) + 's | ' + gap.toString().padStart(8) + 's');
+    for (var i = 0; i < segs.length; i++) {
+        var s = segs[i];
+        log(
+            (i+1).toString().padStart(4) + ' | ' + 
+            s.time.toString().padStart(7) + ' | ' + 
+            s.period.toString().padStart(9) + ' | ' + 
+            s.distance_m.toFixed(0).padStart(11) + ' | ' + 
+            s.speed_kmh.toFixed(1).padStart(10)
+        );
     }
     
-    log('\n===================');
-    log('Total gaps: ' + totalGap + ' seconds');
-    log('Average gap: ' + (totalGap / (segs.length-1)).toFixed(2) + ' seconds');
-    log('\nAs you can see, ALL gaps are 0 - this is continuous GPS data.');
+    var totalTime = segs[segs.length-1].time;
+    var totalDist = segs.reduce(function(sum, s) { return sum + s.distance_m; }, 0);
+    log('\nTotal time: ' + totalTime + ' seconds (' + (totalTime/60).toFixed(1) + ' min)');
+    log('Total distance: ' + totalDist.toFixed(0) + ' meters (' + (totalDist/1000).toFixed(2) + ' km)');
 }
 
 function runSplit() {
@@ -117,60 +123,74 @@ function runSplit() {
     var rule = document.getElementById('ruleSel').value;
     var n = parseInt(document.getElementById('nVal').value) || 5;
     var t = parseInt(document.getElementById('tVal').value) || 60;
+    var d = parseInt(document.getElementById('dVal').value) || 500;
     
     log('Route: ' + route.id + ' (' + segs.length + ' trips)');
     log('Rule: ' + rule);
-    log('N=' + n + ', T=' + t + 's');
-    log('');
+    log('N=' + n + ' trips, T=' + t + 's, D=' + d + 'm\n');
     
     var paths = [];
     var cur = [];
+    var pathTime = 0;  // elapsed time in current path
+    var pathDist = 0;  // distance in current path
     
     for (var i = 0; i < segs.length; i++) {
+        var s = segs[i];
         var doSplit = false;
         var reason = '';
         
+        // Check split conditions BEFORE adding this segment
         if (rule === 'count' && cur.length >= n) {
             doSplit = true;
-            reason = 'count reached ' + n;
+            reason = 'reached ' + n + ' trips';
         }
         
-        if (rule === 'time' && i > 0) {
-            var gap = (segs[i].time - segs[i].period) - segs[i-1].time;
-            if (gap >= t) {
-                doSplit = true;
-                reason = 'gap=' + gap + 's >= ' + t + 's';
-            } else {
-                log('Trip ' + (i+1) + ': gap=' + gap + 's (< ' + t + 's, no split)');
-            }
+        if (rule === 'elapsed' && pathTime >= t) {
+            doSplit = true;
+            reason = 'elapsed ' + pathTime + 's >= ' + t + 's';
+        }
+        
+        if (rule === 'distance' && pathDist >= d) {
+            doSplit = true;
+            reason = 'distance ' + pathDist.toFixed(0) + 'm >= ' + d + 'm';
         }
         
         if (doSplit && cur.length > 0) {
-            log('>>> SPLIT at trip ' + (i+1) + ' (' + reason + ')');
-            paths.push(cur.slice());
+            log('>>> SPLIT before trip ' + (i+1) + ' (' + reason + ')');
+            log('    Path had ' + cur.length + ' trips, ' + pathTime + 's, ' + pathDist.toFixed(0) + 'm\n');
+            paths.push({trips: cur.slice(), time: pathTime, dist: pathDist});
             cur = [];
+            pathTime = 0;
+            pathDist = 0;
         }
+        
         cur.push(i);
+        pathTime += s.period;
+        pathDist += s.distance_m;
     }
-    if (cur.length > 0) paths.push(cur);
+    
+    // Don't forget last path
+    if (cur.length > 0) {
+        paths.push({trips: cur, time: pathTime, dist: pathDist});
+    }
     
     log('\n========== RESULT ==========');
-    log('Total paths created: ' + paths.length);
+    log('Total paths: ' + paths.length + '\n');
     
-    var colors = ['#e94560','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22'];
+    var colors = ['#e94560','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#c0392b'];
     var vis = '';
     
     for (var p = 0; p < paths.length; p++) {
-        log('Path ' + (p+1) + ': trips ' + (paths[p][0]+1) + '-' + (paths[p][paths[p].length-1]+1) + ' (' + paths[p].length + ' trips)');
-        vis += '<div class="path-box" style="background:' + colors[p % colors.length] + '">Path ' + (p+1) + '<br>' + paths[p].length + ' trips</div>';
+        var path = paths[p];
+        log('Path ' + (p+1) + ': ' + path.trips.length + ' trips, ' + path.time + 's, ' + path.dist.toFixed(0) + 'm');
+        vis += '<div class="path-box" style="background:' + colors[p % colors.length] + '">';
+        vis += 'Path ' + (p+1) + '<br>';
+        vis += path.trips.length + ' trips<br>';
+        vis += path.time + 's / ' + path.dist.toFixed(0) + 'm';
+        vis += '</div>';
     }
     
     document.getElementById('visual').innerHTML = vis;
-    
-    if (rule === 'time' && paths.length === 1) {
-        log('\n*** No splits occurred because all time gaps are 0 seconds ***');
-        log('*** This data has continuous GPS sampling with no breaks ***');
-    }
 }
 </script>
 </body>
