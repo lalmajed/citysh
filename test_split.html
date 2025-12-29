@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test Split</title>
+<style>
+body { font-family: Arial; padding: 20px; background: #1a1a2e; color: #eee; }
+.btn { padding: 10px 20px; background: #e94560; color: white; border: none; cursor: pointer; margin: 5px; }
+pre { background: #0a0a1a; padding: 15px; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h2>Path Splitting Test</h2>
+
+<div>
+<input type="radio" name="rule" value="none" id="r1" checked><label for="r1"> No split</label>
+<input type="radio" name="rule" value="count" id="r2"><label for="r2"> Split every N</label>
+</div>
+<div style="margin:10px 0">
+<label>N = <input type="number" id="n" value="3" style="width:50px"></label>
+</div>
+<button class="btn" onclick="test()">TEST SPLIT</button>
+
+<pre id="out">Click TEST SPLIT</pre>
+
+<script>
+// Fake 10 trips
+var trips = [0,1,2,3,4,5,6,7,8,9];
+
+function test() {
+    var rule = document.querySelector('input[name="rule"]:checked').value;
+    var n = parseInt(document.getElementById('n').value);
+    
+    var out = '';
+    out += 'Rule selected: ' + rule + '\n';
+    out += 'N value: ' + n + '\n';
+    out += 'Total trips: ' + trips.length + '\n\n';
+    
+    var paths = [];
+    var current = [];
+    
+    for (var i = 0; i < trips.length; i++) {
+        var shouldSplit = false;
+        
+        if (rule === 'count' && current.length >= n) {
+            shouldSplit = true;
+            out += '-> Split triggered at i=' + i + ' (current has ' + current.length + ' items)\n';
+        }
+        
+        if (shouldSplit && current.length > 0) {
+            paths.push(current.slice());
+            current = [];
+        }
+        current.push(trips[i]);
+    }
+    if (current.length > 0) {
+        paths.push(current);
+    }
+    
+    out += '\n=== RESULT ===\n';
+    out += 'Total paths: ' + paths.length + '\n';
+    for (var p = 0; p < paths.length; p++) {
+        out += 'Path ' + (p+1) + ': [' + paths[p].join(', ') + ']\n';
+    }
+    
+    document.getElementById('out').textContent = out;
+}
+</script>
+</body>
+</html>
