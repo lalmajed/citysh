@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Riyadh Taxi Data - Actual Content</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { color: #d32f2f; margin-bottom: 20px; }
+        .alert { background: #ffebee; border-left: 4px solid #d32f2f; padding: 15px; margin-bottom: 20px; }
+        .alert h3 { color: #d32f2f; }
+        .success { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; margin-bottom: 20px; }
+        .success h3 { color: #4caf50; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat { background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .stat .num { font-size: 32px; font-weight: bold; color: #1976d2; }
+        .stat .label { color: #666; margin-top: 5px; }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        th { background: #1976d2; color: white; padding: 12px 8px; text-align: left; font-size: 12px; }
+        td { padding: 10px 8px; border-bottom: 1px solid #eee; font-size: 12px; }
+        tr:hover { background: #f5f5f5; }
+        .no { color: #d32f2f; }
+        .yes { color: #4caf50; font-weight: bold; }
+        h2 { margin: 30px 0 15px 0; color: #333; }
+        .field-table { margin-bottom: 30px; }
+        .field-table td:first-child { font-weight: bold; width: 200px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚠️ Riyadh Taxi Dataset - Actual Data Content</h1>
+        
+        <div class="alert">
+            <h3>❌ GPS Route Coordinates REMOVED</h3>
+            <p>The original Route_String field (GPS coordinates along each trip) was <b>removed for privacy</b>.</p>
+            <p>Only <b>1 out of 72896</b> trips have any location data.</p>
+        </div>
+        
+        <div class="success">
+            <h3>✅ What We DO Have</h3>
+            <p>72,896 trips with: timestamps, distance, duration, speed profiles, vehicle info</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat"><div class="num">72,896</div><div class="label">Total Trips</div></div>
+            <div class="stat"><div class="num">97,553</div><div class="label">Timestamps</div></div>
+            <div class="stat"><div class="num">1</div><div class="label">With GPS Coords</div></div>
+            <div class="stat"><div class="num">60+</div><div class="label">Speed Points/Trip</div></div>
+        </div>
+
+        <h2>📋 Data Fields Available</h2>
+        <table class="field-table">
+            <tr><td>TripID</td><td>Unique trip identifier</td><td class="yes">✓ Available</td></tr>
+            <tr><td>PickUp_Time</td><td>Timestamp when trip started</td><td class="yes">✓ Available</td></tr>
+            <tr><td>Dropoff_Time</td><td>Timestamp when trip ended</td><td class="yes">✓ Available</td></tr>
+            <tr><td>Distance_KM</td><td>Trip distance in kilometers</td><td class="yes">✓ Available</td></tr>
+            <tr><td>Duration_Sec</td><td>Trip duration in seconds</td><td class="yes">✓ Available</td></tr>
+            <tr><td>Cost_Trip</td><td>Trip cost in SAR</td><td class="yes">✓ Available</td></tr>
+            <tr><td>Car_Model</td><td>Vehicle model (Yukon, Camry, etc)</td><td class="yes">✓ Available</td></tr>
+            <tr><td>Car_Cat</td><td>Vehicle category (Sedan, SUV)</td><td class="yes">✓ Available</td></tr>
+            <tr><td>User_Gender</td><td>Passenger gender</td><td class="yes">✓ Available</td></tr>
+            <tr><td>TripTable</td><td>Speed/acceleration profile (60+ points)</td><td class="yes">✓ Available</td></tr>
+            <tr><td>GPSfreq</td><td>GPS recording frequency</td><td class="yes">✓ Available</td></tr>
+            <tr><td>PickUp_Location</td><td>Pickup GPS coordinates</td><td class="no">❌ Removed</td></tr>
+            <tr><td>Dropoff_Location</td><td>Dropoff GPS coordinates</td><td class="no">❌ Mostly Removed</td></tr>
+            <tr><td>Route_String</td><td>GPS path coordinates</td><td class="no">❌ Removed</td></tr>
+        </table>
+
+        <h2>📊 Trip Data Table (First 100 trips)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Trip ID</th>
+                    <th>Pickup Time</th>
+                    <th>Dropoff Time</th>
+                    <th>Distance (km)</th>
+                    <th>Duration (s)</th>
+                    <th>Cost (SAR)</th>
+                    <th>Car Model</th>
+                    <th>Gender</th>
+                    <th>GPS Points</th>
+                    <th>Max Speed</th>
+                    <th>Avg Speed</th>
+                    <th>Has Location?</th>
+                </tr>
+            </thead>
+            <tbody>
+<tr>
+        <td>1</td>
+        <td>1196250</td>
+        <td>2016-01-31 20:50:48</td>
+        <td>2016-01-31 20:57:32</td>
+        <td>1.97</td>
+        <td>404</td>
+        <td>25</td>
+        <td>Yukon</td>
+        <td>male</td>
+        <td>60</td>
+        <td>56.9 km/h</td>
+        <td>17.8 km/h</td>
+        <td class="yes">Yes</td>
+    </tr><tr>
+        <td>2</td>
+        <td>1196231</td>
+        <td>2016-01-31 20:18:10</td>
+        <td>2016-01-31 23:14:04</td>
+        <td>13.4</td>
+        <td></td>
+        <td></td>
+        <td>Yukon</td>
+        <td>male</td>
+        <td>1503</td>
+        <td>55.1 km/h</td>
+        <td>3.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>3</td>
+        <td>1196207</td>
+        <td>2016-01-31 19:07:37</td>
+        <td>2016-01-31 19:21:14</td>
+        <td>4.68</td>
+        <td></td>
+        <td></td>
+        <td>Yukon</td>
+        <td>female</td>
+        <td>142</td>
+        <td>87.5 km/h</td>
+        <td>20.6 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>4</td>
+        <td>1196201</td>
+        <td>2016-01-31 18:46:31</td>
+        <td>2016-01-31 19:35:42</td>
+        <td>22.99</td>
+        <td></td>
+        <td></td>
+        <td>Yukon</td>
+        <td>female</td>
+        <td>588</td>
+        <td>143.3 km/h</td>
+        <td>27.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>5</td>
+        <td>1196125</td>
+        <td>2016-01-31 17:00:44</td>
+        <td>2016-01-31 17:31:08</td>
+        <td>23.52</td>
+        <td></td>
+        <td></td>
+        <td>Yukon</td>
+        <td>N/A</td>
+        <td>384</td>
+        <td>157.0 km/h</td>
+        <td>45.1 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>6</td>
+        <td>1195860</td>
+        <td>2016-01-31 11:04:12</td>
+        <td>2016-01-31 11:27:09</td>
+        <td>22.7</td>
+        <td></td>
+        <td></td>
+        <td>Yukon</td>
+        <td>female</td>
+        <td>292</td>
+        <td>159.8 km/h</td>
+        <td>51.8 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>7</td>
+        <td>1195832</td>
+        <td>2016-01-31 09:59:48</td>
+        <td>2016-01-31 10:12:29</td>
+        <td>6.4</td>
+        <td></td>
+        <td></td>
+        <td>Taurus</td>
+        <td>female</td>
+        <td>131</td>
+        <td>64.5 km/h</td>
+        <td>30.3 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>8</td>
+        <td>1195827</td>
+        <td>2016-01-31 09:31:58</td>
+        <td>2016-01-31 10:14:31</td>
+        <td>21.88</td>
+        <td></td>
+        <td></td>
+        <td>Yukon</td>
+        <td>female</td>
+        <td>507</td>
+        <td>132.8 km/h</td>
+        <td>28.4 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>9</td>
+        <td>1195823</td>
+        <td>2016-01-31 09:21:06</td>
+        <td>2016-01-31 09:35:22</td>
+        <td>6.22</td>
+        <td></td>
+        <td></td>
+        <td>Taurus</td>
+        <td>male</td>
+        <td>170</td>
+        <td>74.9 km/h</td>
+        <td>26.2 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>10</td>
+        <td>1195810</td>
+        <td>2016-01-31 08:41:40</td>
+        <td>2016-01-31 08:49:42</td>
+        <td>3.64</td>
+        <td></td>
+        <td></td>
+        <td>Yukon</td>
+        <td>N/A</td>
+        <td>115</td>
+        <td>112.9 km/h</td>
+        <td>27.2 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>11</td>
+        <td>1195790</td>
+        <td>2016-01-31 08:25:14</td>
+        <td>2016-01-31 08:45:35</td>
+        <td>11.37</td>
+        <td></td>
+        <td></td>
+        <td>Taurus</td>
+        <td>female</td>
+        <td>223</td>
+        <td>137.8 km/h</td>
+        <td>33.4 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>12</td>
+        <td>1195761</td>
+        <td>2016-01-31 06:30:13</td>
+        <td>2016-01-31 06:57:49</td>
+        <td>35.43</td>
+        <td></td>
+        <td></td>
+        <td>Yukon</td>
+        <td>N/A</td>
+        <td>331</td>
+        <td>151.8 km/h</td>
+        <td>74.2 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>13</td>
+        <td>1195679</td>
+        <td>2016-01-31 01:11:33</td>
+        <td>2016-01-31 01:30:52</td>
+        <td>14.33</td>
+        <td></td>
+        <td></td>
+        <td>Yukon</td>
+        <td>N/A</td>
+        <td>230</td>
+        <td>150.7 km/h</td>
+        <td>44.5 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>14</td>
+        <td>1195670</td>
+        <td>2016-01-31 03:54:43</td>
+        <td>2016-01-31 05:18:26</td>
+        <td>27.22</td>
+        <td></td>
+        <td></td>
+        <td>Yukon</td>
+        <td>female</td>
+        <td>983</td>
+        <td>131.0 km/h</td>
+        <td>19.3 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>15</td>
+        <td>1195779</td>
+        <td>2016-01-31 07:15:05</td>
+        <td>2016-01-31 07:28:34</td>
+        <td>6.71</td>
+        <td></td>
+        <td></td>
+        <td>Taurus</td>
+        <td>female</td>
+        <td>161</td>
+        <td>82.6 km/h</td>
+        <td>28.9 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>16</td>
+        <td>1196041</td>
+        <td>2016-01-31 15:04:08</td>
+        <td>2016-01-31 15:41:04</td>
+        <td>16.37</td>
+        <td></td>
+        <td></td>
+        <td>Yukon</td>
+        <td>female</td>
+        <td>442</td>
+        <td>107.4 km/h</td>
+        <td>26.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>17</td>
+        <td>1195749</td>
+        <td>2016-01-31 05:53:40</td>
+        <td>2016-01-31 05:59:06</td>
+        <td>2.22</td>
+        <td></td>
+        <td></td>
+        <td>Yukon</td>
+        <td>female</td>
+        <td>64</td>
+        <td>68.0 km/h</td>
+        <td>24.8 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>18</td>
+        <td>1195715</td>
+        <td>2016-01-31 04:39:55</td>
+        <td>2016-01-31 05:21:28</td>
+        <td>22.49</td>
+        <td></td>
+        <td></td>
+        <td>Yukon</td>
+        <td>female</td>
+        <td>511</td>
+        <td>172.0 km/h</td>
+        <td>30.8 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>19</td>
+        <td>1196247</td>
+        <td>2016-01-31 20:38:51</td>
+        <td>2016-01-31 21:09:38</td>
+        <td>24.85</td>
+        <td></td>
+        <td></td>
+        <td>Expedition </td>
+        <td>female</td>
+        <td>369</td>
+        <td>151.3 km/h</td>
+        <td>46.3 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>20</td>
+        <td>1196241</td>
+        <td>2016-01-31 20:28:24</td>
+        <td>2016-01-31 21:44:32</td>
+        <td>50.53</td>
+        <td></td>
+        <td></td>
+        <td>Taurus</td>
+        <td>N/A</td>
+        <td>913</td>
+        <td>117.7 km/h</td>
+        <td>39.7 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>21</td>
+        <td>1196233</td>
+        <td>2016-01-31 20:19:39</td>
+        <td>2016-01-31 20:37:56</td>
+        <td>8.4</td>
+        <td></td>
+        <td></td>
+        <td>Camry</td>
+        <td>female</td>
+        <td>239</td>
+        <td>144.5 km/h</td>
+        <td>26.5 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>22</td>
+        <td>1196222</td>
+        <td>2016-01-31 19:55:57</td>
+        <td>2016-01-31 20:04:47</td>
+        <td>4.39</td>
+        <td></td>
+        <td></td>
+        <td>Camry</td>
+        <td>female</td>
+        <td>85</td>
+        <td>79.4 km/h</td>
+        <td>30.3 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>23</td>
+        <td>1196215</td>
+        <td>2016-01-31 19:20:47</td>
+        <td>2016-01-31 19:46:02</td>
+        <td>17.05</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>N/A</td>
+        <td>322</td>
+        <td>535.2 km/h</td>
+        <td>39.4 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>24</td>
+        <td>1196214</td>
+        <td>2016-01-31 19:30:08</td>
+        <td>2016-01-31 19:45:54</td>
+        <td>5.5</td>
+        <td></td>
+        <td></td>
+        <td>Expedition </td>
+        <td>female</td>
+        <td>208</td>
+        <td>128.1 km/h</td>
+        <td>20.9 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>25</td>
+        <td>1196205</td>
+        <td>2016-01-31 19:14:38</td>
+        <td>2016-01-31 19:45:52</td>
+        <td>18.28</td>
+        <td></td>
+        <td></td>
+        <td>Prado</td>
+        <td>female</td>
+        <td>349</td>
+        <td>117.2 km/h</td>
+        <td>35.1 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>26</td>
+        <td>1196203</td>
+        <td>2016-01-31 18:54:05</td>
+        <td>2016-01-31 19:01:14</td>
+        <td>4.41</td>
+        <td></td>
+        <td></td>
+        <td>Sonata</td>
+        <td>male</td>
+        <td>105</td>
+        <td>99.2 km/h</td>
+        <td>9.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>27</td>
+        <td>1196200a</td>
+        <td>2016-01-31 18:45:58</td>
+        <td>2016-01-31 18:48:37.743842</td>
+        <td>1.0566876092472315</td>
+        <td></td>
+        <td></td>
+        <td>SONATA</td>
+        <td>female</td>
+        <td>34</td>
+        <td>49.1 km/h</td>
+        <td>23.1 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>28</td>
+        <td>1196200b</td>
+        <td>2016-01-31 19:26:37.724138</td>
+        <td>2016-01-31 19:35:06</td>
+        <td>3.337235240925927</td>
+        <td></td>
+        <td></td>
+        <td>SONATA</td>
+        <td>female</td>
+        <td>104</td>
+        <td>79.5 km/h</td>
+        <td>23.9 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>29</td>
+        <td>1196198</td>
+        <td>2016-01-31 18:42:57</td>
+        <td>2016-01-31 18:55:57</td>
+        <td>4.56</td>
+        <td></td>
+        <td></td>
+        <td>Cadillac</td>
+        <td>female</td>
+        <td>155</td>
+        <td>65.2 km/h</td>
+        <td>21.2 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>30</td>
+        <td>1196193</td>
+        <td>2016-01-31 18:37:14</td>
+        <td>2016-01-31 18:45:33</td>
+        <td>1.32</td>
+        <td></td>
+        <td></td>
+        <td>Prado</td>
+        <td>N/A</td>
+        <td>91</td>
+        <td>1724962.6 km/h</td>
+        <td>37920.2 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>31</td>
+        <td>1196190</td>
+        <td>2016-01-31 18:16:02</td>
+        <td>2016-01-31 18:26:26</td>
+        <td>7.78</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>female</td>
+        <td>124</td>
+        <td>116.9 km/h</td>
+        <td>40.3 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>32</td>
+        <td>1196188</td>
+        <td>2016-01-31 18:28:25</td>
+        <td>2016-01-31 18:53:18</td>
+        <td>18.3</td>
+        <td></td>
+        <td></td>
+        <td>Accrode</td>
+        <td>female</td>
+        <td>296</td>
+        <td>109.1 km/h</td>
+        <td>43.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>33</td>
+        <td>1196186</td>
+        <td>2016-01-31 18:23:12</td>
+        <td>2016-01-31 18:55:23</td>
+        <td>8.22</td>
+        <td></td>
+        <td></td>
+        <td>Elentra</td>
+        <td>female</td>
+        <td>385</td>
+        <td>72.8 km/h</td>
+        <td>15.4 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>34</td>
+        <td>1196181</td>
+        <td>2016-01-31 18:27:00</td>
+        <td>2016-01-31 18:58:41</td>
+        <td>27.57</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>N/A</td>
+        <td>379</td>
+        <td>144.9 km/h</td>
+        <td>47.8 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>35</td>
+        <td>1196180</td>
+        <td>2016-01-31 18:10:59</td>
+        <td>2016-01-31 18:15:11</td>
+        <td>1.32</td>
+        <td></td>
+        <td></td>
+        <td>CAMARE</td>
+        <td>male</td>
+        <td>49</td>
+        <td>60.9 km/h</td>
+        <td>19.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>36</td>
+        <td>1196179</td>
+        <td>2016-01-31 17:56:55</td>
+        <td>2016-01-31 18:20:54</td>
+        <td>5.91</td>
+        <td></td>
+        <td></td>
+        <td>Fortuner </td>
+        <td>female</td>
+        <td>257</td>
+        <td>64.6 km/h</td>
+        <td>22.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>37</td>
+        <td>1196175</td>
+        <td>2016-01-31 17:57:24</td>
+        <td>2016-01-31 18:11:51</td>
+        <td>5.54</td>
+        <td></td>
+        <td></td>
+        <td>Sonata</td>
+        <td>male</td>
+        <td>152</td>
+        <td>65.0 km/h</td>
+        <td>23.1 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>38</td>
+        <td>1196168</td>
+        <td>2016-01-31 17:53:38</td>
+        <td>2016-01-31 18:15:41</td>
+        <td>12.84</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>female</td>
+        <td>263</td>
+        <td>134.2 km/h</td>
+        <td>23.8 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>39</td>
+        <td>1196170a</td>
+        <td>2016-01-31 17:48:59</td>
+        <td>2016-01-31 18:03:55.849406</td>
+        <td>4.473164396405009</td>
+        <td></td>
+        <td></td>
+        <td>Prado</td>
+        <td>N/A</td>
+        <td>108</td>
+        <td>74.7 km/h</td>
+        <td>17.8 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>40</td>
+        <td>1196170b</td>
+        <td>2016-01-31 19:10:08.808454</td>
+        <td>2016-01-31 19:19:47.150594</td>
+        <td>4.297937342784421</td>
+        <td></td>
+        <td></td>
+        <td>Prado</td>
+        <td>N/A</td>
+        <td>70</td>
+        <td>81.3 km/h</td>
+        <td>26.4 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>41</td>
+        <td>1196170c</td>
+        <td>2016-01-31 21:14:45.347424</td>
+        <td>2016-01-31 21:20:29</td>
+        <td>1.0919008700477617</td>
+        <td></td>
+        <td></td>
+        <td>Prado</td>
+        <td>N/A</td>
+        <td>40</td>
+        <td>28.0 km/h</td>
+        <td>11.7 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>42</td>
+        <td>1196163</td>
+        <td>2016-01-31 17:42:54</td>
+        <td>2016-01-31 18:01:28</td>
+        <td>10.49</td>
+        <td></td>
+        <td></td>
+        <td>Accrode</td>
+        <td>female</td>
+        <td>222</td>
+        <td>113.5 km/h</td>
+        <td>33.4 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>43</td>
+        <td>1196161</td>
+        <td>2016-01-31 17:14:59</td>
+        <td>2016-01-31 17:54:36</td>
+        <td>13.75</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>female</td>
+        <td>474</td>
+        <td>111.0 km/h</td>
+        <td>19.6 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>44</td>
+        <td>1196160</td>
+        <td>2016-01-31 17:28:00</td>
+        <td>2016-01-31 17:47:34</td>
+        <td>15.41</td>
+        <td></td>
+        <td></td>
+        <td>Fortuner</td>
+        <td>N/A</td>
+        <td>183</td>
+        <td>125.2 km/h</td>
+        <td>24.4 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>45</td>
+        <td>1196148</td>
+        <td>2016-01-31 17:12:22</td>
+        <td>2016-01-31 17:19:21</td>
+        <td>1.68</td>
+        <td></td>
+        <td></td>
+        <td>SONATA</td>
+        <td>N/A</td>
+        <td>83</td>
+        <td>48.5 km/h</td>
+        <td>14.5 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>46</td>
+        <td>1196145</td>
+        <td>2016-01-31 16:56:23</td>
+        <td>2016-01-31 17:54:08</td>
+        <td>16.72</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>female</td>
+        <td>635</td>
+        <td>147.3 km/h</td>
+        <td>14.2 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>47</td>
+        <td>1196128</td>
+        <td>2016-01-31 16:49:30</td>
+        <td>2016-01-31 17:14:53</td>
+        <td>15.35</td>
+        <td></td>
+        <td></td>
+        <td>Camry</td>
+        <td>female</td>
+        <td>289</td>
+        <td>151.8 km/h</td>
+        <td>34.1 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>48</td>
+        <td>1196110</td>
+        <td>2016-01-31 16:53:43</td>
+        <td>2016-01-31 17:11:00</td>
+        <td>16.77</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>female</td>
+        <td>198</td>
+        <td>159.2 km/h</td>
+        <td>36.4 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>49</td>
+        <td>1196100</td>
+        <td>2016-01-31 16:28:15</td>
+        <td>2016-01-31 16:31:41</td>
+        <td>1.3</td>
+        <td></td>
+        <td></td>
+        <td>Camry</td>
+        <td>female</td>
+        <td>29</td>
+        <td>130.2 km/h</td>
+        <td>16.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>50</td>
+        <td>1196098</td>
+        <td>2016-01-31 16:18:26</td>
+        <td>2016-01-31 16:57:09</td>
+        <td>21.24</td>
+        <td></td>
+        <td></td>
+        <td>Azeera</td>
+        <td>female</td>
+        <td>461</td>
+        <td>106.6 km/h</td>
+        <td>27.1 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>51</td>
+        <td>1196091a</td>
+        <td>2016-01-31 16:14:56</td>
+        <td>2016-01-31 16:32:22.901587</td>
+        <td>10.396545530966792</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>male</td>
+        <td>215</td>
+        <td>94.1 km/h</td>
+        <td>35.6 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>52</td>
+        <td>1196091b</td>
+        <td>2016-01-31 17:14:36.990476</td>
+        <td>2016-01-31 17:31:59</td>
+        <td>11.41948382268098</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>male</td>
+        <td>212</td>
+        <td>97.1 km/h</td>
+        <td>37.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>53</td>
+        <td>1196074</td>
+        <td>2016-01-31 15:52:41</td>
+        <td>2016-01-31 16:09:08</td>
+        <td>11.18</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>female</td>
+        <td>216</td>
+        <td>145.2 km/h</td>
+        <td>25.1 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>54</td>
+        <td>1196071</td>
+        <td>2016-01-31 15:45:53</td>
+        <td>2016-01-31 16:01:18</td>
+        <td>11.43</td>
+        <td></td>
+        <td></td>
+        <td>Azeera</td>
+        <td>female</td>
+        <td>164</td>
+        <td>780.4 km/h</td>
+        <td>43.2 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>55</td>
+        <td>1196066</td>
+        <td>2016-01-31 15:43:44</td>
+        <td>2016-01-31 15:58:21</td>
+        <td>3.69</td>
+        <td></td>
+        <td></td>
+        <td>GMC</td>
+        <td>N/A</td>
+        <td>174</td>
+        <td>63.3 km/h</td>
+        <td>15.3 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>56</td>
+        <td>1196065</td>
+        <td>2016-01-31 15:39:08</td>
+        <td>2016-01-31 15:48:44</td>
+        <td>6.48</td>
+        <td></td>
+        <td></td>
+        <td>Santafe</td>
+        <td>female</td>
+        <td>114</td>
+        <td>157.3 km/h</td>
+        <td>25.2 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>57</td>
+        <td>1196061a</td>
+        <td>2016-01-31 15:29:42</td>
+        <td>2016-01-31 15:45:33.514286</td>
+        <td>5.930403064271197</td>
+        <td></td>
+        <td></td>
+        <td>Fortuner</td>
+        <td>N/A</td>
+        <td>102</td>
+        <td>102.1 km/h</td>
+        <td>26.3 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>58</td>
+        <td>1196061b</td>
+        <td>2016-01-31 16:50:20.984416</td>
+        <td>2016-01-31 17:07:39</td>
+        <td>8.777195498991825</td>
+        <td></td>
+        <td></td>
+        <td>Fortuner</td>
+        <td>N/A</td>
+        <td>288</td>
+        <td>848.0 km/h</td>
+        <td>18.2 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>59</td>
+        <td>1196056</td>
+        <td>2016-01-31 15:24:32</td>
+        <td>2016-01-31 16:04:37</td>
+        <td>10.78</td>
+        <td></td>
+        <td></td>
+        <td>Fortuner</td>
+        <td>female</td>
+        <td>311</td>
+        <td>112.9 km/h</td>
+        <td>12.5 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>60</td>
+        <td>1196054</td>
+        <td>2016-01-31 15:21:10</td>
+        <td>2016-01-31 16:00:52</td>
+        <td>9.86</td>
+        <td></td>
+        <td></td>
+        <td>Fortuner</td>
+        <td>female</td>
+        <td>495</td>
+        <td>75.2 km/h</td>
+        <td>15.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>61</td>
+        <td>1196047</td>
+        <td>2016-01-31 15:14:47</td>
+        <td>2016-01-31 15:57:58</td>
+        <td>24.93</td>
+        <td></td>
+        <td></td>
+        <td>INNOVA</td>
+        <td>female</td>
+        <td>535</td>
+        <td>146.5 km/h</td>
+        <td>33.2 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>62</td>
+        <td>1196037</td>
+        <td>2016-01-31 14:41:19</td>
+        <td>2016-01-31 14:56:22</td>
+        <td>6.75</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>female</td>
+        <td>156</td>
+        <td>92.4 km/h</td>
+        <td>23.7 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>63</td>
+        <td>1196033</td>
+        <td>2016-01-31 14:17:26</td>
+        <td>2016-01-31 14:21:15</td>
+        <td>0.81</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>female</td>
+        <td>47</td>
+        <td>56.4 km/h</td>
+        <td>12.8 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>64</td>
+        <td>1196019a</td>
+        <td>2016-01-31 14:18:54</td>
+        <td>2016-01-31 14:42:14.527357</td>
+        <td>9.860112468007785</td>
+        <td></td>
+        <td></td>
+        <td>Fortuner</td>
+        <td>female</td>
+        <td>201</td>
+        <td>65.7 km/h</td>
+        <td>25.2 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>65</td>
+        <td>1196019b</td>
+        <td>2016-01-31 15:40:07.835201</td>
+        <td>2016-01-31 17:15:57</td>
+        <td>53.72847609020661</td>
+        <td></td>
+        <td></td>
+        <td>Fortuner</td>
+        <td>female</td>
+        <td>820</td>
+        <td>139.0 km/h</td>
+        <td>33.7 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>66</td>
+        <td>1196009</td>
+        <td>2016-01-31 14:02:45</td>
+        <td>2016-01-31 14:06:19</td>
+        <td>0</td>
+        <td></td>
+        <td></td>
+        <td>Taurus</td>
+        <td>male</td>
+        <td>42</td>
+        <td>0.6 km/h</td>
+        <td>0.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>67</td>
+        <td>1196006</td>
+        <td>2016-01-31 14:05:33</td>
+        <td>2016-01-31 14:41:00</td>
+        <td>28.79</td>
+        <td></td>
+        <td></td>
+        <td>Lexus</td>
+        <td>female</td>
+        <td>444</td>
+        <td>148.3 km/h</td>
+        <td>48.5 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>68</td>
+        <td>1196002</td>
+        <td>2016-01-31 13:54:57</td>
+        <td>2016-01-31 14:18:20</td>
+        <td>10.1</td>
+        <td></td>
+        <td></td>
+        <td>Camry</td>
+        <td>female</td>
+        <td>279</td>
+        <td>141.9 km/h</td>
+        <td>25.9 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>69</td>
+        <td>1196003</td>
+        <td>2016-01-31 14:02:36</td>
+        <td>2016-01-31 14:29:30</td>
+        <td>15.4</td>
+        <td></td>
+        <td></td>
+        <td>Fortuner</td>
+        <td>female</td>
+        <td>312</td>
+        <td>135.8 km/h</td>
+        <td>33.6 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>70</td>
+        <td>1195999</td>
+        <td>2016-01-31 13:58:31</td>
+        <td>2016-01-31 14:21:03</td>
+        <td>5.05</td>
+        <td></td>
+        <td></td>
+        <td>Sportage (KIA)</td>
+        <td>female</td>
+        <td>249</td>
+        <td>43.9 km/h</td>
+        <td>13.5 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>71</td>
+        <td>1195996</td>
+        <td>2016-01-31 14:08:04</td>
+        <td>2016-01-31 14:20:03</td>
+        <td>3.85</td>
+        <td></td>
+        <td></td>
+        <td>Lexus</td>
+        <td>female</td>
+        <td>163</td>
+        <td>73.2 km/h</td>
+        <td>19.4 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>72</td>
+        <td>1195992</td>
+        <td>2016-01-31 14:06:18</td>
+        <td>2016-01-31 15:52:30</td>
+        <td>37.81</td>
+        <td></td>
+        <td></td>
+        <td>Sonata</td>
+        <td>N/A</td>
+        <td>1274</td>
+        <td>729.6 km/h</td>
+        <td>21.7 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>73</td>
+        <td>1195993</td>
+        <td>2016-01-31 13:35:53</td>
+        <td>2016-01-31 13:37:19</td>
+        <td>0</td>
+        <td></td>
+        <td></td>
+        <td>Taurus</td>
+        <td>male</td>
+        <td>16</td>
+        <td>0.0 km/h</td>
+        <td>0.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>74</td>
+        <td>1195987</td>
+        <td>2016-01-31 13:54:46</td>
+        <td>2016-01-31 14:11:40</td>
+        <td>6.15</td>
+        <td></td>
+        <td></td>
+        <td>prado</td>
+        <td>female</td>
+        <td>184</td>
+        <td>176.3 km/h</td>
+        <td>15.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>75</td>
+        <td>1195977</td>
+        <td>2016-01-31 13:48:30</td>
+        <td>2016-01-31 13:58:14</td>
+        <td>1.07</td>
+        <td></td>
+        <td></td>
+        <td>santafe</td>
+        <td>female</td>
+        <td>96</td>
+        <td>41.5 km/h</td>
+        <td>6.9 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>76</td>
+        <td>1195979</td>
+        <td>2016-01-31 13:33:41</td>
+        <td>2016-01-31 14:10:15</td>
+        <td>28.33</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>female</td>
+        <td>418</td>
+        <td>148.9 km/h</td>
+        <td>45.4 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>77</td>
+        <td>1195972</td>
+        <td>2016-01-31 13:35:13</td>
+        <td>2016-01-31 13:53:10</td>
+        <td>3.29</td>
+        <td></td>
+        <td></td>
+        <td>Accrode</td>
+        <td>N/A</td>
+        <td>215</td>
+        <td>101.1 km/h</td>
+        <td>11.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>78</td>
+        <td>1195970</td>
+        <td>2016-01-31 13:32:18</td>
+        <td>2016-01-31 14:07:22</td>
+        <td>34.85</td>
+        <td></td>
+        <td></td>
+        <td>Sonata</td>
+        <td>male</td>
+        <td>419</td>
+        <td>148.8 km/h</td>
+        <td>59.2 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>79</td>
+        <td>1195967</td>
+        <td>2016-01-31 13:16:26</td>
+        <td>2016-01-31 13:48:38</td>
+        <td>29.32</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>N/A</td>
+        <td>386</td>
+        <td>154.8 km/h</td>
+        <td>54.7 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>80</td>
+        <td>1195965</td>
+        <td>2016-01-31 13:08:10</td>
+        <td>2016-01-31 13:39:50</td>
+        <td>10.32</td>
+        <td></td>
+        <td></td>
+        <td>Fortuner</td>
+        <td>female</td>
+        <td>379</td>
+        <td>96.2 km/h</td>
+        <td>9.6 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>81</td>
+        <td>1195959</td>
+        <td>2016-01-31 13:10:36</td>
+        <td>2016-01-31 13:51:59</td>
+        <td>20.97</td>
+        <td></td>
+        <td></td>
+        <td>Elentra</td>
+        <td>female</td>
+        <td>475</td>
+        <td>148.1 km/h</td>
+        <td>28.3 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>82</td>
+        <td>1195958</td>
+        <td>2016-01-31 13:14:25</td>
+        <td>2016-01-31 13:54:50</td>
+        <td>15.76</td>
+        <td></td>
+        <td></td>
+        <td>Azeera</td>
+        <td>female</td>
+        <td>477</td>
+        <td>149.5 km/h</td>
+        <td>23.7 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>83</td>
+        <td>1195950</td>
+        <td>2016-01-31 12:56:54</td>
+        <td>2016-01-31 13:02:22</td>
+        <td>4.98</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>female</td>
+        <td>84</td>
+        <td>97.2 km/h</td>
+        <td>42.2 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>84</td>
+        <td>1195949</td>
+        <td>2016-01-31 13:08:02</td>
+        <td>2016-01-31 14:01:36</td>
+        <td>21.93</td>
+        <td></td>
+        <td></td>
+        <td>camry</td>
+        <td>N/A</td>
+        <td>634</td>
+        <td>113.7 km/h</td>
+        <td>23.7 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>85</td>
+        <td>1195943</td>
+        <td>2016-01-31 12:49:38</td>
+        <td>2016-01-31 13:03:33</td>
+        <td>6.66</td>
+        <td></td>
+        <td></td>
+        <td>FORTUNER</td>
+        <td>female</td>
+        <td>166</td>
+        <td>103.0 km/h</td>
+        <td>28.9 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>86</td>
+        <td>1195942</td>
+        <td>2016-01-31 12:57:18</td>
+        <td>2016-01-31 13:15:04</td>
+        <td>9.23</td>
+        <td></td>
+        <td></td>
+        <td>Prado </td>
+        <td>N/A</td>
+        <td>212</td>
+        <td>157.8 km/h</td>
+        <td>31.3 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>87</td>
+        <td>1195936</td>
+        <td>2016-01-31 12:46:38</td>
+        <td>2016-01-31 13:02:38</td>
+        <td>7.87</td>
+        <td></td>
+        <td></td>
+        <td>santafe</td>
+        <td>female</td>
+        <td>191</td>
+        <td>85.4 km/h</td>
+        <td>27.8 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>88</td>
+        <td>1195928</td>
+        <td>2016-01-31 12:20:51</td>
+        <td>2016-01-31 12:35:40</td>
+        <td>10.34</td>
+        <td></td>
+        <td></td>
+        <td>Fortuner</td>
+        <td>female</td>
+        <td>176</td>
+        <td>115.6 km/h</td>
+        <td>42.1 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>89</td>
+        <td>1195917</td>
+        <td>2016-01-31 12:21:57</td>
+        <td>2016-01-31 12:49:28</td>
+        <td>15.81</td>
+        <td></td>
+        <td></td>
+        <td>Taurus</td>
+        <td>female</td>
+        <td>339</td>
+        <td>120.9 km/h</td>
+        <td>34.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>90</td>
+        <td>1195915</td>
+        <td>2016-01-31 11:56:59</td>
+        <td>2016-01-31 12:00:11</td>
+        <td>0</td>
+        <td></td>
+        <td></td>
+        <td>Taurus</td>
+        <td>male</td>
+        <td>17</td>
+        <td>3.8 km/h</td>
+        <td>0.8 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>91</td>
+        <td>1195906</td>
+        <td>2016-01-31 11:46:27</td>
+        <td>2016-01-31 12:19:27</td>
+        <td>7.96</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>female</td>
+        <td>414</td>
+        <td>69.1 km/h</td>
+        <td>14.6 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>92</td>
+        <td>1195899</td>
+        <td>2016-01-31 11:31:54</td>
+        <td>2016-01-31 12:04:45</td>
+        <td>25.03</td>
+        <td></td>
+        <td></td>
+        <td>Camry</td>
+        <td>female</td>
+        <td>338</td>
+        <td>152.9 km/h</td>
+        <td>40.4 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>93</td>
+        <td>1195890</td>
+        <td>2016-01-31 11:20:14</td>
+        <td>2016-01-31 11:26:22</td>
+        <td>0</td>
+        <td></td>
+        <td></td>
+        <td>Taurus</td>
+        <td>male</td>
+        <td>52</td>
+        <td>0.0 km/h</td>
+        <td>0.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>94</td>
+        <td>1195882</td>
+        <td>2016-01-31 11:30:32</td>
+        <td>2016-01-31 12:13:54</td>
+        <td>22.1</td>
+        <td></td>
+        <td></td>
+        <td>prado</td>
+        <td>female</td>
+        <td>639</td>
+        <td>325.8 km/h</td>
+        <td>20.7 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>95</td>
+        <td>1195884</td>
+        <td>2016-01-31 11:14:02</td>
+        <td>2016-01-31 11:40:51</td>
+        <td>12.56</td>
+        <td></td>
+        <td></td>
+        <td>Camry</td>
+        <td>female</td>
+        <td>334</td>
+        <td>134.0 km/h</td>
+        <td>27.1 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>96</td>
+        <td>1195880</td>
+        <td>2016-01-31 11:20:22</td>
+        <td>2016-01-31 11:53:58</td>
+        <td>23.34</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>female</td>
+        <td>364</td>
+        <td>120.9 km/h</td>
+        <td>36.2 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>97</td>
+        <td>1195879</td>
+        <td>2016-01-31 11:16:50</td>
+        <td>2016-01-31 11:28:32</td>
+        <td>7.56</td>
+        <td></td>
+        <td></td>
+        <td>Tahoe</td>
+        <td>female</td>
+        <td>119</td>
+        <td>76.7 km/h</td>
+        <td>39.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>98</td>
+        <td>1195870</td>
+        <td>2016-01-31 11:44:57</td>
+        <td>2016-01-31 12:30:47</td>
+        <td>23.07</td>
+        <td></td>
+        <td></td>
+        <td>Fortuner </td>
+        <td>female</td>
+        <td>378</td>
+        <td>151.4 km/h</td>
+        <td>20.5 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>99</td>
+        <td>1195871</td>
+        <td>2016-01-31 11:42:47</td>
+        <td>2016-01-31 11:57:14</td>
+        <td>4.08</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>female</td>
+        <td>155</td>
+        <td>112.7 km/h</td>
+        <td>17.0 km/h</td>
+        <td class="no">No</td>
+    </tr><tr>
+        <td>100</td>
+        <td>1195858</td>
+        <td>2016-01-31 10:32:55</td>
+        <td>2016-01-31 11:09:29</td>
+        <td>18.8</td>
+        <td></td>
+        <td></td>
+        <td>Innova</td>
+        <td>male</td>
+        <td>418</td>
+        <td>158.0 km/h</td>
+        <td>30.3 km/h</td>
+        <td class="no">No</td>
+    </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
