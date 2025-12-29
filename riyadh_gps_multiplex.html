@@ -19,13 +19,13 @@
         .param-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: 11px; }
         .param-row label { color: #8b949e; flex: 1; }
         .param-row input { width: 70px; padding: 5px; border: 1px solid #30363d; background: #0d1117; color: #c9d1d9; border-radius: 4px; text-align: center; }
-        .param-row span { color: #8b949e; font-size: 10px; }
         .btn { padding: 6px 12px; border: 1px solid #30363d; background: #21262d; color: #c9d1d9; border-radius: 4px; cursor: pointer; font-size: 11px; margin-right: 5px; margin-top: 8px; }
         .btn:hover { background: #30363d; }
-        .rules-box { background: #0d1117; border: 1px solid #30363d; border-radius: 4px; padding: 10px; margin: 10px 0; font-size: 10px; line-height: 1.6; }
-        .rules-box b { color: #58a6ff; }
-        .rules-box .rule { margin: 8px 0; padding: 8px; background: #21262d; border-radius: 4px; }
-        .rules-box .rule-name { color: #f0883e; font-weight: bold; }
+        .info-box { background: #0d1117; border: 1px solid #d29922; border-radius: 4px; padding: 10px; margin: 10px 0; font-size: 10px; line-height: 1.5; }
+        .info-box b { color: #d29922; }
+        .rules-box { background: #0d1117; border: 1px solid #30363d; border-radius: 4px; padding: 10px; margin: 10px 0; font-size: 10px; }
+        .rules-box .rule { margin: 5px 0; }
+        .rules-box .rule-name { color: #58a6ff; font-weight: bold; }
         .route-info { background: #0d1117; border: 1px solid #30363d; border-radius: 4px; padding: 10px; margin: 10px 0; }
         .route-info .label { font-size: 10px; color: #8b949e; }
         .route-info .value { font-size: 13px; color: #58a6ff; font-weight: bold; }
@@ -33,7 +33,7 @@
         .stat-box { flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 4px; padding: 8px; text-align: center; }
         .stat-box .v { font-size: 18px; font-weight: bold; color: #58a6ff; }
         .stat-box .l { font-size: 9px; color: #8b949e; }
-        .path-list { border: 1px solid #30363d; border-radius: 4px; background: #0d1117; max-height: 220px; overflow-y: auto; }
+        .path-list { border: 1px solid #30363d; border-radius: 4px; background: #0d1117; max-height: 200px; overflow-y: auto; }
         .path-hdr { padding: 10px; background: #21262d; border-bottom: 1px solid #30363d; cursor: pointer; }
         .path-hdr:hover { background: #30363d; }
         .path-hdr.active { background: #1f6feb; color: white; }
@@ -41,7 +41,6 @@
         .path-hdr .name { font-weight: bold; font-size: 12px; }
         .path-hdr .meta { font-size: 10px; color: #8b949e; }
         .path-hdr.active .meta { color: #ccc; }
-        .path-hdr .reason { font-size: 9px; color: #f0883e; margin-top: 3px; }
         .path-trips { display: none; }
         .path-trips.show { display: block; }
         .trip-item { padding: 8px 15px; border-bottom: 1px solid #21262d; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
@@ -50,15 +49,13 @@
         .trip-item .idx { font-weight: bold; color: #58a6ff; }
         .trip-item.active .idx { color: white; }
         .trip-item .time { color: #f0883e; }
-        .trip-item .stop-badge { background: #f85149; color: white; padding: 1px 5px; border-radius: 3px; font-size: 9px; }
-        .trip-item .stop-badge.minor { background: #d29922; }
+        .trip-item .slow { color: #f85149; font-size: 9px; }
         .detail { border: 1px solid #1f6feb; background: #1f6feb22; border-radius: 4px; padding: 10px; margin-top: 10px; display: none; }
         .detail.show { display: block; }
         .detail h4 { font-size: 12px; color: #58a6ff; margin-bottom: 8px; }
         .detail table { width: 100%; font-size: 11px; }
         .detail td { padding: 3px 0; }
         .detail td:first-child { color: #8b949e; }
-        .detail .warn { color: #f85149; }
         .map-area { flex: 1; position: relative; }
         #map { width: 100%; height: 100%; }
         #canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 500; }
@@ -81,30 +78,29 @@
         </div>
         
         <div class="section">
-            <h3>Path Inference Rules</h3>
+            <h3>Path Splitting Rules</h3>
+            <div class="info-box">
+                <b>Note:</b> This taxi GPS data is continuous (10s intervals, no gaps, min speed 22 km/h). Choose a rule below:
+            </div>
             <div class="rules-box">
-                <div class="rule">
-                    <span class="rule-name">Dwell &lt; Stop Threshold:</span><br>
-                    Same movement (red light, queue) - no break
-                </div>
-                <div class="rule">
-                    <span class="rule-name">Stop ≤ Dwell &lt; Path Break:</span><br>
-                    Stop detected (pickup/drop) - same path, marked as stop
-                </div>
-                <div class="rule">
-                    <span class="rule-name">Dwell ≥ Path Break:</span><br>
-                    Significant stop - end path, start new one
-                </div>
+                <div class="rule"><input type="radio" name="rule" value="none" checked onchange="recompute()"> <span class="rule-name">No split</span> - All trips in one path</div>
+                <div class="rule"><input type="radio" name="rule" value="time" onchange="recompute()"> <span class="rule-name">Time gap</span> - Split if gap > threshold (for camera data)</div>
+                <div class="rule"><input type="radio" name="rule" value="speed" onchange="recompute()"> <span class="rule-name">Speed drop</span> - Split if speed < threshold</div>
+                <div class="rule"><input type="radio" name="rule" value="count" onchange="recompute()"> <span class="rule-name">Fixed count</span> - Split every N trips</div>
             </div>
             <div class="param-row">
-                <label>Stop threshold:</label>
-                <input type="number" id="stopThresh" value="180" min="1"> <span>sec (3 min)</span>
+                <label>Time gap (sec):</label>
+                <input type="number" id="timeThresh" value="900" min="1">
             </div>
             <div class="param-row">
-                <label>Path break threshold:</label>
-                <input type="number" id="pathThresh" value="900" min="1"> <span>sec (15 min)</span>
+                <label>Speed threshold (km/h):</label>
+                <input type="number" id="speedThresh" value="10" min="0">
             </div>
-            <button class="btn" onclick="recompute()">Apply Rules</button>
+            <div class="param-row">
+                <label>Trips per path:</label>
+                <input type="number" id="countThresh" value="5" min="1">
+            </div>
+            <button class="btn" onclick="recompute()">Apply</button>
         </div>
         
         <div class="section">
@@ -119,7 +115,7 @@
             <div class="stats-row">
                 <div class="stat-box"><div class="v" id="nPaths">-</div><div class="l">Paths</div></div>
                 <div class="stat-box"><div class="v" id="nTrips">-</div><div class="l">Trips</div></div>
-                <div class="stat-box"><div class="v" id="nStops">-</div><div class="l">Stops</div></div>
+                <div class="stat-box"><div class="v" id="nDist">-</div><div class="l">km</div></div>
             </div>
             <h3>Paths</h3>
             <div class="path-list" id="pathList"></div>
@@ -130,7 +126,6 @@
                     <tr><td>Duration</td><td id="tripDur">-</td></tr>
                     <tr><td>Distance</td><td id="tripDist">-</td></tr>
                     <tr><td>Speed</td><td id="tripSpeed">-</td></tr>
-                    <tr><td>Dwell after</td><td id="tripDwell">-</td></tr>
                     <tr><td>Start</td><td id="tripStart">-</td></tr>
                     <tr><td>End</td><td id="tripEnd">-</td></tr>
                 </table>
@@ -144,7 +139,6 @@
             <b>Legend</b>
             <div class="leg-item"><div class="leg-circ" style="background:#00ff00"></div>Route start</div>
             <div class="leg-item"><div class="leg-circ" style="background:#ff0000"></div>Route end</div>
-            <div class="leg-item"><div class="leg-circ" style="background:#f0883e"></div>Stop point</div>
             <div class="leg-item"><div class="leg-color" style="background:#e74c3c"></div>Path (colored)</div>
         </div>
     </div>
@@ -154,8 +148,6 @@ var DATA = {"edges": [{"x1": 46.8493022483241, "y1": 24.701475446932697, "x2": 4
 var map, canvas, ctx, osmLayer;
 var currentRoute = null, currentPaths = [], selectedTrip = -1, selectedPath = -1;
 var pathColors = ['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#34495e','#c0392b','#2980b9'];
-var STOP_THRESH = 180;  // 3 minutes
-var PATH_THRESH = 900;  // 15 minutes
 
 function init() {
     map = L.map('map', {center: [24.7, 46.75], zoom: 11});
@@ -176,44 +168,44 @@ function resize() { canvas.width = canvas.parentElement.clientWidth; canvas.heig
 function latlngPx(lat,lng) { var p = map.latLngToContainerPoint([lat,lng]); return {x:p.x, y:p.y}; }
 function updateLayers() { document.getElementById('showStreet').checked ? map.addLayer(osmLayer) : map.removeLayer(osmLayer); }
 
+function getSelectedRule() {
+    var radios = document.getElementsByName('rule');
+    for (var r of radios) if (r.checked) return r.value;
+    return 'none';
+}
+
 function inferPaths(segs) {
-    var paths = [], cur = {trips:[], stops:[], reason:''};
+    var rule = getSelectedRule();
+    var timeThresh = parseInt(document.getElementById('timeThresh').value) || 900;
+    var speedThresh = parseInt(document.getElementById('speedThresh').value) || 10;
+    var countThresh = parseInt(document.getElementById('countThresh').value) || 5;
+    
+    var paths = [];
+    var cur = {trips: []};
     
     for (var i = 0; i < segs.length; i++) {
-        var dwell = 0;
-        if (i > 0) {
-            // Dwell = gap between end of previous trip and start of current trip
-            var prevEnd = segs[i-1].time;
-            var curStart = segs[i].time - segs[i].period;
-            dwell = curStart - prevEnd;
-        }
-        segs[i].dwell_before = dwell;
+        var shouldSplit = false;
         
-        if (dwell >= PATH_THRESH) {
-            // Significant stop - break path
-            if (cur.trips.length > 0) paths.push(cur);
-            cur = {trips: [], stops: [], reason: 'Break: ' + formatDwell(dwell) + ' dwell'};
-        } else if (dwell >= STOP_THRESH) {
-            // Stop detected but same path
-            cur.stops.push(i);
+        if (rule === 'time' && i > 0) {
+            var gap = (segs[i].time - segs[i].period) - segs[i-1].time;
+            if (gap > timeThresh) shouldSplit = true;
+        } else if (rule === 'speed') {
+            if (segs[i].speed_kmh < speedThresh) shouldSplit = true;
+        } else if (rule === 'count') {
+            if (cur.trips.length >= countThresh) shouldSplit = true;
         }
-        // else: dwell < STOP_THRESH, same movement (no action needed)
         
+        if (shouldSplit && cur.trips.length > 0) {
+            paths.push(cur);
+            cur = {trips: []};
+        }
         cur.trips.push(i);
     }
     if (cur.trips.length > 0) paths.push(cur);
     return paths;
 }
 
-function formatDwell(sec) {
-    if (sec < 60) return sec + 's';
-    if (sec < 3600) return Math.floor(sec/60) + 'm ' + (sec%60) + 's';
-    return Math.floor(sec/3600) + 'h ' + Math.floor((sec%3600)/60) + 'm';
-}
-
 function recompute() {
-    STOP_THRESH = parseInt(document.getElementById('stopThresh').value) || 180;
-    PATH_THRESH = parseInt(document.getElementById('pathThresh').value) || 900;
     if (currentRoute) selectRoute();
 }
 
@@ -233,7 +225,6 @@ function draw() {
     if (!currentRoute) return;
     var segs = currentRoute.segments;
     
-    // Draw trips
     segs.forEach((s, i) => {
         var pi = currentPaths.findIndex(p => p.trips.includes(i));
         var isSel = (i === selectedTrip);
@@ -248,19 +239,14 @@ function draw() {
         ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
     });
     
-    // Draw waypoints
     segs.forEach((s,i) => { 
         if (i > 0) {
             var p = latlngPx(s.start[1], s.start[0]);
-            var isStop = currentPaths.some(path => path.stops.includes(i));
-            ctx.beginPath(); ctx.arc(p.x, p.y, isStop ? 7 : 4, 0, Math.PI*2);
-            ctx.fillStyle = isStop ? '#f0883e' : '#3498db'; 
-            ctx.fill();
-            if (isStop) { ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke(); }
+            ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2);
+            ctx.fillStyle = '#3498db'; ctx.fill();
         }
     });
     
-    // Start/end markers
     if (segs.length > 0) {
         var ps = latlngPx(segs[0].start[1], segs[0].start[0]);
         ctx.beginPath(); ctx.arc(ps.x, ps.y, 12, 0, Math.PI*2);
@@ -290,42 +276,34 @@ function selectRoute() {
     
     currentPaths = inferPaths(segs);
     
-    var totalStops = currentPaths.reduce((s, p) => s + p.stops.length, 0);
-    
     var html = '';
     currentPaths.forEach((path, pi) => {
         var dist = path.trips.reduce((s,ti) => s + segs[ti].distance_m, 0);
         var col = pathColors[pi % pathColors.length];
         var n = path.trips.length;
-        var stopCount = path.stops.length;
         
         html += '<div class="path-hdr" onclick="togglePath('+pi+')" id="ph'+pi+'" style="border-left:4px solid '+col+'">';
         html += '<div class="top-row"><span class="name">Path '+(pi+1)+'</span>';
-        html += '<span class="meta">'+n+' trips, '+(dist/1000).toFixed(2)+'km'+(stopCount?' ('+stopCount+' stops)':'')+'</span></div>';
-        if (path.reason) html += '<div class="reason">'+path.reason+'</div>';
-        html += '</div>';
+        html += '<span class="meta">'+n+' trips, '+(dist/1000).toFixed(2)+'km</span></div></div>';
         html += '<div class="path-trips" id="pt'+pi+'">';
         
         path.trips.forEach((ti, idx) => {
             var s = segs[ti];
             var t = pickup ? new Date(pickup.getTime() + (s.time - s.period) * 1000) : null;
-            var isStop = path.stops.includes(ti);
-            var dwellClass = s.dwell_before >= PATH_THRESH ? 'stop-badge' : (s.dwell_before >= STOP_THRESH ? 'stop-badge minor' : '');
-            
             html += '<div class="trip-item" onclick="event.stopPropagation();selTrip('+ti+')" id="tr'+ti+'">';
             html += '<span class="idx">T'+(ti+1)+'</span>';
             html += '<span class="time">'+fmtTime(t)+'</span>';
-            html += '<span>'+s.distance_m.toFixed(0)+'m</span>';
-            if (isStop) html += '<span class="'+dwellClass+'">stop '+formatDwell(s.dwell_before)+'</span>';
+            html += '<span>'+s.distance_m.toFixed(0)+'m @ '+s.speed_kmh+'km/h</span>';
             html += '</div>';
         });
         html += '</div>';
     });
     document.getElementById('pathList').innerHTML = html;
     
+    var totalDist = segs.reduce((s,x) => s + x.distance_m, 0);
     document.getElementById('nPaths').textContent = currentPaths.length;
     document.getElementById('nTrips').textContent = segs.length;
-    document.getElementById('nStops').textContent = totalStops;
+    document.getElementById('nDist').textContent = (totalDist/1000).toFixed(1);
     draw();
 }
 
@@ -362,16 +340,6 @@ function selTrip(i) {
     document.getElementById('tripDur').textContent = s.period + 's';
     document.getElementById('tripDist').textContent = s.distance_m.toFixed(1) + 'm';
     document.getElementById('tripSpeed').textContent = s.speed_kmh + ' km/h';
-    
-    var dwellEl = document.getElementById('tripDwell');
-    if (s.dwell_before > 0) {
-        dwellEl.textContent = formatDwell(s.dwell_before);
-        dwellEl.className = s.dwell_before >= PATH_THRESH ? 'warn' : '';
-    } else {
-        dwellEl.textContent = '-';
-        dwellEl.className = '';
-    }
-    
     document.getElementById('tripStart').textContent = s.start[1].toFixed(5) + ', ' + s.start[0].toFixed(5);
     document.getElementById('tripEnd').textContent = s.end[1].toFixed(5) + ', ' + s.end[0].toFixed(5);
     draw();
