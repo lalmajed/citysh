@@ -39,13 +39,16 @@
         .trip-stats td:last-child { text-align: right; font-weight: bold; }
         
         .canvas-area { flex: 1; position: relative; }
-        canvas { width: 100%; height: 100%; background: white; }
+        canvas { width: 100%; height: 100%; background: white; cursor: grab; }
+        canvas:active { cursor: grabbing; }
         
         .legend { position: absolute; bottom: 15px; right: 15px; background: rgba(13,17,23,0.95); border: 1px solid #30363d; border-radius: 8px; padding: 12px; }
         .legend h4 { font-size: 11px; color: #58a6ff; margin-bottom: 8px; }
         .legend-item { display: flex; align-items: center; margin: 4px 0; font-size: 10px; }
         .legend-color { width: 20px; height: 4px; margin-right: 8px; border-radius: 2px; }
         .legend-circle { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
+        
+        .hint { position: absolute; top: 10px; left: 10px; background: rgba(13,17,23,0.8); padding: 8px 12px; border-radius: 4px; font-size: 11px; color: #8b949e; }
     </style>
 </head>
 <body>
@@ -97,6 +100,7 @@
         
         <div class="canvas-area">
             <canvas id="canvas"></canvas>
+            <div class="hint">Drag to pan • Scroll to zoom</div>
             
             <div class="legend">
                 <h4>Road Network</h4>
@@ -122,6 +126,10 @@
         var view = { x1:46.5, x2:47.0, y1:24.5, y2:25.0 };
         var selectedSegment = -1;
         
+        // Pan/zoom state
+        var isDragging = false;
+        var lastX, lastY;
+        
         function resize() {
             canvas.width = canvas.parentElement.clientWidth;
             canvas.height = canvas.parentElement.clientHeight;
@@ -130,6 +138,8 @@
         
         function tx(lon) { return (lon-view.x1)/(view.x2-view.x1)*canvas.width; }
         function ty(lat) { return canvas.height-(lat-view.y1)/(view.y2-view.y1)*canvas.height; }
+        function fromX(px) { return view.x1 + px/canvas.width*(view.x2-view.x1); }
+        function fromY(py) { return view.y1 + (canvas.height-py)/canvas.height*(view.y2-view.y1); }
         
         function getColor(fc) {
             if (fc > 0.007) return '#8b0000';
@@ -168,7 +178,6 @@
                 trip.segments.forEach((seg, i) => {
                     var isSelected = (i === selectedSegment);
                     
-                    // Segment line
                     ctx.beginPath();
                     ctx.moveTo(tx(seg.start[0]), ty(seg.start[1]));
                     ctx.lineTo(tx(seg.end[0]), ty(seg.end[1]));
@@ -176,7 +185,7 @@
                     ctx.lineWidth = isSelected ? 5 : 3;
                     ctx.stroke();
                     
-                    // Joint point (small blue dot)
+                    // Joint point
                     if (i > 0) {
                         ctx.beginPath();
                         ctx.arc(tx(seg.start[0]), ty(seg.start[1]), 3, 0, Math.PI*2);
@@ -185,7 +194,7 @@
                     }
                 });
                 
-                // Start marker (green)
+                // Start marker
                 if (trip.segments.length > 0) {
                     var first = trip.segments[0];
                     ctx.beginPath();
@@ -196,7 +205,7 @@
                     ctx.lineWidth = 2;
                     ctx.stroke();
                     
-                    // End marker (red)
+                    // End marker
                     var last = trip.segments[trip.segments.length-1];
                     ctx.beginPath();
                     ctx.arc(tx(last.end[0]), ty(last.end[1]), 8, 0, Math.PI*2);
@@ -207,11 +216,10 @@
                     ctx.stroke();
                 }
                 
-                // Highlight selected segment
+                // Highlight selected segment ends
                 if (selectedSegment >= 0 && selectedSegment < trip.segments.length) {
                     var seg = trip.segments[selectedSegment];
                     
-                    // Selected segment start
                     ctx.beginPath();
                     ctx.arc(tx(seg.start[0]), ty(seg.start[1]), 6, 0, Math.PI*2);
                     ctx.fillStyle = '#f39c12';
@@ -220,7 +228,6 @@
                     ctx.lineWidth = 1;
                     ctx.stroke();
                     
-                    // Selected segment end
                     ctx.beginPath();
                     ctx.arc(tx(seg.end[0]), ty(seg.end[1]), 6, 0, Math.PI*2);
                     ctx.fillStyle = '#9b59b6';
@@ -241,7 +248,6 @@
                 section.style.display = 'block';
                 var trip = trips[tripIdx];
                 
-                // Build segment list
                 var html = '';
                 trip.segments.forEach((seg, i) => {
                     html += '<div class="segment-item" onclick="selectSegment('+i+')" id="seg'+i+'">';
@@ -252,7 +258,6 @@
                 });
                 list.innerHTML = html;
                 
-                // Stats
                 var totalDist = trip.segments.reduce((s,seg) => s + seg.distance, 0);
                 var totalTime = trip.segments.reduce((s,seg) => s + seg.time, 0);
                 var avgSpeed = totalTime > 0 ? (totalDist / totalTime) * 3.6 : 0;
@@ -269,25 +274,10 @@
         }
         
         function selectSegment(idx) {
-            // Update selection
             document.querySelectorAll('.segment-item').forEach(el => el.classList.remove('active'));
             document.getElementById('seg'+idx).classList.add('active');
             selectedSegment = idx;
-            
-            // Zoom to segment
-            var tripIdx = parseInt(document.getElementById('trip').value);
-            if (tripIdx >= 0) {
-                var seg = trips[tripIdx].segments[idx];
-                var minX = Math.min(seg.start[0], seg.end[0]);
-                var maxX = Math.max(seg.start[0], seg.end[0]);
-                var minY = Math.min(seg.start[1], seg.end[1]);
-                var maxY = Math.max(seg.start[1], seg.end[1]);
-                var px = (maxX-minX)*0.5 || 0.002;
-                var py = (maxY-minY)*0.5 || 0.002;
-                view = { x1:minX-px, x2:maxX+px, y1:minY-py, y2:maxY+py };
-            }
-            
-            draw();
+            draw();  // Just redraw, no zoom
         }
         
         function zoomToTrip() {
@@ -310,6 +300,61 @@
             document.querySelectorAll('.segment-item').forEach(el => el.classList.remove('active'));
             draw(); 
         }
+        
+        // Pan handlers
+        canvas.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            canvas.style.cursor = 'grabbing';
+        });
+        
+        canvas.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            var dx = e.clientX - lastX;
+            var dy = e.clientY - lastY;
+            var dlon = -dx / canvas.width * (view.x2 - view.x1);
+            var dlat = dy / canvas.height * (view.y2 - view.y1);
+            view.x1 += dlon; view.x2 += dlon;
+            view.y1 += dlat; view.y2 += dlat;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            draw();
+        });
+        
+        canvas.addEventListener('mouseup', function() {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        });
+        
+        canvas.addEventListener('mouseleave', function() {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        });
+        
+        // Zoom handler
+        canvas.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            var rect = canvas.getBoundingClientRect();
+            var mx = e.clientX - rect.left;
+            var my = e.clientY - rect.top;
+            var lon = fromX(mx);
+            var lat = fromY(my);
+            
+            var factor = e.deltaY > 0 ? 1.2 : 0.8;
+            var w = (view.x2 - view.x1) * factor;
+            var h = (view.y2 - view.y1) * factor;
+            
+            // Zoom centered on mouse
+            var rx = mx / canvas.width;
+            var ry = 1 - my / canvas.height;
+            view.x1 = lon - w * rx;
+            view.x2 = lon + w * (1-rx);
+            view.y1 = lat - h * ry;
+            view.y2 = lat + h * (1-ry);
+            
+            draw();
+        });
         
         window.onresize = resize;
         resize();
