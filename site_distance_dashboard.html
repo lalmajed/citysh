@@ -102,36 +102,31 @@ function haversine(lat1, lon1, lat2, lon2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// Determine travel direction based on origin to destination
-function getTravelDirection(startIdx, endIdx) {
-    const start = SITES[startIdx];
-    const end = SITES[endIdx];
-    const dLat = end.lat - start.lat;
-    const dLon = end.lon - start.lon;
+// Get LOCAL travel direction at a point on the path
+function getLocalDirection(path, pathIdx) {
+    // Look at direction from this point to next point
+    const i = Math.min(pathIdx, path.length - 2);
+    const p1 = path[i];
+    const p2 = path[i + 1];
     
-    // Determine primary direction
+    const dLat = p2.lat() - p1.lat();
+    const dLon = p2.lng() - p1.lng();
+    
+    // Determine primary direction at this segment
     if (Math.abs(dLat) > Math.abs(dLon)) {
-        // More N/S movement
         return dLat > 0 ? 'N' : 'S';
     } else {
-        // More E/W movement
         return dLon > 0 ? 'E' : 'W';
     }
 }
 
 // Find waypoints along a route path
 function findWaypointsOnPath(path, startIdx, endIdx) {
-    const travelDir = getTravelDirection(startIdx, endIdx);
     const found = [];
     const THRESHOLD = 0.15; // 150 meters
     
-    console.log('Travel direction:', SITES[startIdx].site_id, '→', SITES[endIdx].site_id, '=', travelDir);
-    
     SITES.forEach((site, idx) => {
         if (idx === startIdx || idx === endIdx) return;
-        
-        // Site direction must match TRAVEL direction (same lane)
-        if (site.site_direction !== travelDir) return;
         
         // Find closest point on path
         let minDist = Infinity, pathIdx = 0;
@@ -141,14 +136,23 @@ function findWaypointsOnPath(path, startIdx, endIdx) {
         }
         
         // Must be close to the path
-        if (minDist < THRESHOLD) {
-            found.push({ idx, pathIdx, dist: minDist });
+        if (minDist >= THRESHOLD) return;
+        
+        // Get LOCAL direction at this point on the path
+        const localDir = getLocalDirection(path, pathIdx);
+        
+        // Site direction must match LOCAL travel direction
+        if (site.site_direction === localDir) {
+            found.push({ idx, pathIdx, dist: minDist, localDir });
+            console.log('  ✓', site.site_id, '- site dir:', site.site_direction, '= local dir:', localDir);
+        } else {
+            console.log('  ✗', site.site_id, '- site dir:', site.site_direction, '≠ local dir:', localDir);
         }
     });
     
     // Sort by position along path
     found.sort((a, b) => a.pathIdx - b.pathIdx);
-    console.log('Waypoints (traveling ' + travelDir + '):', found.map(w => SITES[w.idx].site_id));
+    console.log('Waypoints found:', found.map(w => SITES[w.idx].site_id));
     return found.map(w => w.idx);
 }
 

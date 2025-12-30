@@ -68,7 +68,7 @@
                     <select id="originSel"><option value="">-- Origin --</option></select>
                     <select id="destSel"><option value="">-- Destination --</option></select>
                     <button class="btn" onclick="showRoute()">Show Route with Waypoints</button>
-                    <p style="font-size:0.75rem;color:#666;margin-top:5px;">Detects sites within 150m AND same direction as origin</p>
+                    <p style="font-size:0.75rem;color:#666;margin-top:5px;">Detects sites within 150m matching LOCAL travel direction</p>
                 </div>
                 
                 <div class="panel">
@@ -193,14 +193,15 @@ function haversine(lat1, lon1, lat2, lon2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// Determine travel direction based on origin to destination
-function getTravelDirection(startIdx, endIdx) {
-    const start = SITES[startIdx];
-    const end = SITES[endIdx];
-    const dLat = end.lat - start.lat;
-    const dLon = end.lon - start.lon;
+// Get LOCAL travel direction at a point on the path
+function getLocalDirection(path, pathIdx) {
+    const i = Math.min(pathIdx, path.length - 2);
+    const p1 = path[i];
+    const p2 = path[i + 1];
     
-    // Determine primary direction
+    const dLat = p2.lat() - p1.lat();
+    const dLon = p2.lng() - p1.lng();
+    
     if (Math.abs(dLat) > Math.abs(dLon)) {
         return dLat > 0 ? 'N' : 'S';
     } else {
@@ -209,17 +210,11 @@ function getTravelDirection(startIdx, endIdx) {
 }
 
 function findWaypoints(path, startIdx, endIdx) {
-    const travelDir = getTravelDirection(startIdx, endIdx);
     const found = [];
     const THRESHOLD = 0.15; // 150 meters
     
-    console.log('Travel direction:', SITES[startIdx].site_id, '→', SITES[endIdx].site_id, '=', travelDir);
-    
     SITES.forEach((site, idx) => {
         if (idx === startIdx || idx === endIdx) return;
-        
-        // Site direction must match TRAVEL direction
-        if (site.site_direction !== travelDir) return;
         
         // Find closest point on path
         let minDist = Infinity, pathIdx = 0;
@@ -228,13 +223,19 @@ function findWaypoints(path, startIdx, endIdx) {
             if (d < minDist) { minDist = d; pathIdx = i; }
         }
         
-        // Must be close to the path
-        if (minDist < THRESHOLD) {
+        if (minDist >= THRESHOLD) return;
+        
+        // Get LOCAL direction at this point
+        const localDir = getLocalDirection(path, pathIdx);
+        
+        // Site direction must match LOCAL travel direction
+        if (site.site_direction === localDir) {
             found.push({ idx, pathIdx, dist: minDist });
+            console.log('  ✓', site.site_id, 'dir:', site.site_direction, '= local:', localDir);
         }
     });
     
-    console.log('Waypoints (traveling ' + travelDir + '):', found.map(w => SITES[w.idx].site_id));
+    console.log('Waypoints found:', found.map(w => SITES[w.idx].site_id));
     return found.sort((a, b) => a.pathIdx - b.pathIdx);
 }
 
