@@ -60,14 +60,13 @@
         .waypoint-site { font-weight: 600; font-size: 0.85rem; }
         .waypoint-road { font-size: 0.7rem; color: #64748b; direction: rtl; }
         .waypoint-dir { font-size: 0.65rem; color: #94a3b8; }
-        .waypoint-stats { text-align: right; font-size: 0.75rem; color: #64748b; }
         
         .trip-segment { background: #e0f2fe; padding: 6px 10px; margin: 2px 0; border-radius: 4px; font-size: 0.75rem; color: #0369a1; display: flex; justify-content: space-between; }
         .trip-segment .trip-label { font-weight: 500; }
         .trip-segment .trip-stats { color: #0284c7; }
         
         .no-waypoints { text-align: center; padding: 20px; color: #94a3b8; font-size: 0.85rem; }
-        .loading { text-align: center; padding: 20px; color: #64748b; font-size: 0.85rem; }
+        .route-direction { background: #fef3c7; padding: 8px 12px; border-radius: 6px; margin-bottom: 10px; font-size: 0.8rem; color: #92400e; }
     </style>
 </head>
 <body>
@@ -123,6 +122,7 @@
             
             <div class="route-breakdown" id="routeBreakdown">
                 <div class="route-breakdown-title">Route Breakdown <span id="stopCount">Select sites</span></div>
+                <div id="routeDirection"></div>
                 <div id="breakdownContent">
                     <div class="no-waypoints">Select two sites to see route breakdown</div>
                 </div>
@@ -148,13 +148,11 @@
         let currentRenderer = null;
         let selectedSiteA = null, selectedSiteB = null;
         let currentView = 'distance';
-        let directionsService = null;
         
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
                 center: {lat: 24.7136, lng: 46.6753}, zoom: 10
             });
-            directionsService = new google.maps.DirectionsService();
             
             DATA.sites.forEach((s, i) => {
                 const m = new google.maps.Marker({
@@ -171,8 +169,9 @@
         function populateSiteSelectors() {
             const sA = document.getElementById('siteA'), sB = document.getElementById('siteB');
             DATA.sites.forEach((s, i) => {
-                sA.innerHTML += `<option value="${i}">${s.site_id}</option>`;
-                sB.innerHTML += `<option value="${i}">${s.site_id}</option>`;
+                const dir = s.site_direction ? ` (${s.site_direction})` : '';
+                sA.innerHTML += `<option value="${i}">${s.site_id}${dir}</option>`;
+                sB.innerHTML += `<option value="${i}">${s.site_id}${dir}</option>`;
             });
             sA.onchange = sB.onchange = calculateRoutes;
         }
@@ -193,67 +192,74 @@
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
         
-        // Find candidate sites that are geographically near the route
-        function findCandidateSites(route, startIdx, endIdx) {
-            const candidates = [];
+        // Calculate bearing between two points
+        function getBearing(lat1, lon1, lat2, lon2) {
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const lat1Rad = lat1 * Math.PI / 180;
+            const lat2Rad = lat2 * Math.PI / 180;
+            const y = Math.sin(dLon) * Math.cos(lat2Rad);
+            const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - Math.sin(lat1Rad) * Math.cos(lat2Rad) * Math.cos(dLon);
+            let bearing = Math.atan2(y, x) * 180 / Math.PI;
+            return (bearing + 360) % 360;
+        }
+        
+        // Convert bearing to cardinal direction
+        function bearingToDirection(bearing) {
+            if (bearing >= 315 || bearing < 45) return 'N';
+            if (bearing >= 45 && bearing < 135) return 'E';
+            if (bearing >= 135 && bearing < 225) return 'S';
+            return 'W';
+        }
+        
+        // Check if site direction matches route direction
+        function directionMatches(siteDir, routeDir) {
+            if (!siteDir) return false;
+            return siteDir === routeDir;
+        }
+        
+        // Find sites that are ON the route (same direction only!)
+        function findSitesOnRoute(route, startIdx, endIdx, routeDirection) {
+            const found = [];
             const path = route.overview_path;
+            const startSite = DATA.sites[startIdx];
             
             DATA.sites.forEach((site, idx) => {
                 if (idx === startIdx || idx === endIdx) return;
                 
-                // Check if site is within 50m of any point on route
+                // CRITICAL: Check if site direction matches route direction
+                if (!directionMatches(site.site_direction, routeDirection)) {
+                    return; // Skip sites going the wrong direction
+                }
+                
+                // Check if site is close to route path
+                let minDist = Infinity;
+                let closestPathIdx = 0;
+                
                 for (let i = 0; i < path.length; i++) {
                     const dist = haversine(site.lat, site.lon, path[i].lat(), path[i].lng());
-                    if (dist < 0.05) { // 50 meters
-                        candidates.push({ idx, site, pathIndex: i });
-                        break;
+                    if (dist < minDist) {
+                        minDist = dist;
+                        closestPathIdx = i;
                     }
+                }
+                
+                // Must be within 30 meters of route
+                if (minDist < 0.03) {
+                    // Calculate distance from start along the path
+                    let distFromStart = 0;
+                    for (let i = 0; i < closestPathIdx; i++) {
+                        distFromStart += haversine(path[i].lat(), path[i].lng(), path[i+1].lat(), path[i+1].lng());
+                    }
+                    found.push({ idx, site, distFromStart });
                 }
             });
             
-            return candidates;
-        }
-        
-        // Verify if a site is truly ON the route by checking if adding it as waypoint increases distance
-        async function verifySitesOnRoute(candidates, startSite, endSite, baseDistance) {
-            const verified = [];
-            
-            for (const cand of candidates) {
-                try {
-                    const result = await new Promise((resolve, reject) => {
-                        directionsService.route({
-                            origin: {lat: startSite.lat, lng: startSite.lon},
-                            destination: {lat: endSite.lat, lng: endSite.lon},
-                            waypoints: [{ location: {lat: cand.site.lat, lng: cand.site.lon}, stopover: true }],
-                            travelMode: 'DRIVING'
-                        }, (res, status) => {
-                            if (status === 'OK') resolve(res);
-                            else reject(status);
-                        });
-                    });
-                    
-                    // Calculate total distance with waypoint
-                    let totalDist = 0;
-                    result.routes[0].legs.forEach(leg => totalDist += leg.distance.value);
-                    
-                    // If adding waypoint increases distance by less than 2%, it's on the route
-                    const increase = (totalDist - baseDistance) / baseDistance;
-                    if (increase < 0.02) { // Less than 2% increase
-                        // Calculate distance from start to this waypoint
-                        const distFromStart = result.routes[0].legs[0].distance.value;
-                        verified.push({ ...cand, distFromStart, verified: true });
-                    }
-                } catch (e) {
-                    // Skip if routing fails
-                }
-            }
-            
             // Sort by distance from start
-            verified.sort((a, b) => a.distFromStart - b.distFromStart);
-            return verified;
+            found.sort((a, b) => a.distFromStart - b.distFromStart);
+            return found;
         }
         
-        async function calculateRoutes() {
+        function calculateRoutes() {
             const iA = parseInt(document.getElementById('siteA').value);
             const iB = parseInt(document.getElementById('siteB').value);
             if (isNaN(iA) || isNaN(iB) || iA === iB) return;
@@ -273,15 +279,12 @@
             
             const sA = DATA.sites[iA], sB = DATA.sites[iB];
             
-            // Show loading
-            document.getElementById('breakdownContent').innerHTML = '<div class="loading">Finding sites on route...</div>';
-            
-            directionsService.route({
+            new google.maps.DirectionsService().route({
                 origin: {lat: sA.lat, lng: sA.lon},
                 destination: {lat: sB.lat, lng: sB.lon},
                 travelMode: 'DRIVING',
                 provideRouteAlternatives: true
-            }, async (result, status) => {
+            }, (result, status) => {
                 if (status === 'OK' && result.routes.length > 0) {
                     let minDistRoute = result.routes[0], minTimeRoute = result.routes[0];
                     let minDist = result.routes[0].legs[0].distance.value;
@@ -302,17 +305,7 @@
                     document.getElementById('timeKm').textContent = (timeRoute.legs[0].distance.value / 1000).toFixed(1);
                     document.getElementById('timeMin').textContent = Math.round(timeRoute.legs[0].duration.value / 60);
                     
-                    // Find and verify sites on route
-                    const route = currentView === 'distance' ? distanceRoute : timeRoute;
-                    const candidates = findCandidateSites(route, iA, iB);
-                    
-                    if (candidates.length > 0) {
-                        const baseDistance = route.legs[0].distance.value;
-                        const verifiedSites = await verifySitesOnRoute(candidates, sA, sB, baseDistance);
-                        showRoute(currentView, verifiedSites);
-                    } else {
-                        showRoute(currentView, []);
-                    }
+                    showRoute(currentView);
                 }
             });
             
@@ -322,7 +315,7 @@
             map.fitBounds(bounds, 50);
         }
         
-        function showRoute(type, verifiedSites = null) {
+        function showRoute(type) {
             currentView = type;
             
             document.getElementById('distCard').classList.toggle('active', type === 'distance');
@@ -342,19 +335,30 @@
             });
             currentRenderer.setDirections({ routes: [route], request: { travelMode: 'DRIVING' } });
             
-            // Mark verified waypoints on map
-            if (verifiedSites) {
-                verifiedSites.forEach(wp => {
-                    markers[wp.idx]?.setIcon({
-                        path: google.maps.SymbolPath.CIRCLE, scale: 9, 
-                        fillColor: '#f59e0b', fillOpacity: 1, strokeColor: '#d97706', strokeWeight: 2
-                    });
+            // Get the START SITE's direction - that's the route direction we care about
+            const startSite = DATA.sites[selectedSiteA];
+            const routeDirection = startSite.site_direction;
+            
+            // Show route direction
+            const dirNames = { 'N': 'Northbound', 'S': 'Southbound', 'E': 'Eastbound', 'W': 'Westbound' };
+            document.getElementById('routeDirection').innerHTML = routeDirection ? 
+                `<div class="route-direction">Route Direction: ${dirNames[routeDirection] || routeDirection} (from ${startSite.site_id})</div>` : '';
+            
+            // Find sites on route with MATCHING direction
+            const sitesOnRoute = findSitesOnRoute(route, selectedSiteA, selectedSiteB, routeDirection);
+            
+            // Mark waypoints on map
+            sitesOnRoute.forEach(wp => {
+                markers[wp.idx]?.setIcon({
+                    path: google.maps.SymbolPath.CIRCLE, scale: 9, 
+                    fillColor: '#f59e0b', fillOpacity: 1, strokeColor: '#d97706', strokeWeight: 2
                 });
-                buildBreakdown(type, route, verifiedSites);
-            }
+            });
+            
+            buildBreakdown(type, route, sitesOnRoute, routeDirection);
         }
         
-        function buildBreakdown(type, route, sitesOnRoute) {
+        function buildBreakdown(type, route, sitesOnRoute, routeDirection) {
             const sA = DATA.sites[selectedSiteA], sB = DATA.sites[selectedSiteB];
             const totalDist = route.legs[0].distance.value / 1000;
             const totalTime = route.legs[0].duration.value / 60;
@@ -362,7 +366,7 @@
             const allStops = [
                 { idx: selectedSiteA, site: sA, type: 'start', distFromStart: 0 },
                 ...sitesOnRoute.map(w => ({ ...w, type: 'waypoint' })),
-                { idx: selectedSiteB, site: sB, type: 'end', distFromStart: totalDist * 1000 }
+                { idx: selectedSiteB, site: sB, type: 'end', distFromStart: totalDist }
             ];
             
             const stopCount = allStops.length;
@@ -381,9 +385,8 @@
                     <div class="waypoint ${typeClass}">
                         <div class="waypoint-icon">${icon}</div>
                         <div class="waypoint-info">
-                            <div class="waypoint-site">${stop.site.site_id}</div>
+                            <div class="waypoint-site">${stop.site.site_id} ${dir ? '(' + dir + ')' : ''}</div>
                             <div class="waypoint-road">${stop.site.road_name || 'Unknown Road'}</div>
-                            ${dir ? `<div class="waypoint-dir">Direction: ${dir}</div>` : ''}
                         </div>
                     </div>
                 `;
@@ -391,9 +394,8 @@
                 // Add trip segment
                 if (i < allStops.length - 1) {
                     const next = allStops[i + 1];
-                    const tripDistM = (next.distFromStart || 0) - (stop.distFromStart || 0);
-                    const tripDist = (tripDistM / 1000).toFixed(1);
-                    const tripTime = Math.round((tripDistM / 1000) / (totalDist / totalTime));
+                    const tripDist = (next.distFromStart - stop.distFromStart).toFixed(1);
+                    const tripTime = Math.round((next.distFromStart - stop.distFromStart) / totalDist * totalTime);
                     
                     html += `
                         <div class="trip-segment">
@@ -413,8 +415,9 @@
             DATA.sites.forEach((s, i) => {
                 if (!filter || s.site_id.toLowerCase().includes(f) || (s.road_name||'').toLowerCase().includes(f)) {
                     cnt++;
+                    const dir = s.site_direction ? ` (${s.site_direction})` : '';
                     html += `<div class="site-item ${i===selectedSiteA||i===selectedSiteB?'selected':''}" onclick="selectSiteFromList(${i})">
-                        <div class="site-id">${s.site_id}</div><div class="site-road">${s.road_name||'Unknown'}</div></div>`;
+                        <div class="site-id">${s.site_id}${dir}</div><div class="site-road">${s.road_name||'Unknown'}</div></div>`;
                 }
             });
             c.innerHTML = html;
