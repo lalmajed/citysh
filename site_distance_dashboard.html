@@ -316,7 +316,19 @@ function clearCache() {
         log('Cache cleared'); 
     }
 }
+
     </script>
     <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
+    <script>
+    // Wait for Google Maps to load then init
+    function waitForMaps() {
+        if (typeof google !== 'undefined' && google.maps) {
+            initMap();
+        } else {
+            setTimeout(waitForMaps, 100);
+        }
+    }
+    waitForMaps();
+    </script>
 </body>
 </html>
