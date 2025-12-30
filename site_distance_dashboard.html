@@ -130,7 +130,7 @@ function findCandidatesNearPath(path, startIdx, endIdx) {
 }
 
 // Verify waypoint using Google Maps - check if adding it increases route distance
-async function verifyWaypointWithGoogle(startIdx, waypointIdx, endIdx, directDist) {
+async function verifyWaypointWithGoogle(startIdx, waypointIdx, endIdx, directDist, directPath) {
     return new Promise(resolve => {
         directionsService.route({
             origin: {lat: SITES[startIdx].lat, lng: SITES[startIdx].lon},
@@ -146,13 +146,19 @@ async function verifyWaypointWithGoogle(startIdx, waypointIdx, endIdx, directDis
                 res.routes[0].legs.forEach(leg => totalDist += leg.distance.value);
                 totalDist = totalDist / 1000; // km
                 
-                // If adding waypoint increases distance by less than 3%, it's ON the route
-                // Strict threshold - crossing to wrong side of road adds significant distance
+                // STRICT: If adding waypoint increases distance by more than 1%, NOT on route
                 const increase = (totalDist - directDist) / directDist;
-                const isOnRoute = increase < 0.03; // 3% threshold - very strict
+                
+                // Also check: does the waypoint route follow the same general path?
+                const waypointPath = res.routes[0].overview_path;
+                const pathSimilar = checkPathSimilarity(directPath, waypointPath);
+                
+                const isOnRoute = increase < 0.01 && pathSimilar; // 1% AND path must be similar
                 
                 const result = isOnRoute ? '✓ ON ROUTE' : '✗ OFF';
-                log('  ' + result + ' ' + SITES[waypointIdx].site_id + ' (+' + (increase*100).toFixed(1) + '%)');
+                log('  ' + result + ' ' + SITES[waypointIdx].site_id + 
+                    ' dist+' + (increase*100).toFixed(2) + '%' +
+                    ' path=' + (pathSimilar ? 'similar' : 'DIFFERENT'));
                 resolve(isOnRoute);
             } else {
                 log('  ERROR checking ' + SITES[waypointIdx].site_id + ': ' + status);
@@ -160,6 +166,35 @@ async function verifyWaypointWithGoogle(startIdx, waypointIdx, endIdx, directDis
             }
         });
     });
+}
+
+// Check if two paths are similar (waypoint route should follow direct route)
+function checkPathSimilarity(directPath, waypointPath) {
+    if (!directPath || !waypointPath || directPath.length < 2 || waypointPath.length < 2) {
+        return true; // Can't compare, assume OK
+    }
+    
+    // Sample points from waypoint path and check if they're close to direct path
+    let matchCount = 0;
+    const sampleSize = Math.min(10, waypointPath.length);
+    const step = Math.floor(waypointPath.length / sampleSize);
+    
+    for (let i = 0; i < waypointPath.length; i += step) {
+        const wp = waypointPath[i];
+        
+        // Find closest point on direct path
+        let minDist = Infinity;
+        for (let j = 0; j < directPath.length; j++) {
+            const d = haversine(wp.lat(), wp.lng(), directPath[j].lat(), directPath[j].lng());
+            if (d < minDist) minDist = d;
+        }
+        
+        // If within 100m of direct path, it's following the same route
+        if (minDist < 0.1) matchCount++;
+    }
+    
+    // At least 80% of sampled points should be near the direct path
+    return (matchCount / sampleSize) >= 0.8;
 }
 
 // Get travel direction at a point on the path - check multiple segments for accuracy
