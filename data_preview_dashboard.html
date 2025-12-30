@@ -3,243 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Preview - Check Before Building Matrix</title>
+    <title>Data Preview - Check Sites & Routes</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 20px; }
-        h1 { color: #333; margin-bottom: 10px; }
+        h1 { color: #333; margin-bottom: 5px; }
         .subtitle { color: #666; margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1400px; margin: 0 auto; }
-        .panel { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .panel h2 { color: #4285f4; font-size: 1rem; margin-bottom: 15px; border-bottom: 2px solid #4285f4; padding-bottom: 10px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #f8f9fa; font-weight: 600; color: #333; }
-        tr:hover { background: #f8f9fa; }
-        .site-table { max-height: 400px; overflow-y: auto; }
-        .json-preview { background: #1e1e1e; color: #0f0; padding: 15px; font-family: monospace; font-size: 0.8rem; max-height: 300px; overflow: auto; border-radius: 8px; white-space: pre-wrap; }
-        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-        .stat { background: #e3f2fd; padding: 20px; border-radius: 8px; text-align: center; }
-        .stat-value { font-size: 2rem; font-weight: bold; color: #1565c0; }
-        .stat-label { color: #666; font-size: 0.85rem; margin-top: 5px; }
-        .test-section { margin-top: 20px; padding-top: 20px; border-top: 2px solid #eee; }
-        .test-section h3 { color: #333; margin-bottom: 15px; }
-        .test-row { display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-end; }
-        .test-row select { flex: 1; padding: 12px; font-size: 1rem; border: 2px solid #ddd; border-radius: 6px; }
-        .test-row button { padding: 12px 25px; background: #4285f4; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .test-row button:hover { background: #3367d6; }
-        .result-box { background: #e8f5e9; padding: 20px; border-radius: 8px; margin-top: 15px; display: none; }
-        .result-box.show { display: block; }
-        .result-box.error { background: #ffebee; }
-        .result-values { display: flex; gap: 40px; margin-top: 10px; }
-        .result-value { text-align: center; }
-        .result-num { font-size: 2.5rem; font-weight: bold; color: #2e7d32; }
-        .result-unit { color: #666; }
-        #map { height: 300px; border-radius: 8px; margin-top: 15px; }
-        .direction-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; color: white; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .grid { display: grid; grid-template-columns: 400px 1fr; gap: 20px; }
+        .panel { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .panel h2 { color: #4285f4; font-size: 0.95rem; margin-bottom: 12px; border-bottom: 2px solid #4285f4; padding-bottom: 8px; }
+        .stat-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .stat { flex: 1; background: #e3f2fd; padding: 12px; border-radius: 8px; text-align: center; }
+        .stat-value { font-size: 1.3rem; font-weight: bold; color: #1565c0; }
+        .stat-label { color: #666; font-size: 0.75rem; }
+        .site-table { max-height: 250px; overflow-y: auto; font-size: 0.8rem; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; font-weight: 600; position: sticky; top: 0; }
+        .dir-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: bold; color: white; }
         .dir-N { background: #2196f3; }
         .dir-S { background: #f44336; }
         .dir-E { background: #4caf50; }
         .dir-W { background: #ff9800; }
+        select { width: 100%; padding: 10px; font-size: 0.9rem; border: 2px solid #ddd; border-radius: 6px; margin-bottom: 10px; }
+        .btn { width: 100%; padding: 12px; background: #4285f4; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.95rem; }
+        .btn:hover { background: #3367d6; }
+        #map { height: 350px; border-radius: 8px; }
+        .result-panel { background: #e8f5e9; padding: 15px; border-radius: 8px; margin-top: 15px; }
+        .result-panel.error { background: #ffebee; }
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .result-title { font-weight: bold; color: #2e7d32; }
+        .result-totals { display: flex; gap: 20px; }
+        .result-total { text-align: center; }
+        .result-num { font-size: 1.8rem; font-weight: bold; color: #1565c0; }
+        .result-unit { font-size: 0.75rem; color: #666; }
+        .waypoints-list { margin-top: 15px; }
+        .waypoint { display: flex; align-items: center; padding: 8px 10px; background: white; border-radius: 6px; margin: 5px 0; border-left: 4px solid #fbbc04; }
+        .waypoint.start { border-left-color: #34a853; }
+        .waypoint.end { border-left-color: #ea4335; }
+        .wp-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.75rem; margin-right: 10px; color: white; background: #fbbc04; }
+        .waypoint.start .wp-icon { background: #34a853; }
+        .waypoint.end .wp-icon { background: #ea4335; }
+        .wp-info { flex: 1; }
+        .wp-name { font-weight: 600; font-size: 0.9rem; }
+        .wp-road { font-size: 0.75rem; color: #666; direction: rtl; }
+        .trip-seg { background: #e3f2fd; padding: 8px 12px; margin: 3px 0; border-radius: 6px; font-size: 0.8rem; color: #1565c0; display: flex; justify-content: space-between; border-left: 3px solid #4285f4; }
+        .trip-seg .label { font-weight: 500; }
+        .trip-seg .values { color: #0d47a1; font-weight: bold; }
+        .loading { text-align: center; padding: 20px; color: #666; }
     </style>
 </head>
 <body>
-    <h1>Data Preview Dashboard</h1>
-    <p class="subtitle">Check your site data and test Google Maps routes before building the full matrix</p>
-    
-    <div class="stat-grid">
-        <div class="stat">
-            <div class="stat-value" id="totalSites">0</div>
-            <div class="stat-label">Total Sites</div>
-        </div>
-        <div class="stat">
-            <div class="stat-value" id="northSites">0</div>
-            <div class="stat-label">Northbound (N)</div>
-        </div>
-        <div class="stat">
-            <div class="stat-value" id="southSites">0</div>
-            <div class="stat-label">Southbound (S)</div>
-        </div>
-        <div class="stat">
-            <div class="stat-value" id="ewSites">0</div>
-            <div class="stat-label">East/West (E/W)</div>
-        </div>
-    </div>
-    
-    <div class="grid">
-        <div class="panel">
-            <h2>Sites Data (from JSON)</h2>
-            <div class="site-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Site ID</th>
-                            <th>Direction</th>
-                            <th>Latitude</th>
-                            <th>Longitude</th>
-                            <th>Road</th>
-                        </tr>
-                    </thead>
-                    <tbody id="siteTableBody"></tbody>
-                </table>
-            </div>
+    <div class="container">
+        <h1>Data Preview Dashboard</h1>
+        <p class="subtitle">Check sites & test routes with waypoints before building matrix</p>
+        
+        <div class="stat-row">
+            <div class="stat"><div class="stat-value" id="totalSites">247</div><div class="stat-label">Total Sites</div></div>
+            <div class="stat"><div class="stat-value" id="nSites">0</div><div class="stat-label">North (N)</div></div>
+            <div class="stat"><div class="stat-value" id="sSites">0</div><div class="stat-label">South (S)</div></div>
+            <div class="stat"><div class="stat-value" id="eSites">0</div><div class="stat-label">East (E)</div></div>
+            <div class="stat"><div class="stat-value" id="wSites">0</div><div class="stat-label">West (W)</div></div>
         </div>
         
-        <div class="panel">
-            <h2>JSON Structure Preview</h2>
-            <div class="json-preview" id="jsonPreview"></div>
-        </div>
-    </div>
-    
-    <div class="panel" style="margin-top: 20px; max-width: 1400px; margin-left: auto; margin-right: auto;">
-        <h2>Test Google Maps Route</h2>
-        <p style="color: #666; margin-bottom: 15px;">Select two sites and click "Test Route" to verify Google Maps returns correct data</p>
-        
-        <div class="test-row">
-            <select id="testOrigin">
-                <option value="">-- Select Origin --</option>
-            </select>
-            <span style="font-size: 1.5rem;">→</span>
-            <select id="testDest">
-                <option value="">-- Select Destination --</option>
-            </select>
-            <button onclick="testRoute()">Test Route</button>
-        </div>
-        
-        <div class="result-box" id="resultBox">
-            <strong id="resultTitle">Route Result:</strong>
-            <div class="result-values">
-                <div class="result-value">
-                    <div class="result-num" id="resultDist">--</div>
-                    <div class="result-unit">kilometers</div>
+        <div class="grid">
+            <div class="sidebar">
+                <div class="panel">
+                    <h2>All Sites (247)</h2>
+                    <div class="site-table">
+                        <table>
+                            <thead><tr><th>#</th><th>Site ID</th><th>Dir</th><th>Lat</th><th>Lon</th></tr></thead>
+                            <tbody id="siteTable"></tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="result-value">
-                    <div class="result-num" id="resultTime">--</div>
-                    <div class="result-unit">minutes</div>
+                
+                <div class="panel">
+                    <h2>Test Route</h2>
+                    <select id="originSel"><option value="">-- Select Origin --</option></select>
+                    <select id="destSel"><option value="">-- Select Destination --</option></select>
+                    <button class="btn" onclick="testRoute()">Get Route & Waypoints</button>
+                </div>
+                
+                <div class="panel" id="resultPanel" style="display:none;">
+                    <h2>Route Result</h2>
+                    <div id="resultContent"></div>
+                </div>
+            </div>
+            
+            <div class="map-area">
+                <div class="panel">
+                    <h2>Map</h2>
+                    <div id="map"></div>
                 </div>
             </div>
         </div>
-        
-        <div id="map"></div>
     </div>
 
     <script>
 const SITES = [{"site_id": "RUHSM001", "lat": 24.7403322023658, "lon": 46.6273981332779, "osmid": 161824693, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0623\u0645\u064a\u0631 \u062a\u0631\u0643\u064a \u0628\u0646 \u0639\u0628\u062f\u0627\u0644\u0639\u0632\u064a\u0632 \u0627\u0644\u0623\u0648\u0644", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM002", "lat": 24.740427194217, "lon": 46.6274785995483, "osmid": 569788808, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0623\u0645\u064a\u0631 \u062a\u0631\u0643\u064a \u0628\u0646 \u0639\u0628\u062f\u0627\u0644\u0639\u0632\u064a\u0632 \u0627\u0644\u0623\u0648\u0644", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM003", "lat": 24.7546965432207, "lon": 46.6325774788857, "osmid": 710508486, "road_name": "\u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u0634\u0645\u0627\u0644\u064a", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM007", "lat": 24.6726265911391, "lon": 46.656776368618, "osmid": 39445700, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u062e\u0627\u0644\u062f", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM009", "lat": 24.7209740445557, "lon": 46.6058734059334, "osmid": null, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u062e\u0627\u0644\u062f", "road_direction": null, "site_direction": "N"}, {"site_id": "RUHSM012", "lat": 24.6483701639916, "lon": 46.7946767807007, "osmid": 40854376, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u0634\u0631\u0642\u064a", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM015", "lat": 24.5439855825558, "lon": 46.872533261776, "osmid": 741596406, "road_name": "\u0627\u0644\u062e\u0631\u062c", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM018", "lat": 24.8287062928303, "lon": 46.6193702816963, "osmid": 53823323, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0633\u0644\u0645\u0627\u0646", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM019", "lat": 24.8178075375809, "lon": 46.6184422373772, "osmid": 569823073, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0641\u0647\u062f", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM022", "lat": 24.670488879256, "lon": 46.6602820158005, "osmid": 39375332, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u062e\u0627\u0644\u062f", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM023", "lat": 24.780546768419, "lon": 46.7285308241844, "osmid": 710009868, "road_name": null, "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM024", "lat": 24.6799116099266, "lon": 46.6544723510742, "osmid": 1247148402, "road_name": "\u0634\u0627\u0631\u0639 \u0623\u0645 \u0627\u0644\u062d\u0645\u0627\u0645", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM025", "lat": 24.7649189230075, "lon": 46.6561299562454, "osmid": 592883518, "road_name": "\u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u0634\u0645\u0627\u0644\u064a", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM026", "lat": 24.7731896590511, "lon": 46.7319613695145, "osmid": 592833059, "road_name": "\u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u0634\u0631\u0642\u064a", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM027", "lat": 24.6750541016666, "lon": 46.6531071066856, "osmid": 39445700, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u062e\u0627\u0644\u062f", "road_direction": "SE", "site_direction": "E"}, {"site_id": "RUHSM029", "lat": 24.9694129976553, "lon": 46.7820569872856, "osmid": 158959637, "road_name": null, "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM030", "lat": 25.0012034832327, "lon": 46.7709928750992, "osmid": 815453207, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062c\u0646\u0627\u062f\u0631\u064a\u0629", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM032", "lat": 24.7120199687664, "lon": 46.6719147562981, "osmid": 266899333, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0641\u0647\u062f \u0627\u0644\u0641\u0631\u0639\u064a", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM033", "lat": 24.7897540511277, "lon": 46.7158091068268, "osmid": 593117942, "road_name": "\u0627\u0644\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u0634\u0645\u0627\u0644\u064a", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM034", "lat": 24.6755122958506, "lon": 46.6905936598778, "osmid": 38095413, "road_name": null, "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM035", "lat": 24.6203516108267, "lon": 46.5742367506027, "osmid": 1351551729, "road_name": "\u0637\u0631\u064a\u0642 \u0645\u0643\u0629 \u0627\u0644\u0645\u0643\u0631\u0645\u0629", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM038", "lat": 24.6846274081011, "lon": 46.7023712396622, "osmid": 42176353, "road_name": null, "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHSM042", "lat": 24.740704875449, "lon": 46.5987414121628, "osmid": 710508488, "road_name": "\u0627\u0644\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u0634\u0645\u0627\u0644\u064a", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM044", "lat": 24.8400178982926, "lon": 46.6072306036949, "osmid": 790301603, "road_name": null, "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM045", "lat": 24.6261962301252, "lon": 46.7836314439774, "osmid": 131300092, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u062c\u0646\u0648\u0628\u064a", "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHSM046", "lat": 24.5856708282881, "lon": 46.6952633857727, "osmid": 157620778, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u062c\u0646\u0648\u0628\u064a", "road_direction": "E", "site_direction": "E"}, {"site_id": "RUHSM049", "lat": 24.8066959557292, "lon": 46.7554226517677, "osmid": 47497526, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0645\u0627\u0645", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM051", "lat": 24.5581848394885, "lon": 46.6767024993897, "osmid": 157620709, "road_name": "\u0637\u0631\u064a\u0642 \u062f\u064a\u0631\u0627\u0628", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM052", "lat": 24.7243240497979, "lon": 46.6658690571785, "osmid": 38124839, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0641\u0647\u062f", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM053", "lat": 24.6729043824091, "lon": 46.6916853189468, "osmid": 413593861, "road_name": null, "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM054", "lat": 24.6123632798959, "lon": 46.7067539691925, "osmid": 159100653, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0641\u0647\u062f", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM055", "lat": 24.6110781730948, "lon": 46.707022190094, "osmid": 47594631, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0641\u0647\u062f", "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM057", "lat": 24.6656945509571, "lon": 46.6192603111267, "osmid": 783932747, "road_name": "\u0637\u0631\u064a\u0642 \u062c\u062f\u0629", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM059", "lat": 24.831956030886, "lon": 46.8484577536583, "osmid": 792787210, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062c\u0646\u0627\u062f\u0631\u064a\u0629", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM060", "lat": 24.8321897210297, "lon": 46.7234346270561, "osmid": 83257231, "road_name": "Airport Road", "road_direction": "SW", "site_direction": "S"}, {"site_id": "RUHSM062", "lat": 24.7980377711983, "lon": 46.569601893425, "osmid": 47588131, "road_name": null, "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHSM069", "lat": 24.56560566558, "lon": 46.6250592470169, "osmid": 157752006, "road_name": "\u0627\u0644\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u063a\u0631\u0628\u064a", "road_direction": "SE", "site_direction": "E"}, {"site_id": "RUHSM070", "lat": 24.6942463632656, "lon": 46.5634649991989, "osmid": 157772368, "road_name": "\u0627\u0644\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u063a\u0631\u0628\u064a", "road_direction": "SW", "site_direction": "S"}, {"site_id": "RUHSM071", "lat": 24.6711544395348, "lon": 46.6223931312561, "osmid": 708124920, "road_name": "\u0637\u0631\u064a\u0642 \u0639\u0628\u062f \u0627\u0644\u0644\u0647 \u0628\u0646 \u062d\u0630\u0627\u0641\u0629 \u0627\u0644\u0633\u0647\u0645\u064a", "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM072", "lat": 24.6707963331305, "lon": 46.6222590208054, "osmid": 42325901, "road_name": "\u0637\u0631\u064a\u0642 \u0639\u0628\u062f \u0627\u0644\u0644\u0647 \u0628\u0646 \u062d\u0630\u0627\u0641\u0629 \u0627\u0644\u0633\u0647\u0645\u064a", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM073", "lat": 24.6870447823229, "lon": 46.6315904259682, "osmid": 39445683, "road_name": "Flags Roundabout", "road_direction": "NW", "site_direction": "W"}, {"site_id": "RUHSM074", "lat": 24.6869545710959, "lon": 46.6317647695541, "osmid": 42327048, "road_name": "\u0634\u0627\u0631\u0639 \u0639\u0645\u0631\u0648 \u0627\u0644\u0636\u0645\u0631\u064a", "road_direction": "E", "site_direction": "E"}, {"site_id": "RUHSM077", "lat": 24.8111586340332, "lon": 46.7348715662956, "osmid": 53844447, "road_name": "\u0637\u0631\u064a\u0642 \u0633\u0639\u064a\u062f \u0628\u0646 \u0632\u064a\u062f", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM078", "lat": 24.8110612436613, "lon": 46.7346113920212, "osmid": 39254023, "road_name": "\u0637\u0631\u064a\u0642 \u0633\u0639\u064a\u062f \u0628\u0646 \u0632\u064a\u062f", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM079", "lat": 24.5588531422709, "lon": 46.6225674748421, "osmid": 331548802, "road_name": "Al Tawhed", "road_direction": "E", "site_direction": "E"}, {"site_id": "RUHSM080", "lat": 24.5589824415937, "lon": 46.622556746006, "osmid": 709511230, "road_name": "Al Tawhed", "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHSM093", "lat": 24.8325232108086, "lon": 46.8203857541084, "osmid": 47497520, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0645\u0627\u0645", "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHSM095", "lat": 24.7800816178938, "lon": 46.8530228734016, "osmid": 534338369, "road_name": "\u0637\u0631\u064a\u0642 \u062e\u0631\u064a\u0635", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM096", "lat": 24.5348626583046, "lon": 46.6983264684677, "osmid": 331945797, "road_name": "Al-Khaleefa Al Mamoun", "road_direction": "NE", "site_direction": "N"}, {"site_id": "RUHSM097", "lat": 24.598323749187, "lon": 46.7443531751633, "osmid": 160690777, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u062c\u0646\u0648\u0628\u064a", "road_direction": "SW", "site_direction": "S"}, {"site_id": "RUHSM098", "lat": 24.8195992645787, "lon": 46.8459257483482, "osmid": 244034778, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062c\u0646\u0627\u062f\u0631\u064a\u0629", "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM100", "lat": 24.5686573528817, "lon": 46.8897798657417, "osmid": 46654594, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062e\u0631\u062c \u0627\u0644\u0633\u0631\u064a\u0639", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM102", "lat": 24.7352066774981, "lon": 46.6819301247597, "osmid": 269644725, "road_name": null, "road_direction": "E", "site_direction": "E"}, {"site_id": "RUHSM106", "lat": 24.7087793016666, "lon": 46.7659583687782, "osmid": 265060216, "road_name": "\u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u0634\u0631\u0642\u064a", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM110", "lat": 24.8409306555311, "lon": 46.5533074736595, "osmid": 258340131, "road_name": "\u0627\u0644\u0645\u0644\u0643 \u062e\u0627\u0644\u062f", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM111", "lat": 24.8410231157739, "lon": 46.5536212921143, "osmid": 47588066, "road_name": "\u0627\u0644\u0645\u0644\u0643 \u062e\u0627\u0644\u062f", "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM112", "lat": 24.5972800762424, "lon": 46.6084000468254, "osmid": 783112827, "road_name": "\u0627\u0644\u0625\u0645\u0627\u0645 \u0623\u0628\u064a \u062d\u0646\u064a\u0641\u0629", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM113", "lat": 24.5971435038554, "lon": 46.6084751486778, "osmid": 43538488, "road_name": "\u0627\u0644\u0625\u0645\u0627\u0645 \u0623\u0628\u064a \u062d\u0646\u064a\u0641\u0629", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM114", "lat": 24.5475208005664, "lon": 46.7195722460747, "osmid": 638609490, "road_name": "\u0639\u0631\u0641\u0627\u062a", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM116", "lat": 24.9070265631544, "lon": 46.9199708104134, "osmid": 558643065, "road_name": null, "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHSM117", "lat": 24.5381879590055, "lon": 46.6897889971733, "osmid": 331905646, "road_name": "\u0627\u0644\u0625\u0645\u0627\u0645 \u0645\u0633\u0644\u0645", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM118", "lat": 24.5382806827733, "lon": 46.6898936033249, "osmid": 160652610, "road_name": "\u0627\u0644\u0625\u0645\u0627\u0645 \u0645\u0633\u0644\u0645", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM121", "lat": 24.6462394879027, "lon": 46.6858944296837, "osmid": 159115335, "road_name": "\u0627\u0644\u0623\u0645\u064a\u0631 \u0637\u0644\u0627\u0644 \u0628\u0646 \u0639\u0628\u062f\u0627\u0644\u0639\u0632\u064a\u0632", "road_direction": "E", "site_direction": "E"}, {"site_id": "RUHSM122", "lat": 24.7958463762615, "lon": 46.7296761274338, "osmid": 47497526, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0645\u0627\u0645", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM125", "lat": 24.771906272745, "lon": 46.732605099678, "osmid": 592833059, "road_name": "\u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u0634\u0631\u0642\u064a", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM128", "lat": 24.6981526522312, "lon": 46.6789072751999, "osmid": 266901971, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0641\u0647\u062f", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM129", "lat": 24.6876372637067, "lon": 46.7106726765633, "osmid": 784202297, "road_name": "\u0637\u0631\u064a\u0642 \u0645\u0643\u0629 \u0627\u0644\u0645\u0643\u0631\u0645\u0629", "road_direction": "E", "site_direction": "E"}, {"site_id": "RUHSM130", "lat": 24.6636397195435, "lon": 46.7306765913963, "osmid": 1137278778, "road_name": "\u0634\u0627\u0631\u0639 \u0627\u0644\u062c\u0627\u0645\u0639\u0629", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM131", "lat": 24.6634934669944, "lon": 46.7308187484741, "osmid": 38114489, "road_name": "\u0634\u0627\u0631\u0639 \u0627\u0644\u062c\u0627\u0645\u0639\u0629", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM136", "lat": 24.620424801656, "lon": 46.5808054804802, "osmid": 53784923, "road_name": "\u0627\u0644\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u063a\u0631\u0628\u064a", "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM140", "lat": 24.8769760481679, "lon": 46.8059206008911, "osmid": 39549463, "road_name": "Al Thumama", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM141", "lat": 24.8769687507318, "lon": 46.8060520291329, "osmid": 39549466, "road_name": "Al Thumama", "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM142", "lat": 24.5674108328895, "lon": 46.655505001545, "osmid": 333939141, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u062c\u0646\u0648\u0628\u064a", "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHSM144", "lat": 24.5638614614901, "lon": 46.717287003994, "osmid": 644838335, "road_name": "Al-Marouj", "road_direction": "SE", "site_direction": "E"}, {"site_id": "RUHSM145", "lat": 24.5687663130558, "lon": 46.8898630142212, "osmid": 159112152, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062e\u0631\u062c \u0627\u0644\u0633\u0631\u064a\u0639", "road_direction": "NW", "site_direction": "W"}, {"site_id": "RUHSM147", "lat": 24.6038597752923, "lon": 46.6194561123848, "osmid": 43538488, "road_name": "\u0627\u0644\u0625\u0645\u0627\u0645 \u0623\u0628\u064a \u062d\u0646\u064a\u0641\u0629", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM148", "lat": 24.6040012164286, "lon": 46.6193461418152, "osmid": 783112827, "road_name": "\u0627\u0644\u0625\u0645\u0627\u0645 \u0623\u0628\u064a \u062d\u0646\u064a\u0641\u0629", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM152", "lat": 24.6854562001529, "lon": 46.6520261764526, "osmid": 1247148402, "road_name": "\u0634\u0627\u0631\u0639 \u0623\u0645 \u0627\u0644\u062d\u0645\u0627\u0645", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM153", "lat": 24.6855219810628, "lon": 46.6522246599197, "osmid": 539918135, "road_name": "\u0634\u0627\u0631\u0639 \u0623\u0645 \u0627\u0644\u062d\u0645\u0627\u0645", "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM156", "lat": 24.7259342868167, "lon": 46.7802920937538, "osmid": 784202303, "road_name": "\u0637\u0631\u064a\u0642 \u062e\u0631\u064a\u0635", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM157", "lat": 24.6409759484262, "lon": 46.8291538953781, "osmid": 331128588, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u062c\u0646\u0648\u0628\u064a", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM160", "lat": 24.6086054881289, "lon": 46.7729669809341, "osmid": 593114187, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062e\u0631\u062c", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM161", "lat": 24.6336106991616, "lon": 46.8119421601295, "osmid": 40994373, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u062c\u0646\u0648\u0628\u064a", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM164", "lat": 24.5796291806517, "lon": 46.5517866611481, "osmid": 157711942, "road_name": "\u0628\u0644\u0627\u0644 \u0628\u0646 \u0631\u0628\u0627\u062d", "road_direction": "E", "site_direction": "E"}, {"site_id": "RUHSM165", "lat": 24.5797877232525, "lon": 46.5518108010292, "osmid": 783932731, "road_name": "\u0628\u0644\u0627\u0644 \u0628\u0646 \u0631\u0628\u0627\u062d", "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHSM168", "lat": 24.5844927893916, "lon": 46.7547172307968, "osmid": 55419534, "road_name": "An-Nasar Road", "road_direction": "E", "site_direction": "E"}, {"site_id": "RUHSM169", "lat": 24.5982237727608, "lon": 46.6173076629639, "osmid": 741824091, "road_name": "\u062d\u0645\u0632\u0629 \u0628\u0646 \u0639\u0628\u062f \u0627\u0644\u0645\u0637\u0644\u0628", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM170", "lat": 24.5981359902433, "lon": 46.6171762347221, "osmid": 157620811, "road_name": "\u062d\u0645\u0632\u0629 \u0628\u0646 \u0639\u0628\u062f \u0627\u0644\u0645\u0637\u0644\u0628", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM173", "lat": 24.7946969705971, "lon": 46.6560655832291, "osmid": 1342419504, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0639\u0628\u062f\u0627\u0644\u0639\u0632\u064a\u0632", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM174", "lat": 24.5079388888788, "lon": 46.9285324215889, "osmid": 69424408, "road_name": "Al Kharj", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM175", "lat": 24.5081024122122, "lon": 46.9286692142487, "osmid": 792788985, "road_name": "Al Kharj", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM178", "lat": 25.0159432570743, "lon": 46.7664411664009, "osmid": 158959584, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062c\u0646\u0627\u062f\u0631\u064a\u0629", "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM179", "lat": 25.0158897994536, "lon": 46.7662614583969, "osmid": 815453207, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062c\u0646\u0627\u062f\u0631\u064a\u0629", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM180", "lat": 24.66748117972, "lon": 46.7952159047127, "osmid": 156738125, "road_name": "\u0623\u0628\u0648 \u0639\u0628\u064a\u062f\u0629 \u0639\u0627\u0645\u0631 \u0628\u0646 \u0627\u0644\u062c\u0631\u0627\u062d", "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHSM181", "lat": 24.6672764432188, "lon": 46.7952185869217, "osmid": 161100608, "road_name": "\u0623\u0628\u0648 \u0639\u0628\u064a\u062f\u0629 \u0639\u0627\u0645\u0631 \u0628\u0646 \u0627\u0644\u062c\u0631\u0627\u062d", "road_direction": "E", "site_direction": "E"}, {"site_id": "RUHSM182", "lat": 24.6433261861909, "lon": 46.8339711427689, "osmid": 258315154, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u062c\u0646\u0648\u0628\u064a", "road_direction": "SW", "site_direction": "S"}, {"site_id": "RUHSM187", "lat": 24.642784983054, "lon": 46.7355394363403, "osmid": 1102350294, "road_name": "\u0627\u0644\u062e\u0631\u062c", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM188", "lat": 24.6011674755442, "lon": 46.6398543119431, "osmid": 221379977, "road_name": "\u0627\u0628\u0646 \u0627\u0644\u062c\u0648\u0632\u064a", "road_direction": "NE", "site_direction": "N"}, {"site_id": "RUHSM189", "lat": 24.6013016369983, "lon": 46.6397336125374, "osmid": 221379976, "road_name": "\u0627\u0628\u0646 \u0627\u0644\u062c\u0648\u0632\u064a", "road_direction": "SW", "site_direction": "S"}, {"site_id": "RUHSM190", "lat": 24.6326745415304, "lon": 46.5654820203781, "osmid": 569617231, "road_name": "\u0637\u0631\u064a\u0642 \u0646\u062c\u062f", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM191", "lat": 24.8129651971553, "lon": 46.6760292649269, "osmid": 569596217, "road_name": null, "road_direction": "SW", "site_direction": "S"}, {"site_id": "RUHSM192", "lat": 24.8127826050202, "lon": 46.6761177778244, "osmid": 158922809, "road_name": "\u0627\u0644\u062b\u0645\u0627\u0645\u0629", "road_direction": "NE", "site_direction": "N"}, {"site_id": "RUHSM195", "lat": 24.7299152397197, "lon": 46.8647655844688, "osmid": 161390131, "road_name": "\u0627\u0644\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u062b\u0627\u0646\u064a", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM196", "lat": 24.7999978581173, "lon": 46.6526859998703, "osmid": 1159782964, "road_name": "\u0627\u0644\u0631\u0628\u064a\u0639 - \u0627\u0644\u064a\u0631\u0645\u0648\u0643", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM198", "lat": 24.7694781484828, "lon": 46.6684493422508, "osmid": 996899621, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0639\u0628\u062f\u0627\u0644\u0639\u0632\u064a\u0632", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM201", "lat": 24.615255335399, "lon": 46.7573323845863, "osmid": 332076124, "road_name": null, "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM207", "lat": 24.7444197548951, "lon": 46.6082498431206, "osmid": 266889822, "road_name": "\u0627\u0644\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u0634\u0645\u0627\u0644\u064a", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM208", "lat": 24.823774152058, "lon": 46.7285388708115, "osmid": 53844447, "road_name": "\u0637\u0631\u064a\u0642 \u0633\u0639\u064a\u062f \u0628\u0646 \u0632\u064a\u062f", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM209", "lat": 24.8236621627272, "lon": 46.7282545566559, "osmid": 39254023, "road_name": "\u0637\u0631\u064a\u0642 \u0633\u0639\u064a\u062f \u0628\u0646 \u0632\u064a\u062f", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM210", "lat": 24.7432407032976, "lon": 46.8001833558083, "osmid": 45984901, "road_name": "\u0639\u0628\u062f\u0627\u0644\u0631\u062d\u0645\u0646 \u0627\u0644\u0646\u0627\u0635\u0631", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM211", "lat": 24.7433162129597, "lon": 46.8002933263779, "osmid": 45984900, "road_name": "\u0639\u0628\u062f\u0627\u0644\u0631\u062d\u0645\u0646 \u0627\u0644\u0646\u0627\u0635\u0631", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM212", "lat": 24.6725825464765, "lon": 46.8299263715744, "osmid": 1239582591, "road_name": "\u0634\u0627\u0631\u0639 \u0627\u0628\u0646 \u0645\u0627\u062c\u0629", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM213", "lat": 24.6725337944213, "lon": 46.8298190832138, "osmid": 334118692, "road_name": "\u0634\u0627\u0631\u0639 \u0627\u0628\u0646 \u0645\u0627\u062c\u0629", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM216", "lat": 24.5872366876198, "lon": 46.5884765982628, "osmid": 157282652, "road_name": "\u062e\u062f\u064a\u062c\u0629 \u0628\u0646\u062a \u062e\u0648\u064a\u0644\u062f", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM217", "lat": 24.5871147808519, "lon": 46.5885651111603, "osmid": 43155650, "road_name": "\u062e\u062f\u064a\u062c\u0629 \u0628\u0646\u062a \u062e\u0648\u064a\u0644\u062f", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM218", "lat": 24.7088894173431, "lon": 46.8437933921814, "osmid": 52993906, "road_name": "\u0637\u0631\u064a\u0642 \u0637\u0644\u062d\u0629 \u0628\u0646 \u0639\u0628\u064a\u062f\u0627\u0644\u0644\u0647", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM221", "lat": 24.6402519488123, "lon": 46.75511687994, "osmid": 1102350297, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u062f\u064a\u0646\u0629 \u0627\u0644\u0645\u0646\u0648\u0631\u0629", "road_direction": "E", "site_direction": "E"}, {"site_id": "RUHSM224", "lat": 24.7455602489784, "lon": 46.8242803215981, "osmid": 784215121, "road_name": "\u0634\u0627\u0631\u0639 \u062d\u0633\u0627\u0646 \u0628\u0646 \u062b\u0627\u0628\u062a", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM225", "lat": 24.7454847342479, "lon": 46.8241676688194, "osmid": 52572580, "road_name": "\u0634\u0627\u0631\u0639 \u062d\u0633\u0627\u0646 \u0628\u0646 \u062b\u0627\u0628\u062a", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM226", "lat": 24.7641928838335, "lon": 46.8337565660477, "osmid": 135191742, "road_name": "\u0634\u0627\u0631\u0639 \u0627\u0628\u0646 \u0627\u0644\u0647\u064a\u062b\u0645", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM227", "lat": 24.764122238671, "lon": 46.8336492776871, "osmid": 79699130, "road_name": "\u0634\u0627\u0631\u0639 \u0627\u0628\u0646 \u0627\u0644\u0647\u064a\u062b\u0645", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM228", "lat": 24.7395185293973, "lon": 46.5959626436234, "osmid": 710508488, "road_name": "\u0627\u0644\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u0634\u0645\u0627\u0644\u064a", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM232", "lat": 24.4701528666928, "lon": 46.612468957901, "osmid": 333835113, "road_name": "\u062f\u064a\u0631\u0627\u0628", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM233", "lat": 24.5476209553064, "lon": 46.6873374581337, "osmid": 160652581, "road_name": "\u0627\u0644\u062e\u0644\u064a\u0644 \u0628\u0646 \u0623\u062d\u0645\u062f", "road_direction": "SE", "site_direction": "E"}, {"site_id": "RUHSM234", "lat": 24.5477331800292, "lon": 46.6874313354492, "osmid": 160652587, "road_name": "\u0627\u0644\u062e\u0644\u064a\u0644 \u0628\u0646 \u0623\u062d\u0645\u062f", "road_direction": "NW", "site_direction": "W"}, {"site_id": "RUHSM235", "lat": 24.6672178504822, "lon": 46.7845594882965, "osmid": 159112096, "road_name": "East Ring Road", "road_direction": "NW", "site_direction": "W"}, {"site_id": "RUHSM238", "lat": 24.4949618404793, "lon": 46.9437834620476, "osmid": 41929681, "road_name": "\u0627\u0644\u062e\u0631\u062c \u0627\u0644\u062c\u062f\u064a\u062f", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM239", "lat": 24.4951033915724, "lon": 46.9439175724983, "osmid": 41460176, "road_name": "\u0627\u0644\u062e\u0631\u062c \u0627\u0644\u062c\u062f\u064a\u062f", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM240", "lat": 24.6486919902838, "lon": 46.7140683531761, "osmid": 40806542, "road_name": "\u0627\u0644\u0623\u0645\u064a\u0631 \u0639\u0628\u062f\u0627\u0644\u0639\u0632\u064a\u0632 \u0628\u0646 \u0645\u0633\u0627\u0639\u062f \u0628\u0646 \u062c\u0644\u0648\u064a", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM241", "lat": 24.6487358708835, "lon": 46.7141970992088, "osmid": 681854546, "road_name": "\u0627\u0644\u0623\u0645\u064a\u0631 \u0639\u0628\u062f\u0627\u0644\u0639\u0632\u064a\u0632 \u0628\u0646 \u0645\u0633\u0627\u0639\u062f \u0628\u0646 \u062c\u0644\u0648\u064a", "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM242", "lat": 24.5620708697593, "lon": 46.5307635068893, "osmid": 221408572, "road_name": "\u0623\u062d\u0645\u062f \u0628\u0646 \u0627\u0644\u062e\u0637\u0627\u0628", "road_direction": "E", "site_direction": "S"}, {"site_id": "RUHSM243", "lat": 24.5622074829673, "lon": 46.5307849645615, "osmid": 283817385, "road_name": "\u0623\u062d\u0645\u062f \u0628\u0646 \u0627\u0644\u062e\u0637\u0627\u0628", "road_direction": "W", "site_direction": "N"}, {"site_id": "RUHSM244", "lat": 24.5925682421353, "lon": 46.5811836719513, "osmid": 157282661, "road_name": "\u0623\u0633\u0645\u0627\u0621 \u0628\u0646\u062a \u0623\u0628\u064a \u0628\u0643\u0631", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM245", "lat": 24.592451165573, "lon": 46.5809771418572, "osmid": 157282658, "road_name": "\u0623\u0633\u0645\u0627\u0621 \u0628\u0646\u062a \u0623\u0628\u064a \u0628\u0643\u0631", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM246", "lat": 24.5606828008027, "lon": 46.5485760569573, "osmid": 221409262, "road_name": "\u0623\u062d\u0645\u062f \u0628\u0646 \u0627\u0644\u062e\u0637\u0627\u0628", "road_direction": "E", "site_direction": "S"}, {"site_id": "RUHSM247", "lat": 24.5608462580163, "lon": 46.5485733747482, "osmid": 221409269, "road_name": "\u0623\u062d\u0645\u062f \u0628\u0646 \u0627\u0644\u062e\u0637\u0627\u0628", "road_direction": "W", "site_direction": "N"}, {"site_id": "RUHSM248", "lat": 24.5591532055241, "lon": 46.5682715177536, "osmid": 221409262, "road_name": "\u0623\u062d\u0645\u062f \u0628\u0646 \u0627\u0644\u062e\u0637\u0627\u0628", "road_direction": "E", "site_direction": "S"}, {"site_id": "RUHSM249", "lat": 24.5593190901152, "lon": 46.5683010220528, "osmid": 221409269, "road_name": "\u0623\u062d\u0645\u062f \u0628\u0646 \u0627\u0644\u062e\u0637\u0627\u0628", "road_direction": "W", "site_direction": "N"}, {"site_id": "RUHSM250", "lat": 24.7962287009035, "lon": 46.7782375216484, "osmid": 907881758, "road_name": "\u0627\u0644\u0625\u0645\u0627\u0645 \u0639\u0628\u062f \u0627\u0644\u0644\u0647 \u0628\u0646 \u0633\u0639\u0648\u062f \u0628\u0646 \u0639\u0628\u062f \u0627\u0644\u0639\u0632\u064a\u0632", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM251", "lat": 24.7963431075156, "lon": 46.778157055378, "osmid": 1325482371, "road_name": "\u0627\u0644\u0625\u0645\u0627\u0645 \u0639\u0628\u062f \u0627\u0644\u0644\u0647 \u0628\u0646 \u0633\u0639\u0648\u062f \u0628\u0646 \u0639\u0628\u062f \u0627\u0644\u0639\u0632\u064a\u0632", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM252", "lat": 24.6506762784333, "lon": 46.7848706245422, "osmid": 1062814357, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u062f\u064a\u0646\u0629 \u0627\u0644\u0645\u0646\u0648\u0631\u0629", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM253", "lat": 24.6505348901065, "lon": 46.7849349975586, "osmid": 1043372229, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u062f\u064a\u0646\u0629 \u0627\u0644\u0645\u0646\u0648\u0631\u0629", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM254", "lat": 24.6017820953835, "lon": 46.6995683312416, "osmid": 170394217, "road_name": "\u0627\u0644\u0633\u0648\u064a\u062f\u064a \u0627\u0644\u0639\u0627\u0645", "road_direction": "E", "site_direction": "E"}, {"site_id": "RUHSM255", "lat": 24.6019428426154, "lon": 46.6995227336884, "osmid": 170394216, "road_name": "\u0627\u0644\u0633\u0648\u064a\u062f\u064a \u0627\u0644\u0639\u0627\u0645", "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHSM257", "lat": 24.5417677210066, "lon": 46.6960680484772, "osmid": 160652587, "road_name": "\u0627\u0644\u062e\u0644\u064a\u0644 \u0628\u0646 \u0623\u062d\u0645\u062f", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM258", "lat": 24.5416505969815, "lon": 46.6959768533707, "osmid": 160652581, "road_name": "\u0627\u0644\u062e\u0644\u064a\u0644 \u0628\u0646 \u0623\u062d\u0645\u062f", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM260", "lat": 24.6184495728811, "lon": 46.5350738167763, "osmid": 569617231, "road_name": "\u0637\u0631\u064a\u0642 \u0646\u062c\u062f", "road_direction": "NW", "site_direction": "W"}, {"site_id": "RUHSM261", "lat": 24.8220580564739, "lon": 46.8324986100197, "osmid": 330252795, "road_name": "\u0627\u0644\u0625\u0645\u0627\u0645 \u0639\u0628\u062f \u0627\u0644\u0644\u0647 \u0628\u0646 \u0633\u0639\u0648\u062f \u0628\u0646 \u0639\u0628\u062f \u0627\u0644\u0639\u0632\u064a\u0632", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM262", "lat": 24.7625659273025, "lon": 46.8108746409416, "osmid": 569545367, "road_name": "\u0634\u0627\u0631\u0639 \u0633\u0644\u0645\u0627\u0646 \u0627\u0644\u0641\u0627\u0631\u0633\u064a", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM263", "lat": 24.7625074578522, "lon": 46.810756623745, "osmid": 784215129, "road_name": "\u0634\u0627\u0631\u0639 \u0633\u0644\u0645\u0627\u0646 \u0627\u0644\u0641\u0627\u0631\u0633\u064a", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM265", "lat": 24.6282468000288, "lon": 46.5544849634171, "osmid": 157633404, "road_name": "Najran", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM266", "lat": 24.621812214839, "lon": 46.5321287512779, "osmid": 311983874, "road_name": "\u0637\u0631\u064a\u0642 \u0646\u062c\u062f", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM267", "lat": 24.8855940582138, "lon": 46.7199504375458, "osmid": 83257224, "road_name": null, "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM268", "lat": 24.5686427243791, "lon": 46.5279042720795, "osmid": 221408573, "road_name": "Suliman Bin Abdulmalek Bin Marvan", "road_direction": "E", "site_direction": "S"}, {"site_id": "RUHSM269", "lat": 24.56878873, "lon": 46.52792484, "osmid": 283817377, "road_name": "\u0633\u0644\u064a\u0645\u0627\u0646 \u0628\u0646 \u0639\u0628\u062f\u0627\u0644\u0645\u0644\u0643 \u0628\u0646 \u0645\u0631\u0648\u0627\u0646", "road_direction": "W", "site_direction": "N"}, {"site_id": "RUHSM270", "lat": 24.6423900305582, "lon": 46.7355823516846, "osmid": 41036178, "road_name": null, "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM271", "lat": 24.7657883617786, "lon": 46.7543041706085, "osmid": 592455422, "road_name": null, "road_direction": "E", "site_direction": "E"}, {"site_id": "RUHSM274", "lat": 24.8155925940606, "lon": 46.6353213787079, "osmid": 1306993966, "road_name": "\u0634\u0627\u0631\u0639 \u0623\u0646\u0633 \u0628\u0646 \u0645\u0627\u0644\u0643", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM275", "lat": 24.8347697001099, "lon": 46.7905327677727, "osmid": 135184942, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0634\u064a\u062e \u062c\u0627\u0628\u0631 \u0627\u0644\u0623\u062d\u0645\u062f \u0627\u0644\u0635\u0628\u0627\u062d", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM276", "lat": 24.8346966545502, "lon": 46.7903396487236, "osmid": 161612199, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0634\u064a\u062e \u062c\u0627\u0628\u0631 \u0627\u0644\u0623\u062d\u0645\u062f \u0627\u0644\u0635\u0628\u0627\u062d", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM278", "lat": 24.6766160926836, "lon": 46.8499436974526, "osmid": 160842543, "road_name": "\u0634\u0627\u0631\u0639 \u0634\u0628\u0647 \u0627\u0644\u062c\u0632\u064a\u0631\u0629", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM279", "lat": 24.6765527121673, "lon": 46.8497881293297, "osmid": 160842542, "road_name": "\u0634\u0627\u0631\u0639 \u0634\u0628\u0647 \u0627\u0644\u062c\u0632\u064a\u0631\u0629", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM280", "lat": 24.8184475122469, "lon": 46.8023881316185, "osmid": 135184942, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0634\u064a\u062e \u062c\u0627\u0628\u0631 \u0627\u0644\u0623\u062d\u0645\u062f \u0627\u0644\u0635\u0628\u0627\u062d", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM281", "lat": 24.8183549901527, "lon": 46.8022164702416, "osmid": 161612199, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0634\u064a\u062e \u062c\u0627\u0628\u0631 \u0627\u0644\u0623\u062d\u0645\u062f \u0627\u0644\u0635\u0628\u0627\u062d", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM286", "lat": 24.6720829180904, "lon": 46.5581783652306, "osmid": 157290974, "road_name": "\u0627\u0644\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u063a\u0631\u0628\u064a", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM287", "lat": 24.6433213464037, "lon": 46.5461325645447, "osmid": 157633395, "road_name": "\u0627\u0644\u0637\u0627\u0626\u0641", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM290", "lat": 24.6155723237174, "lon": 46.7154604196549, "osmid": 782720189, "road_name": "\u0634\u0627\u0631\u0639 \u0627\u0644 \u0641\u0631\u064a\u0627\u0646", "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM291", "lat": 24.6155430622212, "lon": 46.7153263092041, "osmid": 47594560, "road_name": "\u0634\u0627\u0631\u0639 \u0627\u0644 \u0641\u0631\u064a\u0627\u0646", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM292", "lat": 24.6999315543658, "lon": 46.7230913043022, "osmid": 245588766, "road_name": "\u0637\u0631\u064a\u0642 \u0635\u0644\u0627\u062d \u0627\u0644\u062f\u064a\u0646 \u0627\u0644\u0623\u064a\u0648\u0628\u064a", "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM296", "lat": 24.7779751316449, "lon": 46.7809116840363, "osmid": 960096953, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0639\u0628\u062f\u0627\u0644\u0644\u0647", "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHSM304", "lat": 24.7020076530006, "lon": 46.6487458348274, "osmid": 39452629, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0639\u0631\u0648\u0628\u0629", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM305", "lat": 24.8371752096259, "lon": 46.6561380028725, "osmid": 784415515, "road_name": "\u0637\u0631\u064a\u0642 \u0623\u0628\u064a \u0628\u0643\u0631 \u0627\u0644\u0635\u062f\u064a\u0642", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM306", "lat": 24.7059527461551, "lon": 46.6575327515602, "osmid": 993747681, "road_name": null, "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHSM308", "lat": 24.6226168155053, "lon": 46.5494531393051, "osmid": 569617231, "road_name": "\u0637\u0631\u064a\u0642 \u0646\u062c\u062f", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM312", "lat": 25.0212345764591, "lon": 46.6135954856873, "osmid": 329180210, "road_name": null, "road_direction": "E", "site_direction": "E"}, {"site_id": "RUHSM313", "lat": 25.0214120108395, "lon": 46.6135391592979, "osmid": 329180192, "road_name": null, "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHSM315", "lat": 24.5423701171962, "lon": 46.7042890191078, "osmid": 160652668, "road_name": "Al-Khaleefa Al Mamoun", "road_direction": "SW", "site_direction": "S"}, {"site_id": "RUHSM316", "lat": 24.5422652060434, "lon": 46.7044472694397, "osmid": 1074157499, "road_name": null, "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM325", "lat": 24.5786754649118, "lon": 46.741595864296, "osmid": 189200767, "road_name": "An-Nasar Road", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM326", "lat": 24.5788146164014, "lon": 46.7415341734886, "osmid": 189200765, "road_name": "An-Nasar Road", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM336", "lat": 24.9067906009768, "lon": 46.977547109127, "osmid": 534322625, "road_name": "\u0637\u0631\u064a\u0642 \u062e\u0631\u064a\u0635", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM337", "lat": 24.9066907889091, "lon": 46.9776409864426, "osmid": 534322620, "road_name": "\u0637\u0631\u064a\u0642 \u062e\u0631\u064a\u0635", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM340", "lat": 24.9288681103428, "lon": 46.7166620492935, "osmid": 8422980, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0633\u0644\u0645\u0627\u0646", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM345", "lat": 24.6962883540936, "lon": 46.8563032150269, "osmid": 181124359, "road_name": "\u0627\u0644\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u062b\u0627\u0646\u064a", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM350", "lat": 24.7642247877842, "lon": 46.6931256651878, "osmid": 381435555, "road_name": "\u0637\u0631\u064a\u0642 \u0623\u0628\u064a \u0628\u0643\u0631 \u0627\u0644\u0635\u062f\u064a\u0642", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM358", "lat": 24.7884113106178, "lon": 46.6334706544876, "osmid": 1308657825, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0641\u0647\u062f", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM359", "lat": 24.7553980581506, "lon": 46.6502237319946, "osmid": 160652487, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0641\u0647\u062f", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM360", "lat": 24.5945431171705, "lon": 46.7034012079239, "osmid": 263936134, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0641\u0647\u062f", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM368", "lat": 24.6352978544649, "lon": 46.6226264834404, "osmid": 159100558, "road_name": "\u0627\u0644\u0623\u0645\u064a\u0631 \u0623\u062d\u0645\u062f \u0628\u0646 \u0639\u0628\u062f\u0627\u0644\u0639\u0632\u064a\u0632", "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHSM369", "lat": 24.6351466822632, "lon": 46.6227042675018, "osmid": 784032557, "road_name": "\u0627\u0644\u0623\u0645\u064a\u0631 \u0623\u062d\u0645\u062f \u0628\u0646 \u0639\u0628\u062f\u0627\u0644\u0639\u0632\u064a\u0632", "road_direction": "E", "site_direction": "E"}, {"site_id": "RUHSM380", "lat": 24.841429643951, "lon": 46.8063712120056, "osmid": 290143056, "road_name": "\u0648\u0627\u062f\u064a \u0627\u0644\u0633\u0627\u062d\u0644", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM381", "lat": 24.8413541914201, "lon": 46.8061780929566, "osmid": 804078603, "road_name": "\u0648\u0627\u062f\u064a \u0627\u0644\u0633\u0627\u062d\u0644", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM396", "lat": 24.3294130168959, "lon": 46.8735444545746, "osmid": 333185788, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0631\u064a\u0627\u0636 - \u062d\u0648\u0637\u0629 \u0628\u0646\u064a \u062a\u0645\u064a\u0645", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM397", "lat": 24.3294912044514, "lon": 46.8738126754761, "osmid": 638544359, "road_name": "\u0637\u0631\u064a\u0642 \u062d\u0648\u0637\u0629 \u0628\u0646\u064a \u062a\u0645\u064a\u0645 - \u0627\u0644\u0631\u064a\u0627\u0636", "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM432", "lat": 24.8907017220214, "lon": 46.8079134821892, "osmid": 40503715, "road_name": "Al Thumama", "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM433", "lat": 24.8907309072334, "lon": 46.8077713251114, "osmid": 158959596, "road_name": "Al Thumama", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM451", "lat": 24.6446348177146, "lon": 46.6930103302002, "osmid": 1011853741, "road_name": "\u0627\u0644\u0625\u0645\u0627\u0645 \u0639\u0628\u062f\u0627\u0644\u0639\u0632\u064a\u0632 \u0628\u0646 \u0645\u062d\u0645\u062f \u0628\u0646 \u0633\u0639\u0648\u062f", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM452", "lat": 24.6443911519871, "lon": 46.6931363940239, "osmid": 1011853742, "road_name": "\u0627\u0644\u0625\u0645\u0627\u0645 \u0639\u0628\u062f\u0627\u0644\u0639\u0632\u064a\u0632 \u0628\u0646 \u0645\u062d\u0645\u062f \u0628\u0646 \u0633\u0639\u0648\u062f", "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM455", "lat": 24.5519562952254, "lon": 46.6132870316506, "osmid": 157711917, "road_name": "\u0646\u062c\u0645 \u0627\u0644\u062f\u064a\u0646 \u0627\u0644\u0623\u064a\u0648\u0628\u064a", "road_direction": "E", "site_direction": "E"}, {"site_id": "RUHSM456", "lat": 24.5520953694537, "lon": 46.6132897138596, "osmid": 157711908, "road_name": "\u0646\u062c\u0645 \u0627\u0644\u062f\u064a\u0646 \u0627\u0644\u0623\u064a\u0648\u0628\u064a", "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHSM458", "lat": 24.8195554339359, "lon": 46.7520859837532, "osmid": 380064395, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0634\u064a\u062e \u062d\u0633\u0646 \u0628\u0646 \u062d\u0633\u064a\u0646 \u0628\u0646 \u0639\u0644\u064a", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM459", "lat": 24.5847343246958, "lon": 46.6552877426148, "osmid": 593400804, "road_name": "\u0639\u0627\u0626\u0634\u0629 \u0628\u0646\u062a \u0623\u0628\u064a \u0628\u0643\u0631", "road_direction": "SE", "site_direction": "E"}, {"site_id": "RUHSM460", "lat": 24.5848514020341, "lon": 46.6554942727089, "osmid": 227478645, "road_name": "\u0639\u0627\u0626\u0634\u0629 \u0628\u0646\u062a \u0623\u0628\u064a \u0628\u0643\u0631", "road_direction": "NW", "site_direction": "W"}, {"site_id": "RUHSM467", "lat": 24.6270665833972, "lon": 46.5201660990715, "osmid": 157633395, "road_name": "\u0627\u0644\u0637\u0627\u0626\u0641", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM468", "lat": 24.6266960872229, "lon": 46.5199971199036, "osmid": 297443438, "road_name": "Al Taief", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM525", "lat": 25.012863802906, "lon": 46.6809833049774, "osmid": 47515665, "road_name": null, "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHSM526", "lat": 25.0128613773877, "lon": 46.6811040043831, "osmid": 157905711, "road_name": null, "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM530", "lat": 24.6072056361663, "lon": 46.660198867321, "osmid": 43541904, "road_name": "\u0637\u0631\u064a\u0642 \u0645\u0639\u0627\u0648\u064a\u0629 \u0627\u0628\u0646 \u0623\u0628\u064a \u0633\u0641\u064a\u0627\u0646", "road_direction": "NE", "site_direction": "N"}, {"site_id": "RUHSM531", "lat": 24.6073153598916, "lon": 46.6601157188416, "osmid": 159100615, "road_name": "\u0637\u0631\u064a\u0642 \u0645\u0639\u0627\u0648\u064a\u0629 \u0627\u0628\u0646 \u0623\u0628\u064a \u0633\u0641\u064a\u0627\u0646", "road_direction": "SW", "site_direction": "S"}, {"site_id": "RUHSM540", "lat": 24.625494022299, "lon": 46.6844916343689, "osmid": 43538480, "road_name": "\u0627\u0644\u0623\u0645\u064a\u0631 \u0641\u0647\u062f \u0628\u0646 \u0641\u064a\u0635\u0644 \u0628\u0646 \u0641\u0631\u062d\u0627\u0646 \u0622\u0644 \u0633\u0639\u0648\u062f", "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHSM541", "lat": 24.6253794264026, "lon": 46.6844862699509, "osmid": 159100590, "road_name": "\u0627\u0644\u0623\u0645\u064a\u0631 \u0641\u0647\u062f \u0628\u0646 \u0641\u064a\u0635\u0644 \u0628\u0646 \u0641\u0631\u062d\u0627\u0646 \u0622\u0644 \u0633\u0639\u0648\u062f", "road_direction": "E", "site_direction": "E"}, {"site_id": "RUHSM542", "lat": 24.9065182947864, "lon": 46.6434082388878, "osmid": 327796126, "road_name": "\u0637\u0631\u064a\u0642 \u0639\u062b\u0645\u0627\u0646 \u0628\u0646 \u0639\u0641\u0627\u0646", "road_direction": "NW", "site_direction": "W"}, {"site_id": "RUHSM543", "lat": 24.9064526219956, "lon": 46.6431882977486, "osmid": 327796126, "road_name": "\u0637\u0631\u064a\u0642 \u0639\u062b\u0645\u0627\u0646 \u0628\u0646 \u0639\u0641\u0627\u0646", "road_direction": "SE", "site_direction": "E"}, {"site_id": "RUHSM546", "lat": 24.7902436855305, "lon": 46.8545919656754, "osmid": 973250690, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0633\u0644\u0637\u0627\u0646 \u0642\u0627\u0628\u0648\u0633 \u0628\u0646 \u0633\u0639\u064a\u062f", "road_direction": "NW", "site_direction": "W"}, {"site_id": "RUHSM547", "lat": 24.7901097595178, "lon": 46.8544578552246, "osmid": 973250691, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0633\u0644\u0637\u0627\u0646 \u0642\u0627\u0628\u0648\u0633 \u0628\u0646 \u0633\u0639\u064a\u062f", "road_direction": "SE", "site_direction": "E"}, {"site_id": "RUHSM555", "lat": 24.8721018851866, "lon": 46.6604670882225, "osmid": 327796126, "road_name": "\u0637\u0631\u064a\u0642 \u0639\u062b\u0645\u0627\u0646 \u0628\u0646 \u0639\u0641\u0627\u0646", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHSM556", "lat": 24.8720069697679, "lon": 46.6602981090546, "osmid": 327796126, "road_name": "\u0637\u0631\u064a\u0642 \u0639\u062b\u0645\u0627\u0646 \u0628\u0646 \u0639\u0641\u0627\u0646", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHSM559", "lat": 24.5441977464061, "lon": 46.8807810544968, "osmid": 69437219, "road_name": "\u0645\u062d\u0645\u062f \u0623\u0628\u064a \u0646\u0642\u0637\u0629", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHSM560", "lat": 24.5442490050968, "lon": 46.8806630373001, "osmid": 159112142, "road_name": "\u0645\u062d\u0645\u062f \u0623\u0628\u064a \u0646\u0642\u0637\u0629", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHSM576", "lat": 24.856359089514, "lon": 46.7374357581139, "osmid": 1173410458, "road_name": null, "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHSM577", "lat": 24.8563639531407, "lon": 46.7373177409172, "osmid": 846319608, "road_name": null, "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHTE304", "lat": 24.5842414097686, "lon": 46.7537328600884, "osmid": 1241331970, "road_name": null, "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHTE305", "lat": 24.5903877908723, "lon": 46.7684072256088, "osmid": 709216195, "road_name": "An-Nasar Road", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHTE306", "lat": 24.5905317003463, "lon": 46.7683106660843, "osmid": 1029308359, "road_name": "An-Nasar Road", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHTE309", "lat": 24.6524997358911, "lon": 46.837058365345, "osmid": 156738144, "road_name": "\u0634\u0627\u0631\u0639 \u0627\u0633\u0637\u0646\u0628\u0648\u0644", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHTE311", "lat": 24.6064936135113, "lon": 46.7306846380234, "osmid": 783359058, "road_name": "\u0627\u0644\u0628\u0637\u062d\u0627\u0621", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHTE312", "lat": 24.7251035336184, "lon": 46.846419274807, "osmid": 52438808, "road_name": "\u0634\u0627\u0631\u0639 \u0623\u0628\u064a \u0647\u0631\u064a\u0631\u0629", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHTE313", "lat": 24.7251863658135, "lon": 46.8465641140938, "osmid": 52438804, "road_name": "\u0634\u0627\u0631\u0639 \u0623\u0628\u064a \u0647\u0631\u064a\u0631\u0629", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHTE315", "lat": 24.6141750770559, "lon": 46.8200236558914, "osmid": 40994368, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062e\u0631\u062c \u0627\u0644\u0633\u0631\u064a\u0639", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHTE316", "lat": 24.6142896999613, "lon": 46.8201014399529, "osmid": 40994378, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u062e\u0631\u062c \u0627\u0644\u0633\u0631\u064a\u0639", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHTE317", "lat": 24.6667255799159, "lon": 46.5599271655083, "osmid": 261538844, "road_name": "\u0627\u0644\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u063a\u0631\u0628\u064a", "road_direction": "N", "site_direction": "N"}, {"site_id": "RUHTE318", "lat": 24.8014076405187, "lon": 46.7830601334572, "osmid": 1325482382, "road_name": "\u0627\u0644\u0635\u062d\u0627\u0628\u0629", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHTE319", "lat": 24.8013516499019, "lon": 46.7829152941704, "osmid": 789258821, "road_name": "\u0627\u0644\u0635\u062d\u0627\u0628\u0629", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHTE320", "lat": 24.5822390462004, "lon": 46.800848543644, "osmid": 638609491, "road_name": "Arfat", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHTE321", "lat": 24.5821049042435, "lon": 46.8009102344513, "osmid": 638609503, "road_name": "Arfat", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHTE325", "lat": 24.8405124734256, "lon": 46.6326740384102, "osmid": 327896575, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0639\u0628\u062f\u0627\u0644\u0639\u0632\u064a\u0632 \u0627\u0644\u0641\u0631\u0639\u064a", "road_direction": "S", "site_direction": "S"}, {"site_id": "RUHTE326", "lat": 24.84056807361, "lon": 46.632821559906, "osmid": 158922799, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0639\u0628\u062f\u0627\u0644\u0639\u0632\u064a\u0632", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHTE327", "lat": 25.0019957881179, "lon": 46.5249887108803, "osmid": 877978064, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0641\u0647\u062f", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHTE329", "lat": 24.7977018282743, "lon": 46.6402861475945, "osmid": 1308643706, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0625\u0645\u0627\u0645 \u0633\u0639\u0648\u062f \u0628\u0646 \u0641\u064a\u0635\u0644", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHTE330", "lat": 24.7980061369433, "lon": 46.6402700543404, "osmid": 1308643692, "road_name": null, "road_direction": "W", "site_direction": "W"}, {"site_id": "RUHTE331", "lat": 24.5881342040044, "lon": 46.6691654920578, "osmid": 98046729, "road_name": null, "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHTE332", "lat": 24.6438528149027, "lon": 46.5914431214333, "osmid": 784032550, "road_name": "\u0637\u0631\u064a\u0642 \u062c\u062f\u0629", "road_direction": "SW", "site_direction": "W"}, {"site_id": "RUHTE333", "lat": 24.643733326556, "lon": 46.5916550159454, "osmid": 783932744, "road_name": "\u0637\u0631\u064a\u0642 \u062c\u062f\u0629", "road_direction": "NE", "site_direction": "E"}, {"site_id": "RUHTE334", "lat": 24.6315966143575, "lon": 46.8755158782005, "osmid": 331033536, "road_name": "\u0627\u0644\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u062b\u0627\u0646\u064a", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHTE335", "lat": 24.6308021511539, "lon": 46.8756607174873, "osmid": 258320760, "road_name": "\u0627\u0644\u0637\u0631\u064a\u0642 \u0627\u0644\u062f\u0627\u0626\u0631\u064a \u0627\u0644\u062b\u0627\u0646\u064a", "road_direction": "SE", "site_direction": "S"}, {"site_id": "RUHTE336", "lat": 24.9054087603904, "lon": 46.5742716193199, "osmid": 977379016, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0641\u0647\u062f", "road_direction": "NW", "site_direction": "N"}, {"site_id": "RUHTE337", "lat": 24.9053406696483, "lon": 46.5741160511971, "osmid": 977379017, "road_name": "\u0637\u0631\u064a\u0642 \u0627\u0644\u0645\u0644\u0643 \u0641\u0647\u062f", "road_direction": "SE", "site_direction": "S"}];
 
-let map, directionsService, directionsRenderer;
-
-function init() {
-    // Stats
-    document.getElementById('totalSites').textContent = SITES.length;
-    document.getElementById('northSites').textContent = SITES.filter(s => s.site_direction === 'N').length;
-    document.getElementById('southSites').textContent = SITES.filter(s => s.site_direction === 'S').length;
-    document.getElementById('ewSites').textContent = SITES.filter(s => s.site_direction === 'E' || s.site_direction === 'W').length;
-    
-    // Site table
-    const tbody = document.getElementById('siteTableBody');
-    SITES.forEach((s, i) => {
-        const dirClass = 'dir-' + (s.site_direction || 'X');
-        tbody.innerHTML += '<tr>' +
-            '<td>' + (i + 1) + '</td>' +
-            '<td><strong>' + s.site_id + '</strong></td>' +
-            '<td><span class="direction-badge ' + dirClass + '">' + (s.site_direction || '?') + '</span></td>' +
-            '<td>' + s.lat.toFixed(6) + '</td>' +
-            '<td>' + s.lon.toFixed(6) + '</td>' +
-            '<td style="direction:rtl;font-size:0.8rem;">' + (s.road_name || '-') + '</td>' +
-        '</tr>';
-    });
-    
-    // JSON preview
-    const preview = {
-        total_sites: SITES.length,
-        sample_site: SITES[0],
-        all_fields: Object.keys(SITES[0]),
-        directions_breakdown: {
-            N: SITES.filter(s => s.site_direction === 'N').length,
-            S: SITES.filter(s => s.site_direction === 'S').length,
-            E: SITES.filter(s => s.site_direction === 'E').length,
-            W: SITES.filter(s => s.site_direction === 'W').length
-        }
-    };
-    document.getElementById('jsonPreview').textContent = JSON.stringify(preview, null, 2);
-    
-    // Dropdowns
-    const origin = document.getElementById('testOrigin');
-    const dest = document.getElementById('testDest');
-    SITES.forEach((s, i) => {
-        const opt = '<option value="' + i + '">' + s.site_id + ' (' + (s.site_direction || '?') + ')</option>';
-        origin.innerHTML += opt;
-        dest.innerHTML += opt;
-    });
-}
+let map, markers = [], directionsService, directionsRenderer;
 
 function initMap() {
-    map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: 24.7136, lng: 46.6753 },
-        zoom: 10
+    // Stats
+    document.getElementById('totalSites').textContent = SITES.length;
+    document.getElementById('nSites').textContent = SITES.filter(s => s.site_direction === 'N').length;
+    document.getElementById('sSites').textContent = SITES.filter(s => s.site_direction === 'S').length;
+    document.getElementById('eSites').textContent = SITES.filter(s => s.site_direction === 'E').length;
+    document.getElementById('wSites').textContent = SITES.filter(s => s.site_direction === 'W').length;
+    
+    // Site table
+    const tbody = document.getElementById('siteTable');
+    SITES.forEach((s, i) => {
+        tbody.innerHTML += '<tr><td>' + i + '</td><td><b>' + s.site_id + '</b></td>' +
+            '<td><span class="dir-badge dir-' + s.site_direction + '">' + s.site_direction + '</span></td>' +
+            '<td>' + s.lat.toFixed(4) + '</td><td>' + s.lon.toFixed(4) + '</td></tr>';
     });
+    
+    // Dropdowns
+    const oSel = document.getElementById('originSel');
+    const dSel = document.getElementById('destSel');
+    SITES.forEach((s, i) => {
+        const opt = '<option value="' + i + '">' + s.site_id + ' (' + s.site_direction + ')</option>';
+        oSel.innerHTML += opt;
+        dSel.innerHTML += opt;
+    });
+    
+    // Map
+    map = new google.maps.Map(document.getElementById('map'), { center: {lat: 24.7136, lng: 46.6753}, zoom: 10 });
     directionsService = new google.maps.DirectionsService();
-    directionsRenderer = new google.maps.DirectionsRenderer({ map: map });
+    directionsRenderer = new google.maps.DirectionsRenderer({ map, suppressMarkers: true });
     
-    // Add markers for all sites
-    SITES.forEach(s => {
-        new google.maps.Marker({
-            position: { lat: s.lat, lng: s.lon },
-            map: map,
-            title: s.site_id
-        });
+    SITES.forEach((s, i) => {
+        const m = new google.maps.Marker({ position: {lat: s.lat, lng: s.lon}, map, title: s.site_id });
+        markers.push(m);
     });
-    
-    init();
 }
 
-function testRoute() {
-    const iA = parseInt(document.getElementById('testOrigin').value);
-    const iB = parseInt(document.getElementById('testDest').value);
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function findWaypoints(route, startIdx, endIdx) {
+    const startDir = SITES[startIdx].site_direction;
+    const path = route.overview_path;
+    const found = [];
     
-    if (isNaN(iA) || isNaN(iB)) {
-        alert('Please select both origin and destination');
+    SITES.forEach((site, idx) => {
+        if (idx === startIdx || idx === endIdx) return;
+        if (site.site_direction !== startDir) return;
+        
+        let minDist = Infinity, pathIdx = 0;
+        for (let i = 0; i < path.length; i++) {
+            const d = haversine(site.lat, site.lon, path[i].lat(), path[i].lng());
+            if (d < minDist) { minDist = d; pathIdx = i; }
+        }
+        if (minDist < 0.03) found.push({ idx, pathIdx });
+    });
+    
+    return found.sort((a, b) => a.pathIdx - b.pathIdx);
+}
+
+async function getGoogleRoute(i, j) {
+    return new Promise(resolve => {
+        directionsService.route({
+            origin: {lat: SITES[i].lat, lng: SITES[i].lon},
+            destination: {lat: SITES[j].lat, lng: SITES[j].lon},
+            travelMode: 'DRIVING'
+        }, (res, status) => {
+            if (status === 'OK') {
+                const leg = res.routes[0].legs[0];
+                resolve({ dist: leg.distance.value / 1000, time: leg.duration.value / 60, route: res.routes[0] });
+            } else {
+                resolve({ error: status });
+            }
+        });
+    });
+}
+
+async function testRoute() {
+    const iA = parseInt(document.getElementById('originSel').value);
+    const iB = parseInt(document.getElementById('destSel').value);
+    
+    if (isNaN(iA) || isNaN(iB)) { alert('Select both sites'); return; }
+    if (iA === iB) { alert('Select different sites'); return; }
+    
+    const panel = document.getElementById('resultPanel');
+    const content = document.getElementById('resultContent');
+    panel.style.display = 'block';
+    content.innerHTML = '<div class="loading">Loading from Google Maps...</div>';
+    
+    // Reset markers
+    markers.forEach(m => m.setIcon(null));
+    markers[iA].setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
+    markers[iB].setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
+    
+    // Get main route
+    const main = await getGoogleRoute(iA, iB);
+    if (main.error) {
+        content.innerHTML = '<div style="color:red;">Error: ' + main.error + '</div>';
         return;
     }
     
-    if (iA === iB) {
-        alert('Please select different sites');
-        return;
+    directionsRenderer.setDirections({ routes: [main.route], request: { travelMode: 'DRIVING' } });
+    
+    // Find waypoints
+    const waypoints = findWaypoints(main.route, iA, iB);
+    waypoints.forEach(w => markers[w.idx].setIcon('http://maps.google.com/mapfiles/ms/icons/orange-dot.png'));
+    
+    // Build stop list
+    const stops = [iA, ...waypoints.map(w => w.idx), iB];
+    
+    // Get all trip segments from Google
+    const trips = [];
+    for (let i = 0; i < stops.length - 1; i++) {
+        const from = stops[i], to = stops[i + 1];
+        const r = await getGoogleRoute(from, to);
+        trips.push({ from, to, dist: r.dist || 0, time: r.time || 0 });
     }
     
-    const sA = SITES[iA];
-    const sB = SITES[iB];
+    // Calculate totals
+    const totalDist = trips.reduce((sum, t) => sum + t.dist, 0);
+    const totalTime = trips.reduce((sum, t) => sum + t.time, 0);
     
-    const resultBox = document.getElementById('resultBox');
-    resultBox.className = 'result-box show';
-    document.getElementById('resultTitle').textContent = 'Loading...';
-    document.getElementById('resultDist').textContent = '...';
-    document.getElementById('resultTime').textContent = '...';
+    // Build HTML
+    let html = '<div class="result-header">' +
+        '<span class="result-title">' + SITES[iA].site_id + ' → ' + SITES[iB].site_id + '</span>' +
+        '</div>' +
+        '<div class="result-totals">' +
+        '<div class="result-total"><div class="result-num">' + totalDist.toFixed(1) + '</div><div class="result-unit">km total</div></div>' +
+        '<div class="result-total"><div class="result-num">' + Math.round(totalTime) + '</div><div class="result-unit">min total</div></div>' +
+        '<div class="result-total"><div class="result-num">' + stops.length + '</div><div class="result-unit">stops</div></div>' +
+        '<div class="result-total"><div class="result-num">' + trips.length + '</div><div class="result-unit">trips</div></div>' +
+        '</div>';
     
-    directionsService.route({
-        origin: { lat: sA.lat, lng: sA.lon },
-        destination: { lat: sB.lat, lng: sB.lon },
-        travelMode: 'DRIVING'
-    }, (response, status) => {
-        if (status === 'OK') {
-            directionsRenderer.setDirections(response);
-            
-            const leg = response.routes[0].legs[0];
-            const distKm = (leg.distance.value / 1000).toFixed(1);
-            const timeMin = Math.round(leg.duration.value / 60);
-            
-            document.getElementById('resultTitle').textContent = sA.site_id + ' → ' + sB.site_id + ' (Google Maps)';
-            document.getElementById('resultDist').textContent = distKm;
-            document.getElementById('resultTime').textContent = timeMin;
-            resultBox.className = 'result-box show';
-        } else {
-            document.getElementById('resultTitle').textContent = 'ERROR: ' + status;
-            document.getElementById('resultDist').textContent = '--';
-            document.getElementById('resultTime').textContent = '--';
-            resultBox.className = 'result-box show error';
+    html += '<div class="waypoints-list">';
+    
+    stops.forEach((idx, i) => {
+        const s = SITES[idx];
+        const cls = i === 0 ? 'start' : i === stops.length - 1 ? 'end' : '';
+        const icon = i === 0 ? 'A' : i === stops.length - 1 ? 'B' : i;
+        
+        html += '<div class="waypoint ' + cls + '">' +
+            '<div class="wp-icon">' + icon + '</div>' +
+            '<div class="wp-info">' +
+            '<div class="wp-name">' + s.site_id + ' (' + s.site_direction + ')</div>' +
+            '<div class="wp-road">' + (s.road_name || '') + '</div>' +
+            '</div></div>';
+        
+        if (i < trips.length) {
+            const t = trips[i];
+            html += '<div class="trip-seg">' +
+                '<span class="label">Trip ' + (i + 1) + ': ' + SITES[t.from].site_id + ' → ' + SITES[t.to].site_id + '</span>' +
+                '<span class="values">' + t.dist.toFixed(1) + ' km, ' + Math.round(t.time) + ' min</span>' +
+                '</div>';
         }
     });
+    
+    html += '</div>';
+    content.innerHTML = html;
+    
+    // Fit map
+    const bounds = new google.maps.LatLngBounds();
+    stops.forEach(idx => bounds.extend({lat: SITES[idx].lat, lng: SITES[idx].lon}));
+    map.fitBounds(bounds, 50);
 }
     </script>
     <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
