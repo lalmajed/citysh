@@ -518,7 +518,7 @@ const DATA = {"sites": [{"site_id": "RUHSM001", "lat": 24.7403322023658, "lon": 
         function initMap() {
             map = L.map('map').setView([24.7136, 46.6753], 10);
             
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap &copy; CARTO',
                 maxZoom: 19
             }).addTo(map);
