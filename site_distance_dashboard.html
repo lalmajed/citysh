@@ -589,7 +589,7 @@ const DATA = {"sites": [{"site_id": "RUHSM001", "lat": 24.7403322023658, "lon": 
             highlightMatrixCell(idxA, idxB);
         }
         
-        function highlightRoute(idxA, idxB) {
+        async function highlightRoute(idxA, idxB) {
             Object.values(markers).forEach(m => {
                 m.setStyle({ fillColor: '#60a5fa', radius: 5 });
             });
@@ -606,20 +606,47 @@ const DATA = {"sites": [{"site_id": "RUHSM001", "lat": 24.7403322023658, "lon": 
             const siteA = DATA.sites[idxA];
             const siteB = DATA.sites[idxB];
             
-            routeLine = L.polyline([
-                [siteA.lat, siteA.lon],
-                [siteB.lat, siteB.lon]
-            ], {
-                color: '#a855f7',
-                weight: 4,
-                dashArray: '10, 5'
-            }).addTo(map);
-            
-            const bounds = L.latLngBounds([
-                [siteA.lat, siteA.lon],
-                [siteB.lat, siteB.lon]
-            ]);
-            map.fitBounds(bounds, { padding: [50, 50] });
+            // Fetch actual road route from OSRM
+            try {
+                const url = `https://router.project-osrm.org/route/v1/driving/${siteA.lon},${siteA.lat};${siteB.lon},${siteB.lat}?overview=full&geometries=geojson`;
+                const resp = await fetch(url);
+                const data = await resp.json();
+                
+                if (data.code === 'Ok' && data.routes && data.routes[0]) {
+                    const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                    routeLine = L.polyline(coords, {
+                        color: '#a855f7',
+                        weight: 5,
+                        opacity: 0.8
+                    }).addTo(map);
+                    map.fitBounds(routeLine.getBounds(), { padding: [50, 50] });
+                } else {
+                    // Fallback to straight line
+                    routeLine = L.polyline([
+                        [siteA.lat, siteA.lon],
+                        [siteB.lat, siteB.lon]
+                    ], {
+                        color: '#a855f7',
+                        weight: 4,
+                        dashArray: '10, 5'
+                    }).addTo(map);
+                    const bounds = L.latLngBounds([[siteA.lat, siteA.lon], [siteB.lat, siteB.lon]]);
+                    map.fitBounds(bounds, { padding: [50, 50] });
+                }
+            } catch (e) {
+                console.error('Route fetch failed:', e);
+                // Fallback to straight line
+                routeLine = L.polyline([
+                    [siteA.lat, siteA.lon],
+                    [siteB.lat, siteB.lon]
+                ], {
+                    color: '#a855f7',
+                    weight: 4,
+                    dashArray: '10, 5'
+                }).addTo(map);
+                const bounds = L.latLngBounds([[siteA.lat, siteA.lon], [siteB.lat, siteB.lon]]);
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
         }
         
         function populateSiteList(filter = '') {
