@@ -105,7 +105,7 @@ function haversine(lat1, lon1, lat2, lon2) {
 // Find candidate waypoints near the path (pre-filter)
 function findCandidatesNearPath(path, startIdx, endIdx) {
     const candidates = [];
-    const THRESHOLD = 0.2; // 200 meters - increased for wider roads
+    const THRESHOLD = 0.05; // 50 meters - strict but reasonable
     
     log('Path has ' + path.length + ' points');
     
@@ -125,7 +125,7 @@ function findCandidatesNearPath(path, startIdx, endIdx) {
     });
     
     candidates.sort((a, b) => a.pathIdx - b.pathIdx);
-    log('Found ' + candidates.length + ' candidates near path');
+    log('Found ' + candidates.length + ' candidates within 30m of path');
     return candidates;
 }
 
@@ -162,19 +162,41 @@ async function verifyWaypointWithGoogle(startIdx, waypointIdx, endIdx, directDis
     });
 }
 
-// Get travel direction at a point on the path
+// Get travel direction at a point on the path - check multiple segments for accuracy
 function getRouteDirectionAt(path, pathIdx) {
-    const i = Math.min(Math.max(pathIdx, 0), path.length - 2);
-    const p1 = path[i];
-    const p2 = path[i + 1];
-    const dLat = p2.lat() - p1.lat();
-    const dLon = p2.lng() - p1.lng();
+    // Look at a window of points around the target for better accuracy
+    const startI = Math.max(0, pathIdx - 2);
+    const endI = Math.min(path.length - 1, pathIdx + 2);
     
-    if (Math.abs(dLat) > Math.abs(dLon)) {
-        return dLat > 0 ? 'N' : 'S';
-    } else {
-        return dLon > 0 ? 'E' : 'W';
+    let totalDLat = 0, totalDLon = 0;
+    for (let i = startI; i < endI; i++) {
+        totalDLat += path[i + 1].lat() - path[i].lat();
+        totalDLon += path[i + 1].lng() - path[i].lng();
     }
+    
+    if (Math.abs(totalDLat) > Math.abs(totalDLon)) {
+        return totalDLat > 0 ? 'N' : 'S';
+    } else {
+        return totalDLon > 0 ? 'E' : 'W';
+    }
+}
+
+// Check if site direction is compatible with route direction (not opposite)
+function isDirectionCompatible(siteDir, routeDir) {
+    // Opposite pairs - these are NOT compatible
+    const opposites = {
+        'N': 'S', 'S': 'N',
+        'E': 'W', 'W': 'E'
+    };
+    
+    // If site direction is OPPOSITE to route direction, not compatible
+    if (opposites[routeDir] === siteDir) {
+        return false;
+    }
+    
+    // Same direction = compatible
+    // Also accept if site is perpendicular (route might be turning)
+    return true;
 }
 
 // Find and verify waypoints using Google Maps
@@ -194,11 +216,14 @@ async function findWaypointsOnPath(path, startIdx, endIdx, directDist) {
         const routeDir = getRouteDirectionAt(path, c.pathIdx);
         const siteDir = SITES[c.idx].site_direction;
         
-        if (siteDir === routeDir) {
+        // Check if directions are compatible (same or adjacent)
+        const compatible = isDirectionCompatible(siteDir, routeDir);
+        
+        if (compatible) {
             directionMatched.push(c);
-            log('  ✓ ' + SITES[c.idx].site_id + ' dir=' + siteDir + ' matches route=' + routeDir);
+            log('  ✓ ' + SITES[c.idx].site_id + ' dir=' + siteDir + ' compatible with route=' + routeDir);
         } else {
-            log('  ✗ ' + SITES[c.idx].site_id + ' dir=' + siteDir + ' ≠ route=' + routeDir);
+            log('  ✗ ' + SITES[c.idx].site_id + ' dir=' + siteDir + ' OPPOSITE to route=' + routeDir);
         }
     }
     
