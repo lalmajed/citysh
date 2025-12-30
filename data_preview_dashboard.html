@@ -72,7 +72,10 @@
                 </div>
                 
                 <div class="panel">
-                    <h2>Recent Cached Routes</h2>
+                    <h2>Cached Routes (from Matrix Builder)</h2>
+                    <div style="margin-bottom:10px;">
+                        <button class="btn" style="padding:8px;font-size:0.8rem;" onclick="refreshData()">Refresh Cache</button>
+                    </div>
                     <div class="cached-list" id="cachedList">
                         <div class="no-data">Loading...</div>
                     </div>
@@ -138,8 +141,14 @@ function saveCache() {
 
 function updateStats() {
     const count = Object.keys(CACHE.dist).length;
+    const wpCount = Object.keys(CACHE.waypoints).length;
     document.getElementById('totalCached').textContent = count.toLocaleString();
     document.getElementById('percentDone').textContent = ((count / 60762) * 100).toFixed(1) + '%';
+}
+
+function refreshData() {
+    loadCache();
+    alert('Cache refreshed! ' + Object.keys(CACHE.dist).length + ' routes, ' + Object.keys(CACHE.waypoints).length + ' with waypoints');
 }
 
 function initMap() {
@@ -311,15 +320,36 @@ async function showRoute() {
         directionsRenderer.setDirections(res);
         
         const directDist = route.legs[0].distance.value / 1000;
+        const directTime = route.legs[0].duration.value / 60;
         const logDiv = document.getElementById('verifyLog');
+        const cacheKey = iA + '_' + iB;
         
-        // VERIFY waypoints using Google Maps
+        // Check if we have CACHED waypoints from Matrix Builder
+        const cachedWaypoints = CACHE.waypoints[cacheKey] || [];
+        
         logDiv.innerHTML = '<div><strong>Route: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id + '</strong></div>';
-        logDiv.innerHTML += '<div>Direct distance: ' + directDist.toFixed(2) + ' km</div><hr>';
+        logDiv.innerHTML += '<div>Distance: ' + directDist.toFixed(2) + ' km | Time: ' + Math.round(directTime) + ' min</div><hr>';
         
-        const waypointIdxs = await findAndVerifyWaypoints(route.overview_path, iA, iB, directDist, logDiv);
+        let waypointIdxs;
         
-        logDiv.innerHTML += '<hr><div><strong>VERIFIED: ' + waypointIdxs.length + ' waypoints on route</strong></div>';
+        if (cachedWaypoints.length > 0) {
+            // USE CACHED WAYPOINTS from Matrix Builder
+            waypointIdxs = cachedWaypoints;
+            logDiv.innerHTML += '<div style="color:#4caf50;font-weight:bold;">Using CACHED waypoints from Matrix Builder:</div>';
+            waypointIdxs.forEach(idx => {
+                logDiv.innerHTML += '<div style="color:#4caf50;">  ✓ ' + SITES[idx].site_id + ' (' + SITES[idx].site_direction + ')</div>';
+            });
+        } else if (CACHE.dist[cacheKey] !== undefined) {
+            // Route is cached but has NO waypoints
+            waypointIdxs = [];
+            logDiv.innerHTML += '<div style="color:#ff9800;">Route cached - NO waypoints on this route</div>';
+        } else {
+            // Not cached - verify now
+            logDiv.innerHTML += '<div style="color:#2196f3;">Route NOT cached - verifying waypoints now...</div>';
+            waypointIdxs = await findAndVerifyWaypoints(route.overview_path, iA, iB, directDist, logDiv);
+        }
+        
+        logDiv.innerHTML += '<hr><div><strong>WAYPOINTS: ' + waypointIdxs.length + '</strong></div>';
         
         waypointIdxs.forEach(idx => markers[idx].setIcon('http://maps.google.com/mapfiles/ms/icons/orange-dot.png'));
         
