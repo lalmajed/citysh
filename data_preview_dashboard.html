@@ -116,6 +116,13 @@ function loadCache() {
     renderCachedList();
 }
 
+function saveCache() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(CACHE));
+        updateStats();
+    } catch(e) { console.error('Save failed', e); }
+}
+
 function updateStats() {
     const count = Object.keys(CACHE.dist).length;
     document.getElementById('totalCached').textContent = count.toLocaleString();
@@ -242,7 +249,7 @@ async function showRoute() {
             if (CACHE.dist[key] !== undefined) {
                 trips.push({ from, to, dist: CACHE.dist[key], time: CACHE.time[key], cached: true });
             } else {
-                // Fetch from Google
+                // Fetch from Google and SAVE to cache
                 const r = await new Promise(resolve => {
                     directionsService.route({
                         origin: {lat: SITES[from].lat, lng: SITES[from].lon},
@@ -255,6 +262,12 @@ async function showRoute() {
                         } else resolve({ dist: 0, time: 0 });
                     });
                 });
+                // Save to cache!
+                if (r.dist > 0) {
+                    CACHE.dist[key] = r.dist;
+                    CACHE.time[key] = r.time;
+                    saveCache();
+                }
                 trips.push({ from, to, dist: r.dist, time: r.time, cached: false });
             }
         }
