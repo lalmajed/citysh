@@ -14,55 +14,57 @@
         .main-content { display: flex; flex-direction: column; overflow: hidden; }
         #map { width: 100%; flex: 1; }
         .section-title { font-size: 0.9rem; font-weight: 600; color: #2563eb; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
-        .site-list { max-height: 150px; overflow-y: auto; margin-bottom: 15px; }
+        .site-list { max-height: 120px; overflow-y: auto; margin-bottom: 15px; }
         .site-item { padding: 8px 10px; margin: 4px 0; background: #f8fafc; border-radius: 6px; cursor: pointer; font-size: 0.8rem; border: 1px solid #e2e8f0; }
         .site-item:hover { background: #e2e8f0; }
         .site-item.selected { background: #dbeafe; border-left: 3px solid #2563eb; }
         .site-item .site-id { font-weight: 600; }
         .site-item .site-road { color: #64748b; font-size: 0.75rem; direction: rtl; }
         .selection-panel { background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
-        .selection-row { display: flex; gap: 10px; align-items: flex-end; }
+        .selection-row { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 10px; }
         .selection-box { flex: 1; }
         .selection-box label { display: block; font-size: 0.75rem; color: #64748b; margin-bottom: 4px; }
-        .selection-box select { width: 100%; padding: 8px; background: #fff; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.8rem; }
+        .selection-box select, .selection-box input { width: 100%; padding: 8px; background: #fff; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.8rem; }
         .swap-btn { background: #e2e8f0; border: none; color: #64748b; padding: 8px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; }
         .search-box { margin-bottom: 15px; }
         .search-box input { width: 100%; padding: 10px; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; }
         .routes-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .route-card { border-radius: 8px; padding: 12px; border: 2px solid; cursor: pointer; }
-        .route-card.distance { background: #f0fdf4; border-color: #22c55e; }
-        .route-card.time { background: #faf5ff; border-color: #a855f7; }
-        .route-card.active { box-shadow: 0 0 0 3px rgba(0,0,0,0.1); }
-        .route-card-title { font-size: 0.8rem; font-weight: 600; margin-bottom: 8px; }
-        .route-card.distance .route-card-title { color: #166534; }
-        .route-card.time .route-card-title { color: #7c3aed; }
-        .route-card-values { display: flex; gap: 20px; }
+        .route-card { border-radius: 8px; padding: 12px; border: 2px solid; }
+        .route-card.osrm { background: #f0fdf4; border-color: #22c55e; }
+        .route-card.google { background: #faf5ff; border-color: #a855f7; }
+        .route-card-title { font-size: 0.75rem; font-weight: 600; margin-bottom: 8px; }
+        .route-card.osrm .route-card-title { color: #166534; }
+        .route-card.google .route-card-title { color: #7c3aed; }
+        .route-card-values { display: flex; gap: 15px; }
         .route-value { text-align: center; }
-        .route-value-num { font-size: 1.5rem; font-weight: 700; }
-        .route-card.distance .route-value-num { color: #16a34a; }
-        .route-card.time .route-value-num { color: #7c3aed; }
-        .route-value-unit { font-size: 0.7rem; color: #64748b; }
-        .route-breakdown { background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; max-height: 300px; overflow-y: auto; }
+        .route-value-num { font-size: 1.3rem; font-weight: 700; }
+        .route-card.osrm .route-value-num { color: #16a34a; }
+        .route-card.google .route-value-num { color: #7c3aed; }
+        .route-value-unit { font-size: 0.65rem; color: #64748b; }
+        .route-breakdown { background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; max-height: 250px; overflow-y: auto; }
         .route-breakdown-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; display: flex; justify-content: space-between; }
         .route-breakdown-title span { font-weight: normal; color: #64748b; font-size: 0.75rem; }
         .waypoint { display: flex; align-items: center; padding: 8px; background: #fff; border-radius: 6px; margin: 4px 0; border-left: 4px solid #f59e0b; }
         .waypoint.start { border-left-color: #22c55e; }
         .waypoint.end { border-left-color: #ef4444; }
-        .waypoint-icon { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; margin-right: 10px; color: white; background: #f59e0b; }
+        .waypoint-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.65rem; margin-right: 8px; color: white; background: #f59e0b; }
         .waypoint.start .waypoint-icon { background: #22c55e; }
         .waypoint.end .waypoint-icon { background: #ef4444; }
         .waypoint-info { flex: 1; }
-        .waypoint-site { font-weight: 600; font-size: 0.85rem; }
-        .waypoint-road { font-size: 0.7rem; color: #64748b; direction: rtl; }
-        .trip-segment { background: #e0f2fe; padding: 6px 10px; margin: 2px 0; border-radius: 4px; font-size: 0.75rem; color: #0369a1; display: flex; justify-content: space-between; }
+        .waypoint-site { font-weight: 600; font-size: 0.8rem; }
+        .waypoint-road { font-size: 0.65rem; color: #64748b; direction: rtl; }
+        .trip-segment { background: #e0f2fe; padding: 5px 8px; margin: 2px 0; border-radius: 4px; font-size: 0.7rem; color: #0369a1; display: flex; justify-content: space-between; }
         .no-waypoints { text-align: center; padding: 20px; color: #94a3b8; font-size: 0.85rem; }
-        .route-dir-info { background: #fef3c7; padding: 8px 12px; border-radius: 6px; margin-bottom: 10px; font-size: 0.8rem; color: #92400e; }
-        .matrix-source { background: #dbeafe; padding: 6px 10px; border-radius: 4px; font-size: 0.7rem; color: #1e40af; margin-bottom: 10px; }
+        .route-dir-info { background: #fef3c7; padding: 6px 10px; border-radius: 6px; margin-bottom: 8px; font-size: 0.75rem; color: #92400e; }
+        .traffic-info { background: #dbeafe; padding: 8px 10px; border-radius: 6px; margin-bottom: 10px; font-size: 0.75rem; color: #1e40af; }
+        .traffic-info.error { background: #fee2e2; color: #b91c1c; }
+        .time-row { display: flex; gap: 8px; }
+        .time-row .selection-box { flex: 1; }
     </style>
 </head>
 <body>
     <div class="container">
-        <header><h1>Riyadh Sites - Shortest Path (OSRM Matrix)</h1></header>
+        <header><h1>Riyadh Sites - Route with Traffic</h1></header>
         <div class="sidebar">
             <div class="section-title">Select Route</div>
             <div class="selection-panel">
@@ -77,29 +79,51 @@
                         <select id="siteB"><option value="">-- Select --</option></select>
                     </div>
                 </div>
+                <div class="time-row">
+                    <div class="selection-box">
+                        <label>Departure Date</label>
+                        <input type="date" id="departDate" value="2025-12-30">
+                    </div>
+                    <div class="selection-box">
+                        <label>Departure Time</label>
+                        <input type="time" id="departTime" value="08:00">
+                    </div>
+                    <div class="selection-box">
+                        <label>Traffic Model</label>
+                        <select id="trafficModel">
+                            <option value="bestguess">Best Guess</option>
+                            <option value="pessimistic">Pessimistic</option>
+                            <option value="optimistic">Optimistic</option>
+                        </select>
+                    </div>
+                </div>
             </div>
+            
+            <div class="traffic-info" id="trafficInfo">Google Maps traffic: Not yet requested</div>
+            
             <div class="routes-comparison">
-                <div class="route-card distance active" id="distCard" onclick="showRoute('distance')">
-                    <div class="route-card-title">From Matrix (OSRM)</div>
+                <div class="route-card osrm">
+                    <div class="route-card-title">OSRM Matrix (no traffic)</div>
                     <div class="route-card-values">
-                        <div class="route-value"><div class="route-value-num" id="distKm">--</div><div class="route-value-unit">km</div></div>
-                        <div class="route-value"><div class="route-value-num" id="distMin">--</div><div class="route-value-unit">min</div></div>
+                        <div class="route-value"><div class="route-value-num" id="osrmKm">--</div><div class="route-value-unit">km</div></div>
+                        <div class="route-value"><div class="route-value-num" id="osrmMin">--</div><div class="route-value-unit">min</div></div>
                     </div>
                 </div>
-                <div class="route-card time" id="timeCard" onclick="showRoute('time')">
-                    <div class="route-card-title">Google Maps Route</div>
+                <div class="route-card google">
+                    <div class="route-card-title">Google Maps (with traffic)</div>
                     <div class="route-card-values">
-                        <div class="route-value"><div class="route-value-num" id="timeKm">--</div><div class="route-value-unit">km</div></div>
-                        <div class="route-value"><div class="route-value-num" id="timeMin">--</div><div class="route-value-unit">min</div></div>
+                        <div class="route-value"><div class="route-value-num" id="googleKm">--</div><div class="route-value-unit">km</div></div>
+                        <div class="route-value"><div class="route-value-num" id="googleMin">--</div><div class="route-value-unit">min</div></div>
                     </div>
                 </div>
             </div>
+            
             <div class="route-breakdown">
                 <div class="route-breakdown-title">Route Breakdown <span id="stopCount"></span></div>
-                <div class="matrix-source">Trip distances from pre-calculated OSRM road network matrix</div>
                 <div id="routeDirInfo"></div>
                 <div id="breakdownContent"><div class="no-waypoints">Select two sites to see route</div></div>
             </div>
+            
             <div class="section-title">All Sites (<span id="filteredCount">247</span>)</div>
             <div class="search-box"><input type="text" id="searchInput" placeholder="Search sites..."></div>
             <div class="site-list" id="siteList"></div>
@@ -113,7 +137,6 @@ const TIME_MATRIX = [[0.0, 7.2, 10.2, 10.7, 11.7, 28.8, 37.8, 15.1, 16.2, 10.6, 
 
 let map, markers = [], selectedA = null, selectedB = null;
 let gmapsRoute = null, renderer = null;
-let currentView = 'distance';
 
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), {
@@ -137,6 +160,9 @@ function initMap() {
         selB.innerHTML += opt;
     });
     selA.onchange = selB.onchange = calcRoute;
+    document.getElementById('departDate').onchange = calcRoute;
+    document.getElementById('departTime').onchange = calcRoute;
+    document.getElementById('trafficModel').onchange = calcRoute;
     updateSiteList();
 }
 
@@ -186,27 +212,73 @@ function calcRoute() {
     const sA = SITES[iA], sB = SITES[iB];
     
     // Show OSRM matrix values
-    const osrmDist = DIST_MATRIX[iA][iB];
-    const osrmTime = TIME_MATRIX[iA][iB];
-    document.getElementById('distKm').textContent = osrmDist.toFixed(1);
-    document.getElementById('distMin').textContent = Math.round(osrmTime);
+    document.getElementById('osrmKm').textContent = DIST_MATRIX[iA][iB].toFixed(1);
+    document.getElementById('osrmMin').textContent = Math.round(TIME_MATRIX[iA][iB]);
     
     // Reset markers
     markers.forEach(m => m.setIcon(null));
     markers[iA].setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
     markers[iB].setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
     
-    // Get Google route for visualization
-    new google.maps.DirectionsService().route({
+    // Build departure time
+    const dateStr = document.getElementById('departDate').value;
+    const timeStr = document.getElementById('departTime').value;
+    const trafficModel = document.getElementById('trafficModel').value;
+    const departureTime = new Date(dateStr + 'T' + timeStr + ':00');
+    
+    const trafficInfo = document.getElementById('trafficInfo');
+    trafficInfo.className = 'traffic-info';
+    trafficInfo.textContent = `Requesting route for ${departureTime.toLocaleString()}...`;
+    
+    // Try with drivingOptions
+    const request = {
         origin: {lat: sA.lat, lng: sA.lon},
         destination: {lat: sB.lat, lng: sB.lon},
-        travelMode: 'DRIVING'
-    }, (res, status) => {
+        travelMode: 'DRIVING',
+        drivingOptions: {
+            departureTime: departureTime,
+            trafficModel: trafficModel
+        }
+    };
+    
+    new google.maps.DirectionsService().route(request, (res, status) => {
+        console.log('DirectionsService response:', status, res);
+        
         if (status === 'OK') {
             gmapsRoute = res.routes[0];
-            document.getElementById('timeKm').textContent = (gmapsRoute.legs[0].distance.value / 1000).toFixed(1);
-            document.getElementById('timeMin').textContent = Math.round(gmapsRoute.legs[0].duration.value / 60);
-            showRoute(currentView);
+            const leg = gmapsRoute.legs[0];
+            
+            document.getElementById('googleKm').textContent = (leg.distance.value / 1000).toFixed(1);
+            
+            // Check if duration_in_traffic is available
+            if (leg.duration_in_traffic) {
+                document.getElementById('googleMin').textContent = Math.round(leg.duration_in_traffic.value / 60);
+                trafficInfo.textContent = `Traffic data available! Departure: ${departureTime.toLocaleString()}, Model: ${trafficModel}`;
+            } else {
+                document.getElementById('googleMin').textContent = Math.round(leg.duration.value / 60);
+                trafficInfo.textContent = `No traffic data (duration_in_traffic not returned). Using standard duration.`;
+                trafficInfo.className = 'traffic-info error';
+            }
+            
+            showRoute();
+        } else {
+            trafficInfo.textContent = `Error: ${status}. Trying without traffic options...`;
+            trafficInfo.className = 'traffic-info error';
+            
+            // Fallback without drivingOptions
+            new google.maps.DirectionsService().route({
+                origin: {lat: sA.lat, lng: sA.lon},
+                destination: {lat: sB.lat, lng: sB.lon},
+                travelMode: 'DRIVING'
+            }, (res2, status2) => {
+                if (status2 === 'OK') {
+                    gmapsRoute = res2.routes[0];
+                    document.getElementById('googleKm').textContent = (gmapsRoute.legs[0].distance.value / 1000).toFixed(1);
+                    document.getElementById('googleMin').textContent = Math.round(gmapsRoute.legs[0].duration.value / 60);
+                    trafficInfo.textContent = `Fallback: No traffic data available with keyless API`;
+                    showRoute();
+                }
+            });
         }
     });
     
@@ -238,40 +310,27 @@ function findWaypoints(route, startIdx, endIdx) {
             if (d < minDist) { minDist = d; pathIdx = i; }
         }
         
-        if (minDist < 0.03) {
-            found.push({ idx, site, pathIdx });
-        }
+        if (minDist < 0.03) found.push({ idx, site, pathIdx });
     });
     
-    // Sort by position along path
     found.sort((a, b) => a.pathIdx - b.pathIdx);
     return found;
 }
 
-function showRoute(type) {
-    currentView = type;
-    document.getElementById('distCard').classList.toggle('active', type === 'distance');
-    document.getElementById('timeCard').classList.toggle('active', type === 'time');
-    
+function showRoute() {
     if (renderer) renderer.setMap(null);
     if (!gmapsRoute) return;
     
     renderer = new google.maps.DirectionsRenderer({
         map: map, suppressMarkers: true,
-        polylineOptions: { strokeColor: '#22c55e', strokeWeight: 5, strokeOpacity: 0.8 }
+        polylineOptions: { strokeColor: '#a855f7', strokeWeight: 5, strokeOpacity: 0.8 }
     });
     renderer.setDirections({ routes: [gmapsRoute], request: { travelMode: 'DRIVING' } });
     
-    // Find waypoints
     const waypoints = findWaypoints(gmapsRoute, selectedA, selectedB);
-    waypoints.forEach(w => {
-        markers[w.idx].setIcon('http://maps.google.com/mapfiles/ms/icons/orange-dot.png');
-    });
+    waypoints.forEach(w => markers[w.idx].setIcon('http://maps.google.com/mapfiles/ms/icons/orange-dot.png'));
     
-    // Build breakdown with ACCURATE distances from matrix
     const sA = SITES[selectedA], sB = SITES[selectedB];
-    
-    // Build list of all stops with their indices
     const stopIndices = [selectedA, ...waypoints.map(w => w.idx), selectedB];
     const stops = stopIndices.map((idx, i) => ({ idx, site: SITES[idx], type: i === 0 ? 'start' : i === stopIndices.length - 1 ? 'end' : 'wp' }));
     
@@ -293,14 +352,9 @@ function showRoute(type) {
         </div>`;
         
         if (i < stops.length - 1) {
-            const fromIdx = stop.idx;
-            const toIdx = stops[i + 1].idx;
-            // USE THE OSRM MATRIX FOR ACCURATE DISTANCES!
-            const tripDist = DIST_MATRIX[fromIdx][toIdx];
-            const tripTime = TIME_MATRIX[fromIdx][toIdx];
-            totalDist += tripDist;
-            totalTime += tripTime;
-            
+            const tripDist = DIST_MATRIX[stop.idx][stops[i+1].idx];
+            const tripTime = TIME_MATRIX[stop.idx][stops[i+1].idx];
+            totalDist += tripDist; totalTime += tripTime;
             html += `<div class="trip-segment">
                 <span>Trip ${i+1}: ${stop.site.site_id} -> ${stops[i+1].site.site_id}</span>
                 <span>${tripDist.toFixed(1)} km, ${Math.round(tripTime)} min</span>
@@ -308,9 +362,8 @@ function showRoute(type) {
         }
     });
     
-    // Add total
-    html += `<div style="margin-top:10px; padding:10px; background:#f0fdf4; border-radius:6px; font-weight:600; color:#166534;">
-        Total: ${totalDist.toFixed(1)} km, ${Math.round(totalTime)} min
+    html += `<div style="margin-top:8px; padding:8px; background:#f0fdf4; border-radius:6px; font-weight:600; font-size:0.8rem; color:#166534;">
+        Total (OSRM): ${totalDist.toFixed(1)} km, ${Math.round(totalTime)} min
     </div>`;
     
     document.getElementById('breakdownContent').innerHTML = html;
