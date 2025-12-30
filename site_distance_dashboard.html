@@ -30,7 +30,6 @@
         .swap-btn { background: #e2e8f0; border: none; color: #64748b; padding: 8px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; }
         .search-box { margin-bottom: 15px; }
         .search-box input { width: 100%; padding: 10px; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; }
-        
         .route-result { background: #e8f0fe; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 2px solid #4285f4; }
         .route-result-title { font-size: 0.8rem; font-weight: 600; color: #4285f4; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
         .route-result-title .source-tag { font-size: 0.65rem; padding: 2px 8px; border-radius: 10px; background: #34a853; color: white; }
@@ -38,9 +37,7 @@
         .route-value { text-align: center; }
         .route-value-num { font-size: 2rem; font-weight: 700; color: #1a73e8; }
         .route-value-unit { font-size: 0.75rem; color: #64748b; }
-        
         .route-info-box { background: #e8f5e9; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 0.75rem; color: #2e7d32; border: 1px solid #a5d6a7; }
-        
         .route-breakdown { background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; max-height: 220px; overflow-y: auto; }
         .route-breakdown-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; display: flex; justify-content: space-between; }
         .route-breakdown-title span { font-weight: normal; color: #64748b; font-size: 0.75rem; }
@@ -58,27 +55,33 @@
         .trip-segment .trip-source { font-size: 0.6rem; background: #4285f4; color: white; padding: 1px 5px; border-radius: 8px; margin-left: 5px; }
         .trip-total { background: #e8f5e9; padding: 10px; border-radius: 6px; margin-top: 10px; font-weight: 600; color: #2e7d32; display: flex; justify-content: space-between; }
         .no-waypoints { text-align: center; padding: 15px; color: #94a3b8; font-size: 0.85rem; }
-        
         .toggle-btn { background: #4285f4; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; }
         .toggle-btn:hover { background: #3367d6; }
-        
         .matrix-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: white; z-index: 100; overflow: auto; display: none; }
         .matrix-overlay.show { display: block; }
-        .matrix-header { padding: 15px; background: #4285f4; color: white; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+        .matrix-header { padding: 15px; background: #4285f4; color: white; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; flex-wrap: wrap; gap: 10px; }
         .matrix-header h2 { font-size: 1rem; }
-        .matrix-actions { display: flex; gap: 10px; }
-        .matrix-btn { background: white; color: #4285f4; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
+        .matrix-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .matrix-btn { background: white; color: #4285f4; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.75rem; }
+        .matrix-btn.green { background: #34a853; color: white; }
+        .matrix-btn.orange { background: #ff9800; color: white; }
         .matrix-content { padding: 15px; }
-        .matrix-info { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .matrix-info { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
         .matrix-info-box { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; }
-        .matrix-info-value { font-size: 1.5rem; font-weight: 700; color: #4285f4; }
-        .matrix-info-label { font-size: 0.75rem; color: #666; }
+        .matrix-info-value { font-size: 1.3rem; font-weight: 700; color: #4285f4; }
+        .matrix-info-label { font-size: 0.7rem; color: #666; }
         .matrix-table { border-collapse: collapse; font-size: 0.65rem; }
         .matrix-table th, .matrix-table td { border: 1px solid #ddd; padding: 4px 6px; text-align: center; min-width: 45px; }
         .matrix-table th { background: #4285f4; color: white; position: sticky; top: 0; }
         .matrix-table td:first-child { background: #4285f4; color: white; font-weight: 600; position: sticky; left: 0; }
         .matrix-table td.cached { background: #e8f5e9; }
         .matrix-table td.empty { background: #fff3e0; color: #999; }
+        .download-section { background: #f0f4f8; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .download-section h3 { font-size: 0.9rem; margin-bottom: 10px; color: #333; }
+        .download-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+        .download-btns button { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; }
+        .download-btns .csv-btn { background: #34a853; color: white; }
+        .download-btns .json-btn { background: #4285f4; color: white; }
     </style>
 </head>
 <body>
@@ -86,7 +89,7 @@
         <header>
             <h1>Riyadh Sites - Google Maps</h1>
             <div class="header-stats">
-                <div class="header-stat">Routes cached: <strong id="cacheCount">0</strong></div>
+                <div class="header-stat">Cached: <strong id="cacheCount">0</strong></div>
                 <div class="header-stat">Total: <strong>61,009</strong></div>
             </div>
         </header>
@@ -105,66 +108,50 @@
                     </div>
                 </div>
             </div>
-            
             <div class="route-result">
-                <div class="route-result-title">
-                    Total Route (A to B)
-                    <span class="source-tag">Google Maps</span>
-                </div>
+                <div class="route-result-title">Total Route<span class="source-tag">Google Maps</span></div>
                 <div class="route-result-values">
-                    <div class="route-value">
-                        <div class="route-value-num" id="routeKm">--</div>
-                        <div class="route-value-unit">km</div>
-                    </div>
-                    <div class="route-value">
-                        <div class="route-value-num" id="routeMin">--</div>
-                        <div class="route-value-unit">min</div>
-                    </div>
+                    <div class="route-value"><div class="route-value-num" id="routeKm">--</div><div class="route-value-unit">km</div></div>
+                    <div class="route-value"><div class="route-value-num" id="routeMin">--</div><div class="route-value-unit">min</div></div>
                 </div>
             </div>
-            
-            <div class="route-info-box">
-                All distances from <strong>Google Maps</strong>. Routes auto-saved to matrix as you browse!
-            </div>
-            
+            <div class="route-info-box">All distances from <strong>Google Maps</strong>. Auto-saved to matrix!</div>
             <div class="route-breakdown">
                 <div class="route-breakdown-title">Trips & Waypoints <span id="stopCount"></span></div>
-                <div id="breakdownContent"><div class="no-waypoints">Select two sites to see route</div></div>
+                <div id="breakdownContent"><div class="no-waypoints">Select two sites</div></div>
             </div>
-            
-            <div class="section-title">
-                Sites (<span id="filteredCount">247</span>)
-                <button class="toggle-btn" onclick="toggleMatrix()">View Matrix</button>
-            </div>
-            <div class="search-box"><input type="text" id="searchInput" placeholder="Search sites..."></div>
+            <div class="section-title">Sites (<span id="filteredCount">247</span>)<button class="toggle-btn" onclick="toggleMatrix()">View Matrix</button></div>
+            <div class="search-box"><input type="text" id="searchInput" placeholder="Search..."></div>
             <div class="site-list" id="siteList"></div>
         </div>
         <div class="main-content">
             <div id="map"></div>
             <div class="matrix-overlay" id="matrixOverlay">
                 <div class="matrix-header">
-                    <h2>Google Maps Distance Matrix</h2>
+                    <h2>Google Maps Matrix</h2>
                     <div class="matrix-actions">
-                        <button class="matrix-btn" onclick="downloadMatrix()">Download JSON</button>
-                        <button class="matrix-btn" onclick="clearMatrix()">Clear</button>
                         <button class="matrix-btn" onclick="toggleMatrix()">Close</button>
                     </div>
                 </div>
                 <div class="matrix-content">
                     <div class="matrix-info">
-                        <div class="matrix-info-box">
-                            <div class="matrix-info-value" id="matrixCached">0</div>
-                            <div class="matrix-info-label">Cached</div>
-                        </div>
-                        <div class="matrix-info-box">
-                            <div class="matrix-info-value">61,009</div>
-                            <div class="matrix-info-label">Total</div>
-                        </div>
-                        <div class="matrix-info-box">
-                            <div class="matrix-info-value" id="matrixPercent">0%</div>
-                            <div class="matrix-info-label">Complete</div>
+                        <div class="matrix-info-box"><div class="matrix-info-value" id="matrixCached">0</div><div class="matrix-info-label">Cached</div></div>
+                        <div class="matrix-info-box"><div class="matrix-info-value">61,009</div><div class="matrix-info-label">Total</div></div>
+                        <div class="matrix-info-box"><div class="matrix-info-value" id="matrixPercent">0%</div><div class="matrix-info-label">Complete</div></div>
+                        <div class="matrix-info-box"><div class="matrix-info-value" id="matrixSites">247</div><div class="matrix-info-label">Sites</div></div>
+                    </div>
+                    
+                    <div class="download-section">
+                        <h3>Download Matrix Data</h3>
+                        <div class="download-btns">
+                            <button class="csv-btn" onclick="downloadDistanceCSV()">Distance Matrix (CSV)</button>
+                            <button class="csv-btn" onclick="downloadTimeCSV()">Time Matrix (CSV)</button>
+                            <button class="csv-btn" onclick="downloadCoordinatesCSV()">Site Coordinates (CSV)</button>
+                            <button class="json-btn" onclick="downloadJSON()">Full Data (JSON)</button>
+                            <button class="matrix-btn orange" onclick="clearMatrix()">Clear Cache</button>
                         </div>
                     </div>
+                    
                     <div id="matrixTableContainer">Loading...</div>
                 </div>
             </div>
@@ -177,62 +164,99 @@ const TOTAL_ROUTES = 247 * 247 - 247;
 
 let googleMatrix = { dist: {}, time: {} };
 let map, markers = [], selectedA = null, selectedB = null;
-let gmapsRoute = null, renderer = null;
-let directionsService = null;
-let currentWaypoints = [];
+let gmapsRoute = null, renderer = null, directionsService = null;
 
 function loadCache() {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-        try { googleMatrix = JSON.parse(saved); } catch(e) { googleMatrix = { dist: {}, time: {} }; }
-    }
+    if (saved) { try { googleMatrix = JSON.parse(saved); } catch(e) {} }
     updateCacheCount();
 }
-
-function saveCache() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(googleMatrix));
-    updateCacheCount();
-}
-
-function updateCacheCount() {
-    const count = Object.keys(googleMatrix.dist).length;
-    document.getElementById('cacheCount').textContent = count.toLocaleString();
-}
-
+function saveCache() { localStorage.setItem(STORAGE_KEY, JSON.stringify(googleMatrix)); updateCacheCount(); }
+function updateCacheCount() { document.getElementById('cacheCount').textContent = Object.keys(googleMatrix.dist).length.toLocaleString(); }
 function getCacheKey(i, j) { return i + '_' + j; }
+function getCached(i, j) { const k = getCacheKey(i,j); return googleMatrix.dist[k] !== undefined ? { dist: googleMatrix.dist[k], time: googleMatrix.time[k] } : null; }
+function setCache(i, j, dist, time) { const k = getCacheKey(i,j); googleMatrix.dist[k] = dist; googleMatrix.time[k] = time; saveCache(); }
 
-function getCached(i, j) {
-    const key = getCacheKey(i, j);
-    if (googleMatrix.dist[key] !== undefined) {
-        return { dist: googleMatrix.dist[key], time: googleMatrix.time[key] };
+function downloadDistanceCSV() {
+    let csv = 'From/To,' + SITES.map(s => s.site_id).join(',') + '\n';
+    for (let i = 0; i < SITES.length; i++) {
+        let row = [SITES[i].site_id];
+        for (let j = 0; j < SITES.length; j++) {
+            if (i === j) row.push('0');
+            else {
+                const c = getCached(i, j);
+                row.push(c ? c.dist.toFixed(2) : '');
+            }
+        }
+        csv += row.join(',') + '\n';
     }
-    return null;
+    downloadFile(csv, 'google_distance_km.csv', 'text/csv');
 }
 
-function setCache(i, j, dist, time) {
-    const key = getCacheKey(i, j);
-    googleMatrix.dist[key] = dist;
-    googleMatrix.time[key] = time;
-    saveCache();
+function downloadTimeCSV() {
+    let csv = 'From/To,' + SITES.map(s => s.site_id).join(',') + '\n';
+    for (let i = 0; i < SITES.length; i++) {
+        let row = [SITES[i].site_id];
+        for (let j = 0; j < SITES.length; j++) {
+            if (i === j) row.push('0');
+            else {
+                const c = getCached(i, j);
+                row.push(c ? c.time.toFixed(1) : '');
+            }
+        }
+        csv += row.join(',') + '\n';
+    }
+    downloadFile(csv, 'google_time_min.csv', 'text/csv');
+}
+
+function downloadCoordinatesCSV() {
+    let csv = 'site_id,latitude,longitude,direction,road_name\n';
+    SITES.forEach(s => {
+        csv += s.site_id + ',' + s.lat + ',' + s.lon + ',' + (s.site_direction||'') + ',"' + (s.road_name||'').replace(/"/g,'""') + '"\n';
+    });
+    downloadFile(csv, 'site_coordinates.csv', 'text/csv');
+}
+
+function downloadJSON() {
+    const data = {
+        source: 'Google Maps DirectionsService',
+        description: 'Shortest TIME routes',
+        exported: new Date().toISOString(),
+        total_cached: Object.keys(googleMatrix.dist).length,
+        total_possible: TOTAL_ROUTES,
+        sites: SITES,
+        distance_km: googleMatrix.dist,
+        time_min: googleMatrix.time
+    };
+    downloadFile(JSON.stringify(data, null, 2), 'google_matrix.json', 'application/json');
+}
+
+function downloadFile(content, filename, type) {
+    const blob = new Blob([content], {type});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+
+function clearMatrix() {
+    if (confirm('Clear all cached routes?')) {
+        googleMatrix = { dist: {}, time: {} }; saveCache(); renderMatrix();
+    }
 }
 
 function initMap() {
     loadCache();
     map = new google.maps.Map(document.getElementById('map'), { center: {lat: 24.7136, lng: 46.6753}, zoom: 11 });
     directionsService = new google.maps.DirectionsService();
-    
     SITES.forEach((s, i) => {
-        const marker = new google.maps.Marker({ position: {lat: s.lat, lng: s.lon}, map, title: s.site_id });
-        marker.addListener('click', () => onMarkerClick(i));
-        markers.push(marker);
+        const m = new google.maps.Marker({ position: {lat: s.lat, lng: s.lon}, map, title: s.site_id });
+        m.addListener('click', () => onMarkerClick(i));
+        markers.push(m);
     });
-    
     const selA = document.getElementById('siteA'), selB = document.getElementById('siteB');
-    SITES.forEach((s, i) => {
-        const opt = '<option value="' + i + '">' + s.site_id + ' (' + (s.site_direction||'?') + ')</option>';
-        selA.innerHTML += opt;
-        selB.innerHTML += opt;
-    });
+    SITES.forEach((s, i) => { const o = '<option value="'+i+'">'+s.site_id+' ('+(s.site_direction||'?')+')</option>'; selA.innerHTML += o; selB.innerHTML += o; });
     selA.onchange = selB.onchange = calcRoute;
     updateSiteList();
 }
@@ -247,49 +271,30 @@ function renderMatrix() {
     const count = Object.keys(googleMatrix.dist).length;
     document.getElementById('matrixCached').textContent = count.toLocaleString();
     document.getElementById('matrixPercent').textContent = ((count/TOTAL_ROUTES)*100).toFixed(1)+'%';
-    
     const size = 30;
-    let html = '<table class="matrix-table"><thead><tr><th></th>';
-    for (let j = 0; j < size; j++) html += '<th>' + SITES[j].site_id.slice(-4) + '</th>';
+    let html = '<p style="margin-bottom:10px;color:#666;font-size:0.8rem;">Preview: 30x30 of 247x247. Green = cached from Google.</p>';
+    html += '<table class="matrix-table"><thead><tr><th></th>';
+    for (let j = 0; j < size; j++) html += '<th>'+SITES[j].site_id.slice(-4)+'</th>';
     html += '</tr></thead><tbody>';
     for (let i = 0; i < size; i++) {
-        html += '<tr><td>' + SITES[i].site_id.slice(-4) + '</td>';
+        html += '<tr><td>'+SITES[i].site_id.slice(-4)+'</td>';
         for (let j = 0; j < size; j++) {
-            if (i === j) { html += '<td>0</td>'; }
-            else {
-                const c = getCached(i, j);
-                html += c ? '<td class="cached">' + c.dist.toFixed(1) + '</td>' : '<td class="empty">-</td>';
-            }
+            if (i===j) html += '<td>0</td>';
+            else { const c = getCached(i,j); html += c ? '<td class="cached">'+c.dist.toFixed(1)+'</td>' : '<td class="empty">-</td>'; }
         }
         html += '</tr>';
     }
-    html += '</tbody></table><p style="margin-top:15px;color:#666;font-size:0.8rem;">30x30 preview. Green = Google cached.</p>';
+    html += '</tbody></table>';
     document.getElementById('matrixTableContainer').innerHTML = html;
 }
 
-function downloadMatrix() {
-    const blob = new Blob([JSON.stringify({
-        source: 'Google Maps', exported: new Date().toISOString(),
-        cached: Object.keys(googleMatrix.dist).length, sites: SITES, matrix: googleMatrix
-    }, null, 2)], {type: 'application/json'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-    a.download = 'google_matrix.json'; a.click();
-}
-
-function clearMatrix() {
-    if (confirm('Clear all cached routes?')) {
-        googleMatrix = { dist: {}, time: {} }; saveCache(); renderMatrix();
-    }
-}
-
-function updateSiteList(filter = '') {
+function updateSiteList(filter='') {
     const list = document.getElementById('siteList'), f = (filter||'').toLowerCase();
     let html = '', count = 0;
     SITES.forEach((s, i) => {
         if (!f || s.site_id.toLowerCase().includes(f) || (s.road_name||'').toLowerCase().includes(f)) {
             count++;
-            const sel = (i === selectedA || i === selectedB) ? 'selected' : '';
-            html += '<div class="site-item ' + sel + '" onclick="onSiteClick(' + i + ')"><div class="site-id">' + s.site_id + ' (' + (s.site_direction||'?') + ')</div><div class="site-road">' + (s.road_name||'') + '</div></div>';
+            html += '<div class="site-item '+(i===selectedA||i===selectedB?'selected':'')+'" onclick="onSiteClick('+i+')"><div class="site-id">'+s.site_id+' ('+(s.site_direction||'?')+')</div><div class="site-road">'+(s.road_name||'')+'</div></div>';
         }
     });
     list.innerHTML = html;
@@ -297,44 +302,28 @@ function updateSiteList(filter = '') {
 }
 
 function onMarkerClick(i) {
-    if (selectedA === null || (selectedA !== null && selectedB !== null)) {
-        selectedA = i; selectedB = null; document.getElementById('siteA').value = i;
-    } else {
-        selectedB = i; document.getElementById('siteB').value = i;
-    }
+    if (selectedA === null || (selectedA !== null && selectedB !== null)) { selectedA = i; selectedB = null; document.getElementById('siteA').value = i; }
+    else { selectedB = i; document.getElementById('siteB').value = i; }
     calcRoute();
 }
-
 function onSiteClick(i) { onMarkerClick(i); }
+function swapSites() { const a = document.getElementById('siteA'), b = document.getElementById('siteB'), t = a.value; a.value = b.value; b.value = t; calcRoute(); }
 
-function swapSites() {
-    const a = document.getElementById('siteA'), b = document.getElementById('siteB');
-    const t = a.value; a.value = b.value; b.value = t;
-    calcRoute();
-}
-
-function haversine(lat1, lon1, lat2, lon2) {
-    const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
-    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+function haversine(lat1,lon1,lat2,lon2) {
+    const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLon=(lon2-lon1)*Math.PI/180;
+    const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 
 function findWaypoints(route, startIdx, endIdx) {
-    const startDir = SITES[startIdx].site_direction;
-    const path = route.overview_path;
-    const found = [];
+    const startDir = SITES[startIdx].site_direction, path = route.overview_path, found = [];
     SITES.forEach((site, idx) => {
-        if (idx === startIdx || idx === endIdx) return;
-        if (site.site_direction !== startDir) return;
+        if (idx === startIdx || idx === endIdx || site.site_direction !== startDir) return;
         let minDist = Infinity, pathIdx = 0;
-        for (let i = 0; i < path.length; i++) {
-            const d = haversine(site.lat, site.lon, path[i].lat(), path[i].lng());
-            if (d < minDist) { minDist = d; pathIdx = i; }
-        }
+        for (let i = 0; i < path.length; i++) { const d = haversine(site.lat, site.lon, path[i].lat(), path[i].lng()); if (d < minDist) { minDist = d; pathIdx = i; } }
         if (minDist < 0.03) found.push({ idx, site, pathIdx });
     });
-    found.sort((a, b) => a.pathIdx - b.pathIdx);
-    return found;
+    return found.sort((a,b) => a.pathIdx - b.pathIdx);
 }
 
 async function fetchGoogleRoute(i, j) {
@@ -345,73 +334,45 @@ async function fetchGoogleRoute(i, j) {
             travelMode: 'DRIVING'
         }, (res, status) => {
             if (status === 'OK') {
-                const leg = res.routes[0].legs[0];
-                const dist = leg.distance.value / 1000;
-                const time = leg.duration.value / 60;
+                const leg = res.routes[0].legs[0], dist = leg.distance.value/1000, time = leg.duration.value/60;
                 setCache(i, j, dist, time);
                 resolve({ dist, time, route: res.routes[0] });
-            } else {
-                resolve({ dist: -1, time: -1, error: status });
-            }
+            } else resolve({ dist: -1, time: -1, error: status });
         });
     });
 }
 
 async function calcRoute() {
-    const iA = parseInt(document.getElementById('siteA').value);
-    const iB = parseInt(document.getElementById('siteB').value);
+    const iA = parseInt(document.getElementById('siteA').value), iB = parseInt(document.getElementById('siteB').value);
     if (isNaN(iA) || isNaN(iB) || iA === iB) return;
-    
     selectedA = iA; selectedB = iB;
-    
     markers.forEach(m => m.setIcon(null));
     markers[iA].setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
     markers[iB].setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
     
-    // Get main route from Google
     const mainResult = await fetchGoogleRoute(iA, iB);
-    if (mainResult.error) {
-        document.getElementById('routeKm').textContent = 'ERR';
-        document.getElementById('routeMin').textContent = 'ERR';
-        return;
-    }
+    if (mainResult.error) { document.getElementById('routeKm').textContent = 'ERR'; document.getElementById('routeMin').textContent = 'ERR'; return; }
     
     gmapsRoute = mainResult.route;
     document.getElementById('routeKm').textContent = mainResult.dist.toFixed(1);
     document.getElementById('routeMin').textContent = Math.round(mainResult.time);
     
-    // Show route on map
     if (renderer) renderer.setMap(null);
-    renderer = new google.maps.DirectionsRenderer({
-        map, suppressMarkers: true,
-        polylineOptions: { strokeColor: '#4285f4', strokeWeight: 5, strokeOpacity: 0.8 }
-    });
+    renderer = new google.maps.DirectionsRenderer({ map, suppressMarkers: true, polylineOptions: { strokeColor: '#4285f4', strokeWeight: 5, strokeOpacity: 0.8 } });
     renderer.setDirections({ routes: [gmapsRoute], request: { travelMode: 'DRIVING' } });
     
-    // Find waypoints
-    currentWaypoints = findWaypoints(gmapsRoute, iA, iB);
-    currentWaypoints.forEach(w => markers[w.idx].setIcon('http://maps.google.com/mapfiles/ms/icons/orange-dot.png'));
+    const waypoints = findWaypoints(gmapsRoute, iA, iB);
+    waypoints.forEach(w => markers[w.idx].setIcon('http://maps.google.com/mapfiles/ms/icons/orange-dot.png'));
     
-    // Build stop list
-    const stopIndices = [iA, ...currentWaypoints.map(w => w.idx), iB];
-    
-    // Show initial breakdown (with loading for trips)
+    const stopIndices = [iA, ...waypoints.map(w => w.idx), iB];
     renderBreakdown(stopIndices, {});
     
-    // Fetch all trip segments from Google
     const tripData = {};
     for (let i = 0; i < stopIndices.length - 1; i++) {
-        const from = stopIndices[i], to = stopIndices[i + 1];
-        const cached = getCached(from, to);
-        if (cached) {
-            tripData[from + '_' + to] = cached;
-        } else {
-            const result = await fetchGoogleRoute(from, to);
-            if (!result.error) {
-                tripData[from + '_' + to] = { dist: result.dist, time: result.time };
-            }
-        }
-        // Update display after each trip
+        const from = stopIndices[i], to = stopIndices[i+1];
+        const c = getCached(from, to);
+        if (c) tripData[from+'_'+to] = c;
+        else { const r = await fetchGoogleRoute(from, to); if (!r.error) tripData[from+'_'+to] = { dist: r.dist, time: r.time }; }
         renderBreakdown(stopIndices, tripData);
         await new Promise(r => setTimeout(r, 50));
     }
@@ -424,56 +385,20 @@ async function calcRoute() {
 }
 
 function renderBreakdown(stopIndices, tripData) {
-    const stops = stopIndices.map((idx, i) => ({
-        idx, site: SITES[idx],
-        type: i === 0 ? 'start' : i === stopIndices.length - 1 ? 'end' : 'wp'
-    }));
-    
-    document.getElementById('stopCount').textContent = stops.length + ' stops, ' + (stops.length - 1) + ' trips';
-    
-    let html = '';
-    let totalDist = 0, totalTime = 0, allLoaded = true;
-    
+    const stops = stopIndices.map((idx, i) => ({ idx, site: SITES[idx], type: i===0?'start':i===stopIndices.length-1?'end':'wp' }));
+    document.getElementById('stopCount').textContent = stops.length + ' stops, ' + (stops.length-1) + ' trips';
+    let html = '', totalDist = 0, totalTime = 0, allLoaded = true;
     stops.forEach((stop, i) => {
-        const cls = stop.type === 'start' ? 'start' : stop.type === 'end' ? 'end' : '';
-        const icon = stop.type === 'start' ? 'A' : stop.type === 'end' ? 'B' : i;
-        
-        html += '<div class="waypoint ' + cls + '">' +
-            '<div class="waypoint-icon">' + icon + '</div>' +
-            '<div class="waypoint-info">' +
-                '<div class="waypoint-site">' + stop.site.site_id + ' (' + stop.site.site_direction + ')</div>' +
-                '<div class="waypoint-road">' + (stop.site.road_name || '') + '</div>' +
-            '</div></div>';
-        
-        if (i < stops.length - 1) {
-            const from = stop.idx, to = stops[i + 1].idx;
-            const key = from + '_' + to;
-            const trip = tripData[key];
-            
-            if (trip) {
-                totalDist += trip.dist;
-                totalTime += trip.time;
-                html += '<div class="trip-segment">' +
-                    '<span>Trip ' + (i+1) + ': ' + stop.site.site_id + ' → ' + stops[i+1].site.site_id + '</span>' +
-                    '<span>' + trip.dist.toFixed(1) + ' km, ' + Math.round(trip.time) + ' min <span class="trip-source">Google</span></span>' +
-                '</div>';
-            } else {
-                allLoaded = false;
-                html += '<div class="trip-segment loading">' +
-                    '<span>Trip ' + (i+1) + ': ' + stop.site.site_id + ' → ' + stops[i+1].site.site_id + '</span>' +
-                    '<span>Loading from Google...</span>' +
-                '</div>';
-            }
+        const cls = stop.type==='start'?'start':stop.type==='end'?'end':'';
+        const icon = stop.type==='start'?'A':stop.type==='end'?'B':i;
+        html += '<div class="waypoint '+cls+'"><div class="waypoint-icon">'+icon+'</div><div class="waypoint-info"><div class="waypoint-site">'+stop.site.site_id+' ('+stop.site.site_direction+')</div><div class="waypoint-road">'+(stop.site.road_name||'')+'</div></div></div>';
+        if (i < stops.length-1) {
+            const key = stop.idx+'_'+stops[i+1].idx, trip = tripData[key];
+            if (trip) { totalDist += trip.dist; totalTime += trip.time; html += '<div class="trip-segment"><span>Trip '+(i+1)+': '+stop.site.site_id+' -> '+stops[i+1].site.site_id+'</span><span>'+trip.dist.toFixed(1)+' km, '+Math.round(trip.time)+' min <span class="trip-source">Google</span></span></div>'; }
+            else { allLoaded = false; html += '<div class="trip-segment loading"><span>Trip '+(i+1)+': '+stop.site.site_id+' -> '+stops[i+1].site.site_id+'</span><span>Loading...</span></div>'; }
         }
     });
-    
-    if (allLoaded && stops.length > 1) {
-        html += '<div class="trip-total">' +
-            '<span>Total (' + (stops.length - 1) + ' trips)</span>' +
-            '<span>' + totalDist.toFixed(1) + ' km, ' + Math.round(totalTime) + ' min</span>' +
-        '</div>';
-    }
-    
+    if (allLoaded && stops.length > 1) html += '<div class="trip-total"><span>Total ('+( stops.length-1)+' trips)</span><span>'+totalDist.toFixed(1)+' km, '+Math.round(totalTime)+' min</span></div>';
     document.getElementById('breakdownContent').innerHTML = html;
 }
 
