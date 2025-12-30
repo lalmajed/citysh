@@ -36,22 +36,39 @@
     <div class="container">
         <div class="sidebar">
             <div class="panel">
-                <h2>1. SELECT ORIGIN</h2>
+                <h2>PARALLEL EXTRACTION (with waypoint verification)</h2>
+                <div style="margin-bottom:10px;">
+                    <label>Workers: </label>
+                    <select id="workerCount" style="width:80px;padding:5px;">
+                        <option value="2">2</option>
+                        <option value="3" selected>3</option>
+                        <option value="5">5</option>
+                    </select>
+                    <span style="font-size:0.75rem;color:#666;margin-left:10px;">(fewer = less rate limiting)</span>
+                </div>
+                
+                <button class="btn btn-start" id="startAllBtn" onclick="startParallelAll()">
+                    START ALL ORIGINS (PARALLEL)
+                </button>
+                
+                <button class="btn btn-stop" id="stopAllBtn" onclick="stopAll()" style="display:none;">
+                    STOP ALL
+                </button>
+                
+                <hr style="margin:15px 0;">
+                
+                <h2>OR SINGLE ORIGIN</h2>
                 <select id="originSelect">
                     <option value="">-- Select origin --</option>
                 </select>
                 
-                <button class="btn btn-start" id="startBtn" onclick="startAutoCalc()">
-                    CALCULATE ALL ROUTES FROM THIS ORIGIN
+                <button class="btn btn-start" id="startBtn" onclick="startAutoCalc()" style="background:#34a853;">
+                    RUN SINGLE ORIGIN
                 </button>
                 
                 <button class="btn btn-stop" id="stopBtn" onclick="stopAutoCalc()" style="display:none;">
                     STOP
                 </button>
-                
-                <p style="font-size:0.75rem;color:#666;margin-top:10px;">
-                    <strong>TIP:</strong> Open 3-5 tabs, select different origins in each, run all simultaneously!
-                </p>
             </div>
             
             <div class="panel">
@@ -451,6 +468,124 @@ async function startAutoCalc() {
 }
 
 function stopAutoCalc() { running = false; log('Stopped'); }
+
+// PARALLEL PROCESSING - with full waypoint verification
+let parallelRunning = false;
+let activeWorkers = 0;
+
+async function startParallelAll() {
+    if (parallelRunning) return;
+    
+    parallelRunning = true;
+    document.getElementById('startAllBtn').style.display = 'none';
+    document.getElementById('stopAllBtn').style.display = 'block';
+    
+    const workerCount = parseInt(document.getElementById('workerCount').value);
+    log('═══════════════════════════════════');
+    log('STARTING ' + workerCount + ' PARALLEL WORKERS');
+    log('With FULL waypoint verification');
+    log('═══════════════════════════════════');
+    
+    // Find incomplete origins
+    const incompleteOrigins = [];
+    for (let i = 0; i < SITES.length; i++) {
+        let done = 0;
+        for (let j = 0; j < SITES.length; j++) {
+            if (i !== j && getCached(i, j)) done++;
+        }
+        if (done < 246) {
+            incompleteOrigins.push({ idx: i, done: done });
+        }
+    }
+    
+    // Sort: most complete first
+    incompleteOrigins.sort((a, b) => b.done - a.done);
+    
+    log('Found ' + incompleteOrigins.length + ' incomplete origins');
+    
+    if (incompleteOrigins.length === 0) {
+        log('ALL COMPLETE!');
+        parallelRunning = false;
+        document.getElementById('startAllBtn').style.display = 'block';
+        document.getElementById('stopAllBtn').style.display = 'none';
+        return;
+    }
+    
+    let currentIdx = 0;
+    let totalRoutesDone = Object.keys(CACHE.dist).length;
+    
+    // Worker function - processes one origin at a time with full verification
+    async function worker(workerId) {
+        while (parallelRunning && currentIdx < incompleteOrigins.length) {
+            const origin = incompleteOrigins[currentIdx++];
+            if (!origin) break;
+            
+            const originSite = SITES[origin.idx];
+            log('[W' + workerId + '] Starting ' + originSite.site_id + ' (' + origin.done + '/246 done)');
+            
+            let routesDone = 0;
+            for (let j = 0; j < SITES.length && parallelRunning; j++) {
+                if (j === origin.idx) continue;
+                if (getCached(origin.idx, j)) { routesDone++; continue; }
+                
+                // Full route fetch with waypoint verification
+                const r = await fetchRoute(origin.idx, j);
+                if (!r.error) {
+                    setCache(origin.idx, j, r.dist, r.time, r.waypoints);
+                    totalRoutesDone++;
+                    routesDone++;
+                    
+                    const wpInfo = r.waypoints.length > 0 ? ' [' + r.waypoints.length + ' wp]' : '';
+                    log('[W' + workerId + '] ' + originSite.site_id + '→' + SITES[j].site_id + ': ' + r.dist.toFixed(1) + 'km' + wpInfo);
+                }
+                
+                // Save periodically
+                if (totalRoutesDone % 20 === 0) {
+                    saveCache();
+                    updateParallelProgress(totalRoutesDone);
+                }
+                
+                // Rate limit - important to avoid Google blocking
+                await new Promise(r => setTimeout(r, 200));
+            }
+            
+            saveCache();
+            log('[W' + workerId + '] Finished ' + originSite.site_id);
+        }
+        
+        activeWorkers--;
+        log('[W' + workerId + '] Worker stopped');
+        
+        if (activeWorkers === 0) {
+            parallelRunning = false;
+            document.getElementById('startAllBtn').style.display = 'block';
+            document.getElementById('stopAllBtn').style.display = 'none';
+            log('═══════════════════════════════════');
+            log('ALL WORKERS FINISHED!');
+            log('Total routes: ' + Object.keys(CACHE.dist).length);
+            log('═══════════════════════════════════');
+        }
+    }
+    
+    // Start workers
+    activeWorkers = workerCount;
+    for (let w = 0; w < workerCount; w++) {
+        worker(w + 1);
+        await new Promise(r => setTimeout(r, 500)); // Stagger worker starts
+    }
+}
+
+function updateParallelProgress(total) {
+    const pct = ((total / 60762) * 100).toFixed(1);
+    document.getElementById('statCached').textContent = total;
+    document.getElementById('statPercent').textContent = pct + '%';
+    document.getElementById('currentCalc').textContent = total + ' routes cached (' + pct + '%)';
+}
+
+function stopAll() {
+    parallelRunning = false;
+    log('Stopping all workers...');
+}
 
 function downloadDistCSV() {
     let csv = ',' + SITES.map(s=>s.site_id).join(',') + '\n';
