@@ -68,7 +68,7 @@
                     <select id="originSel"><option value="">-- Origin --</option></select>
                     <select id="destSel"><option value="">-- Destination --</option></select>
                     <button class="btn" onclick="showRoute()">Show Route with Waypoints</button>
-                    <p style="font-size:0.75rem;color:#666;margin-top:5px;">Detects sites within 150m matching LOCAL travel direction</p>
+                    <p style="font-size:0.75rem;color:#666;margin-top:5px;">Verifies each candidate with Google Maps (< 5% distance increase = on route)</p>
                 </div>
                 
                 <div class="panel">
@@ -89,6 +89,13 @@
             <div class="main">
                 <div class="panel">
                     <div id="map"></div>
+                </div>
+                
+                <div class="panel">
+                    <h2>Waypoint Verification Log</h2>
+                    <div id="verifyLog" style="background:#1e1e1e;color:#0f0;padding:10px;font-family:monospace;font-size:0.8rem;max-height:200px;overflow-y:auto;border-radius:6px;">
+                        Click "Show Route" to verify waypoints using Google Maps
+                    </div>
                 </div>
                 
                 <div class="panel">
@@ -193,50 +200,85 @@ function haversine(lat1, lon1, lat2, lon2) {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// Get LOCAL travel direction at a point on the path
-function getLocalDirection(path, pathIdx) {
-    const i = Math.min(pathIdx, path.length - 2);
-    const p1 = path[i];
-    const p2 = path[i + 1];
-    
-    const dLat = p2.lat() - p1.lat();
-    const dLon = p2.lng() - p1.lng();
-    
-    if (Math.abs(dLat) > Math.abs(dLon)) {
-        return dLat > 0 ? 'N' : 'S';
-    } else {
-        return dLon > 0 ? 'E' : 'W';
-    }
-}
-
-function findWaypoints(path, startIdx, endIdx) {
-    const found = [];
+// Find candidates near path
+function findCandidatesNearPath(path, startIdx, endIdx) {
+    const candidates = [];
     const THRESHOLD = 0.15; // 150 meters
     
     SITES.forEach((site, idx) => {
         if (idx === startIdx || idx === endIdx) return;
         
-        // Find closest point on path
         let minDist = Infinity, pathIdx = 0;
         for (let i = 0; i < path.length; i++) {
             const d = haversine(site.lat, site.lon, path[i].lat(), path[i].lng());
             if (d < minDist) { minDist = d; pathIdx = i; }
         }
         
-        if (minDist >= THRESHOLD) return;
-        
-        // Get LOCAL direction at this point
-        const localDir = getLocalDirection(path, pathIdx);
-        
-        // Site direction must match LOCAL travel direction
-        if (site.site_direction === localDir) {
-            found.push({ idx, pathIdx, dist: minDist });
-            console.log('  ✓', site.site_id, 'dir:', site.site_direction, '= local:', localDir);
+        if (minDist < THRESHOLD) {
+            candidates.push({ idx, pathIdx, dist: minDist });
         }
     });
     
-    console.log('Waypoints found:', found.map(w => SITES[w.idx].site_id));
-    return found.sort((a, b) => a.pathIdx - b.pathIdx);
+    candidates.sort((a, b) => a.pathIdx - b.pathIdx);
+    return candidates;
+}
+
+// Verify waypoint with Google Maps
+async function verifyWaypoint(startIdx, waypointIdx, endIdx, directDist, logDiv) {
+    return new Promise(resolve => {
+        directionsService.route({
+            origin: {lat: SITES[startIdx].lat, lng: SITES[startIdx].lon},
+            destination: {lat: SITES[endIdx].lat, lng: SITES[endIdx].lon},
+            waypoints: [{
+                location: {lat: SITES[waypointIdx].lat, lng: SITES[waypointIdx].lon},
+                stopover: true
+            }],
+            travelMode: 'DRIVING'
+        }, (res, status) => {
+            if (status === 'OK') {
+                let totalDist = 0;
+                res.routes[0].legs.forEach(leg => totalDist += leg.distance.value);
+                totalDist = totalDist / 1000;
+                
+                const increase = (totalDist - directDist) / directDist;
+                const isOnRoute = increase < 0.05;
+                
+                const msg = SITES[waypointIdx].site_id + ' (' + SITES[waypointIdx].site_direction + '): ' +
+                    'direct=' + directDist.toFixed(2) + 'km, with waypoint=' + totalDist.toFixed(2) + 'km, ' +
+                    'increase=' + (increase*100).toFixed(1) + '% → ' + (isOnRoute ? '✓ ON ROUTE' : '✗ OFF ROUTE');
+                
+                if (logDiv) {
+                    logDiv.innerHTML += '<div style="color:' + (isOnRoute ? 'green' : 'red') + '">' + msg + '</div>';
+                }
+                console.log(msg);
+                resolve(isOnRoute ? waypointIdx : null);
+            } else {
+                resolve(null);
+            }
+        });
+    });
+}
+
+// Find and verify all waypoints
+async function findAndVerifyWaypoints(path, startIdx, endIdx, directDist, logDiv) {
+    const candidates = findCandidatesNearPath(path, startIdx, endIdx);
+    
+    if (logDiv) {
+        logDiv.innerHTML = '<div><strong>Checking ' + candidates.length + ' candidates near route...</strong></div>';
+    }
+    
+    if (candidates.length === 0) return [];
+    
+    const verified = [];
+    for (const c of candidates) {
+        const result = await verifyWaypoint(startIdx, c.idx, endIdx, directDist, logDiv);
+        if (result !== null) {
+            verified.push(result);
+        }
+        await new Promise(r => setTimeout(r, 150));
+    }
+    
+    return verified;
 }
 
 async function showRoute() {
@@ -268,15 +310,16 @@ async function showRoute() {
         const route = res.routes[0];
         directionsRenderer.setDirections(res);
         
-        // Get waypoints - prefer cached, fallback to detection
-        const cacheKey = iA + '_' + iB;
-        let waypointIdxs = CACHE.waypoints[cacheKey] || [];
+        const directDist = route.legs[0].distance.value / 1000;
+        const logDiv = document.getElementById('verifyLog');
         
-        // If not cached, detect from path
-        if (waypointIdxs.length === 0) {
-            const detected = findWaypoints(route.overview_path, iA, iB);
-            waypointIdxs = detected.map(w => w.idx);
-        }
+        // VERIFY waypoints using Google Maps
+        logDiv.innerHTML = '<div><strong>Route: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id + '</strong></div>';
+        logDiv.innerHTML += '<div>Direct distance: ' + directDist.toFixed(2) + ' km</div><hr>';
+        
+        const waypointIdxs = await findAndVerifyWaypoints(route.overview_path, iA, iB, directDist, logDiv);
+        
+        logDiv.innerHTML += '<hr><div><strong>VERIFIED: ' + waypointIdxs.length + ' waypoints on route</strong></div>';
         
         waypointIdxs.forEach(idx => markers[idx].setIcon('http://maps.google.com/mapfiles/ms/icons/orange-dot.png'));
         
