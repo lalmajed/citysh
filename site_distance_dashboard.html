@@ -162,6 +162,21 @@ async function verifyWaypointWithGoogle(startIdx, waypointIdx, endIdx, directDis
     });
 }
 
+// Get travel direction at a point on the path
+function getRouteDirectionAt(path, pathIdx) {
+    const i = Math.min(Math.max(pathIdx, 0), path.length - 2);
+    const p1 = path[i];
+    const p2 = path[i + 1];
+    const dLat = p2.lat() - p1.lat();
+    const dLon = p2.lng() - p1.lng();
+    
+    if (Math.abs(dLat) > Math.abs(dLon)) {
+        return dLat > 0 ? 'N' : 'S';
+    } else {
+        return dLon > 0 ? 'E' : 'W';
+    }
+}
+
 // Find and verify waypoints using Google Maps
 async function findWaypointsOnPath(path, startIdx, endIdx, directDist) {
     log('Checking for waypoints (direct dist: ' + directDist.toFixed(2) + 'km)...');
@@ -172,14 +187,35 @@ async function findWaypointsOnPath(path, startIdx, endIdx, directDist) {
         return [];
     }
     
-    log('Verifying ' + candidates.length + ' candidates with Google Maps (3% threshold)...');
-    const verified = [];
+    // STEP 1: Filter by direction FIRST - site direction must match route direction at that point
+    log('Step 1: Checking direction match...');
+    const directionMatched = [];
     for (const c of candidates) {
+        const routeDir = getRouteDirectionAt(path, c.pathIdx);
+        const siteDir = SITES[c.idx].site_direction;
+        
+        if (siteDir === routeDir) {
+            directionMatched.push(c);
+            log('  ✓ ' + SITES[c.idx].site_id + ' dir=' + siteDir + ' matches route=' + routeDir);
+        } else {
+            log('  ✗ ' + SITES[c.idx].site_id + ' dir=' + siteDir + ' ≠ route=' + routeDir);
+        }
+    }
+    
+    if (directionMatched.length === 0) {
+        log('No candidates match route direction');
+        return [];
+    }
+    
+    // STEP 2: Verify with Google Maps (backup check)
+    log('Step 2: Verifying ' + directionMatched.length + ' with Google Maps...');
+    const verified = [];
+    for (const c of directionMatched) {
         const isOnRoute = await verifyWaypointWithGoogle(startIdx, c.idx, endIdx, directDist);
         if (isOnRoute) {
             verified.push(c.idx);
         }
-        await new Promise(r => setTimeout(r, 100)); // Small delay between API calls
+        await new Promise(r => setTimeout(r, 100));
     }
     
     log('VERIFIED WAYPOINTS: ' + (verified.length > 0 ? verified.map(i => SITES[i].site_id).join(', ') : 'none'));
