@@ -105,7 +105,9 @@ function haversine(lat1, lon1, lat2, lon2) {
 // Find candidate waypoints near the path (pre-filter)
 function findCandidatesNearPath(path, startIdx, endIdx) {
     const candidates = [];
-    const THRESHOLD = 0.15; // 150 meters
+    const THRESHOLD = 0.2; // 200 meters - increased for wider roads
+    
+    log('Path has ' + path.length + ' points');
     
     SITES.forEach((site, idx) => {
         if (idx === startIdx || idx === endIdx) return;
@@ -118,10 +120,12 @@ function findCandidatesNearPath(path, startIdx, endIdx) {
         
         if (minDist < THRESHOLD) {
             candidates.push({ idx, pathIdx, dist: minDist });
+            log('  Candidate: ' + site.site_id + ' (' + (minDist*1000).toFixed(0) + 'm from path)');
         }
     });
     
     candidates.sort((a, b) => a.pathIdx - b.pathIdx);
+    log('Found ' + candidates.length + ' candidates near path');
     return candidates;
 }
 
@@ -142,13 +146,15 @@ async function verifyWaypointWithGoogle(startIdx, waypointIdx, endIdx, directDis
                 res.routes[0].legs.forEach(leg => totalDist += leg.distance.value);
                 totalDist = totalDist / 1000; // km
                 
-                // If adding waypoint increases distance by less than 5%, it's ON the route
+                // If adding waypoint increases distance by less than 10%, it's ON the route
                 const increase = (totalDist - directDist) / directDist;
-                const isOnRoute = increase < 0.05;
+                const isOnRoute = increase < 0.10; // 10% threshold
                 
-                console.log('  Verify', SITES[waypointIdx].site_id, ': direct=', directDist.toFixed(2), 'with waypoint=', totalDist.toFixed(2), 'increase=', (increase*100).toFixed(1) + '%', isOnRoute ? '✓ ON ROUTE' : '✗ OFF ROUTE');
+                const result = isOnRoute ? '✓ ON ROUTE' : '✗ OFF';
+                log('  ' + result + ' ' + SITES[waypointIdx].site_id + ' (+' + (increase*100).toFixed(1) + '%)');
                 resolve(isOnRoute);
             } else {
+                log('  ERROR checking ' + SITES[waypointIdx].site_id + ': ' + status);
                 resolve(false);
             }
         });
@@ -157,11 +163,15 @@ async function verifyWaypointWithGoogle(startIdx, waypointIdx, endIdx, directDis
 
 // Find and verify waypoints using Google Maps
 async function findWaypointsOnPath(path, startIdx, endIdx, directDist) {
+    log('Checking for waypoints (direct dist: ' + directDist.toFixed(2) + 'km)...');
     const candidates = findCandidatesNearPath(path, startIdx, endIdx);
-    console.log('Candidates near path:', candidates.map(c => SITES[c.idx].site_id));
     
-    if (candidates.length === 0) return [];
+    if (candidates.length === 0) {
+        log('No candidates found near path');
+        return [];
+    }
     
+    log('Verifying ' + candidates.length + ' candidates with Google Maps...');
     const verified = [];
     for (const c of candidates) {
         const isOnRoute = await verifyWaypointWithGoogle(startIdx, c.idx, endIdx, directDist);
@@ -171,7 +181,7 @@ async function findWaypointsOnPath(path, startIdx, endIdx, directDist) {
         await new Promise(r => setTimeout(r, 100)); // Small delay between API calls
     }
     
-    console.log('Verified waypoints:', verified.map(i => SITES[i].site_id));
+    log('VERIFIED WAYPOINTS: ' + (verified.length > 0 ? verified.map(i => SITES[i].site_id).join(', ') : 'none'));
     return verified;
 }
 
