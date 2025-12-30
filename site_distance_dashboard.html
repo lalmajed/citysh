@@ -38,13 +38,17 @@
             <div class="panel">
                 <h2>PARALLEL EXTRACTION</h2>
                 <div style="margin-bottom:10px;">
-                    <label>Parallel workers: </label>
+                    <label>Workers: </label>
                     <select id="workerCount" style="width:60px;padding:5px;">
                         <option value="3">3</option>
                         <option value="5" selected>5</option>
-                        <option value="8">8</option>
                         <option value="10">10</option>
                     </select>
+                    
+                    <label style="margin-left:15px;">
+                        <input type="checkbox" id="fastMode" checked> 
+                        <strong>FAST MODE</strong> (skip waypoint verification)
+                    </label>
                 </div>
                 
                 <button class="btn btn-start" id="startAllBtn" onclick="startParallelAll()">
@@ -393,7 +397,7 @@ function initMap() {
     log('Ready! Select origin and click the blue button.');
 }
 
-async function fetchRoute(i, j) {
+async function fetchRoute(i, j, skipWaypoints = false) {
     return new Promise(async (resolve) => {
         directionsService.route({
             origin: {lat: SITES[i].lat, lng: SITES[i].lon},
@@ -404,10 +408,12 @@ async function fetchRoute(i, j) {
                 const leg = res.routes[0].legs[0];
                 const dist = leg.distance.value/1000;
                 const time = leg.duration.value/60;
-                const path = res.routes[0].overview_path;
                 
-                // Find and VERIFY waypoints using Google Maps
-                const waypoints = await findWaypointsOnPath(path, i, j, dist);
+                let waypoints = [];
+                if (!skipWaypoints) {
+                    const path = res.routes[0].overview_path;
+                    waypoints = await findWaypointsOnPath(path, i, j, dist);
+                }
                 
                 resolve({ dist, time, waypoints });
             } else resolve({error: status});
@@ -510,34 +516,37 @@ async function startParallelAll() {
     
     let currentIdx = 0;
     
+    const fastMode = document.getElementById('fastMode').checked;
+    log('Fast mode: ' + (fastMode ? 'ON (no waypoint verification)' : 'OFF (with waypoint verification)'));
+    
     // Worker function
     async function worker(workerId) {
         while (parallelRunning && currentIdx < incompleteOrigins.length) {
             const origin = incompleteOrigins[currentIdx++];
             if (!origin) break;
             
-            log('[Worker ' + workerId + '] Processing ' + SITES[origin.idx].site_id + ' (' + origin.done + '/246 done)');
+            log('[W' + workerId + '] ' + SITES[origin.idx].site_id);
             
             for (let j = 0; j < SITES.length && parallelRunning; j++) {
                 if (j === origin.idx) continue;
                 if (getCached(origin.idx, j)) continue;
                 
-                const r = await fetchRoute(origin.idx, j);
+                const r = await fetchRoute(origin.idx, j, fastMode);
                 if (!r.error) {
                     setCache(origin.idx, j, r.dist, r.time, r.waypoints);
                 }
                 
-                // Save every 20 routes
-                if (Object.keys(CACHE.dist).length % 20 === 0) {
+                // Save every 50 routes
+                if (Object.keys(CACHE.dist).length % 50 === 0) {
                     saveCache();
                     updateProgress();
                 }
                 
-                await new Promise(r => setTimeout(r, 200)); // Rate limit
+                await new Promise(r => setTimeout(r, 100)); // Faster rate limit
             }
             
             saveCache();
-            log('[Worker ' + workerId + '] Finished ' + SITES[origin.idx].site_id);
+            updateProgress();
         }
         activeWorkers--;
         if (activeWorkers === 0) {
