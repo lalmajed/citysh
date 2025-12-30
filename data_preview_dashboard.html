@@ -68,6 +68,9 @@
                     <select id="originSel"><option value="">-- Origin --</option></select>
                     <select id="destSel"><option value="">-- Destination --</option></select>
                     <button class="btn" onclick="showRoute()">Show Route with Waypoints</button>
+                    <label style="font-size:0.8rem;display:flex;align-items:center;gap:5px;margin-top:5px;">
+                        <input type="checkbox" id="ignoreDir"> Ignore direction filter (show all nearby)
+                    </label>
                 </div>
                 
                 <div class="panel">
@@ -187,20 +190,28 @@ function haversine(lat1, lon1, lat2, lon2) {
 
 function findWaypoints(path, startIdx, endIdx) {
     const startDir = SITES[startIdx].site_direction;
+    const ignoreDir = document.getElementById('ignoreDir').checked;
     const found = [];
+    const THRESHOLD = 0.1; // 100 meters
     
     SITES.forEach((site, idx) => {
         if (idx === startIdx || idx === endIdx) return;
-        if (site.site_direction !== startDir) return;
         
+        // Find closest point on path
         let minDist = Infinity, pathIdx = 0;
         for (let i = 0; i < path.length; i++) {
             const d = haversine(site.lat, site.lon, path[i].lat(), path[i].lng());
             if (d < minDist) { minDist = d; pathIdx = i; }
         }
-        if (minDist < 0.03) found.push({ idx, pathIdx });
+        
+        // Check if close enough (and optionally same direction)
+        const dirMatch = ignoreDir || site.site_direction === startDir;
+        if (minDist < THRESHOLD && dirMatch) {
+            found.push({ idx, pathIdx, dist: minDist, dir: site.site_direction });
+        }
     });
     
+    console.log('Waypoints found:', found.map(w => SITES[w.idx].site_id + ' (' + w.dir + ', ' + (w.dist*1000).toFixed(0) + 'm)'));
     return found.sort((a, b) => a.pathIdx - b.pathIdx);
 }
 
@@ -237,8 +248,13 @@ async function showRoute() {
         const waypoints = findWaypoints(route.overview_path, iA, iB);
         waypoints.forEach(w => markers[w.idx].setIcon('http://maps.google.com/mapfiles/ms/icons/orange-dot.png'));
         
-        // Build stops list
-        const stops = [iA, ...waypoints.map(w => w.idx), iB];
+        // Build stops list with waypoint info
+        const stopsInfo = [
+            { idx: iA, distFromRoute: 0 },
+            ...waypoints.map(w => ({ idx: w.idx, distFromRoute: w.dist, dir: w.dir })),
+            { idx: iB, distFromRoute: 0 }
+        ];
+        const stops = stopsInfo.map(s => s.idx);
         
         // Get cached distances for each segment, or fetch from Google
         const trips = [];
