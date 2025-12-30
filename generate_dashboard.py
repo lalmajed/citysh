@@ -9,69 +9,20 @@ html = '''<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riyadh Sites - Shortest Path Distance & Time Matrix</title>
+    <title>Riyadh Sites - Shortest Path Matrix</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f1f5f9; 
-            color: #1e293b;
-            height: 100vh;
-            overflow: hidden;
-        }
-        
-        .container {
-            display: grid;
-            grid-template-columns: 420px 1fr;
-            grid-template-rows: auto 1fr;
-            height: 100vh;
-            gap: 1px;
-            background: #e2e8f0;
-        }
-        
-        header {
-            grid-column: 1 / -1;
-            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-        }
-        
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f1f5f9; color: #1e293b; height: 100vh; overflow: hidden; }
+        .container { display: grid; grid-template-columns: 420px 1fr; grid-template-rows: auto 1fr; height: 100vh; gap: 1px; background: #e2e8f0; }
+        header { grid-column: 1 / -1; background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; }
         header h1 { font-size: 1.2rem; font-weight: 600; }
         .stats { display: flex; gap: 15px; font-size: 0.85rem; }
         .stat-item { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; }
         .sidebar { background: #ffffff; overflow-y: auto; padding: 15px; }
-        .main-content { display: grid; grid-template-rows: 40% 60%; overflow: hidden; }
-        #map { width: 100%; height: 100%; }
-        .table-section { background: #ffffff; overflow: hidden; display: flex; flex-direction: column; }
-        .table-tabs { display: flex; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
-        .tab-btn { flex: 1; padding: 12px; background: transparent; border: none; color: #64748b; cursor: pointer; font-size: 0.9rem; font-weight: 600; }
-        .tab-btn.active { color: #2563eb; background: #ffffff; border-bottom: 3px solid #2563eb; }
-        .matrix-container { flex: 1; overflow: auto; }
-        .matrix-table { border-collapse: collapse; font-size: 0.65rem; }
-        .matrix-table th, .matrix-table td { border: 1px solid #e2e8f0; padding: 3px 5px; text-align: center; white-space: nowrap; min-width: 45px; }
-        .matrix-table thead th { background: #f8fafc; position: sticky; top: 0; z-index: 2; font-weight: 600; color: #2563eb; }
-        .matrix-table thead th:first-child { left: 0; z-index: 3; }
-        .matrix-table tbody th { background: #f8fafc; position: sticky; left: 0; z-index: 1; font-weight: 600; color: #2563eb; }
-        .matrix-table td { background: #ffffff; cursor: pointer; }
-        .matrix-table td:hover { outline: 2px solid #2563eb; }
-        .matrix-table td.highlight-row, .matrix-table td.highlight-col { background: #dbeafe !important; }
-        .matrix-table td.highlight-cell { background: #2563eb !important; color: white; font-weight: bold; }
-        .matrix-table td.diagonal { background: #f1f5f9; color: #94a3b8; }
-        .dist-0 { background: #dcfce7 !important; color: #166534; }
-        .dist-1 { background: #bbf7d0 !important; color: #166534; }
-        .dist-2 { background: #86efac !important; color: #166534; }
-        .dist-3 { background: #4ade80 !important; color: #ffffff; }
-        .dist-4 { background: #fde047 !important; color: #713f12; }
-        .dist-5 { background: #facc15 !important; color: #713f12; }
-        .dist-6 { background: #fb923c !important; color: #ffffff; }
-        .dist-7 { background: #f87171 !important; color: #ffffff; }
-        .dist-8 { background: #ef4444 !important; color: #ffffff; }
-        .dist-9 { background: #b91c1c !important; color: #ffffff; }
+        .main-content { display: flex; flex-direction: column; overflow: hidden; }
+        #map { width: 100%; flex: 1; min-height: 300px; }
         .section-title { font-size: 0.9rem; font-weight: 600; color: #2563eb; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
-        .site-list { max-height: 180px; overflow-y: auto; margin-bottom: 15px; }
+        .site-list { max-height: 200px; overflow-y: auto; margin-bottom: 15px; }
         .site-item { padding: 8px 10px; margin: 4px 0; background: #f8fafc; border-radius: 6px; cursor: pointer; font-size: 0.8rem; border: 1px solid #e2e8f0; }
         .site-item:hover { background: #e2e8f0; }
         .site-item.selected { background: #dbeafe; border-left: 3px solid #2563eb; }
@@ -94,11 +45,8 @@ html = '''<!DOCTYPE html>
         .result-label { font-size: 0.7rem; color: #94a3b8; margin-top: 5px; text-transform: uppercase; }
         .search-box { margin-bottom: 15px; }
         .search-box input { width: 100%; padding: 10px 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; color: #1e293b; font-size: 0.85rem; }
-        .legend { display: flex; flex-wrap: wrap; gap: 5px; padding: 8px 10px; background: #f8fafc; font-size: 0.65rem; }
-        .legend-item { display: flex; align-items: center; gap: 3px; }
-        .legend-color { width: 16px; height: 10px; border-radius: 2px; }
-        .swap-btn { background: #e2e8f0; border: none; color: #64748b; padding: 8px; border-radius: 50%; cursor: pointer; }
-        .routes-panel { background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; max-height: 280px; overflow-y: auto; }
+        .swap-btn { background: #e2e8f0; border: none; color: #64748b; padding: 8px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; }
+        .routes-panel { background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; max-height: 350px; overflow-y: auto; }
         .routes-panel.hidden { display: none; }
         .routes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
         .routes-header h3 { font-size: 0.85rem; color: #2563eb; font-weight: 600; }
@@ -113,6 +61,7 @@ html = '''<!DOCTYPE html>
         .sort-btns { display: flex; gap: 5px; margin-bottom: 10px; }
         .sort-btn { padding: 4px 8px; font-size: 0.7rem; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer; color: #64748b; }
         .sort-btn.active { background: #2563eb; color: white; }
+        .info-box { background: #dbeafe; border-radius: 8px; padding: 12px; margin-bottom: 15px; font-size: 0.8rem; color: #1e40af; }
     </style>
 </head>
 <body>
@@ -171,35 +120,23 @@ html = '''<!DOCTYPE html>
                 <input type="text" id="searchInput" placeholder="Search by site ID or road name...">
             </div>
             <div class="site-list" id="siteList"></div>
+            
+            <div class="info-box">
+                <strong>Data Source:</strong> OSRM routing on OpenStreetMap roads.<br>
+                <strong>Map:</strong> Google Maps
+            </div>
         </div>
         
         <div class="main-content">
             <div id="map"></div>
-            <div class="table-section">
-                <div class="table-tabs">
-                    <button class="tab-btn active" data-tab="distance">Shortest Distance (km)</button>
-                    <button class="tab-btn" data-tab="time">Shortest Time (min)</button>
-                </div>
-                <div class="legend" id="legend"></div>
-                <div class="matrix-container" id="matrixContainer">
-                    <div class="loading">Loading...</div>
-                </div>
-            </div>
         </div>
     </div>
 
     <script>
         const DATA = ''' + json.dumps(data) + ''';
         
-        let map, markers = {}, routeLine, selectedSiteA = null, selectedSiteB = null, currentTab = 'distance';
+        let map, markers = {}, routeLine, selectedSiteA = null, selectedSiteB = null;
         let currentRoutes = [], currentSortBy = 'distance';
-        const distTh = [5,10,15,25,40,60,80,100,130], timeTh = [5,10,15,25,40,60,80,100,120];
-        
-        function getColorClass(v, isTime) {
-            const th = isTime ? timeTh : distTh;
-            for (let i = 0; i < th.length; i++) if (v < th[i]) return 'dist-'+i;
-            return 'dist-9';
-        }
         
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
@@ -215,8 +152,6 @@ html = '''<!DOCTYPE html>
             });
             populateSiteSelectors();
             populateSiteList();
-            renderMatrix();
-            renderLegend();
         }
         
         function populateSiteSelectors() {
@@ -242,13 +177,12 @@ html = '''<!DOCTYPE html>
             document.getElementById('distanceResult').textContent = d >= 0 ? d.toFixed(1) : 'N/A';
             document.getElementById('timeResult').textContent = t >= 0 ? t.toFixed(0) : 'N/A';
             highlightRoute(iA, iB);
-            highlightMatrixCell(iA, iB);
             if (!document.getElementById('routesPanel').classList.contains('hidden')) renderRoutesList();
         }
         
         function showAllRoutes(type) {
             const iA = parseInt(document.getElementById('siteA').value);
-            if (isNaN(iA)) return;
+            if (isNaN(iA)) { alert('Please select a From Site first'); return; }
             currentRoutes = DATA.sites.map((s, i) => ({
                 idx: i, site_id: s.site_id, road_name: s.road_name || 'Unknown',
                 distance: DATA.road_distances_km[iA][i], time: DATA.road_durations_min[iA][i]
@@ -328,52 +262,6 @@ html = '''<!DOCTYPE html>
         }
         
         function selectSiteFromList(i) { selectSiteFromMap(i); }
-        
-        function renderMatrix() {
-            const c = document.getElementById('matrixContainer');
-            const m = currentTab === 'distance' ? DATA.road_distances_km : DATA.road_durations_min;
-            const isT = currentTab === 'time', u = isT ? 'min' : 'km';
-            let h = '<table class="matrix-table"><thead><tr><th></th>';
-            DATA.sites.forEach(s => h += `<th>${s.site_id}</th>`);
-            h += '</tr></thead><tbody>';
-            DATA.sites.forEach((sA, i) => {
-                h += `<tr><th>${sA.site_id}</th>`;
-                DATA.sites.forEach((sB, j) => {
-                    const v = m[i][j];
-                    if (i === j) h += `<td class="diagonal" data-row="${i}" data-col="${j}">0</td>`;
-                    else if (v < 0) h += `<td data-row="${i}" data-col="${j}">-</td>`;
-                    else h += `<td class="${getColorClass(v,isT)}" data-row="${i}" data-col="${j}">${isT?v.toFixed(0):v.toFixed(1)}</td>`;
-                });
-                h += '</tr>';
-            });
-            h += '</tbody></table>';
-            c.innerHTML = h;
-            c.querySelectorAll('td').forEach(td => td.onclick = () => {
-                const r = parseInt(td.dataset.row), col = parseInt(td.dataset.col);
-                if (!isNaN(r)) { document.getElementById('siteA').value = r; document.getElementById('siteB').value = col; updateQuickLookup(); }
-            });
-        }
-        
-        function highlightMatrixCell(r, col) {
-            document.querySelectorAll('.matrix-table td').forEach(td => td.classList.remove('highlight-row','highlight-col','highlight-cell'));
-            document.querySelectorAll(`.matrix-table td[data-row="${r}"]`).forEach(td => td.classList.add('highlight-row'));
-            document.querySelectorAll(`.matrix-table td[data-col="${col}"]`).forEach(td => td.classList.add('highlight-col'));
-            document.querySelector(`.matrix-table td[data-row="${r}"][data-col="${col}"]`)?.classList.add('highlight-cell');
-        }
-        
-        function renderLegend() {
-            const c = document.getElementById('legend'), isT = currentTab === 'time', th = isT ? timeTh : distTh, u = isT ? 'min' : 'km';
-            c.innerHTML = Array.from({length:10}, (_,i) => 
-                `<div class="legend-item"><div class="legend-color dist-${i}"></div><span>${i===0?'<'+th[0]:i===9?'>'+th[8]:th[i-1]+'-'+th[i]} ${u}</span></div>`
-            ).join('');
-        }
-        
-        document.querySelectorAll('.tab-btn').forEach(b => b.onclick = () => {
-            document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
-            b.classList.add('active');
-            currentTab = b.dataset.tab;
-            renderMatrix(); renderLegend();
-        });
         
         document.getElementById('searchInput').oninput = e => populateSiteList(e.target.value);
     </script>
