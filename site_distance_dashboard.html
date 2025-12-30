@@ -166,19 +166,35 @@ async function verifyWaypointWithGoogle(startIdx, waypointIdx, endIdx, directDis
 
 // Find and verify waypoints using Google Maps - SIMPLE LOGIC
 async function findWaypointsOnPath(path, startIdx, endIdx, directDist) {
+    const originDir = SITES[startIdx].site_direction;
+    log('Origin: ' + SITES[startIdx].site_id + ' (direction: ' + originDir + ')');
     log('Direct route: ' + directDist.toFixed(2) + 'km');
-    log('Finding candidates within 50m of path...');
     
-    const candidates = findCandidatesNearPath(path, startIdx, endIdx);
+    // STEP 1: Find candidates near path
+    log('Finding candidates within 50m of path...');
+    let candidates = findCandidatesNearPath(path, startIdx, endIdx);
     
     if (candidates.length === 0) {
         log('No candidates found');
         return [];
     }
     
-    // Verify EACH candidate with Google Maps
-    // If adding as waypoint barely increases distance (< 0.5%), it's ON the route
-    log('Verifying ' + candidates.length + ' candidates with Google (0.5% threshold)...');
+    // STEP 2: Filter by direction - MUST match origin direction (same lane!)
+    log('Filtering by direction (must be ' + originDir + ')...');
+    candidates = candidates.filter(c => {
+        const siteDir = SITES[c.idx].site_direction;
+        const match = siteDir === originDir;
+        log('  ' + SITES[c.idx].site_id + ' dir=' + siteDir + ' → ' + (match ? '✓ SAME LANE' : '✗ DIFFERENT LANE'));
+        return match;
+    });
+    
+    if (candidates.length === 0) {
+        log('No candidates in same lane');
+        return [];
+    }
+    
+    // STEP 3: Verify with Google Maps
+    log('Verifying ' + candidates.length + ' with Google...');
     const verified = [];
     
     for (const c of candidates) {
