@@ -90,6 +90,17 @@
             </div>
             
             <div class="panel">
+                <h2>STEP 2: VERIFY WAYPOINTS</h2>
+                <p style="font-size:0.8rem;color:#666;margin-bottom:10px;">After extracting routes, verify candidate waypoints</p>
+                <button class="btn" style="background:#ff9800;" id="verifyBtn" onclick="startVerifyWaypoints()">
+                    VERIFY ALL WAYPOINTS
+                </button>
+                <button class="btn btn-stop" id="verifyStopBtn" onclick="stopVerify()" style="display:none;">
+                    STOP VERIFICATION
+                </button>
+            </div>
+            
+            <div class="panel">
                 <h2>DOWNLOAD</h2>
                 <div class="downloads">
                     <button class="btn btn-download" onclick="downloadDistCSV()">Distance CSV</button>
@@ -616,6 +627,86 @@ function stopAll() {
     log('Stopping all workers...');
     document.getElementById('startAllBtn').style.display = 'block';
     document.getElementById('stopAllBtn').style.display = 'none';
+}
+
+// WAYPOINT VERIFICATION PASS
+let verifyRunning = false;
+
+async function startVerifyWaypoints() {
+    if (verifyRunning) return;
+    
+    verifyRunning = true;
+    document.getElementById('verifyBtn').style.display = 'none';
+    document.getElementById('verifyStopBtn').style.display = 'block';
+    
+    log('═══════════════════════════════════');
+    log('STARTING WAYPOINT VERIFICATION');
+    log('═══════════════════════════════════');
+    
+    // Find all routes with candidate waypoints
+    const routesWithCandidates = [];
+    for (const key of Object.keys(CACHE.waypoints)) {
+        if (CACHE.waypoints[key] && CACHE.waypoints[key].length > 0) {
+            const [i, j] = key.split('_').map(Number);
+            routesWithCandidates.push({ key, i, j, candidates: CACHE.waypoints[key] });
+        }
+    }
+    
+    log('Found ' + routesWithCandidates.length + ' routes with candidate waypoints');
+    
+    let verified = 0;
+    let total = routesWithCandidates.length;
+    
+    for (const route of routesWithCandidates) {
+        if (!verifyRunning) break;
+        
+        const directDist = CACHE.dist[route.key];
+        log('Verifying ' + SITES[route.i].site_id + ' → ' + SITES[route.j].site_id + ' (' + route.candidates.length + ' candidates)');
+        
+        const verifiedWaypoints = [];
+        
+        for (const wpIdx of route.candidates) {
+            if (!verifyRunning) break;
+            
+            // Verify this waypoint with Google
+            const isOnRoute = await verifyWaypointWithGoogle(route.i, wpIdx, route.j, directDist);
+            if (isOnRoute) {
+                verifiedWaypoints.push(wpIdx);
+            }
+            
+            await new Promise(r => setTimeout(r, 150)); // Rate limit
+        }
+        
+        // Update cache with verified waypoints
+        if (verifiedWaypoints.length > 0) {
+            CACHE.waypoints[route.key] = verifiedWaypoints;
+        } else {
+            delete CACHE.waypoints[route.key];
+        }
+        
+        verified++;
+        log('  → ' + verifiedWaypoints.length + ' verified | Progress: ' + verified + '/' + total);
+        
+        if (verified % 10 === 0) {
+            saveCache();
+        }
+    }
+    
+    saveCache();
+    verifyRunning = false;
+    document.getElementById('verifyBtn').style.display = 'block';
+    document.getElementById('verifyStopBtn').style.display = 'none';
+    
+    log('═══════════════════════════════════');
+    log('VERIFICATION COMPLETE!');
+    log('═══════════════════════════════════');
+}
+
+function stopVerify() {
+    verifyRunning = false;
+    log('Stopping verification...');
+    document.getElementById('verifyBtn').style.display = 'block';
+    document.getElementById('verifyStopBtn').style.display = 'none';
 }
 
 function downloadDistCSV() {
