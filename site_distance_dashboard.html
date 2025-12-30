@@ -16,7 +16,7 @@
         .main-content { display: flex; flex-direction: column; overflow: hidden; position: relative; }
         #map { width: 100%; flex: 1; }
         .section-title { font-size: 0.9rem; font-weight: 600; color: #4285f4; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-        .site-list { max-height: 150px; overflow-y: auto; margin-bottom: 15px; }
+        .site-list { max-height: 130px; overflow-y: auto; margin-bottom: 15px; }
         .site-item { padding: 8px 10px; margin: 4px 0; background: #f8fafc; border-radius: 6px; cursor: pointer; font-size: 0.8rem; border: 1px solid #e2e8f0; }
         .site-item:hover { background: #e2e8f0; }
         .site-item.selected { background: #e8f0fe; border-left: 3px solid #4285f4; }
@@ -32,8 +32,8 @@
         .search-box input { width: 100%; padding: 10px; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; }
         
         .route-result { background: #e8f0fe; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 2px solid #4285f4; }
-        .route-result-title { font-size: 0.8rem; font-weight: 600; color: #4285f4; margin-bottom: 10px; display: flex; justify-content: space-between; }
-        .route-result-title .cached { font-size: 0.7rem; color: #34a853; font-weight: normal; }
+        .route-result-title { font-size: 0.8rem; font-weight: 600; color: #4285f4; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .route-result-title .source-tag { font-size: 0.65rem; padding: 2px 8px; border-radius: 10px; background: #34a853; color: white; }
         .route-result-values { display: flex; gap: 30px; }
         .route-value { text-align: center; }
         .route-value-num { font-size: 2rem; font-weight: 700; color: #1a73e8; }
@@ -41,7 +41,7 @@
         
         .route-info-box { background: #e8f5e9; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 0.75rem; color: #2e7d32; border: 1px solid #a5d6a7; }
         
-        .route-breakdown { background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; max-height: 200px; overflow-y: auto; }
+        .route-breakdown { background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; max-height: 220px; overflow-y: auto; }
         .route-breakdown-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; display: flex; justify-content: space-between; }
         .route-breakdown-title span { font-weight: normal; color: #64748b; font-size: 0.75rem; }
         .waypoint { display: flex; align-items: center; padding: 8px; background: #fff; border-radius: 6px; margin: 4px 0; border-left: 4px solid #fbbc04; }
@@ -53,8 +53,10 @@
         .waypoint-info { flex: 1; }
         .waypoint-site { font-weight: 600; font-size: 0.8rem; }
         .waypoint-road { font-size: 0.65rem; color: #64748b; direction: rtl; }
-        .trip-segment { background: #e3f2fd; padding: 5px 8px; margin: 2px 0; border-radius: 4px; font-size: 0.7rem; color: #1565c0; display: flex; justify-content: space-between; }
-        .trip-segment .from-google { color: #34a853; }
+        .trip-segment { background: #e3f2fd; padding: 6px 10px; margin: 3px 0; border-radius: 4px; font-size: 0.75rem; color: #1565c0; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid #4285f4; }
+        .trip-segment.loading { background: #fff3e0; border-left-color: #ff9800; color: #e65100; }
+        .trip-segment .trip-source { font-size: 0.6rem; background: #4285f4; color: white; padding: 1px 5px; border-radius: 8px; margin-left: 5px; }
+        .trip-total { background: #e8f5e9; padding: 10px; border-radius: 6px; margin-top: 10px; font-weight: 600; color: #2e7d32; display: flex; justify-content: space-between; }
         .no-waypoints { text-align: center; padding: 15px; color: #94a3b8; font-size: 0.85rem; }
         
         .toggle-btn { background: #4285f4; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; }
@@ -85,7 +87,7 @@
             <h1>Riyadh Sites - Google Maps</h1>
             <div class="header-stats">
                 <div class="header-stat">Routes cached: <strong id="cacheCount">0</strong></div>
-                <div class="header-stat">Total possible: <strong>61,009</strong></div>
+                <div class="header-stat">Total: <strong>61,009</strong></div>
             </div>
         </header>
         <div class="sidebar">
@@ -106,8 +108,8 @@
             
             <div class="route-result">
                 <div class="route-result-title">
-                    Google Maps Route
-                    <span class="cached" id="cacheIndicator"></span>
+                    Total Route (A to B)
+                    <span class="source-tag">Google Maps</span>
                 </div>
                 <div class="route-result-values">
                     <div class="route-value">
@@ -122,16 +124,16 @@
             </div>
             
             <div class="route-info-box">
-                <strong>Auto-saving:</strong> Every route you view is saved to the matrix. The more you use it, the more complete your Google matrix becomes!
+                All distances from <strong>Google Maps</strong>. Routes auto-saved to matrix as you browse!
             </div>
             
             <div class="route-breakdown">
-                <div class="route-breakdown-title">Route Breakdown <span id="stopCount"></span></div>
+                <div class="route-breakdown-title">Trips & Waypoints <span id="stopCount"></span></div>
                 <div id="breakdownContent"><div class="no-waypoints">Select two sites to see route</div></div>
             </div>
             
             <div class="section-title">
-                All Sites (<span id="filteredCount">247</span>)
+                Sites (<span id="filteredCount">247</span>)
                 <button class="toggle-btn" onclick="toggleMatrix()">View Matrix</button>
             </div>
             <div class="search-box"><input type="text" id="searchInput" placeholder="Search sites..."></div>
@@ -144,7 +146,7 @@
                     <h2>Google Maps Distance Matrix</h2>
                     <div class="matrix-actions">
                         <button class="matrix-btn" onclick="downloadMatrix()">Download JSON</button>
-                        <button class="matrix-btn" onclick="clearMatrix()">Clear Cache</button>
+                        <button class="matrix-btn" onclick="clearMatrix()">Clear</button>
                         <button class="matrix-btn" onclick="toggleMatrix()">Close</button>
                     </div>
                 </div>
@@ -152,11 +154,11 @@
                     <div class="matrix-info">
                         <div class="matrix-info-box">
                             <div class="matrix-info-value" id="matrixCached">0</div>
-                            <div class="matrix-info-label">Routes Cached</div>
+                            <div class="matrix-info-label">Cached</div>
                         </div>
                         <div class="matrix-info-box">
                             <div class="matrix-info-value">61,009</div>
-                            <div class="matrix-info-label">Total Possible</div>
+                            <div class="matrix-info-label">Total</div>
                         </div>
                         <div class="matrix-info-box">
                             <div class="matrix-info-value" id="matrixPercent">0%</div>
@@ -173,17 +175,16 @@ const SITES = [{"site_id": "RUHSM001", "lat": 24.7403322023658, "lon": 46.627398
 const STORAGE_KEY = 'google_matrix_cache';
 const TOTAL_ROUTES = 247 * 247 - 247;
 
-// Google matrix cache
 let googleMatrix = { dist: {}, time: {} };
+let map, markers = [], selectedA = null, selectedB = null;
+let gmapsRoute = null, renderer = null;
+let directionsService = null;
+let currentWaypoints = [];
 
 function loadCache() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-        try {
-            googleMatrix = JSON.parse(saved);
-        } catch(e) {
-            googleMatrix = { dist: {}, time: {} };
-        }
+        try { googleMatrix = JSON.parse(saved); } catch(e) { googleMatrix = { dist: {}, time: {} }; }
     }
     updateCacheCount();
 }
@@ -198,51 +199,37 @@ function updateCacheCount() {
     document.getElementById('cacheCount').textContent = count.toLocaleString();
 }
 
-function getCacheKey(i, j) {
-    return `${i}_${j}`;
-}
+function getCacheKey(i, j) { return i + '_' + j; }
 
-function getCachedRoute(i, j) {
+function getCached(i, j) {
     const key = getCacheKey(i, j);
     if (googleMatrix.dist[key] !== undefined) {
-        return { dist: googleMatrix.dist[key], time: googleMatrix.time[key], cached: true };
+        return { dist: googleMatrix.dist[key], time: googleMatrix.time[key] };
     }
     return null;
 }
 
-function cacheRoute(i, j, dist, time) {
+function setCache(i, j, dist, time) {
     const key = getCacheKey(i, j);
     googleMatrix.dist[key] = dist;
     googleMatrix.time[key] = time;
     saveCache();
 }
 
-let map, markers = [], selectedA = null, selectedB = null;
-let gmapsRoute = null, renderer = null;
-let directionsService = null;
-
 function initMap() {
     loadCache();
-    
-    map = new google.maps.Map(document.getElementById('map'), {
-        center: {lat: 24.7136, lng: 46.6753}, zoom: 11
-    });
-    
+    map = new google.maps.Map(document.getElementById('map'), { center: {lat: 24.7136, lng: 46.6753}, zoom: 11 });
     directionsService = new google.maps.DirectionsService();
     
     SITES.forEach((s, i) => {
-        const marker = new google.maps.Marker({
-            position: {lat: s.lat, lng: s.lon}, map: map,
-            title: s.site_id + ' (' + (s.site_direction || '?') + ')'
-        });
+        const marker = new google.maps.Marker({ position: {lat: s.lat, lng: s.lon}, map, title: s.site_id });
         marker.addListener('click', () => onMarkerClick(i));
         markers.push(marker);
     });
     
-    const selA = document.getElementById('siteA');
-    const selB = document.getElementById('siteB');
+    const selA = document.getElementById('siteA'), selB = document.getElementById('siteB');
     SITES.forEach((s, i) => {
-        const opt = `<option value="${i}">${s.site_id} (${s.site_direction || '?'})</option>`;
+        const opt = '<option value="' + i + '">' + s.site_id + ' (' + (s.site_direction||'?') + ')</option>';
         selA.innerHTML += opt;
         selB.innerHTML += opt;
     });
@@ -251,87 +238,58 @@ function initMap() {
 }
 
 function toggleMatrix() {
-    const overlay = document.getElementById('matrixOverlay');
-    overlay.classList.toggle('show');
-    if (overlay.classList.contains('show')) {
-        renderMatrixTable();
-    }
+    const o = document.getElementById('matrixOverlay');
+    o.classList.toggle('show');
+    if (o.classList.contains('show')) renderMatrix();
 }
 
-function renderMatrixTable() {
+function renderMatrix() {
     const count = Object.keys(googleMatrix.dist).length;
     document.getElementById('matrixCached').textContent = count.toLocaleString();
-    document.getElementById('matrixPercent').textContent = ((count / TOTAL_ROUTES) * 100).toFixed(1) + '%';
+    document.getElementById('matrixPercent').textContent = ((count/TOTAL_ROUTES)*100).toFixed(1)+'%';
     
-    // Show first 30x30 preview
-    const size = Math.min(30, SITES.length);
+    const size = 30;
     let html = '<table class="matrix-table"><thead><tr><th></th>';
-    for (let j = 0; j < size; j++) {
-        html += `<th>${SITES[j].site_id.slice(-4)}</th>`;
-    }
+    for (let j = 0; j < size; j++) html += '<th>' + SITES[j].site_id.slice(-4) + '</th>';
     html += '</tr></thead><tbody>';
-    
     for (let i = 0; i < size; i++) {
-        html += `<tr><td>${SITES[i].site_id.slice(-4)}</td>`;
+        html += '<tr><td>' + SITES[i].site_id.slice(-4) + '</td>';
         for (let j = 0; j < size; j++) {
-            if (i === j) {
-                html += '<td>0</td>';
-            } else {
-                const cached = getCachedRoute(i, j);
-                if (cached) {
-                    html += `<td class="cached">${cached.dist.toFixed(1)}</td>`;
-                } else {
-                    html += '<td class="empty">-</td>';
-                }
+            if (i === j) { html += '<td>0</td>'; }
+            else {
+                const c = getCached(i, j);
+                html += c ? '<td class="cached">' + c.dist.toFixed(1) + '</td>' : '<td class="empty">-</td>';
             }
         }
         html += '</tr>';
     }
-    html += '</tbody></table>';
-    html += `<p style="margin-top:15px;color:#666;font-size:0.8rem;">Showing 30x30 preview. Green = cached from Google Maps.</p>`;
-    
+    html += '</tbody></table><p style="margin-top:15px;color:#666;font-size:0.8rem;">30x30 preview. Green = Google cached.</p>';
     document.getElementById('matrixTableContainer').innerHTML = html;
 }
 
 function downloadMatrix() {
-    const data = {
-        source: 'Google Maps DirectionsService',
-        description: 'Routes cached from dashboard usage - Shortest TIME',
-        exported_at: new Date().toISOString(),
-        total_cached: Object.keys(googleMatrix.dist).length,
-        sites: SITES,
-        cache: googleMatrix
-    };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'google_maps_matrix_cache.json';
-    a.click();
-    URL.revokeObjectURL(url);
+    const blob = new Blob([JSON.stringify({
+        source: 'Google Maps', exported: new Date().toISOString(),
+        cached: Object.keys(googleMatrix.dist).length, sites: SITES, matrix: googleMatrix
+    }, null, 2)], {type: 'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'google_matrix.json'; a.click();
 }
 
 function clearMatrix() {
-    if (confirm('Clear all cached routes? This cannot be undone.')) {
-        googleMatrix = { dist: {}, time: {} };
-        saveCache();
-        renderMatrixTable();
+    if (confirm('Clear all cached routes?')) {
+        googleMatrix = { dist: {}, time: {} }; saveCache(); renderMatrix();
     }
 }
 
 function updateSiteList(filter = '') {
-    const list = document.getElementById('siteList');
-    const f = filter.toLowerCase();
+    const list = document.getElementById('siteList'), f = (filter||'').toLowerCase();
     let html = '', count = 0;
     SITES.forEach((s, i) => {
-        if (!f || s.site_id.toLowerCase().includes(f) || (s.road_name || '').toLowerCase().includes(f)) {
+        if (!f || s.site_id.toLowerCase().includes(f) || (s.road_name||'').toLowerCase().includes(f)) {
             count++;
             const sel = (i === selectedA || i === selectedB) ? 'selected' : '';
-            html += `<div class="site-item ${sel}" onclick="onSiteClick(${i})">
-                <div class="site-id">${s.site_id} (${s.site_direction || '?'})</div>
-                <div class="site-road">${s.road_name || ''}</div>
-            </div>`;
+            html += '<div class="site-item ' + sel + '" onclick="onSiteClick(' + i + ')"><div class="site-id">' + s.site_id + ' (' + (s.site_direction||'?') + ')</div><div class="site-road">' + (s.road_name||'') + '</div></div>';
         }
     });
     list.innerHTML = html;
@@ -340,11 +298,9 @@ function updateSiteList(filter = '') {
 
 function onMarkerClick(i) {
     if (selectedA === null || (selectedA !== null && selectedB !== null)) {
-        selectedA = i; selectedB = null;
-        document.getElementById('siteA').value = i;
+        selectedA = i; selectedB = null; document.getElementById('siteA').value = i;
     } else {
-        selectedB = i;
-        document.getElementById('siteB').value = i;
+        selectedB = i; document.getElementById('siteB').value = i;
     }
     calcRoute();
 }
@@ -353,29 +309,47 @@ function onSiteClick(i) { onMarkerClick(i); }
 
 function swapSites() {
     const a = document.getElementById('siteA'), b = document.getElementById('siteB');
-    [a.value, b.value] = [b.value, a.value];
+    const t = a.value; a.value = b.value; b.value = t;
     calcRoute();
 }
 
-async function getGoogleRoute(i, j) {
-    // Check cache first
-    const cached = getCachedRoute(i, j);
-    if (cached) return cached;
-    
-    // Call Google Maps
-    return new Promise((resolve) => {
-        const sA = SITES[i], sB = SITES[j];
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function findWaypoints(route, startIdx, endIdx) {
+    const startDir = SITES[startIdx].site_direction;
+    const path = route.overview_path;
+    const found = [];
+    SITES.forEach((site, idx) => {
+        if (idx === startIdx || idx === endIdx) return;
+        if (site.site_direction !== startDir) return;
+        let minDist = Infinity, pathIdx = 0;
+        for (let i = 0; i < path.length; i++) {
+            const d = haversine(site.lat, site.lon, path[i].lat(), path[i].lng());
+            if (d < minDist) { minDist = d; pathIdx = i; }
+        }
+        if (minDist < 0.03) found.push({ idx, site, pathIdx });
+    });
+    found.sort((a, b) => a.pathIdx - b.pathIdx);
+    return found;
+}
+
+async function fetchGoogleRoute(i, j) {
+    return new Promise(resolve => {
         directionsService.route({
-            origin: {lat: sA.lat, lng: sA.lon},
-            destination: {lat: sB.lat, lng: sB.lon},
+            origin: {lat: SITES[i].lat, lng: SITES[i].lon},
+            destination: {lat: SITES[j].lat, lng: SITES[j].lon},
             travelMode: 'DRIVING'
         }, (res, status) => {
             if (status === 'OK') {
                 const leg = res.routes[0].legs[0];
                 const dist = leg.distance.value / 1000;
                 const time = leg.duration.value / 60;
-                cacheRoute(i, j, dist, time);
-                resolve({ dist, time, cached: false, route: res.routes[0] });
+                setCache(i, j, dist, time);
+                resolve({ dist, time, route: res.routes[0] });
             } else {
                 resolve({ dist: -1, time: -1, error: status });
             }
@@ -389,151 +363,116 @@ async function calcRoute() {
     if (isNaN(iA) || isNaN(iB) || iA === iB) return;
     
     selectedA = iA; selectedB = iB;
-    const sA = SITES[iA], sB = SITES[iB];
     
-    // Reset markers
     markers.forEach(m => m.setIcon(null));
     markers[iA].setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
     markers[iB].setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
     
-    // Get main route (with full route object for display)
-    const siteA = SITES[iA], siteB = SITES[iB];
-    directionsService.route({
-        origin: {lat: siteA.lat, lng: siteA.lon},
-        destination: {lat: siteB.lat, lng: siteB.lon},
-        travelMode: 'DRIVING'
-    }, async (res, status) => {
-        if (status === 'OK') {
-            gmapsRoute = res.routes[0];
-            const leg = gmapsRoute.legs[0];
-            const dist = leg.distance.value / 1000;
-            const time = leg.duration.value / 60;
-            
-            // Cache this route
-            cacheRoute(iA, iB, dist, time);
-            
-            const cached = getCachedRoute(iA, iB);
-            document.getElementById('cacheIndicator').textContent = cached ? '(from cache)' : '(just fetched)';
-            document.getElementById('routeKm').textContent = dist.toFixed(1);
-            document.getElementById('routeMin').textContent = Math.round(time);
-            
-            showRoute();
-            
-            // Also cache waypoint routes in background
-            const waypoints = findWaypoints(gmapsRoute, iA, iB);
-            cacheWaypointRoutes(iA, iB, waypoints);
-        }
-    });
-    
-    const bounds = new google.maps.LatLngBounds();
-    bounds.extend({lat: sA.lat, lng: sA.lon});
-    bounds.extend({lat: sB.lat, lng: sB.lon});
-    map.fitBounds(bounds, 50);
-    updateSiteList(document.getElementById('searchInput').value);
-}
-
-async function cacheWaypointRoutes(startIdx, endIdx, waypoints) {
-    const stopIndices = [startIdx, ...waypoints.map(w => w.idx), endIdx];
-    
-    for (let i = 0; i < stopIndices.length - 1; i++) {
-        const fromIdx = stopIndices[i];
-        const toIdx = stopIndices[i + 1];
-        
-        if (!getCachedRoute(fromIdx, toIdx)) {
-            await getGoogleRoute(fromIdx, toIdx);
-            // Small delay to not overwhelm API
-            await new Promise(r => setTimeout(r, 100));
-        }
+    // Get main route from Google
+    const mainResult = await fetchGoogleRoute(iA, iB);
+    if (mainResult.error) {
+        document.getElementById('routeKm').textContent = 'ERR';
+        document.getElementById('routeMin').textContent = 'ERR';
+        return;
     }
     
-    // Re-render breakdown with cached values
-    showRoute();
-}
-
-function haversine(lat1, lon1, lat2, lon2) {
-    const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
-    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-function findWaypoints(route, startIdx, endIdx) {
-    const startDir = SITES[startIdx].site_direction;
-    const path = route.overview_path;
-    const found = [];
+    gmapsRoute = mainResult.route;
+    document.getElementById('routeKm').textContent = mainResult.dist.toFixed(1);
+    document.getElementById('routeMin').textContent = Math.round(mainResult.time);
     
-    SITES.forEach((site, idx) => {
-        if (idx === startIdx || idx === endIdx) return;
-        if (site.site_direction !== startDir) return;
-        
-        let minDist = Infinity, pathIdx = 0;
-        for (let i = 0; i < path.length; i++) {
-            const d = haversine(site.lat, site.lon, path[i].lat(), path[i].lng());
-            if (d < minDist) { minDist = d; pathIdx = i; }
-        }
-        
-        if (minDist < 0.03) found.push({ idx, site, pathIdx });
-    });
-    
-    found.sort((a, b) => a.pathIdx - b.pathIdx);
-    return found;
-}
-
-function showRoute() {
+    // Show route on map
     if (renderer) renderer.setMap(null);
-    if (!gmapsRoute) return;
-    
     renderer = new google.maps.DirectionsRenderer({
-        map: map, suppressMarkers: true,
+        map, suppressMarkers: true,
         polylineOptions: { strokeColor: '#4285f4', strokeWeight: 5, strokeOpacity: 0.8 }
     });
     renderer.setDirections({ routes: [gmapsRoute], request: { travelMode: 'DRIVING' } });
     
-    const waypoints = findWaypoints(gmapsRoute, selectedA, selectedB);
-    waypoints.forEach(w => markers[w.idx].setIcon('http://maps.google.com/mapfiles/ms/icons/orange-dot.png'));
+    // Find waypoints
+    currentWaypoints = findWaypoints(gmapsRoute, iA, iB);
+    currentWaypoints.forEach(w => markers[w.idx].setIcon('http://maps.google.com/mapfiles/ms/icons/orange-dot.png'));
     
-    const stopIndices = [selectedA, ...waypoints.map(w => w.idx), selectedB];
-    const stops = stopIndices.map((idx, i) => ({ 
-        idx, 
-        site: SITES[idx], 
-        type: i === 0 ? 'start' : i === stopIndices.length - 1 ? 'end' : 'wp' 
+    // Build stop list
+    const stopIndices = [iA, ...currentWaypoints.map(w => w.idx), iB];
+    
+    // Show initial breakdown (with loading for trips)
+    renderBreakdown(stopIndices, {});
+    
+    // Fetch all trip segments from Google
+    const tripData = {};
+    for (let i = 0; i < stopIndices.length - 1; i++) {
+        const from = stopIndices[i], to = stopIndices[i + 1];
+        const cached = getCached(from, to);
+        if (cached) {
+            tripData[from + '_' + to] = cached;
+        } else {
+            const result = await fetchGoogleRoute(from, to);
+            if (!result.error) {
+                tripData[from + '_' + to] = { dist: result.dist, time: result.time };
+            }
+        }
+        // Update display after each trip
+        renderBreakdown(stopIndices, tripData);
+        await new Promise(r => setTimeout(r, 50));
+    }
+    
+    const bounds = new google.maps.LatLngBounds();
+    bounds.extend({lat: SITES[iA].lat, lng: SITES[iA].lon});
+    bounds.extend({lat: SITES[iB].lat, lng: SITES[iB].lon});
+    map.fitBounds(bounds, 50);
+    updateSiteList(document.getElementById('searchInput').value);
+}
+
+function renderBreakdown(stopIndices, tripData) {
+    const stops = stopIndices.map((idx, i) => ({
+        idx, site: SITES[idx],
+        type: i === 0 ? 'start' : i === stopIndices.length - 1 ? 'end' : 'wp'
     }));
     
     document.getElementById('stopCount').textContent = stops.length + ' stops, ' + (stops.length - 1) + ' trips';
     
     let html = '';
+    let totalDist = 0, totalTime = 0, allLoaded = true;
+    
     stops.forEach((stop, i) => {
         const cls = stop.type === 'start' ? 'start' : stop.type === 'end' ? 'end' : '';
         const icon = stop.type === 'start' ? 'A' : stop.type === 'end' ? 'B' : i;
-        html += `<div class="waypoint ${cls}">
-            <div class="waypoint-icon">${icon}</div>
-            <div class="waypoint-info">
-                <div class="waypoint-site">${stop.site.site_id} (${stop.site.site_direction})</div>
-                <div class="waypoint-road">${stop.site.road_name || ''}</div>
-            </div>
-        </div>`;
+        
+        html += '<div class="waypoint ' + cls + '">' +
+            '<div class="waypoint-icon">' + icon + '</div>' +
+            '<div class="waypoint-info">' +
+                '<div class="waypoint-site">' + stop.site.site_id + ' (' + stop.site.site_direction + ')</div>' +
+                '<div class="waypoint-road">' + (stop.site.road_name || '') + '</div>' +
+            '</div></div>';
         
         if (i < stops.length - 1) {
-            const fromIdx = stop.idx;
-            const toIdx = stops[i + 1].idx;
-            const cached = getCachedRoute(fromIdx, toIdx);
+            const from = stop.idx, to = stops[i + 1].idx;
+            const key = from + '_' + to;
+            const trip = tripData[key];
             
-            let distText, timeText, sourceText;
-            if (cached) {
-                distText = cached.dist.toFixed(1);
-                timeText = Math.round(cached.time);
-                sourceText = '<span class="from-google">(Google)</span>';
+            if (trip) {
+                totalDist += trip.dist;
+                totalTime += trip.time;
+                html += '<div class="trip-segment">' +
+                    '<span>Trip ' + (i+1) + ': ' + stop.site.site_id + ' → ' + stops[i+1].site.site_id + '</span>' +
+                    '<span>' + trip.dist.toFixed(1) + ' km, ' + Math.round(trip.time) + ' min <span class="trip-source">Google</span></span>' +
+                '</div>';
             } else {
-                distText = '...';
-                timeText = '...';
-                sourceText = '(loading)';
+                allLoaded = false;
+                html += '<div class="trip-segment loading">' +
+                    '<span>Trip ' + (i+1) + ': ' + stop.site.site_id + ' → ' + stops[i+1].site.site_id + '</span>' +
+                    '<span>Loading from Google...</span>' +
+                '</div>';
             }
-            
-            html += `<div class="trip-segment">
-                <span>Trip ${i+1}: ${stop.site.site_id} → ${stops[i+1].site.site_id}</span>
-                <span>${distText} km, ${timeText} min ${sourceText}</span>
-            </div>`;
         }
     });
+    
+    if (allLoaded && stops.length > 1) {
+        html += '<div class="trip-total">' +
+            '<span>Total (' + (stops.length - 1) + ' trips)</span>' +
+            '<span>' + totalDist.toFixed(1) + ' km, ' + Math.round(totalTime) + ' min</span>' +
+        '</div>';
+    }
     
     document.getElementById('breakdownContent').innerHTML = html;
 }
