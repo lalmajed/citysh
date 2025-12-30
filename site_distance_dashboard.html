@@ -104,11 +104,15 @@ function haversine(lat1, lon1, lat2, lon2) {
 
 // Find waypoints along a route path
 function findWaypointsOnPath(path, startIdx, endIdx) {
+    const originDir = SITES[startIdx].site_direction;
     const found = [];
     const THRESHOLD = 0.15; // 150 meters
     
     SITES.forEach((site, idx) => {
         if (idx === startIdx || idx === endIdx) return;
+        
+        // MUST be same direction as origin (same side of road)
+        if (site.site_direction !== originDir) return;
         
         // Find closest point on path
         let minDist = Infinity, pathIdx = 0;
@@ -117,15 +121,15 @@ function findWaypointsOnPath(path, startIdx, endIdx) {
             if (d < minDist) { minDist = d; pathIdx = i; }
         }
         
-        // Include ANY site close to the path (no direction filter)
+        // Must be close to the path
         if (minDist < THRESHOLD) {
-            found.push({ idx, pathIdx, dist: minDist, dir: site.site_direction });
+            found.push({ idx, pathIdx, dist: minDist });
         }
     });
     
     // Sort by position along path
     found.sort((a, b) => a.pathIdx - b.pathIdx);
-    console.log('Waypoints found:', found.map(w => SITES[w.idx].site_id + '(' + w.dir + ',' + (w.dist*1000).toFixed(0) + 'm)'));
+    console.log('Waypoints (' + originDir + ' direction):', found.map(w => SITES[w.idx].site_id + '(' + (w.dist*1000).toFixed(0) + 'm)'));
     return found.map(w => w.idx);
 }
 
