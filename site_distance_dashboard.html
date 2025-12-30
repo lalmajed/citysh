@@ -146,11 +146,11 @@ async function verifyWaypointWithGoogle(startIdx, waypointIdx, endIdx, directDis
                 res.routes[0].legs.forEach(leg => totalDist += leg.distance.value);
                 totalDist = totalDist / 1000; // km
                 
-                // VERY STRICT: 0.5% threshold
-                // If waypoint is truly ON the route, adding it adds almost ZERO distance
-                // If you need to cross road/detour, it adds significant distance
+                // ULTRA STRICT: 0.1% threshold
+                // If waypoint is truly ON the route, distance should be IDENTICAL
+                // Even tiny detour to wrong side adds measurable distance
                 const increase = (totalDist - directDist) / directDist;
-                const isOnRoute = increase < 0.005; // 0.5% - almost no increase allowed
+                const isOnRoute = increase < 0.001; // 0.1% - essentially zero increase
                 
                 const result = isOnRoute ? '✓ ON ROUTE' : '✗ OFF';
                 log('  ' + result + ' ' + SITES[waypointIdx].site_id + 
@@ -190,12 +190,87 @@ async function findWaypointsOnPath(path, startIdx, endIdx, directDist) {
         await new Promise(r => setTimeout(r, 150)); // Rate limit
     }
     
+    // POST-FILTER: If two verified waypoints are very close, keep only one
+    const filtered = filterNearbyDuplicates(verified, path);
+    
     log('═══════════════════════════════════');
-    log('RESULT: ' + verified.length + ' waypoints on route');
-    if (verified.length > 0) {
-        log('  ' + verified.map(i => SITES[i].site_id).join(', '));
+    log('RESULT: ' + filtered.length + ' waypoints on route');
+    if (filtered.length > 0) {
+        log('  ' + filtered.map(i => SITES[i].site_id).join(', '));
     }
-    return verified;
+    return filtered;
+}
+
+// If two waypoints are within 100m of each other, keep only the one matching route direction
+function filterNearbyDuplicates(waypointIdxs, path) {
+    if (waypointIdxs.length < 2) return waypointIdxs;
+    
+    const dominated = new Set();
+    
+    for (let i = 0; i < waypointIdxs.length; i++) {
+        if (dominated.has(i)) continue;
+        
+        for (let j = i + 1; j < waypointIdxs.length; j++) {
+            if (dominated.has(j)) continue;
+            
+            const siteA = SITES[waypointIdxs[i]];
+            const siteB = SITES[waypointIdxs[j]];
+            
+            // Check if sites are very close (within 100m)
+            const dist = haversine(siteA.lat, siteA.lon, siteB.lat, siteB.lon);
+            if (dist < 0.1) {
+                // Find which one matches route direction better
+                // Get path index for each
+                let pathIdxA = 0, pathIdxB = 0;
+                let minDistA = Infinity, minDistB = Infinity;
+                
+                for (let p = 0; p < path.length; p++) {
+                    const dA = haversine(siteA.lat, siteA.lon, path[p].lat(), path[p].lng());
+                    const dB = haversine(siteB.lat, siteB.lon, path[p].lat(), path[p].lng());
+                    if (dA < minDistA) { minDistA = dA; pathIdxA = p; }
+                    if (dB < minDistB) { minDistB = dB; pathIdxB = p; }
+                }
+                
+                // Get route direction at that point
+                const avgIdx = Math.floor((pathIdxA + pathIdxB) / 2);
+                const routeDir = getRouteDir(path, avgIdx);
+                
+                log('  Nearby pair: ' + siteA.site_id + '(' + siteA.site_direction + ') vs ' + siteB.site_id + '(' + siteB.site_direction + ') - route going ' + routeDir);
+                
+                // Keep the one matching route direction
+                if (siteA.site_direction === routeDir && siteB.site_direction !== routeDir) {
+                    dominated.add(j);
+                    log('    → Keep ' + siteA.site_id);
+                } else if (siteB.site_direction === routeDir && siteA.site_direction !== routeDir) {
+                    dominated.add(i);
+                    log('    → Keep ' + siteB.site_id);
+                } else {
+                    // Same direction or neither matches - keep closer one
+                    if (minDistA <= minDistB) {
+                        dominated.add(j);
+                        log('    → Keep ' + siteA.site_id + ' (closer)');
+                    } else {
+                        dominated.add(i);
+                        log('    → Keep ' + siteB.site_id + ' (closer)');
+                    }
+                }
+            }
+        }
+    }
+    
+    return waypointIdxs.filter((_, idx) => !dominated.has(idx));
+}
+
+// Get route direction at a path index
+function getRouteDir(path, idx) {
+    const i = Math.min(Math.max(idx, 0), path.length - 2);
+    const dLat = path[i + 1].lat() - path[i].lat();
+    const dLon = path[i + 1].lng() - path[i].lng();
+    if (Math.abs(dLat) > Math.abs(dLon)) {
+        return dLat > 0 ? 'N' : 'S';
+    } else {
+        return dLon > 0 ? 'E' : 'W';
+    }
 }
 
 function log(msg) {
