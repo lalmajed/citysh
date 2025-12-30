@@ -222,7 +222,7 @@
         }
         
         function findSitesAlongRoute(routePath, startIdx, endIdx) {
-            const THRESHOLD = 0.5;
+            const THRESHOLD = 0.03;
             const sites = [];
             DATA.sites.forEach((site, idx) => {
                 if (idx === startIdx || idx === endIdx) return;
