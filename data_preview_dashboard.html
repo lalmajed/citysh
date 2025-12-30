@@ -68,9 +68,7 @@
                     <select id="originSel"><option value="">-- Origin --</option></select>
                     <select id="destSel"><option value="">-- Destination --</option></select>
                     <button class="btn" onclick="showRoute()">Show Route with Waypoints</button>
-                    <label style="font-size:0.8rem;display:flex;align-items:center;gap:5px;margin-top:5px;">
-                        <input type="checkbox" id="ignoreDir"> Ignore direction filter (show all nearby)
-                    </label>
+                    <p style="font-size:0.75rem;color:#666;margin-top:5px;">Detects all sites within 150m of route</p>
                 </div>
                 
                 <div class="panel">
@@ -196,10 +194,8 @@ function haversine(lat1, lon1, lat2, lon2) {
 }
 
 function findWaypoints(path, startIdx, endIdx) {
-    const startDir = SITES[startIdx].site_direction;
-    const ignoreDir = document.getElementById('ignoreDir').checked;
     const found = [];
-    const THRESHOLD = 0.1; // 100 meters
+    const THRESHOLD = 0.15; // 150 meters
     
     SITES.forEach((site, idx) => {
         if (idx === startIdx || idx === endIdx) return;
@@ -211,9 +207,8 @@ function findWaypoints(path, startIdx, endIdx) {
             if (d < minDist) { minDist = d; pathIdx = i; }
         }
         
-        // Check if close enough (and optionally same direction)
-        const dirMatch = ignoreDir || site.site_direction === startDir;
-        if (minDist < THRESHOLD && dirMatch) {
+        // Include ANY site close to the path
+        if (minDist < THRESHOLD) {
             found.push({ idx, pathIdx, dist: minDist, dir: site.site_direction });
         }
     });
