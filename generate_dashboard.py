@@ -34,8 +34,7 @@ html = '''<!DOCTYPE html>
         .selection-box label { display: block; font-size: 0.75rem; color: #64748b; margin-bottom: 4px; }
         .selection-box select { width: 100%; padding: 8px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; color: #1e293b; font-size: 0.8rem; }
         .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .result-box { background: #ffffff; border-radius: 8px; padding: 12px; text-align: center; border: 1px solid #e2e8f0; cursor: pointer; }
-        .result-box:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .result-box { background: #ffffff; border-radius: 8px; padding: 12px; text-align: center; border: 1px solid #e2e8f0; }
         .result-box.distance { border-left: 4px solid #22c55e; }
         .result-box.time { border-left: 4px solid #8b5cf6; }
         .result-value { font-size: 1.8rem; font-weight: 700; }
@@ -46,21 +45,27 @@ html = '''<!DOCTYPE html>
         .search-box { margin-bottom: 15px; }
         .search-box input { width: 100%; padding: 10px 12px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; color: #1e293b; font-size: 0.85rem; }
         .swap-btn { background: #e2e8f0; border: none; color: #64748b; padding: 8px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; }
-        .routes-panel { background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; max-height: 350px; overflow-y: auto; }
-        .routes-panel.hidden { display: none; }
-        .routes-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
-        .routes-header h3 { font-size: 0.85rem; color: #2563eb; font-weight: 600; }
-        .routes-header .close-btn { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.2rem; }
-        .route-item { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; padding: 8px; margin: 4px 0; background: #ffffff; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 0.75rem; cursor: pointer; align-items: center; }
-        .route-item:hover { background: #dbeafe; }
-        .route-item.selected { background: #dbeafe; border-color: #2563eb; }
-        .route-site { font-weight: 600; color: #1e293b; }
-        .route-road { font-size: 0.65rem; color: #64748b; direction: rtl; }
-        .route-distance { color: #16a34a; font-weight: 600; }
-        .route-time { color: #7c3aed; font-weight: 600; }
-        .sort-btns { display: flex; gap: 5px; margin-bottom: 10px; }
-        .sort-btn { padding: 4px 8px; font-size: 0.7rem; background: #e2e8f0; border: none; border-radius: 4px; cursor: pointer; color: #64748b; }
-        .sort-btn.active { background: #2563eb; color: white; }
+        
+        .route-stops-panel { background: #f0fdf4; border-radius: 8px; padding: 12px; margin-bottom: 15px; border: 1px solid #bbf7d0; }
+        .route-stops-panel.hidden { display: none; }
+        .route-stops-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .route-stops-header h3 { font-size: 0.85rem; color: #166534; font-weight: 600; }
+        .route-stop { display: flex; align-items: center; padding: 8px; margin: 4px 0; background: #ffffff; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 0.8rem; }
+        .route-stop.start { border-left: 4px solid #22c55e; }
+        .route-stop.end { border-left: 4px solid #ef4444; }
+        .route-stop.waypoint { border-left: 4px solid #f59e0b; }
+        .stop-number { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; margin-right: 10px; color: white; }
+        .route-stop.start .stop-number { background: #22c55e; }
+        .route-stop.end .stop-number { background: #ef4444; }
+        .route-stop.waypoint .stop-number { background: #f59e0b; }
+        .stop-info { flex: 1; }
+        .stop-site { font-weight: 600; color: #1e293b; }
+        .stop-road { font-size: 0.7rem; color: #64748b; direction: rtl; }
+        .stop-stats { text-align: right; font-size: 0.75rem; }
+        .stop-dist { color: #16a34a; font-weight: 600; }
+        .stop-time { color: #7c3aed; }
+        .no-stops { color: #64748b; font-style: italic; font-size: 0.8rem; padding: 10px; }
+        
         .info-box { background: #dbeafe; border-radius: 8px; padding: 12px; margin-bottom: 15px; font-size: 0.8rem; color: #1e40af; }
     </style>
 </head>
@@ -75,7 +80,7 @@ html = '''<!DOCTYPE html>
         </header>
         
         <div class="sidebar">
-            <div class="section-title">Quick Distance Lookup</div>
+            <div class="section-title">Route Lookup</div>
             <div class="selection-panel">
                 <div class="selection-row">
                     <div class="selection-box">
@@ -89,30 +94,27 @@ html = '''<!DOCTYPE html>
                     </div>
                 </div>
                 <div class="results-grid">
-                    <div class="result-box distance" onclick="showAllRoutes('distance')" title="Click to see all distances">
+                    <div class="result-box distance">
                         <div class="result-value" id="distanceResult">--</div>
                         <div class="result-unit">km</div>
-                        <div class="result-label">Click for all routes</div>
+                        <div class="result-label">Total Distance</div>
                     </div>
-                    <div class="result-box time" onclick="showAllRoutes('time')" title="Click to see all times">
+                    <div class="result-box time">
                         <div class="result-value" id="timeResult">--</div>
                         <div class="result-unit">min</div>
-                        <div class="result-label">Click for all routes</div>
+                        <div class="result-label">Total Time</div>
                     </div>
                 </div>
             </div>
             
-            <div class="routes-panel hidden" id="routesPanel">
-                <div class="routes-header">
-                    <h3 id="routesTitle">Routes from Site</h3>
-                    <button class="close-btn" onclick="hideRoutesPanel()">&times;</button>
+            <div class="route-stops-panel" id="routeStopsPanel">
+                <div class="route-stops-header">
+                    <h3>Sites Along Route</h3>
+                    <span id="stopsCount"></span>
                 </div>
-                <div class="sort-btns">
-                    <button class="sort-btn active" data-sort="distance" onclick="sortRoutes('distance')">Distance</button>
-                    <button class="sort-btn" data-sort="time" onclick="sortRoutes('time')">Time</button>
-                    <button class="sort-btn" data-sort="name" onclick="sortRoutes('name')">Name</button>
+                <div id="routeStopsList">
+                    <div class="no-stops">Select two sites to see the route</div>
                 </div>
-                <div id="routesList"></div>
             </div>
             
             <div class="section-title">All Sites (<span id="filteredCount">0</span>)</div>
@@ -136,7 +138,6 @@ html = '''<!DOCTYPE html>
         const DATA = ''' + json.dumps(data) + ''';
         
         let map, markers = {}, routeLine, selectedSiteA = null, selectedSiteB = null;
-        let currentRoutes = [], currentSortBy = 'distance';
         
         function initMap() {
             map = new google.maps.Map(document.getElementById('map'), {
@@ -160,16 +161,16 @@ html = '''<!DOCTYPE html>
                 sA.innerHTML += `<option value="${i}">${s.site_id}</option>`;
                 sB.innerHTML += `<option value="${i}">${s.site_id}</option>`;
             });
-            sA.onchange = sB.onchange = updateQuickLookup;
+            sA.onchange = sB.onchange = updateRoute;
         }
         
         function swapSites() {
             const a = document.getElementById('siteA'), b = document.getElementById('siteB');
             [a.value, b.value] = [b.value, a.value];
-            updateQuickLookup();
+            updateRoute();
         }
         
-        function updateQuickLookup() {
+        function updateRoute() {
             const iA = parseInt(document.getElementById('siteA').value), iB = parseInt(document.getElementById('siteB').value);
             if (isNaN(iA) || isNaN(iB)) return;
             selectedSiteA = iA; selectedSiteB = iB;
@@ -177,62 +178,163 @@ html = '''<!DOCTYPE html>
             document.getElementById('distanceResult').textContent = d >= 0 ? d.toFixed(1) : 'N/A';
             document.getElementById('timeResult').textContent = t >= 0 ? t.toFixed(0) : 'N/A';
             highlightRoute(iA, iB);
-            if (!document.getElementById('routesPanel').classList.contains('hidden')) renderRoutesList();
+            populateSiteList(document.getElementById('searchInput').value);
         }
         
-        function showAllRoutes(type) {
-            const iA = parseInt(document.getElementById('siteA').value);
-            if (isNaN(iA)) { alert('Please select a From Site first'); return; }
-            currentRoutes = DATA.sites.map((s, i) => ({
-                idx: i, site_id: s.site_id, road_name: s.road_name || 'Unknown',
-                distance: DATA.road_distances_km[iA][i], time: DATA.road_durations_min[iA][i]
-            })).filter(r => r.idx !== iA && r.distance >= 0);
-            currentSortBy = type;
-            sortRoutes(type);
-            document.getElementById('routesTitle').textContent = 'All routes from ' + DATA.sites[iA].site_id;
-            document.getElementById('routesPanel').classList.remove('hidden');
+        // Haversine distance in km
+        function haversine(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         }
         
-        function sortRoutes(by) {
-            currentSortBy = by;
-            if (by === 'distance') currentRoutes.sort((a,b) => a.distance - b.distance);
-            else if (by === 'time') currentRoutes.sort((a,b) => a.time - b.time);
-            else currentRoutes.sort((a,b) => a.site_id.localeCompare(b.site_id));
-            document.querySelectorAll('.sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === by));
-            renderRoutesList();
+        // Distance from point to line segment
+        function pointToSegmentDist(px, py, x1, y1, x2, y2) {
+            const A = px - x1, B = py - y1, C = x2 - x1, D = y2 - y1;
+            const dot = A * C + B * D;
+            const lenSq = C * C + D * D;
+            let param = lenSq !== 0 ? dot / lenSq : -1;
+            let xx, yy;
+            if (param < 0) { xx = x1; yy = y1; }
+            else if (param > 1) { xx = x2; yy = y2; }
+            else { xx = x1 + param * C; yy = y1 + param * D; }
+            return haversine(px, py, xx, yy);
         }
         
-        function renderRoutesList() {
-            document.getElementById('routesList').innerHTML = currentRoutes.map(r => 
-                `<div class="route-item ${r.idx === selectedSiteB ? 'selected' : ''}" onclick="selectRoute(${r.idx})">
-                    <div><div class="route-site">${r.site_id}</div><div class="route-road">${r.road_name}</div></div>
-                    <div class="route-distance">${r.distance.toFixed(1)} km</div>
-                    <div class="route-time">${r.time.toFixed(0)} min</div>
-                </div>`
-            ).join('');
-        }
-        
-        function selectRoute(i) {
-            document.getElementById('siteB').value = i;
-            updateQuickLookup();
-        }
-        
-        function hideRoutesPanel() { document.getElementById('routesPanel').classList.add('hidden'); }
-        
-        function highlightRoute(iA, iB) {
-            Object.values(markers).forEach(m => m.setIcon({path: google.maps.SymbolPath.CIRCLE, scale: 6, fillColor: '#2563eb', fillOpacity: 0.8, strokeColor: '#1e40af', strokeWeight: 2}));
-            if (routeLine) { if (routeLine.setMap) routeLine.setMap(null); }
-            markers[iA]?.setIcon({path: google.maps.SymbolPath.CIRCLE, scale: 12, fillColor: '#22c55e', fillOpacity: 1, strokeColor: '#166534', strokeWeight: 3});
-            markers[iB]?.setIcon({path: google.maps.SymbolPath.CIRCLE, scale: 12, fillColor: '#ef4444', fillOpacity: 1, strokeColor: '#b91c1c', strokeWeight: 3});
-            const sA = DATA.sites[iA], sB = DATA.sites[iB];
-            new google.maps.DirectionsService().route({
-                origin: {lat: sA.lat, lng: sA.lon}, destination: {lat: sB.lat, lng: sB.lon}, travelMode: 'DRIVING'
-            }, (res, status) => {
-                if (status === 'OK') {
-                    routeLine = new google.maps.DirectionsRenderer({map: map, suppressMarkers: true, polylineOptions: {strokeColor: '#7c3aed', strokeWeight: 5}});
-                    routeLine.setDirections(res);
+        function findSitesAlongRoute(routePath, startIdx, endIdx) {
+            const THRESHOLD_KM = 0.5; // Sites within 500m of route
+            const sitesOnRoute = [];
+            
+            DATA.sites.forEach((site, idx) => {
+                if (idx === startIdx || idx === endIdx) return;
+                
+                // Check distance to each segment of route
+                let minDist = Infinity;
+                for (let i = 0; i < routePath.length - 1; i++) {
+                    const d = pointToSegmentDist(
+                        site.lat, site.lon,
+                        routePath[i].lat(), routePath[i].lng(),
+                        routePath[i+1].lat(), routePath[i+1].lng()
+                    );
+                    minDist = Math.min(minDist, d);
+                }
+                
+                if (minDist < THRESHOLD_KM) {
+                    // Calculate distance along route from start
+                    const distFromStart = DATA.road_distances_km[startIdx][idx];
+                    const timeFromStart = DATA.road_durations_min[startIdx][idx];
+                    sitesOnRoute.push({
+                        idx, site_id: site.site_id, road_name: site.road_name || 'Unknown',
+                        distFromStart, timeFromStart, distToRoute: minDist
+                    });
                 }
             });
+            
+            // Sort by distance from start
+            sitesOnRoute.sort((a, b) => a.distFromStart - b.distFromStart);
+            return sitesOnRoute;
+        }
+        
+        function renderRouteStops(sitesOnRoute, startIdx, endIdx) {
+            const container = document.getElementById('routeStopsList');
+            const startSite = DATA.sites[startIdx];
+            const endSite = DATA.sites[endIdx];
+            const totalDist = DATA.road_distances_km[startIdx][endIdx];
+            const totalTime = DATA.road_durations_min[startIdx][endIdx];
+            
+            let html = '';
+            
+            // Start point
+            html += `<div class="route-stop start">
+                <div class="stop-number">A</div>
+                <div class="stop-info">
+                    <div class="stop-site">${startSite.site_id}</div>
+                    <div class="stop-road">${startSite.road_name || 'Unknown'}</div>
+                </div>
+                <div class="stop-stats">
+                    <div class="stop-dist">Start</div>
+                </div>
+            </div>`;
+            
+            // Waypoints
+            sitesOnRoute.forEach((s, i) => {
+                html += `<div class="route-stop waypoint">
+                    <div class="stop-number">${i + 1}</div>
+                    <div class="stop-info">
+                        <div class="stop-site">${s.site_id}</div>
+                        <div class="stop-road">${s.road_name}</div>
+                    </div>
+                    <div class="stop-stats">
+                        <div class="stop-dist">${s.distFromStart.toFixed(1)} km</div>
+                        <div class="stop-time">${s.timeFromStart.toFixed(0)} min</div>
+                    </div>
+                </div>`;
+            });
+            
+            // End point
+            html += `<div class="route-stop end">
+                <div class="stop-number">B</div>
+                <div class="stop-info">
+                    <div class="stop-site">${endSite.site_id}</div>
+                    <div class="stop-road">${endSite.road_name || 'Unknown'}</div>
+                </div>
+                <div class="stop-stats">
+                    <div class="stop-dist">${totalDist.toFixed(1)} km</div>
+                    <div class="stop-time">${totalTime.toFixed(0)} min</div>
+                </div>
+            </div>`;
+            
+            container.innerHTML = html;
+            document.getElementById('stopsCount').textContent = `(${sitesOnRoute.length} waypoints)`;
+        }
+        
+        function highlightRoute(iA, iB) {
+            // Reset markers
+            Object.values(markers).forEach(m => m.setIcon({
+                path: google.maps.SymbolPath.CIRCLE, scale: 6, 
+                fillColor: '#2563eb', fillOpacity: 0.8, strokeColor: '#1e40af', strokeWeight: 2
+            }));
+            
+            if (routeLine) { if (routeLine.setMap) routeLine.setMap(null); }
+            
+            // Highlight A and B
+            markers[iA]?.setIcon({path: google.maps.SymbolPath.CIRCLE, scale: 12, fillColor: '#22c55e', fillOpacity: 1, strokeColor: '#166534', strokeWeight: 3});
+            markers[iB]?.setIcon({path: google.maps.SymbolPath.CIRCLE, scale: 12, fillColor: '#ef4444', fillOpacity: 1, strokeColor: '#b91c1c', strokeWeight: 3});
+            
+            const sA = DATA.sites[iA], sB = DATA.sites[iB];
+            
+            new google.maps.DirectionsService().route({
+                origin: {lat: sA.lat, lng: sA.lon}, 
+                destination: {lat: sB.lat, lng: sB.lon}, 
+                travelMode: 'DRIVING'
+            }, (res, status) => {
+                if (status === 'OK') {
+                    routeLine = new google.maps.DirectionsRenderer({
+                        map: map, suppressMarkers: true, 
+                        polylineOptions: {strokeColor: '#7c3aed', strokeWeight: 5}
+                    });
+                    routeLine.setDirections(res);
+                    
+                    // Get route path and find sites along it
+                    const path = res.routes[0].overview_path;
+                    const sitesOnRoute = findSitesAlongRoute(path, iA, iB);
+                    
+                    // Highlight waypoint sites on map
+                    sitesOnRoute.forEach(s => {
+                        markers[s.idx]?.setIcon({
+                            path: google.maps.SymbolPath.CIRCLE, scale: 8, 
+                            fillColor: '#f59e0b', fillOpacity: 1, strokeColor: '#b45309', strokeWeight: 2
+                        });
+                    });
+                    
+                    renderRouteStops(sitesOnRoute, iA, iB);
+                } else {
+                    document.getElementById('routeStopsList').innerHTML = '<div class="no-stops">Could not calculate route</div>';
+                }
+            });
+            
             const bounds = new google.maps.LatLngBounds();
             bounds.extend({lat: sA.lat, lng: sA.lon});
             bounds.extend({lat: sB.lat, lng: sB.lon});
@@ -257,8 +359,7 @@ html = '''<!DOCTYPE html>
             if (selectedSiteA === null || (selectedSiteA !== null && selectedSiteB !== null)) {
                 selectedSiteA = i; selectedSiteB = null; document.getElementById('siteA').value = i;
             } else { selectedSiteB = i; document.getElementById('siteB').value = i; }
-            updateQuickLookup();
-            populateSiteList(document.getElementById('searchInput').value);
+            updateRoute();
         }
         
         function selectSiteFromList(i) { selectSiteFromMap(i); }
