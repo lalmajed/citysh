@@ -146,9 +146,10 @@ async function verifyWaypointWithGoogle(startIdx, waypointIdx, endIdx, directDis
                 res.routes[0].legs.forEach(leg => totalDist += leg.distance.value);
                 totalDist = totalDist / 1000; // km
                 
-                // If adding waypoint increases distance by less than 10%, it's ON the route
+                // If adding waypoint increases distance by less than 3%, it's ON the route
+                // Strict threshold - crossing to wrong side of road adds significant distance
                 const increase = (totalDist - directDist) / directDist;
-                const isOnRoute = increase < 0.10; // 10% threshold
+                const isOnRoute = increase < 0.03; // 3% threshold - very strict
                 
                 const result = isOnRoute ? '✓ ON ROUTE' : '✗ OFF';
                 log('  ' + result + ' ' + SITES[waypointIdx].site_id + ' (+' + (increase*100).toFixed(1) + '%)');
@@ -161,83 +162,17 @@ async function verifyWaypointWithGoogle(startIdx, waypointIdx, endIdx, directDis
     });
 }
 
-// Get local travel direction at a point on path
-function getLocalDirection(path, pathIdx) {
-    const i = Math.min(pathIdx, path.length - 2);
-    if (i < 0) return null;
-    const p1 = path[i];
-    const p2 = path[i + 1];
-    const dLat = p2.lat() - p1.lat();
-    const dLon = p2.lng() - p1.lng();
-    if (Math.abs(dLat) > Math.abs(dLon)) {
-        return dLat > 0 ? 'N' : 'S';
-    } else {
-        return dLon > 0 ? 'E' : 'W';
-    }
-}
-
-// Remove duplicate nearby sites - keep only the one matching travel direction
-function deduplicateNearbySites(candidates, path) {
-    const dominated = new Set();
-    
-    for (let i = 0; i < candidates.length; i++) {
-        if (dominated.has(i)) continue;
-        
-        for (let j = i + 1; j < candidates.length; j++) {
-            if (dominated.has(j)) continue;
-            
-            const siteI = SITES[candidates[i].idx];
-            const siteJ = SITES[candidates[j].idx];
-            
-            // Check if sites are very close (within 100m of each other)
-            const dist = haversine(siteI.lat, siteI.lon, siteJ.lat, siteJ.lon);
-            if (dist < 0.1) { // 100m
-                // Sites are close - get travel direction at this point
-                const avgPathIdx = Math.round((candidates[i].pathIdx + candidates[j].pathIdx) / 2);
-                const travelDir = getLocalDirection(path, avgPathIdx);
-                
-                log('  Nearby pair: ' + siteI.site_id + '(' + siteI.site_direction + ') & ' + siteJ.site_id + '(' + siteJ.site_direction + ') - travel dir: ' + travelDir);
-                
-                // Keep the one matching travel direction, remove the other
-                if (siteI.site_direction === travelDir && siteJ.site_direction !== travelDir) {
-                    dominated.add(j);
-                    log('    Keep ' + siteI.site_id + ', remove ' + siteJ.site_id);
-                } else if (siteJ.site_direction === travelDir && siteI.site_direction !== travelDir) {
-                    dominated.add(i);
-                    log('    Keep ' + siteJ.site_id + ', remove ' + siteI.site_id);
-                } else {
-                    // Same direction or neither matches - keep the closer one to path
-                    if (candidates[i].dist <= candidates[j].dist) {
-                        dominated.add(j);
-                        log('    Keep ' + siteI.site_id + ' (closer)');
-                    } else {
-                        dominated.add(i);
-                        log('    Keep ' + siteJ.site_id + ' (closer)');
-                    }
-                }
-            }
-        }
-    }
-    
-    return candidates.filter((_, idx) => !dominated.has(idx));
-}
-
 // Find and verify waypoints using Google Maps
 async function findWaypointsOnPath(path, startIdx, endIdx, directDist) {
     log('Checking for waypoints (direct dist: ' + directDist.toFixed(2) + 'km)...');
-    let candidates = findCandidatesNearPath(path, startIdx, endIdx);
+    const candidates = findCandidatesNearPath(path, startIdx, endIdx);
     
     if (candidates.length === 0) {
         log('No candidates found near path');
         return [];
     }
     
-    // DEDUPLICATE nearby sites first
-    log('Deduplicating nearby sites...');
-    candidates = deduplicateNearbySites(candidates, path);
-    log('After dedup: ' + candidates.length + ' candidates');
-    
-    log('Verifying ' + candidates.length + ' candidates with Google Maps...');
+    log('Verifying ' + candidates.length + ' candidates with Google Maps (3% threshold)...');
     const verified = [];
     for (const c of candidates) {
         const isOnRoute = await verifyWaypointWithGoogle(startIdx, c.idx, endIdx, directDist);
