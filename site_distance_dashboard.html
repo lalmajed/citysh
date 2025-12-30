@@ -36,13 +36,34 @@
     <div class="container">
         <div class="sidebar">
             <div class="panel">
-                <h2>1. SELECT ORIGIN SITE</h2>
+                <h2>PARALLEL EXTRACTION</h2>
+                <div style="margin-bottom:10px;">
+                    <label>Parallel workers: </label>
+                    <select id="workerCount" style="width:60px;padding:5px;">
+                        <option value="3">3</option>
+                        <option value="5" selected>5</option>
+                        <option value="8">8</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-start" id="startAllBtn" onclick="startParallelAll()">
+                    START ALL 247 ORIGINS (PARALLEL)
+                </button>
+                
+                <button class="btn btn-stop" id="stopAllBtn" onclick="stopAll()" style="display:none;">
+                    STOP ALL
+                </button>
+                
+                <hr style="margin:15px 0;">
+                
+                <h2>OR SINGLE ORIGIN</h2>
                 <select id="originSelect">
-                    <option value="">-- Click here to select origin --</option>
+                    <option value="">-- Select one origin --</option>
                 </select>
                 
-                <button class="btn btn-start" id="startBtn" onclick="startAutoCalc()">
-                    CALCULATE ALL 247 ROUTES FROM THIS ORIGIN
+                <button class="btn btn-start" id="startBtn" onclick="startAutoCalc()" style="background:#34a853;">
+                    CALCULATE THIS ORIGIN ONLY
                 </button>
                 
                 <button class="btn btn-stop" id="stopBtn" onclick="stopAutoCalc()" style="display:none;">
@@ -447,6 +468,117 @@ async function startAutoCalc() {
 }
 
 function stopAutoCalc() { running = false; log('Stopped'); }
+
+// PARALLEL PROCESSING
+let parallelRunning = false;
+let activeWorkers = 0;
+
+async function startParallelAll() {
+    if (parallelRunning) return;
+    
+    parallelRunning = true;
+    document.getElementById('startAllBtn').style.display = 'none';
+    document.getElementById('stopAllBtn').style.display = 'block';
+    
+    const workerCount = parseInt(document.getElementById('workerCount').value);
+    log('Starting PARALLEL extraction with ' + workerCount + ' workers...');
+    
+    // Find origins that aren't complete yet
+    const incompleteOrigins = [];
+    for (let i = 0; i < SITES.length; i++) {
+        let done = 0;
+        for (let j = 0; j < SITES.length; j++) {
+            if (i !== j && getCached(i, j)) done++;
+        }
+        if (done < 246) {
+            incompleteOrigins.push({ idx: i, done: done });
+        }
+    }
+    
+    log('Found ' + incompleteOrigins.length + ' incomplete origins');
+    
+    if (incompleteOrigins.length === 0) {
+        log('ALL ORIGINS COMPLETE!');
+        parallelRunning = false;
+        document.getElementById('startAllBtn').style.display = 'block';
+        document.getElementById('stopAllBtn').style.display = 'none';
+        return;
+    }
+    
+    // Sort by most complete first (finish partial ones)
+    incompleteOrigins.sort((a, b) => b.done - a.done);
+    
+    let currentIdx = 0;
+    
+    // Worker function
+    async function worker(workerId) {
+        while (parallelRunning && currentIdx < incompleteOrigins.length) {
+            const origin = incompleteOrigins[currentIdx++];
+            if (!origin) break;
+            
+            log('[Worker ' + workerId + '] Processing ' + SITES[origin.idx].site_id + ' (' + origin.done + '/246 done)');
+            
+            for (let j = 0; j < SITES.length && parallelRunning; j++) {
+                if (j === origin.idx) continue;
+                if (getCached(origin.idx, j)) continue;
+                
+                const r = await fetchRoute(origin.idx, j);
+                if (!r.error) {
+                    setCache(origin.idx, j, r.dist, r.time, r.waypoints);
+                }
+                
+                // Save every 20 routes
+                if (Object.keys(CACHE.dist).length % 20 === 0) {
+                    saveCache();
+                    updateProgress();
+                }
+                
+                await new Promise(r => setTimeout(r, 200)); // Rate limit
+            }
+            
+            saveCache();
+            log('[Worker ' + workerId + '] Finished ' + SITES[origin.idx].site_id);
+        }
+        activeWorkers--;
+        if (activeWorkers === 0) {
+            parallelRunning = false;
+            document.getElementById('startAllBtn').style.display = 'block';
+            document.getElementById('stopAllBtn').style.display = 'none';
+            log('ALL WORKERS FINISHED!');
+        }
+    }
+    
+    // Start workers
+    activeWorkers = workerCount;
+    for (let w = 0; w < workerCount; w++) {
+        worker(w + 1);
+    }
+}
+
+function updateProgress() {
+    const total = Object.keys(CACHE.dist).length;
+    const pct = ((total / 60762) * 100).toFixed(1);
+    document.getElementById('statCached').textContent = total;
+    document.getElementById('statPercent').textContent = pct + '%';
+    
+    // Count complete origins
+    let complete = 0;
+    for (let i = 0; i < SITES.length; i++) {
+        let done = 0;
+        for (let j = 0; j < SITES.length; j++) {
+            if (i !== j && getCached(i, j)) done++;
+        }
+        if (done >= 246) complete++;
+    }
+    document.getElementById('currentCalc').textContent = complete + '/247 origins complete | ' + total + ' routes';
+}
+
+function stopAll() {
+    parallelRunning = false;
+    log('Stopping all workers...');
+    document.getElementById('startAllBtn').style.display = 'block';
+    document.getElementById('stopAllBtn').style.display = 'none';
+}
 
 function downloadDistCSV() {
     let csv = ',' + SITES.map(s=>s.site_id).join(',') + '\n';
