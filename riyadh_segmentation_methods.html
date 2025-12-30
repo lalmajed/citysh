@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Riyadh GPS - 4 Segmentation Categories</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial; background: #0d1117; color: #c9d1d9; }
+        .header { background: #1a365d; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 16px; color: white; }
+        .container { display: flex; height: calc(100vh - 48px); }
+        .sidebar { width: 380px; padding: 12px; overflow-y: auto; background: #161b22; }
+        .section { margin-bottom: 12px; padding: 10px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; }
+        .section h3 { font-size: 10px; text-transform: uppercase; color: #58a6ff; margin-bottom: 8px; letter-spacing: 0.5px; }
+        select, input[type=number] { padding: 6px 8px; border: 1px solid #30363d; background: #161b22; color: #c9d1d9; border-radius: 4px; font-size: 12px; }
+        select { width: 100%; margin-bottom: 6px; }
+        input[type=number] { width: 70px; text-align: center; }
+        .row { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 11px; }
+        .row label { color: #8b949e; min-width: 80px; }
+        .btn { padding: 6px 12px; background: #238636; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; margin-top: 8px; }
+        .btn:hover { background: #2ea043; }
+        .btn-sm { padding: 4px 8px; background: #21262d; border: 1px solid #30363d; color: #c9d1d9; margin: 2px; }
+        .btn-sm:hover { background: #30363d; }
+        .stats { display: flex; gap: 6px; margin: 8px 0; }
+        .stat { flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 4px; padding: 6px; text-align: center; }
+        .stat .n { font-size: 18px; font-weight: bold; color: #58a6ff; }
+        .stat .l { font-size: 9px; color: #8b949e; }
+        .result-box { background: #161b22; border: 1px solid #30363d; border-radius: 4px; padding: 8px; margin-top: 8px; max-height: 200px; overflow-y: auto; font-size: 10px; }
+        .seg-item { padding: 4px 8px; border-bottom: 1px solid #21262d; cursor: pointer; }
+        .seg-item:hover { background: #21262d; }
+        .seg-item.active { background: #238636; color: white; }
+        .map-area { flex: 1; position: relative; }
+        #map { width: 100%; height: 100%; }
+        .cat-tabs { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+        .cat-tab { padding: 6px 10px; background: #21262d; border: 1px solid #30363d; border-radius: 4px; cursor: pointer; font-size: 10px; }
+        .cat-tab:hover { background: #30363d; }
+        .cat-tab.active { background: #1f6feb; border-color: #1f6feb; }
+        .method-desc { font-size: 10px; color: #8b949e; padding: 6px; background: #21262d; border-radius: 4px; margin: 6px 0; }
+        .legend { position: absolute; bottom: 10px; right: 10px; background: rgba(13,17,23,0.95); border: 1px solid #30363d; border-radius: 6px; padding: 10px; z-index: 1000; font-size: 9px; }
+        .leg-row { display: flex; align-items: center; margin: 3px 0; }
+        .leg-color { width: 16px; height: 4px; margin-right: 6px; border-radius: 2px; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Riyadh GPS Routes - 4 Segmentation Categories</h1>
+    <div>
+        <button class="btn-sm" onclick="zoomRoute()">Zoom Route</button>
+        <button class="btn-sm" onclick="resetView()">Reset</button>
+    </div>
+</div>
+<div class="container">
+    <div class="sidebar">
+        <div class="section">
+            <h3>Select Route</h3>
+            <select id="routeSel" onchange="loadRoute()"><option value="">-- Choose route --</option></select>
+            <div class="stats">
+                <div class="stat"><div class="n" id="nPoints">-</div><div class="l">Points</div></div>
+                <div class="stat"><div class="n" id="nSegs">-</div><div class="l">Segments</div></div>
+                <div class="stat"><div class="n" id="nDist">-</div><div class="l">km</div></div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h3>Segmentation Category</h3>
+            <div class="cat-tabs">
+                <div class="cat-tab active" onclick="selectCategory(1)">1. Stop/Threshold</div>
+                <div class="cat-tab" onclick="selectCategory(2)">2. Criteria-Based</div>
+                <div class="cat-tab" onclick="selectCategory(3)">3. Adaptive</div>
+                <div class="cat-tab" onclick="selectCategory(4)">4. Unsupervised</div>
+            </div>
+            
+            <!-- Category 1: Stop/Threshold -->
+            <div id="cat1" class="cat-panel">
+                <select id="method1" onchange="updateMethodDesc()">
+                    <option value="stopfinder">stopFinder (radius + time)</option>
+                    <option value="infostop">infostop (sequential downsampling)</option>
+                    <option value="shipstop">Ship-Stop (speed + time)</option>
+                    <option value="slidingwindow">Sliding Window (radius + duration)</option>
+                </select>
+                <div class="method-desc" id="desc1">Detect stops when vehicle stays within radius for minimum time.</div>
+                <div class="row"><label>Radius (m):</label><input type="number" id="p1_radius" value="100"></div>
+                <div class="row"><label>Min time (s):</label><input type="number" id="p1_time" value="60"></div>
+                <div class="row"><label>Speed (km/h):</label><input type="number" id="p1_speed" value="15"></div>
+            </div>
+            
+            <!-- Category 2: Criteria-Based -->
+            <div id="cat2" class="cat-panel" style="display:none">
+                <select id="method2" onchange="updateMethodDesc()">
+                    <option value="dpmdl">DP + MDL (Dynamic Programming)</option>
+                    <option value="changepoint">Change Point Detection</option>
+                </select>
+                <div class="method-desc" id="desc2">Find optimal segments using speed/acceleration changes.</div>
+                <div class="row"><label>Max segments:</label><input type="number" id="p2_maxseg" value="10"></div>
+                <div class="row"><label>Threshold (std):</label><input type="number" id="p2_thresh" value="1.5" step="0.1"></div>
+            </div>
+            
+            <!-- Category 3: Adaptive -->
+            <div id="cat3" class="cat-panel" style="display:none">
+                <select id="method3" onchange="updateMethodDesc()">
+                    <option value="elbow">Elbow Method (auto threshold)</option>
+                    <option value="ats">Variance Ratio (ATS)</option>
+                </select>
+                <div class="method-desc" id="desc3">Automatically select optimal threshold from data.</div>
+                <div class="row"><label>Speed min:</label><input type="number" id="p3_min" value="5"></div>
+                <div class="row"><label>Speed max:</label><input type="number" id="p3_max" value="60"></div>
+            </div>
+            
+            <!-- Category 4: Unsupervised -->
+            <div id="cat4" class="cat-panel" style="display:none">
+                <select id="method4" onchange="updateMethodDesc()">
+                    <option value="tsmf">TS-MF (KMeans clustering)</option>
+                    <option value="dbscan">DBSCAN (density-based)</option>
+                </select>
+                <div class="method-desc" id="desc4">Cluster points in feature space, segment at transitions.</div>
+                <div class="row"><label>Clusters (K):</label><input type="number" id="p4_k" value="3"></div>
+                <div class="row"><label>DBSCAN eps:</label><input type="number" id="p4_eps" value="0.5" step="0.1"></div>
+            </div>
+            
+            <button class="btn" onclick="runSegmentation()">Run Segmentation</button>
+        </div>
+        
+        <div class="section" id="resultsSection" style="display:none">
+            <h3>Results</h3>
+            <div id="resultInfo" style="font-size:11px;margin-bottom:6px"></div>
+            <div class="result-box" id="segmentList"></div>
+        </div>
+    </div>
+    
+    <div class="map-area">
+        <div id="map"></div>
+        <div class="legend">
+            <b>Legend</b>
+            <div class="leg-row"><div class="leg-color" style="background:#22c55e"></div> Start point</div>
+            <div class="leg-row"><div class="leg-color" style="background:#ef4444"></div> End point</div>
+            <div class="leg-row"><div class="leg-color" style="background:#3b82f6"></div> Trajectory</div>
+            <div class="leg-row"><div class="leg-color" style="background:#f59e0b"></div> Segment boundary</div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Trip data (will be loaded)
+let tripData = null;
+let currentTrip = null;
+let currentCategory = 1;
+let map, routeLayer, markersLayer;
+
+// Haversine distance in meters
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const phi1 = lat1 * Math.PI / 180;
+    const phi2 = lat2 * Math.PI / 180;
+    const dphi = (lat2 - lat1) * Math.PI / 180;
+    const dlam = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dphi/2)**2 + Math.cos(phi1) * Math.cos(phi2) * Math.sin(dlam/2)**2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+// ================================================================
+// CATEGORY 1: STOP / THRESHOLD METHODS
+// ================================================================
+
+// 1A. stopFinder (from stopdetection R package)
+function stopFinder(points, thetaD, thetaT) {
+    const stops = [];
+    let i = 0;
+    while (i < points.length - 1) {
+        let j = i + 1;
+        while (j < points.length) {
+            const dist = haversine(points[i].lat, points[i].lon, points[j].lat, points[j].lon);
+            if (dist >= thetaD) {
+                const time = points[j].timestamp - points[i].timestamp;
+                if (time >= thetaT) {
+                    stops.push({ start: i, end: j - 1, duration: time, type: 'stop' });
+                }
+                i = j;
+                break;
+            }
+            j++;
+        }
+        if (j >= points.length) break;
+    }
+    return stops;
+}
+
+// 1B. infostop (sequential downsampling)
+function infostop(points, r1, minStayingTime, minSize = 2) {
+    const events = [];
+    let i = 0;
+    while (i < points.length) {
+        let centerLat = points[i].lat;
+        let centerLon = points[i].lon;
+        let j = i + 1;
+        while (j < points.length) {
+            const dist = haversine(centerLat, centerLon, points[j].lat, points[j].lon);
+            if (dist > r1) break;
+            // Update center (median approximation)
+            const subset = points.slice(i, j + 1);
+            centerLat = subset.reduce((s, p) => s + p.lat, 0) / subset.length;
+            centerLon = subset.reduce((s, p) => s + p.lon, 0) / subset.length;
+            j++;
+        }
+        const duration = points[j - 1].timestamp - points[i].timestamp;
+        if (duration >= minStayingTime && (j - i) >= minSize) {
+            events.push({ start: i, end: j - 1, duration, type: 'stationary' });
+            i = j;
+        } else {
+            i++;
+        }
+    }
+    return events;
+}
+
+// 1C. Ship-Stop (speed threshold + time)
+function shipStop(points, speedThresh, timeThresh) {
+    const candidates = points.map((p, i) => p.speed <= speedThresh ? i : -1).filter(i => i >= 0);
+    const stops = [];
+    for (const idx of candidates) {
+        let start = idx;
+        while (start > 0 && points[start - 1].speed <= speedThresh) start--;
+        let end = idx;
+        while (end < points.length - 1 && points[end + 1].speed <= speedThresh) end++;
+        const duration = points[end].timestamp - points[start].timestamp;
+        if (duration >= timeThresh) {
+            stops.push({ start, end, duration, type: 'stop' });
+        }
+    }
+    // Merge overlapping
+    if (stops.length === 0) return [];
+    const merged = [stops[0]];
+    for (let i = 1; i < stops.length; i++) {
+        if (stops[i].start <= merged[merged.length - 1].end) {
+            merged[merged.length - 1].end = Math.max(merged[merged.length - 1].end, stops[i].end);
+        } else {
+            merged.push(stops[i]);
+        }
+    }
+    return merged;
+}
+
+// 1D. Sliding window (radius + duration)
+function slidingWindow(points, radius, duration) {
+    function withinRadius(pts, r) {
+        if (pts.length < 2) return true;
+        const cLat = pts.reduce((s, p) => s + p.lat, 0) / pts.length;
+        const cLon = pts.reduce((s, p) => s + p.lon, 0) / pts.length;
+        return pts.every(p => haversine(cLat, cLon, p.lat, p.lon) <= r);
+    }
+    
+    const stops = [];
+    let i = 0;
+    while (i < points.length - 1) {
+        let j = i + 1;
+        while (j < points.length && withinRadius(points.slice(i, j + 1), radius)) j++;
+        j--;
+        const timeDiff = points[j].timestamp - points[i].timestamp;
+        if (timeDiff >= duration) {
+            stops.push({ start: i, end: j, duration: timeDiff, type: 'stop' });
+            i = j;
+        } else {
+            i++;
+        }
+    }
+    return stops;
+}
+
+// ================================================================
+// CATEGORY 2: CRITERIA-BASED / MULTI-FEATURE
+// ================================================================
+
+// 2A. DP + MDL segmentation
+function dpMdlSegmentation(points, maxSegments) {
+    const speeds = points.map(p => p.speed);
+    if (speeds.length < 4) return [0, speeds.length];
+    
+    // Calculate PMD (speed differences normalized)
+    const speedDiff = [];
+    for (let i = 1; i < speeds.length; i++) {
+        speedDiff.push(Math.abs(speeds[i] - speeds[i - 1]));
+    }
+    const mean = speedDiff.reduce((a, b) => a + b, 0) / speedDiff.length;
+    const std = Math.sqrt(speedDiff.reduce((s, v) => s + (v - mean) ** 2, 0) / speedDiff.length) || 1;
+    const pmd = speedDiff.map(d => (d - mean) / std);
+    
+    const n = pmd.length;
+    let bestMdl = Infinity;
+    let bestBounds = [0, n];
+    
+    for (let numSegs = 1; numSegs < Math.min(maxSegments, Math.floor(n / 2)); numSegs++) {
+        const bounds = [0];
+        const segLen = Math.floor(n / numSegs);
+        for (let s = 1; s < numSegs; s++) bounds.push(s * segLen);
+        bounds.push(n);
+        
+        let mdl = 0;
+        for (let i = 0; i < bounds.length - 1; i++) {
+            const seg = pmd.slice(bounds[i], bounds[i + 1]);
+            if (seg.length > 1) {
+                const segMean = seg.reduce((a, b) => a + b, 0) / seg.length;
+                const segVar = seg.reduce((s, v) => s + (v - segMean) ** 2, 0) / seg.length;
+                mdl += segVar * seg.length;
+            }
+        }
+        mdl += numSegs * Math.log(n);
+        
+        if (mdl < bestMdl) {
+            bestMdl = mdl;
+            bestBounds = bounds;
+        }
+    }
+    
+    return bestBounds;
+}
+
+// 2B. Change point detection
+function changePointDetection(points, threshold) {
+    const features = points.map(p => [p.speed, p.acceleration || 0]);
+    
+    // Normalize
+    const means = [0, 0], stds = [1, 1];
+    for (let f = 0; f < 2; f++) {
+        means[f] = features.reduce((s, p) => s + p[f], 0) / features.length;
+        stds[f] = Math.sqrt(features.reduce((s, p) => s + (p[f] - means[f]) ** 2, 0) / features.length) || 1;
+    }
+    const normalized = features.map(p => [(p[0] - means[0]) / stds[0], (p[1] - means[1]) / stds[1]]);
+    
+    // Calculate derivative magnitude
+    const deriv = [];
+    for (let i = 1; i < normalized.length; i++) {
+        const d = Math.sqrt((normalized[i][0] - normalized[i-1][0])**2 + (normalized[i][1] - normalized[i-1][1])**2);
+        deriv.push(d);
+    }
+    
+    const derivMean = deriv.reduce((a, b) => a + b, 0) / deriv.length;
+    const derivStd = Math.sqrt(deriv.reduce((s, v) => s + (v - derivMean) ** 2, 0) / deriv.length) || 1;
+    const threshVal = derivMean + threshold * derivStd;
+    
+    const changePoints = [0];
+    for (let i = 0; i < deriv.length; i++) {
+        if (deriv[i] > threshVal) changePoints.push(i + 1);
+    }
+    changePoints.push(points.length);
+    
+    return changePoints;
+}
+
+// ================================================================
+// CATEGORY 3: ADAPTIVE METHODS
+// ================================================================
+
+// 3A. Elbow method
+function elbowMethod(points, speedMin, speedMax, nPoints = 20) {
+    const thresholds = [];
+    for (let i = 0; i < nPoints; i++) {
+        thresholds.push(speedMin + (speedMax - speedMin) * i / (nPoints - 1));
+    }
+    
+    const segments = thresholds.map(thresh => {
+        let inStop = false, segs = 0;
+        for (const p of points) {
+            if (p.speed < thresh && !inStop) { inStop = true; }
+            else if (p.speed >= thresh && inStop) { segs++; inStop = false; }
+        }
+        if (!inStop) segs++;
+        return segs;
+    });
+    
+    // Find elbow
+    const xNorm = thresholds.map(t => (t - speedMin) / (speedMax - speedMin));
+    const yMin = Math.min(...segments), yMax = Math.max(...segments);
+    const yNorm = segments.map(s => (s - yMin) / (yMax - yMin + 0.001));
+    
+    let maxDist = 0, elbowIdx = 0;
+    for (let i = 1; i < thresholds.length - 1; i++) {
+        const dist = Math.abs((yNorm[yNorm.length-1] - yNorm[0]) * xNorm[i] - 
+                             (xNorm[xNorm.length-1] - xNorm[0]) * yNorm[i] + 
+                             xNorm[xNorm.length-1] * yNorm[0] - yNorm[yNorm.length-1] * xNorm[0]);
+        if (dist > maxDist) { maxDist = dist; elbowIdx = i; }
+    }
+    
+    return { threshold: thresholds[elbowIdx], segments: segments[elbowIdx] };
+}
+
+// 3B. Variance ratio (ATS)
+function varianceRatioThreshold(points, candidates = null) {
+    if (!candidates) {
+        candidates = [];
+        for (let i = 0; i < 20; i++) candidates.push(10 + 50 * i / 19);
+    }
+    
+    let bestThresh = candidates[0], bestScore = -Infinity;
+    
+    for (const thresh of candidates) {
+        const stopSpeeds = points.filter(p => p.speed < thresh).map(p => p.speed);
+        const moveSpeeds = points.filter(p => p.speed >= thresh).map(p => p.speed);
+        
+        if (stopSpeeds.length < 2 || moveSpeeds.length < 2) continue;
+        
+        const overallMean = points.reduce((s, p) => s + p.speed, 0) / points.length;
+        const stopMean = stopSpeeds.reduce((a, b) => a + b, 0) / stopSpeeds.length;
+        const moveMean = moveSpeeds.reduce((a, b) => a + b, 0) / moveSpeeds.length;
+        
+        const betweenVar = (stopSpeeds.length * (stopMean - overallMean)**2 + 
+                          moveSpeeds.length * (moveMean - overallMean)**2) / points.length;
+        
+        const stopVar = stopSpeeds.reduce((s, v) => s + (v - stopMean)**2, 0) / stopSpeeds.length;
+        const moveVar = moveSpeeds.reduce((s, v) => s + (v - moveMean)**2, 0) / moveSpeeds.length;
+        const withinVar = (stopVar * stopSpeeds.length + moveVar * moveSpeeds.length) / points.length;
+        
+        const score = betweenVar / (withinVar + 0.001);
+        if (score > bestScore) { bestScore = score; bestThresh = thresh; }
+    }
+    
+    return bestThresh;
+}
+
+// ================================================================
+// CATEGORY 4: UNSUPERVISED / DENSITY-BASED
+// ================================================================
+
+// 4A. TS-MF (KMeans-style clustering)
+function tsmfSegmentation(points, k) {
+    // Extract features
+    const features = points.map(p => [p.speed, p.acceleration || 0]);
+    
+    // Normalize
+    const means = [0, 0], stds = [1, 1];
+    for (let f = 0; f < 2; f++) {
+        means[f] = features.reduce((s, p) => s + p[f], 0) / features.length;
+        stds[f] = Math.sqrt(features.reduce((s, p) => s + (p[f] - means[f]) ** 2, 0) / features.length) || 1;
+    }
+    const normalized = features.map(p => [(p[0] - means[0]) / stds[0], (p[1] - means[1]) / stds[1]]);
+    
+    // Simple KMeans
+    let centroids = [];
+    for (let i = 0; i < k; i++) {
+        centroids.push(normalized[Math.floor(i * normalized.length / k)].slice());
+    }
+    
+    let labels = new Array(normalized.length).fill(0);
+    for (let iter = 0; iter < 20; iter++) {
+        // Assign to nearest centroid
+        for (let i = 0; i < normalized.length; i++) {
+            let minDist = Infinity, bestC = 0;
+            for (let c = 0; c < k; c++) {
+                const dist = Math.sqrt((normalized[i][0] - centroids[c][0])**2 + (normalized[i][1] - centroids[c][1])**2);
+                if (dist < minDist) { minDist = dist; bestC = c; }
+            }
+            labels[i] = bestC;
+        }
+        
+        // Update centroids
+        for (let c = 0; c < k; c++) {
+            const members = normalized.filter((_, i) => labels[i] === c);
+            if (members.length > 0) {
+                centroids[c][0] = members.reduce((s, p) => s + p[0], 0) / members.length;
+                centroids[c][1] = members.reduce((s, p) => s + p[1], 0) / members.length;
+            }
+        }
+    }
+    
+    // Segment at cluster transitions
+    const segments = [];
+    let current = labels[0], start = 0;
+    for (let i = 1; i < labels.length; i++) {
+        if (labels[i] !== current) {
+            segments.push({ start, end: i - 1, cluster: current });
+            start = i;
+            current = labels[i];
+        }
+    }
+    segments.push({ start, end: labels.length - 1, cluster: current });
+    
+    return segments;
+}
+
+// 4B. DBSCAN-style clustering
+function dbscanSegmentation(points, eps, minSamples = 2) {
+    const features = points.map(p => [p.speed, p.acceleration || 0]);
+    
+    // Normalize
+    const means = [0, 0], stds = [1, 1];
+    for (let f = 0; f < 2; f++) {
+        means[f] = features.reduce((s, p) => s + p[f], 0) / features.length;
+        stds[f] = Math.sqrt(features.reduce((s, p) => s + (p[f] - means[f]) ** 2, 0) / features.length) || 1;
+    }
+    const normalized = features.map(p => [(p[0] - means[0]) / stds[0], (p[1] - means[1]) / stds[1]]);
+    
+    // Simple DBSCAN
+    const labels = new Array(normalized.length).fill(-1);
+    let clusterId = 0;
+    
+    for (let i = 0; i < normalized.length; i++) {
+        if (labels[i] !== -1) continue;
+        
+        // Find neighbors
+        const neighbors = [];
+        for (let j = 0; j < normalized.length; j++) {
+            const dist = Math.sqrt((normalized[i][0] - normalized[j][0])**2 + (normalized[i][1] - normalized[j][1])**2);
+            if (dist <= eps) neighbors.push(j);
+        }
+        
+        if (neighbors.length >= minSamples) {
+            labels[i] = clusterId;
+            for (const n of neighbors) {
+                if (labels[n] === -1) labels[n] = clusterId;
+            }
+            clusterId++;
+        }
+    }
+    
+    // Segment at cluster transitions
+    const segments = [];
+    let current = labels[0], start = 0;
+    for (let i = 1; i < labels.length; i++) {
+        if (labels[i] !== current) {
+            segments.push({ start, end: i - 1, cluster: current, isNoise: current === -1 });
+            start = i;
+            current = labels[i];
+        }
+    }
+    segments.push({ start, end: labels.length - 1, cluster: current, isNoise: current === -1 });
+    
+    return segments;
+}
+
+// ================================================================
+// UI FUNCTIONS
+// ================================================================
+
+function selectCategory(cat) {
+    currentCategory = cat;
+    document.querySelectorAll('.cat-tab').forEach((t, i) => {
+        t.classList.toggle('active', i === cat - 1);
+    });
+    document.querySelectorAll('.cat-panel').forEach((p, i) => {
+        p.style.display = i === cat - 1 ? 'block' : 'none';
+    });
+    updateMethodDesc();
+}
+
+function updateMethodDesc() {
+    const descs = {
+        // Category 1
+        stopfinder: 'stopFinder: Detect stops when vehicle stays within radius for minimum time. From stopdetection R package.',
+        infostop: 'infostop: Sequential downsampling + stationary event detection using Infomap clustering.',
+        shipstop: 'Ship-Stop: Find slow-speed candidates, validate with time threshold. From AIS maritime data.',
+        slidingwindow: 'Sliding Window: Check if all points in expanding window stay within radius for duration.',
+        // Category 2
+        dpmdl: 'DP + MDL: Dynamic Programming with Minimum Description Length to find optimal segment count.',
+        changepoint: 'Change Point: Detect significant changes in speed/acceleration derivatives.',
+        // Category 3
+        elbow: 'Elbow Method: Sweep thresholds, find point of maximum curvature (optimal trade-off).',
+        ats: 'ATS (Variance Ratio): Otsu-style threshold that maximizes between-class variance.',
+        // Category 4
+        tsmf: 'TS-MF: Cluster points in feature space (speed, acceleration), segment at transitions.',
+        dbscan: 'DBSCAN: Density-based clustering, identifies noise/outliers automatically.'
+    };
+    
+    const methodSel = document.getElementById(`method${currentCategory}`);
+    const descDiv = document.getElementById(`desc${currentCategory}`);
+    if (methodSel && descDiv) {
+        descDiv.textContent = descs[methodSel.value] || '';
+    }
+}
+
+function loadRoute() {
+    const sel = document.getElementById('routeSel');
+    if (!sel.value || !tripData) return;
+    
+    currentTrip = tripData.trips.find(t => t.id == sel.value);
+    if (!currentTrip) return;
+    
+    // Prepare points with features
+    const points = [];
+    let prevSpeed = null;
+    for (let i = 0; i < currentTrip.segments.length; i++) {
+        const seg = currentTrip.segments[i];
+        const accel = prevSpeed !== null && seg.period > 0 ? 
+            (seg.speed_kmh - prevSpeed) * 1000 / 3600 / seg.period : 0;
+        
+        points.push({
+            idx: i,
+            lat: seg.start[1],
+            lon: seg.start[0],
+            timestamp: seg.time,
+            speed: seg.speed_kmh,
+            acceleration: accel,
+            distance: seg.distance_m
+        });
+        prevSpeed = seg.speed_kmh;
+    }
+    currentTrip.points = points;
+    
+    // Update stats
+    document.getElementById('nPoints').textContent = points.length;
+    document.getElementById('nSegs').textContent = '-';
+    const totalDist = currentTrip.segments.reduce((s, seg) => s + seg.distance_m, 0) / 1000;
+    document.getElementById('nDist').textContent = totalDist.toFixed(1);
+    
+    // Draw route
+    drawRoute(points);
+    document.getElementById('resultsSection').style.display = 'none';
+}
+
+function drawRoute(points, boundaries = []) {
+    if (routeLayer) map.removeLayer(routeLayer);
+    if (markersLayer) map.removeLayer(markersLayer);
+    
+    routeLayer = L.layerGroup().addTo(map);
+    markersLayer = L.layerGroup().addTo(map);
+    
+    // Draw trajectory
+    const latlngs = points.map(p => [p.lat, p.lon]);
+    L.polyline(latlngs, { color: '#3b82f6', weight: 3, opacity: 0.8 }).addTo(routeLayer);
+    
+    // Start/end markers
+    L.circleMarker(latlngs[0], { radius: 8, color: '#22c55e', fillColor: '#22c55e', fillOpacity: 1 })
+        .bindPopup('Start').addTo(markersLayer);
+    L.circleMarker(latlngs[latlngs.length - 1], { radius: 8, color: '#ef4444', fillColor: '#ef4444', fillOpacity: 1 })
+        .bindPopup('End').addTo(markersLayer);
+    
+    // Segment boundary markers
+    for (const b of boundaries) {
+        if (b > 0 && b < points.length) {
+            L.circleMarker([points[b].lat, points[b].lon], { 
+                radius: 6, color: '#f59e0b', fillColor: '#f59e0b', fillOpacity: 1 
+            }).bindPopup(`Segment boundary at point ${b}`).addTo(markersLayer);
+        }
+    }
+    
+    // Fit bounds
+    map.fitBounds(L.latLngBounds(latlngs), { padding: [50, 50] });
+}
+
+function runSegmentation() {
+    if (!currentTrip || !currentTrip.points) {
+        alert('Please select a route first');
+        return;
+    }
+    
+    const points = currentTrip.points;
+    let result = { boundaries: [], segments: [], info: '' };
+    
+    if (currentCategory === 1) {
+        const method = document.getElementById('method1').value;
+        const radius = parseFloat(document.getElementById('p1_radius').value);
+        const time = parseFloat(document.getElementById('p1_time').value);
+        const speed = parseFloat(document.getElementById('p1_speed').value);
+        
+        let stops = [];
+        if (method === 'stopfinder') stops = stopFinder(points, radius, time);
+        else if (method === 'infostop') stops = infostop(points, radius, time);
+        else if (method === 'shipstop') stops = shipStop(points, speed, time);
+        else if (method === 'slidingwindow') stops = slidingWindow(points, radius, time);
+        
+        result.segments = stops;
+        result.boundaries = stops.map(s => s.start);
+        result.info = `Found ${stops.length} stops using ${method}`;
+        
+    } else if (currentCategory === 2) {
+        const method = document.getElementById('method2').value;
+        const maxSeg = parseInt(document.getElementById('p2_maxseg').value);
+        const thresh = parseFloat(document.getElementById('p2_thresh').value);
+        
+        let bounds = [];
+        if (method === 'dpmdl') bounds = dpMdlSegmentation(points, maxSeg);
+        else if (method === 'changepoint') bounds = changePointDetection(points, thresh);
+        
+        result.boundaries = bounds;
+        result.segments = [];
+        for (let i = 0; i < bounds.length - 1; i++) {
+            result.segments.push({ start: bounds[i], end: bounds[i+1] - 1, type: 'segment' });
+        }
+        result.info = `Found ${result.segments.length} segments using ${method}`;
+        
+    } else if (currentCategory === 3) {
+        const method = document.getElementById('method3').value;
+        const speedMin = parseFloat(document.getElementById('p3_min').value);
+        const speedMax = parseFloat(document.getElementById('p3_max').value);
+        
+        let threshold, numSegs;
+        if (method === 'elbow') {
+            const res = elbowMethod(points, speedMin, speedMax);
+            threshold = res.threshold;
+            numSegs = res.segments;
+        } else {
+            threshold = varianceRatioThreshold(points);
+            numSegs = points.filter(p => p.speed < threshold).length > 0 ? 2 : 1;
+        }
+        
+        // Apply threshold to create segments
+        const bounds = [0];
+        let inStop = false;
+        for (let i = 0; i < points.length; i++) {
+            if (points[i].speed < threshold && !inStop) { inStop = true; bounds.push(i); }
+            else if (points[i].speed >= threshold && inStop) { inStop = false; bounds.push(i); }
+        }
+        bounds.push(points.length);
+        
+        result.boundaries = bounds;
+        result.segments = [];
+        for (let i = 0; i < bounds.length - 1; i++) {
+            result.segments.push({ start: bounds[i], end: bounds[i+1] - 1, type: i % 2 === 0 ? 'move' : 'stop' });
+        }
+        result.info = `Optimal threshold: ${threshold.toFixed(1)} km/h, ${result.segments.length} segments`;
+        
+    } else if (currentCategory === 4) {
+        const method = document.getElementById('method4').value;
+        const k = parseInt(document.getElementById('p4_k').value);
+        const eps = parseFloat(document.getElementById('p4_eps').value);
+        
+        let segs = [];
+        if (method === 'tsmf') segs = tsmfSegmentation(points, k);
+        else if (method === 'dbscan') segs = dbscanSegmentation(points, eps);
+        
+        result.segments = segs;
+        result.boundaries = segs.map(s => s.start);
+        const nClusters = new Set(segs.map(s => s.cluster)).size;
+        result.info = `Found ${segs.length} segments across ${nClusters} clusters using ${method}`;
+    }
+    
+    // Update UI
+    document.getElementById('nSegs').textContent = result.segments.length;
+    document.getElementById('resultInfo').textContent = result.info;
+    
+    // Draw results
+    drawRoute(points, result.boundaries);
+    
+    // List segments
+    const listDiv = document.getElementById('segmentList');
+    listDiv.innerHTML = result.segments.map((seg, i) => {
+        const pts = seg.end - seg.start + 1;
+        const info = seg.cluster !== undefined ? `Cluster ${seg.cluster}` : 
+                     seg.duration !== undefined ? `${seg.duration.toFixed(0)}s` : 
+                     seg.type || '';
+        return `<div class="seg-item" onclick="highlightSegment(${seg.start}, ${seg.end})">
+            <b>Seg ${i + 1}</b>: pts ${seg.start}-${seg.end} (${pts} pts) ${info}
+        </div>`;
+    }).join('');
+    
+    document.getElementById('resultsSection').style.display = 'block';
+}
+
+function highlightSegment(start, end) {
+    if (!currentTrip || !currentTrip.points) return;
+    
+    const points = currentTrip.points;
+    const latlngs = points.slice(start, end + 1).map(p => [p.lat, p.lon]);
+    
+    // Remove previous highlight
+    if (window.highlightLayer) map.removeLayer(window.highlightLayer);
+    
+    // Add highlight
+    window.highlightLayer = L.polyline(latlngs, { color: '#f59e0b', weight: 6, opacity: 0.9 }).addTo(map);
+    
+    // Zoom to segment
+    if (latlngs.length > 0) {
+        map.fitBounds(L.latLngBounds(latlngs), { padding: [50, 50] });
+    }
+}
+
+function zoomRoute() {
+    if (!currentTrip || !currentTrip.points) return;
+    const latlngs = currentTrip.points.map(p => [p.lat, p.lon]);
+    map.fitBounds(L.latLngBounds(latlngs), { padding: [50, 50] });
+}
+
+function resetView() {
+    if (window.highlightLayer) map.removeLayer(window.highlightLayer);
+    if (currentTrip && currentTrip.points) {
+        drawRoute(currentTrip.points, []);
+    }
+}
+
+// Initialize
+function init() {
+    // Create map
+    map = L.map('map').setView([24.7136, 46.6753], 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: 'OpenStreetMap'
+    }).addTo(map);
+    
+    // Load trip data
+    fetch('trip_data.json')
+        .then(r => r.json())
+        .then(data => {
+            tripData = data;
+            const sel = document.getElementById('routeSel');
+            data.trips.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = `Trip ${t.id} (${t.segments.length} segments)`;
+                sel.appendChild(opt);
+            });
+        })
+        .catch(e => {
+            console.error('Error loading trip data:', e);
+            alert('Could not load trip_data.json. Make sure it exists in the same directory.');
+        });
+    
+    updateMethodDesc();
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
