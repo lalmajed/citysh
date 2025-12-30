@@ -164,14 +164,28 @@ async function verifyWaypointWithGoogle(startIdx, waypointIdx, endIdx, directDis
     });
 }
 
-// Find and verify waypoints using Google Maps - SIMPLE LOGIC
+// Get route direction at a specific path index
+function getLocalRouteDirection(path, pathIdx) {
+    const i = Math.max(0, Math.min(pathIdx, path.length - 2));
+    const p1 = path[i];
+    const p2 = path[i + 1];
+    const dLat = p2.lat() - p1.lat();
+    const dLon = p2.lng() - p1.lng();
+    if (Math.abs(dLat) > Math.abs(dLon)) {
+        return dLat > 0 ? 'N' : 'S';
+    } else {
+        return dLon > 0 ? 'E' : 'W';
+    }
+}
+
+// Find and verify waypoints using Google Maps
 async function findWaypointsOnPath(path, startIdx, endIdx, directDist) {
-    const originDir = SITES[startIdx].site_direction;
-    log('Origin: ' + SITES[startIdx].site_id + ' (direction: ' + originDir + ')');
+    log('Origin: ' + SITES[startIdx].site_id);
+    log('Destination: ' + SITES[endIdx].site_id);
     log('Direct route: ' + directDist.toFixed(2) + 'km');
     
     // STEP 1: Find candidates near path
-    log('Finding candidates within 50m of path...');
+    log('STEP 1: Finding candidates within 50m of path...');
     let candidates = findCandidatesNearPath(path, startIdx, endIdx);
     
     if (candidates.length === 0) {
@@ -179,22 +193,23 @@ async function findWaypointsOnPath(path, startIdx, endIdx, directDist) {
         return [];
     }
     
-    // STEP 2: Filter by direction - MUST match origin direction (same lane!)
-    log('Filtering by direction (must be ' + originDir + ')...');
+    // STEP 2: Check LOCAL route direction at each candidate's position
+    log('STEP 2: Checking LOCAL route direction at each candidate...');
     candidates = candidates.filter(c => {
+        const localDir = getLocalRouteDirection(path, c.pathIdx);
         const siteDir = SITES[c.idx].site_direction;
-        const match = siteDir === originDir;
-        log('  ' + SITES[c.idx].site_id + ' dir=' + siteDir + ' → ' + (match ? '✓ SAME LANE' : '✗ DIFFERENT LANE'));
+        const match = siteDir === localDir;
+        log('  ' + SITES[c.idx].site_id + ': site=' + siteDir + ', route=' + localDir + ' → ' + (match ? '✓ MATCH' : '✗ WRONG SIDE'));
         return match;
     });
     
     if (candidates.length === 0) {
-        log('No candidates in same lane');
+        log('No candidates match local route direction');
         return [];
     }
     
     // STEP 3: Verify with Google Maps
-    log('Verifying ' + candidates.length + ' with Google...');
+    log('STEP 3: Verifying ' + candidates.length + ' with Google...');
     const verified = [];
     
     for (const c of candidates) {
