@@ -145,7 +145,7 @@ function haversine(lat1, lon1, lat2, lon2) {
 // Find candidate waypoints near the path (pre-filter)
 function findCandidatesNearPath(path, startIdx, endIdx) {
     const candidates = [];
-    const THRESHOLD = 0.05; // 50 meters - strict but reasonable
+    const THRESHOLD = 0.15; // 150 meters - wider to catch more waypoints
     
     log('Path has ' + path.length + ' points');
     
