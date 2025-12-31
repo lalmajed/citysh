@@ -52,7 +52,9 @@
                         <option value="50">50</option>
                         <option value="60">60</option>
                         <option value="70">70</option>
-                        <option value="84" selected>84</option>
+                        <option value="84">84</option>
+                        <option value="100">100</option>
+                        <option value="124" selected>124</option>
                     </select>
                     <span style="font-size:0.75rem;color:#666;margin-left:10px;">(84 = max parallel)</span>
                 </div>
@@ -243,18 +245,11 @@ async function findWaypointsOnPath(path, startIdx, endIdx, directDist) {
         return [];
     }
     
-    // STEP 3: Verify with Google Maps
-    log('STEP 3: Verifying ' + candidates.length + ' with Google...');
-    const verified = [];
-    
-    for (const c of candidates) {
-        log('  Checking ' + SITES[c.idx].site_id + ' (' + SITES[c.idx].site_direction + ')...');
-        const isOnRoute = await verifyWaypointWithGoogle(startIdx, c.idx, endIdx, directDist);
-        if (isOnRoute) {
-            verified.push(c.idx);
-        }
-        await new Promise(r => setTimeout(r, 80)); // Rate limit
-    }
+    // STEP 3: Verify with Google Maps IN PARALLEL
+    log('STEP 3: Verifying ' + candidates.length + ' in parallel...');
+    const verifyPromises = candidates.map(c => verifyWaypointWithGoogle(startIdx, c.idx, endIdx, directDist));
+    const results = await Promise.all(verifyPromises);
+    const verified = candidates.filter((c, i) => results[i]).map(c => c.idx);
     
     // POST-FILTER: If two verified waypoints are very close, keep only one
     const filtered = filterNearbyDuplicates(verified, path);
@@ -573,8 +568,8 @@ async function startParallelAll() {
                     updateParallelProgress(totalRoutesDone);
                 }
                 
-                // Rate limit - reduced for speed
-                await new Promise(r => setTimeout(r, 150 + Math.random() * 100));
+                // Rate limit - minimal
+                await new Promise(r => setTimeout(r, 50 + Math.random() * 50));
             }
             
             saveCache();
