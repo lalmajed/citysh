@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riyadh Route Analysis - Real Data</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
@@ -52,7 +54,6 @@
             transition: background 0.2s;
         }
         .route-point:hover { background: #f0f7ff; }
-        .route-point.selected { background: #e3f2fd; border-left: 3px solid #1a73e8; }
         
         .point-marker {
             width: 32px; height: 32px; border-radius: 50%;
@@ -73,7 +74,6 @@
             cursor: pointer; transition: all 0.2s;
         }
         .trip-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .trip-item.selected { border-color: #1a73e8; background: #e3f2fd; }
         
         .trip-header { display: flex; justify-content: space-between; align-items: center; }
         .trip-route { font-weight: 600; color: #333; font-size: 0.9em; }
@@ -232,18 +232,16 @@
                 <h4>Travel Time Ratio (r)</h4>
                 <p><code>r = observed_time / expected_time</code></p>
                 <p><strong>r = 1.0</strong> - Exactly as expected</p>
-                <p><strong>r &gt; 1.0</strong> - Slower than expected</p>
-                <p><strong>r &lt; 1.0</strong> - Faster than expected</p>
+                <p><strong>r > 1.0</strong> - Slower than expected</p>
+                <p><strong>r < 1.0</strong> - Faster than expected</p>
                 <div class="normal-band">
                     <strong>Path Segmentation Rule:</strong><br>
-                    New path when time gap &gt; 15 minutes<br>
-                    or ratio &gt; 5.0 (anomaly)
+                    New path when time gap > 15 minutes<br>
+                    or ratio > 5.0 (anomaly)
                 </div>
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/gh/nickolass/Keyless-Google-Maps-API@2.1/mapsJavaScriptAPI.js"></script>
     
     <script>
         // Embedded Data
@@ -263,28 +261,24 @@
         let map, markers = [], polylines = [];
         let trips = [], paths = [];
         
+        // Initialize Leaflet map
         function initMap() {
-            map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: 24.7136, lng: 46.6753 },
-                zoom: 11,
-                styles: [{ featureType: "poi", stylers: [{ visibility: "off" }] }]
-            });
+            map = L.map('map').setView([24.7136, 46.6753], 11);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: 'OpenStreetMap'
+            }).addTo(map);
             
             // Add all site markers (small red dots)
             SITES.forEach(site => {
-                new google.maps.Marker({
-                    position: { lat: site.latitude, lng: site.longitude },
-                    map: map,
-                    icon: {
-                        path: google.maps.SymbolPath.CIRCLE,
-                        scale: 4,
-                        fillColor: '#e53935',
-                        fillOpacity: 0.6,
-                        strokeColor: '#b71c1c',
-                        strokeWeight: 1
-                    },
-                    title: site.site_id
-                });
+                L.circleMarker([site.latitude, site.longitude], {
+                    radius: 4,
+                    fillColor: '#e53935',
+                    fillOpacity: 0.6,
+                    color: '#b71c1c',
+                    weight: 1
+                }).addTo(map).bindTooltip(site.site_id);
             });
             
             processRoute();
@@ -314,14 +308,12 @@
                 const observedSec = trip.obs_time_seconds;
                 const observedMin = observedSec / 60;
                 
-                // Get expected time from our matrix
                 const key = trip.camera_prev + '_' + trip.camera_next;
                 let expectedMin = EXPECTED_TIMES[key];
-                if (!expectedMin) expectedMin = observedMin; // fallback
+                if (!expectedMin) expectedMin = observedMin;
                 
                 const ratio = observedMin / expectedMin;
                 
-                // Calculate gap from previous trip
                 let gapMin = 0;
                 if (i > 0) {
                     const prevEnd = new Date(tripData[i-1].t_next);
@@ -347,7 +339,6 @@
             let currentPath = { trips: [], color: PATH_COLORS[0] };
             
             trips.forEach((trip, idx) => {
-                // Start new path if gap > 15 min or ratio > 5 (anomaly)
                 if ((trip.gapBefore > 15 || trip.ratio > 5) && currentPath.trips.length > 0) {
                     paths.push(currentPath);
                     currentPath = { trips: [], color: PATH_COLORS[paths.length % PATH_COLORS.length] };
@@ -363,8 +354,6 @@
                 path.index = idx + 1;
                 path.color = PATH_COLORS[idx % PATH_COLORS.length];
             });
-            
-            console.log('Trips:', trips.length, 'Paths:', paths.length);
         }
         
         function renderRouteTab() {
@@ -401,13 +390,13 @@
                 
                 html += '<div class="trip-item" data-trip="' + trip.index + '">' +
                     '<div class="trip-header">' +
-                    '<span class="trip-route">Trip ' + trip.index + ': ' + trip.from.site_id + ' → ' + trip.to.site_id + '</span>' +
+                    '<span class="trip-route">Trip ' + trip.index + ': ' + trip.from.site_id + ' -> ' + trip.to.site_id + '</span>' +
                     '<span class="trip-ratio ' + ratioClass + '">r = ' + trip.ratio + '</span>' +
                     '</div>' +
                     '<div class="trip-details">' +
                     '<span>Obs: ' + trip.observedMin + ' min</span>' +
                     '<span>Exp: ' + trip.expectedMin + ' min</span>' +
-                    '<span>' + fromTime + ' → ' + toTime + '</span>' +
+                    '<span>' + fromTime + ' -> ' + toTime + '</span>' +
                     (trip.gapBefore > 0 ? '<span style="color:#e65100;">Gap: ' + trip.gapBefore + 'm</span>' : '') +
                     '</div></div>';
             });
@@ -427,7 +416,7 @@
                 
                 html += '<div class="path-group path-' + path.index + '">' +
                     '<div class="path-header" data-path="' + path.index + '">' +
-                    '<span>Path ' + path.index + ': ' + firstTrip.from.site_id + ' → ' + lastTrip.to.site_id + '</span>' +
+                    '<span>Path ' + path.index + ': ' + firstTrip.from.site_id + ' -> ' + lastTrip.to.site_id + '</span>' +
                     '<span class="path-stats">' + path.trips.length + ' trips | ' + startTime + ' - ' + endTime + '</span>' +
                     '</div><div class="path-trips">';
                 
@@ -436,7 +425,7 @@
                     
                     html += '<div class="trip-item" data-trip="' + trip.index + '" style="margin: 5px 0; padding: 8px;">' +
                         '<div class="trip-header">' +
-                        '<span class="trip-route" style="font-size: 0.85em;">' + trip.from.site_id + ' → ' + trip.to.site_id + '</span>' +
+                        '<span class="trip-route" style="font-size: 0.85em;">' + trip.from.site_id + ' -> ' + trip.to.site_id + '</span>' +
                         '<span class="trip-ratio ' + ratioClass + '" style="font-size: 0.75em;">r=' + trip.ratio + '</span>' +
                         '</div>' +
                         '<div class="trip-details" style="font-size: 0.8em;">' +
@@ -452,12 +441,7 @@
         }
         
         function drawRouteOnMap() {
-            polylines.forEach(p => p.setMap(null));
-            markers.forEach(m => m.setMap(null));
-            polylines = [];
-            markers = [];
-            
-            const bounds = new google.maps.LatLngBounds();
+            const bounds = L.latLngBounds();
             
             // Draw paths with different colors
             paths.forEach((path, pathIdx) => {
@@ -465,23 +449,19 @@
                 
                 path.trips.forEach((trip, tripIdx) => {
                     if (tripIdx === 0 && trip.from.lat) {
-                        pathCoords.push({ lat: trip.from.lat, lng: trip.from.lon });
+                        pathCoords.push([trip.from.lat, trip.from.lon]);
                     }
                     if (trip.to.lat) {
-                        pathCoords.push({ lat: trip.to.lat, lng: trip.to.lon });
+                        pathCoords.push([trip.to.lat, trip.to.lon]);
                     }
                 });
                 
                 if (pathCoords.length > 1) {
-                    const polyline = new google.maps.Polyline({
-                        path: pathCoords,
-                        geodesic: true,
-                        strokeColor: path.color,
-                        strokeOpacity: 0.9,
-                        strokeWeight: 5
-                    });
-                    polyline.setMap(map);
-                    polylines.push(polyline);
+                    L.polyline(pathCoords, {
+                        color: path.color,
+                        weight: 5,
+                        opacity: 0.9
+                    }).addTo(map);
                 }
                 
                 pathCoords.forEach(coord => bounds.extend(coord));
@@ -495,11 +475,11 @@
                 const isOrigin = idx === 0;
                 const isDest = idx === detections.length - 1;
                 
-                let icon;
+                let color, radius;
                 if (isOrigin) {
-                    icon = { path: google.maps.SymbolPath.CIRCLE, scale: 14, fillColor: '#4caf50', fillOpacity: 1, strokeColor: '#2e7d32', strokeWeight: 3 };
+                    color = '#4caf50'; radius = 12;
                 } else if (isDest) {
-                    icon = { path: google.maps.SymbolPath.CIRCLE, scale: 14, fillColor: '#f44336', fillOpacity: 1, strokeColor: '#c62828', strokeWeight: 3 };
+                    color = '#f44336'; radius = 12;
                 } else {
                     let pathColor = '#ff9800';
                     for (const path of paths) {
@@ -510,19 +490,21 @@
                             }
                         }
                     }
-                    icon = { path: google.maps.SymbolPath.CIRCLE, scale: 8, fillColor: pathColor, fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 };
+                    color = pathColor; radius = 8;
                 }
                 
-                const marker = new google.maps.Marker({
-                    position: { lat: det.lat, lng: det.lon },
-                    map: map,
-                    icon: icon,
-                    title: det.site_id + ' (' + new Date(det.timestamp).toLocaleTimeString() + ')'
-                });
-                markers.push(marker);
+                L.circleMarker([det.lat, det.lon], {
+                    radius: radius,
+                    fillColor: color,
+                    fillOpacity: 1,
+                    color: '#fff',
+                    weight: 2
+                }).addTo(map).bindTooltip(det.site_id + '<br>' + new Date(det.timestamp).toLocaleTimeString());
             });
             
-            map.fitBounds(bounds, 50);
+            if (bounds.isValid()) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
         }
         
         // Tab switching
@@ -535,7 +517,8 @@
             });
         });
         
-        window.initMap = initMap;
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initMap);
     </script>
 </body>
 </html>
