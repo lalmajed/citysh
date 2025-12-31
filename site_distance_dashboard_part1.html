@@ -253,7 +253,7 @@ async function findWaypointsOnPath(path, startIdx, endIdx, directDist) {
         if (isOnRoute) {
             verified.push(c.idx);
         }
-        await new Promise(r => setTimeout(r, 150)); // Rate limit
+        await new Promise(r => setTimeout(r, 80)); // Rate limit
     }
     
     // POST-FILTER: If two verified waypoints are very close, keep only one
@@ -568,13 +568,13 @@ async function startParallelAll() {
                 }
                 
                 // Save periodically
-                if (totalRoutesDone % 20 === 0) {
+                if (totalRoutesDone % 50 === 0) {
                     saveCache();
                     updateParallelProgress(totalRoutesDone);
                 }
                 
-                // Rate limit - important to avoid Google blocking
-                await new Promise(r => setTimeout(r, 300 + Math.random() * 200));
+                // Rate limit - reduced for speed
+                await new Promise(r => setTimeout(r, 150 + Math.random() * 100));
             }
             
             saveCache();
