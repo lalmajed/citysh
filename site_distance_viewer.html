@@ -8,144 +8,120 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, sans-serif; background: #1a1a2e; color: #eee; padding: 20px; }
         h1 { color: #00d9ff; margin-bottom: 20px; text-align: center; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        .load-section { background: #16213e; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
-        .load-section h2 { color: #00d9ff; margin-bottom: 15px; font-size: 1.1rem; }
+        .container { max-width: 1600px; margin: 0 auto; display: grid; grid-template-columns: 1fr 500px; gap: 20px; }
+        .left-panel { display: flex; flex-direction: column; gap: 20px; }
+        .panel { background: #16213e; border-radius: 10px; padding: 20px; }
+        .panel h2 { color: #00d9ff; margin-bottom: 15px; font-size: 1.1rem; }
         .load-buttons { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        .btn { padding: 12px 20px; font-size: 1rem; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; }
+        .btn { padding: 10px 15px; font-size: 0.9rem; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; }
         .btn-part1 { background: #4285f4; color: white; }
         .btn-part2 { background: #ea4335; color: white; }
         .btn-combine { background: #34a853; color: white; }
         .btn-export { background: #fbbc05; color: #333; }
-        .btn:hover { opacity: 0.9; transform: scale(1.02); }
+        .btn:hover { opacity: 0.9; }
         .btn:disabled { background: #666; cursor: not-allowed; }
         input[type="file"] { display: none; }
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
-        .stat { background: #0f3460; padding: 20px; border-radius: 10px; text-align: center; }
-        .stat-value { font-size: 2rem; font-weight: bold; color: #00d9ff; }
-        .stat-label { font-size: 0.85rem; color: #aaa; margin-top: 5px; }
-        .data-section { background: #16213e; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
-        .data-section h2 { color: #00d9ff; margin-bottom: 15px; }
-        .matrix-controls { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
-        select { padding: 10px; font-size: 1rem; border-radius: 6px; border: none; background: #0f3460; color: #eee; min-width: 200px; }
-        .search-box { padding: 10px; font-size: 1rem; border-radius: 6px; border: none; background: #0f3460; color: #eee; width: 200px; }
-        .table-container { max-height: 500px; overflow: auto; border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #0f3460; }
-        th { background: #0f3460; color: #00d9ff; position: sticky; top: 0; z-index: 10; }
-        tr:hover { background: #1a3a5c; }
+        .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 15px 0; }
+        .stat { background: #0f3460; padding: 12px; border-radius: 8px; text-align: center; }
+        .stat-value { font-size: 1.3rem; font-weight: bold; color: #00d9ff; }
+        .stat-label { font-size: 0.75rem; color: #aaa; }
+        .matrix-controls { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+        select { padding: 8px; font-size: 0.9rem; border-radius: 6px; border: none; background: #0f3460; color: #eee; }
+        .search-box { padding: 8px; font-size: 0.9rem; border-radius: 6px; border: none; background: #0f3460; color: #eee; width: 150px; }
+        .table-container { max-height: 300px; overflow: auto; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #0f3460; }
+        th { background: #0f3460; color: #00d9ff; position: sticky; top: 0; }
+        tr:hover { background: #1a3a5c; cursor: pointer; }
+        tr.selected { background: #2a5a8c; }
         .waypoints { color: #34a853; font-weight: bold; }
         .distance { color: #4285f4; }
         .time { color: #fbbc05; }
-        .log { background: #0a0a15; color: #0f0; padding: 15px; font-family: monospace; font-size: 0.8rem; height: 150px; overflow-y: auto; border-radius: 8px; margin-top: 15px; }
-        .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
-        .tab { padding: 10px 20px; background: #0f3460; border: none; color: #aaa; cursor: pointer; border-radius: 6px 6px 0 0; }
-        .tab.active { background: #00d9ff; color: #1a1a2e; }
-        .progress-bar { height: 8px; background: #0f3460; border-radius: 4px; margin: 10px 0; overflow: hidden; }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #4285f4, #34a853); transition: width 0.3s; }
-        .part-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; margin-left: 5px; }
+        #map { height: 100%; min-height: 600px; border-radius: 10px; }
+        .map-panel { height: 100%; }
+        .part-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
         .part1-badge { background: #4285f4; }
         .part2-badge { background: #ea4335; }
+        .route-info { background: #0f3460; padding: 15px; border-radius: 8px; margin-top: 10px; }
+        .route-info h3 { color: #00d9ff; margin-bottom: 10px; }
+        .route-detail { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #1a3a5c; }
+        .exports { display: flex; gap: 5px; flex-wrap: wrap; }
     </style>
 </head>
 <body>
     <h1>🗺️ Riyadh Sites Distance Data Viewer</h1>
     
     <div class="container">
-        <div class="load-section">
-            <h2>📂 Load Data</h2>
-            <div class="load-buttons">
-                <button class="btn btn-part1" onclick="document.getElementById('filePart1').click()">
-                    Load Part 1 JSON
-                </button>
-                <input type="file" id="filePart1" accept=".json" onchange="loadFile(this, 1)">
-                
-                <button class="btn btn-part2" onclick="document.getElementById('filePart2').click()">
-                    Load Part 2 JSON
-                </button>
-                <input type="file" id="filePart2" accept=".json" onchange="loadFile(this, 2)">
-                
-                <button class="btn btn-combine" onclick="combineData()" id="combineBtn" disabled>
-                    Combine Parts
-                </button>
-                
-                <span style="color:#aaa; margin-left:20px;">Or load from localStorage:</span>
-                <button class="btn" style="background:#666;" onclick="loadFromLocalStorage(1)">Part 1 Cache</button>
-                <button class="btn" style="background:#666;" onclick="loadFromLocalStorage(2)">Part 2 Cache</button>
+        <div class="left-panel">
+            <div class="panel">
+                <h2>📂 Load Data</h2>
+                <div class="load-buttons">
+                    <button class="btn btn-part1" onclick="document.getElementById('filePart1').click()">Load Part 1 JSON</button>
+                    <input type="file" id="filePart1" accept=".json" onchange="loadFile(this, 1)">
+                    <button class="btn btn-part2" onclick="document.getElementById('filePart2').click()">Load Part 2 JSON</button>
+                    <input type="file" id="filePart2" accept=".json" onchange="loadFile(this, 2)">
+                    <button class="btn btn-combine" onclick="combineData()" id="combineBtn" disabled>Combine</button>
+                    <button class="btn" style="background:#555;" onclick="loadFromLocalStorage(1)">Cache P1</button>
+                    <button class="btn" style="background:#555;" onclick="loadFromLocalStorage(2)">Cache P2</button>
+                </div>
+                <div class="stats">
+                    <div class="stat"><div class="stat-value" id="statPart1">0</div><div class="stat-label">Part 1</div></div>
+                    <div class="stat"><div class="stat-value" id="statPart2">0</div><div class="stat-label">Part 2</div></div>
+                    <div class="stat"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total</div></div>
+                    <div class="stat"><div class="stat-value" id="statWaypoints">0</div><div class="stat-label">w/ Waypoints</div></div>
+                    <div class="stat"><div class="stat-value" id="statPercent">0%</div><div class="stat-label">Complete</div></div>
+                </div>
             </div>
             
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill" style="width:0%"></div>
+            <div class="panel">
+                <h2>📊 Routes (click to view on map)</h2>
+                <div class="matrix-controls">
+                    <input type="text" class="search-box" id="searchBox" placeholder="Search..." oninput="filterTable()">
+                    <select id="originFilter" onchange="filterTable()"><option value="">All Origins</option></select>
+                    <select id="destFilter" onchange="filterTable()"><option value="">All Dests</option></select>
+                    <select id="wpFilter" onchange="filterTable()">
+                        <option value="">All Routes</option>
+                        <option value="yes">With Waypoints</option>
+                        <option value="no">No Waypoints</option>
+                    </select>
+                </div>
+                <div class="table-container">
+                    <table id="dataTable">
+                        <thead>
+                            <tr>
+                                <th>Origin</th>
+                                <th>Destination</th>
+                                <th>Dist (km)</th>
+                                <th>Time (min)</th>
+                                <th>Waypoints</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
             </div>
             
-            <div class="stats">
-                <div class="stat">
-                    <div class="stat-value" id="statPart1">0</div>
-                    <div class="stat-label">Part 1 Routes</div>
+            <div class="panel">
+                <h2>📥 Export</h2>
+                <div class="exports">
+                    <button class="btn btn-export" onclick="exportCombinedCSV()">Distance CSV</button>
+                    <button class="btn btn-export" onclick="exportTimeCSV()">Time CSV</button>
+                    <button class="btn btn-export" onclick="exportWaypointsCSV()">Waypoints CSV</button>
+                    <button class="btn btn-export" onclick="exportFullJSON()">Full JSON</button>
                 </div>
-                <div class="stat">
-                    <div class="stat-value" id="statPart2">0</div>
-                    <div class="stat-label">Part 2 Routes</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value" id="statTotal">0</div>
-                    <div class="stat-label">Total Routes</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value" id="statWaypoints">0</div>
-                    <div class="stat-label">Routes w/ Waypoints</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value" id="statPercent">0%</div>
-                    <div class="stat-label">Matrix Complete</div>
-                </div>
+            </div>
+            
+            <div class="panel route-info" id="routeInfo" style="display:none;">
+                <h3 id="routeTitle">Route Details</h3>
+                <div class="route-detail"><span>Distance:</span><span id="routeDist">-</span></div>
+                <div class="route-detail"><span>Time:</span><span id="routeTime">-</span></div>
+                <div class="route-detail"><span>Waypoints:</span><span id="routeWp">-</span></div>
+                <div class="route-detail"><span>Waypoint IDs:</span><span id="routeWpIds">-</span></div>
             </div>
         </div>
         
-        <div class="data-section">
-            <h2>📊 Data Explorer</h2>
-            
-            <div class="tabs">
-                <button class="tab active" onclick="showTab('routes')">All Routes</button>
-                <button class="tab" onclick="showTab('matrix')">Distance Matrix</button>
-                <button class="tab" onclick="showTab('waypoints')">Waypoints Only</button>
-                <button class="tab" onclick="showTab('origin')">By Origin</button>
-            </div>
-            
-            <div class="matrix-controls">
-                <input type="text" class="search-box" id="searchBox" placeholder="Search site ID..." oninput="filterTable()">
-                <select id="originFilter" onchange="filterByOrigin()">
-                    <option value="">All Origins</option>
-                </select>
-                <select id="destFilter" onchange="filterTable()">
-                    <option value="">All Destinations</option>
-                </select>
-                <button class="btn btn-export" onclick="exportCombinedCSV()">Export Distance CSV</button>
-                <button class="btn btn-export" onclick="exportTimeCSV()">Export Time CSV</button>
-                <button class="btn btn-export" onclick="exportFullJSON()">Export Full JSON</button>
-            </div>
-            
-            <div class="table-container" id="tableContainer">
-                <table id="dataTable">
-                    <thead>
-                        <tr>
-                            <th>Origin</th>
-                            <th>Destination</th>
-                            <th>Distance (km)</th>
-                            <th>Time (min)</th>
-                            <th>Waypoints</th>
-                            <th>Source</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <div class="load-section">
-            <h2>📝 Log</h2>
-            <div class="log" id="log"></div>
+        <div class="panel map-panel">
+            <div id="map"></div>
         </div>
     </div>
 
@@ -158,20 +134,14 @@ let data = {
     combined: { dist: {}, time: {}, waypoints: {} }
 };
 
-let currentTab = 'routes';
+let map, directionsService, directionsRenderer;
+let markers = [];
 let allRoutes = [];
-
-function log(msg) {
-    const el = document.getElementById('log');
-    el.innerHTML += '[' + new Date().toLocaleTimeString() + '] ' + msg + '\n';
-    el.scrollTop = el.scrollHeight;
-}
+let selectedRoute = null;
 
 function loadFile(input, part) {
     const file = input.files[0];
     if (!file) return;
-    
-    log('Loading ' + file.name + '...');
     
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -181,19 +151,17 @@ function loadFile(input, part) {
                 data.part1.dist = json.distance_km || {};
                 data.part1.time = json.time_min || {};
                 data.part1.waypoints = json.waypoints || {};
-                log('Part 1 loaded: ' + Object.keys(data.part1.dist).length + ' routes');
             } else {
                 data.part2.dist = json.distance_km || {};
                 data.part2.time = json.time_min || {};
                 data.part2.waypoints = json.waypoints || {};
-                log('Part 2 loaded: ' + Object.keys(data.part2.dist).length + ' routes');
             }
             updateStats();
             checkCombineReady();
             buildRoutesList();
             renderTable();
         } catch(err) {
-            log('ERROR: ' + err.message);
+            alert('Error loading file: ' + err.message);
         }
     };
     reader.readAsText(file);
@@ -204,7 +172,7 @@ function loadFromLocalStorage(part) {
     try {
         const stored = localStorage.getItem(key);
         if (!stored) {
-            log('No data found in localStorage for Part ' + part);
+            alert('No data in localStorage for Part ' + part);
             return;
         }
         const json = JSON.parse(stored);
@@ -212,19 +180,17 @@ function loadFromLocalStorage(part) {
             data.part1.dist = json.dist || {};
             data.part1.time = json.time || {};
             data.part1.waypoints = json.waypoints || {};
-            log('Part 1 loaded from cache: ' + Object.keys(data.part1.dist).length + ' routes');
         } else {
             data.part2.dist = json.dist || {};
             data.part2.time = json.time || {};
             data.part2.waypoints = json.waypoints || {};
-            log('Part 2 loaded from cache: ' + Object.keys(data.part2.dist).length + ' routes');
         }
         updateStats();
         checkCombineReady();
         buildRoutesList();
         renderTable();
     } catch(err) {
-        log('ERROR loading from localStorage: ' + err.message);
+        alert('Error: ' + err.message);
     }
 }
 
@@ -238,8 +204,6 @@ function combineData() {
     data.combined.dist = { ...data.part1.dist, ...data.part2.dist };
     data.combined.time = { ...data.part1.time, ...data.part2.time };
     data.combined.waypoints = { ...data.part1.waypoints, ...data.part2.waypoints };
-    
-    log('Combined: ' + Object.keys(data.combined.dist).length + ' total routes');
     updateStats();
     buildRoutesList();
     renderTable();
@@ -249,7 +213,7 @@ function updateStats() {
     const p1 = Object.keys(data.part1.dist).length;
     const p2 = Object.keys(data.part2.dist).length;
     const total = Object.keys(data.combined.dist).length || (p1 + p2);
-    const maxRoutes = 247 * 246; // 60762
+    const maxRoutes = 247 * 246;
     
     let wpCount = 0;
     const wpData = Object.keys(data.combined.waypoints).length > 0 ? data.combined.waypoints : 
@@ -263,7 +227,6 @@ function updateStats() {
     document.getElementById('statTotal').textContent = total.toLocaleString();
     document.getElementById('statWaypoints').textContent = wpCount.toLocaleString();
     document.getElementById('statPercent').textContent = ((total / maxRoutes) * 100).toFixed(1) + '%';
-    document.getElementById('progressFill').style.width = ((total / maxRoutes) * 100) + '%';
 }
 
 function buildRoutesList() {
@@ -284,33 +247,23 @@ function buildRoutesList() {
         const source = data.part1.dist[key] !== undefined ? 1 : 2;
         
         allRoutes.push({
-            key,
-            originIdx: i,
-            destIdx: j,
-            origin: originId,
-            dest: destId,
-            dist: distData[key],
-            time: timeData[key],
-            waypoints: wp,
-            source
+            key, originIdx: i, destIdx: j,
+            origin: originId, dest: destId,
+            dist: distData[key], time: timeData[key],
+            waypoints: wp, source
         });
     }
     
-    // Populate filters
     const origins = [...new Set(allRoutes.map(r => r.origin))].sort();
     const dests = [...new Set(allRoutes.map(r => r.dest))].sort();
     
     const originSelect = document.getElementById('originFilter');
     originSelect.innerHTML = '<option value="">All Origins</option>';
-    origins.forEach(o => {
-        originSelect.innerHTML += '<option value="' + o + '">' + o + '</option>';
-    });
+    origins.forEach(o => originSelect.innerHTML += '<option value="' + o + '">' + o + '</option>');
     
     const destSelect = document.getElementById('destFilter');
-    destSelect.innerHTML = '<option value="">All Destinations</option>';
-    dests.forEach(d => {
-        destSelect.innerHTML += '<option value="' + d + '">' + d + '</option>';
-    });
+    destSelect.innerHTML = '<option value="">All Dests</option>';
+    dests.forEach(d => destSelect.innerHTML += '<option value="' + d + '">' + d + '</option>');
 }
 
 function renderTable() {
@@ -318,71 +271,156 @@ function renderTable() {
     const search = document.getElementById('searchBox').value.toLowerCase();
     const originFilter = document.getElementById('originFilter').value;
     const destFilter = document.getElementById('destFilter').value;
+    const wpFilter = document.getElementById('wpFilter').value;
     
     let filtered = allRoutes;
     
-    // Apply tab filter
-    if (currentTab === 'waypoints') {
-        filtered = filtered.filter(r => r.waypoints.length > 0);
-    }
+    if (search) filtered = filtered.filter(r => r.origin.toLowerCase().includes(search) || r.dest.toLowerCase().includes(search));
+    if (originFilter) filtered = filtered.filter(r => r.origin === originFilter);
+    if (destFilter) filtered = filtered.filter(r => r.dest === destFilter);
+    if (wpFilter === 'yes') filtered = filtered.filter(r => r.waypoints.length > 0);
+    if (wpFilter === 'no') filtered = filtered.filter(r => r.waypoints.length === 0);
     
-    // Apply search
-    if (search) {
-        filtered = filtered.filter(r => 
-            r.origin.toLowerCase().includes(search) || 
-            r.dest.toLowerCase().includes(search)
-        );
-    }
-    
-    // Apply origin filter
-    if (originFilter) {
-        filtered = filtered.filter(r => r.origin === originFilter);
-    }
-    
-    // Apply dest filter
-    if (destFilter) {
-        filtered = filtered.filter(r => r.dest === destFilter);
-    }
-    
-    // Limit display for performance
-    const limit = 1000;
+    const limit = 500;
     const display = filtered.slice(0, limit);
     
-    tbody.innerHTML = display.map(r => {
-        const wpStr = r.waypoints.length > 0 ? 
-            r.waypoints.map(idx => SITES[idx]?.site_id || idx).join(', ') : '-';
-        const badge = r.source === 1 ? 
-            '<span class="part-badge part1-badge">P1</span>' :
-            '<span class="part-badge part2-badge">P2</span>';
-        
-        return '<tr>' +
+    tbody.innerHTML = display.map((r, idx) => {
+        const wpStr = r.waypoints.length > 0 ? r.waypoints.length + ' sites' : '-';
+        return '<tr data-idx="' + idx + '" onclick="selectRoute(' + idx + ')">' +
             '<td>' + r.origin + '</td>' +
             '<td>' + r.dest + '</td>' +
             '<td class="distance">' + r.dist.toFixed(2) + '</td>' +
             '<td class="time">' + r.time.toFixed(1) + '</td>' +
             '<td class="waypoints">' + wpStr + '</td>' +
-            '<td>' + badge + '</td>' +
         '</tr>';
     }).join('');
     
-    if (filtered.length > limit) {
-        log('Showing ' + limit + ' of ' + filtered.length + ' routes');
-    }
+    // Store filtered for selection
+    window.filteredRoutes = filtered;
 }
 
-function showTab(tab) {
-    currentTab = tab;
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    event.target.classList.add('active');
-    renderTable();
+function filterTable() { renderTable(); }
+
+function selectRoute(idx) {
+    const route = window.filteredRoutes[idx];
+    if (!route) return;
+    
+    selectedRoute = route;
+    
+    // Highlight row
+    document.querySelectorAll('#tableBody tr').forEach(tr => tr.classList.remove('selected'));
+    document.querySelector('#tableBody tr[data-idx="' + idx + '"]')?.classList.add('selected');
+    
+    // Show route info
+    document.getElementById('routeInfo').style.display = 'block';
+    document.getElementById('routeTitle').textContent = route.origin + ' → ' + route.dest;
+    document.getElementById('routeDist').textContent = route.dist.toFixed(2) + ' km';
+    document.getElementById('routeTime').textContent = route.time.toFixed(1) + ' min';
+    document.getElementById('routeWp').textContent = route.waypoints.length + ' waypoints';
+    document.getElementById('routeWpIds').textContent = route.waypoints.length > 0 ? 
+        route.waypoints.map(i => SITES[i]?.site_id || i).join(', ') : 'None';
+    
+    // Show on map
+    showRouteOnMap(route);
 }
 
-function filterTable() {
-    renderTable();
+function showRouteOnMap(route) {
+    if (!directionsService || !directionsRenderer) return;
+    
+    // Clear previous
+    directionsRenderer.setDirections({routes: []});
+    markers.forEach(m => m.setMap(null));
+    markers = [];
+    
+    const origin = SITES[route.originIdx];
+    const dest = SITES[route.destIdx];
+    
+    // Build waypoints for directions request
+    const waypoints = route.waypoints.map(idx => ({
+        location: { lat: SITES[idx].lat, lng: SITES[idx].lon },
+        stopover: true
+    }));
+    
+    directionsService.route({
+        origin: { lat: origin.lat, lng: origin.lon },
+        destination: { lat: dest.lat, lng: dest.lon },
+        waypoints: waypoints,
+        travelMode: 'DRIVING'
+    }, (result, status) => {
+        if (status === 'OK') {
+            directionsRenderer.setDirections(result);
+            
+            // Add markers for origin (green), destination (red), waypoints (blue)
+            markers.push(new google.maps.Marker({
+                position: { lat: origin.lat, lng: origin.lon },
+                map: map,
+                icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                title: 'Origin: ' + origin.site_id,
+                zIndex: 100
+            }));
+            
+            markers.push(new google.maps.Marker({
+                position: { lat: dest.lat, lng: dest.lon },
+                map: map,
+                icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                title: 'Destination: ' + dest.site_id,
+                zIndex: 100
+            }));
+            
+            route.waypoints.forEach(idx => {
+                const wp = SITES[idx];
+                markers.push(new google.maps.Marker({
+                    position: { lat: wp.lat, lng: wp.lon },
+                    map: map,
+                    icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+                    title: 'Waypoint: ' + wp.site_id,
+                    zIndex: 99
+                }));
+            });
+        }
+    });
 }
 
-function filterByOrigin() {
-    renderTable();
+function initMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 24.7, lng: 46.7 },
+        zoom: 11,
+        styles: [
+            { elementType: "geometry", stylers: [{ color: "#1d2c4d" }] },
+            { elementType: "labels.text.fill", stylers: [{ color: "#8ec3b9" }] },
+            { elementType: "labels.text.stroke", stylers: [{ color: "#1a3646" }] },
+            { featureType: "road", elementType: "geometry", stylers: [{ color: "#304a7d" }] },
+            { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#255763" }] },
+            { featureType: "water", elementType: "geometry", stylers: [{ color: "#0e1626" }] }
+        ]
+    });
+    
+    directionsService = new google.maps.DirectionsService();
+    directionsRenderer = new google.maps.DirectionsRenderer({
+        map: map,
+        suppressMarkers: true,
+        polylineOptions: {
+            strokeColor: '#00d9ff',
+            strokeWeight: 5,
+            strokeOpacity: 0.8
+        }
+    });
+    
+    // Add all site markers (small, gray)
+    SITES.forEach((s, i) => {
+        new google.maps.Marker({
+            position: { lat: s.lat, lng: s.lon },
+            map: map,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 4,
+                fillColor: '#666',
+                fillOpacity: 0.5,
+                strokeWeight: 0
+            },
+            title: s.site_id
+        });
+    });
 }
 
 function exportCombinedCSV() {
@@ -398,9 +436,7 @@ function exportCombinedCSV() {
         });
         csv += row.join(',') + '\n';
     });
-    
-    download(csv, 'riyadh_combined_distance_km.csv', 'text/csv');
-    log('Exported distance CSV');
+    download(csv, 'riyadh_distance_km.csv', 'text/csv');
 }
 
 function exportTimeCSV() {
@@ -416,9 +452,22 @@ function exportTimeCSV() {
         });
         csv += row.join(',') + '\n';
     });
+    download(csv, 'riyadh_time_min.csv', 'text/csv');
+}
+
+function exportWaypointsCSV() {
+    const wpData = Object.keys(data.combined.waypoints).length > 0 ? data.combined.waypoints :
+                   { ...data.part1.waypoints, ...data.part2.waypoints };
     
-    download(csv, 'riyadh_combined_time_min.csv', 'text/csv');
-    log('Exported time CSV');
+    let csv = 'origin,destination,waypoint_count,waypoint_ids\n';
+    for (const key in wpData) {
+        if (wpData[key] && wpData[key].length > 0) {
+            const [i, j] = key.split('_').map(Number);
+            const wpIds = wpData[key].map(idx => SITES[idx]?.site_id || idx).join(';');
+            csv += SITES[i].site_id + ',' + SITES[j].site_id + ',' + wpData[key].length + ',' + wpIds + '\n';
+        }
+    }
+    download(csv, 'riyadh_waypoints.csv', 'text/csv');
 }
 
 function exportFullJSON() {
@@ -429,17 +478,14 @@ function exportFullJSON() {
     const wpData = Object.keys(data.combined.waypoints).length > 0 ? data.combined.waypoints :
                    { ...data.part1.waypoints, ...data.part2.waypoints };
     
-    const json = {
-        source: 'Google Maps - Combined',
+    download(JSON.stringify({
+        source: 'Google Maps',
         sites: SITES,
         total_routes: Object.keys(distData).length,
         distance_km: distData,
         time_min: timeData,
         waypoints: wpData
-    };
-    
-    download(JSON.stringify(json, null, 2), 'riyadh_combined_full.json', 'application/json');
-    log('Exported full JSON');
+    }, null, 2), 'riyadh_combined.json', 'application/json');
 }
 
 function download(content, filename, type) {
@@ -449,9 +495,16 @@ function download(content, filename, type) {
     a.click();
 }
 
-// Init
-log('Data Viewer ready!');
-log('Load Part 1 and/or Part 2 JSON files, or load from localStorage');
+// Wait for Google Maps
+function waitForMaps() {
+    if (typeof google !== 'undefined' && google.maps) {
+        initMap();
+    } else {
+        setTimeout(waitForMaps, 100);
+    }
+}
+waitForMaps();
     </script>
+    <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
 </body>
 </html>
