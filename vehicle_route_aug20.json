@@ -1,0 +1,384 @@
+{
+  "vehicle_id": "1354JSB",
+  "date": "2025-08-20",
+  "trips": [
+    {
+      "camera_prev": "RUHSM052",
+      "camera_next": "RUHSM052",
+      "t_prev": "2025-08-20T06:46:26.323000",
+      "t_next": "2025-08-20T06:46:26.756000",
+      "obs_time_seconds": 0
+    },
+    {
+      "camera_prev": "RUHSM052",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T06:46:26.756000",
+      "t_next": "2025-08-20T08:08:44.742000",
+      "obs_time_seconds": 4938
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T08:08:44.742000",
+      "t_next": "2025-08-20T08:08:45.138000",
+      "obs_time_seconds": 1
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHTE318",
+      "t_prev": "2025-08-20T08:08:45.138000",
+      "t_next": "2025-08-20T08:20:52.895000",
+      "obs_time_seconds": 727
+    },
+    {
+      "camera_prev": "RUHTE318",
+      "camera_next": "HISSM004",
+      "t_prev": "2025-08-20T08:20:52.895000",
+      "t_next": "2025-08-20T08:25:03.973000",
+      "obs_time_seconds": 251
+    },
+    {
+      "camera_prev": "HISSM004",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T08:25:03.973000",
+      "t_next": "2025-08-20T08:27:15.316000",
+      "obs_time_seconds": 132
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHSM496",
+      "t_prev": "2025-08-20T08:27:15.316000",
+      "t_next": "2025-08-20T08:29:25.366000",
+      "obs_time_seconds": 130
+    },
+    {
+      "camera_prev": "RUHSM496",
+      "camera_next": "RUHSM431",
+      "t_prev": "2025-08-20T08:29:25.366000",
+      "t_next": "2025-08-20T08:35:00.119000",
+      "obs_time_seconds": 335
+    },
+    {
+      "camera_prev": "RUHSM431",
+      "camera_next": "RUHSM481",
+      "t_prev": "2025-08-20T08:35:00.119000",
+      "t_next": "2025-08-20T08:42:26.518000",
+      "obs_time_seconds": 446
+    },
+    {
+      "camera_prev": "RUHSM481",
+      "camera_next": "RUHTE318",
+      "t_prev": "2025-08-20T08:42:26.518000",
+      "t_next": "2025-08-20T08:42:55.830000",
+      "obs_time_seconds": 29
+    },
+    {
+      "camera_prev": "RUHTE318",
+      "camera_next": "RUHTE318",
+      "t_prev": "2025-08-20T08:42:55.830000",
+      "t_next": "2025-08-20T08:42:55.830000",
+      "obs_time_seconds": 0
+    },
+    {
+      "camera_prev": "RUHTE318",
+      "camera_next": "RUHSM339",
+      "t_prev": "2025-08-20T08:42:55.830000",
+      "t_next": "2025-08-20T08:48:33.975000",
+      "obs_time_seconds": 338
+    },
+    {
+      "camera_prev": "RUHSM339",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T08:48:33.975000",
+      "t_next": "2025-08-20T08:50:08.798000",
+      "obs_time_seconds": 95
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHSM044",
+      "t_prev": "2025-08-20T08:50:08.798000",
+      "t_next": "2025-08-20T09:01:22.023000",
+      "obs_time_seconds": 674
+    },
+    {
+      "camera_prev": "RUHSM044",
+      "camera_next": "RUHSM250",
+      "t_prev": "2025-08-20T09:01:22.023000",
+      "t_next": "2025-08-20T09:03:11.476000",
+      "obs_time_seconds": 109
+    },
+    {
+      "camera_prev": "RUHSM250",
+      "camera_next": "RUHTE318",
+      "t_prev": "2025-08-20T09:03:11.476000",
+      "t_next": "2025-08-20T09:03:23.627000",
+      "obs_time_seconds": 12
+    },
+    {
+      "camera_prev": "RUHTE318",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T09:03:23.627000",
+      "t_next": "2025-08-20T09:09:49.136000",
+      "obs_time_seconds": 386
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHSM026",
+      "t_prev": "2025-08-20T09:09:49.136000",
+      "t_next": "2025-08-20T09:24:06.997000",
+      "obs_time_seconds": 857
+    },
+    {
+      "camera_prev": "RUHSM026",
+      "camera_next": "RUHSM157",
+      "t_prev": "2025-08-20T09:24:06.997000",
+      "t_next": "2025-08-20T09:39:45.427000",
+      "obs_time_seconds": 939
+    },
+    {
+      "camera_prev": "RUHSM157",
+      "camera_next": "RUHTE318",
+      "t_prev": "2025-08-20T09:39:45.427000",
+      "t_next": "2025-08-20T09:58:19.257000",
+      "obs_time_seconds": 1114
+    },
+    {
+      "camera_prev": "RUHTE318",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T09:58:19.257000",
+      "t_next": "2025-08-20T10:14:49.492000",
+      "obs_time_seconds": 990
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T10:14:49.492000",
+      "t_next": "2025-08-20T11:52:43.608000",
+      "obs_time_seconds": 5874
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHSM281",
+      "t_prev": "2025-08-20T11:52:43.608000",
+      "t_next": "2025-08-20T12:15:52.173000",
+      "obs_time_seconds": 1389
+    },
+    {
+      "camera_prev": "RUHSM281",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T12:15:52.173000",
+      "t_next": "2025-08-20T12:51:07.886000",
+      "obs_time_seconds": 2115
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHTE318",
+      "t_prev": "2025-08-20T12:51:07.886000",
+      "t_next": "2025-08-20T13:06:48.862000",
+      "obs_time_seconds": 941
+    },
+    {
+      "camera_prev": "RUHTE318",
+      "camera_next": "RUHTE318",
+      "t_prev": "2025-08-20T13:06:48.862000",
+      "t_next": "2025-08-20T13:06:49.340000",
+      "obs_time_seconds": 1
+    },
+    {
+      "camera_prev": "RUHTE318",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T13:06:49.340000",
+      "t_next": "2025-08-20T13:13:06.277000",
+      "obs_time_seconds": 377
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHTE318",
+      "t_prev": "2025-08-20T13:13:06.277000",
+      "t_next": "2025-08-20T13:20:47.363000",
+      "obs_time_seconds": 461
+    },
+    {
+      "camera_prev": "RUHTE318",
+      "camera_next": "RUHTE318",
+      "t_prev": "2025-08-20T13:20:47.363000",
+      "t_next": "2025-08-20T13:20:47.363000",
+      "obs_time_seconds": 0
+    },
+    {
+      "camera_prev": "RUHTE318",
+      "camera_next": "RUHSM281",
+      "t_prev": "2025-08-20T13:20:47.363000",
+      "t_next": "2025-08-20T13:51:39.813000",
+      "obs_time_seconds": 1852
+    },
+    {
+      "camera_prev": "RUHSM281",
+      "camera_next": "RUHSM281",
+      "t_prev": "2025-08-20T13:51:39.813000",
+      "t_next": "2025-08-20T13:51:40.494000",
+      "obs_time_seconds": 1
+    },
+    {
+      "camera_prev": "RUHSM281",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T13:51:40.494000",
+      "t_next": "2025-08-20T13:59:19.050000",
+      "obs_time_seconds": 459
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T13:59:19.050000",
+      "t_next": "2025-08-20T14:46:01.763000",
+      "obs_time_seconds": 2802
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHTE318",
+      "t_prev": "2025-08-20T14:46:01.763000",
+      "t_next": "2025-08-20T14:46:49.365000",
+      "obs_time_seconds": 48
+    },
+    {
+      "camera_prev": "RUHTE318",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T14:46:49.365000",
+      "t_next": "2025-08-20T15:40:17.782000",
+      "obs_time_seconds": 3208
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T15:40:17.782000",
+      "t_next": "2025-08-20T16:50:46.534000",
+      "obs_time_seconds": 4229
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHTE318",
+      "t_prev": "2025-08-20T16:50:46.534000",
+      "t_next": "2025-08-20T17:04:38.331000",
+      "obs_time_seconds": 832
+    },
+    {
+      "camera_prev": "RUHTE318",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T17:04:38.331000",
+      "t_next": "2025-08-20T17:18:12.992000",
+      "obs_time_seconds": 814
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T17:18:12.992000",
+      "t_next": "2025-08-20T17:36:58.610000",
+      "obs_time_seconds": 1126
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T17:36:58.610000",
+      "t_next": "2025-08-20T17:36:59.005000",
+      "obs_time_seconds": 1
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHTE318",
+      "t_prev": "2025-08-20T17:36:59.005000",
+      "t_next": "2025-08-20T17:55:51.882000",
+      "obs_time_seconds": 1132
+    },
+    {
+      "camera_prev": "RUHTE318",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T17:55:51.882000",
+      "t_next": "2025-08-20T18:01:44.362000",
+      "obs_time_seconds": 353
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHSM012",
+      "t_prev": "2025-08-20T18:01:44.362000",
+      "t_next": "2025-08-20T18:22:25.428000",
+      "obs_time_seconds": 1241
+    },
+    {
+      "camera_prev": "RUHSM012",
+      "camera_next": "RUHSM221",
+      "t_prev": "2025-08-20T18:22:25.428000",
+      "t_next": "2025-08-20T18:47:31.755000",
+      "obs_time_seconds": 1506
+    },
+    {
+      "camera_prev": "RUHSM221",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T18:47:31.755000",
+      "t_next": "2025-08-20T18:52:31.380000",
+      "obs_time_seconds": 300
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHTE318",
+      "t_prev": "2025-08-20T18:52:31.380000",
+      "t_next": "2025-08-20T19:04:22.879000",
+      "obs_time_seconds": 711
+    },
+    {
+      "camera_prev": "RUHTE318",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T19:04:22.879000",
+      "t_next": "2025-08-20T19:10:36.136000",
+      "obs_time_seconds": 374
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHSM157",
+      "t_prev": "2025-08-20T19:10:36.136000",
+      "t_next": "2025-08-20T19:33:46.920000",
+      "obs_time_seconds": 1390
+    },
+    {
+      "camera_prev": "RUHSM157",
+      "camera_next": "RUHTE318",
+      "t_prev": "2025-08-20T19:33:46.920000",
+      "t_next": "2025-08-20T19:34:48.630000",
+      "obs_time_seconds": 62
+    },
+    {
+      "camera_prev": "RUHTE318",
+      "camera_next": "RUHTE319",
+      "t_prev": "2025-08-20T19:34:48.630000",
+      "t_next": "2025-08-20T19:42:26.242000",
+      "obs_time_seconds": 458
+    },
+    {
+      "camera_prev": "RUHTE319",
+      "camera_next": "RUHSM120",
+      "t_prev": "2025-08-20T19:42:26.242000",
+      "t_next": "2025-08-20T20:40:37.115000",
+      "obs_time_seconds": 3491
+    },
+    {
+      "camera_prev": "RUHSM120",
+      "camera_next": "RUHSM032",
+      "t_prev": "2025-08-20T20:40:37.115000",
+      "t_next": "2025-08-20T21:08:42.118000",
+      "obs_time_seconds": 1685
+    },
+    {
+      "camera_prev": "RUHSM032",
+      "camera_next": "RUHSM451",
+      "t_prev": "2025-08-20T21:08:42.118000",
+      "t_next": "2025-08-20T21:20:57.223000",
+      "obs_time_seconds": 735
+    },
+    {
+      "camera_prev": "RUHSM451",
+      "camera_next": "RUHSM451",
+      "t_prev": "2025-08-20T21:20:57.223000",
+      "t_next": "2025-08-20T21:20:57.320000",
+      "obs_time_seconds": 0
+    }
+  ]
+}
