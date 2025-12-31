@@ -82,6 +82,7 @@
                         <button class="btn btn-sm btn-part1" onclick="loadFromLocalStorage(1)">Load Part 1</button>
                         <button class="btn btn-sm btn-part2" onclick="loadFromLocalStorage(2)">Load Part 2</button>
                         <button class="btn btn-sm btn-combine" onclick="combineData()">Combine</button>
+                        <button class="btn btn-sm" id="toggleSitesBtn" onclick="toggleAllSites()" style="background:#9c27b0;">Show All Sites</button>
                     </div>
                 </div>
                 
@@ -136,6 +137,8 @@ const SITES = [{"site_id": "RUHSM001", "lat": 24.7403322023658, "lon": 46.627398
 let CACHE = { dist: {}, time: {}, waypoints: {}, source: {} };
 let map, directionsService, directionsRenderer;
 let routeMarkers = []; // Only markers for current route
+let allSiteMarkers = []; // All 247 site markers
+let allSitesVisible = false;
 
 function loadFromLocalStorage(part) {
     const key = part === 1 ? 'riyadh_gmaps_matrix_part1' : 'riyadh_gmaps_matrix_part2';
@@ -242,6 +245,50 @@ function initMap() {
     });
     
     log('Ready! Click Load Part 1 or Part 2');
+    log('Click "Show All Sites" to display all 247 markers');
+}
+
+function toggleAllSites() {
+    const btn = document.getElementById('toggleSitesBtn');
+    
+    if (allSitesVisible) {
+        // Hide all sites
+        allSiteMarkers.forEach(m => m.setMap(null));
+        allSiteMarkers = [];
+        allSitesVisible = false;
+        btn.textContent = 'Show All Sites';
+        btn.style.background = '#9c27b0';
+        log('Hidden all site markers');
+    } else {
+        // Show all sites
+        log('Loading 247 site markers...');
+        btn.textContent = 'Loading...';
+        
+        setTimeout(() => {
+            SITES.forEach((s, i) => {
+                const marker = new google.maps.Marker({
+                    position: {lat: s.lat, lng: s.lon},
+                    map: map,
+                    title: s.site_id + ' (' + s.site_direction + ')',
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 6,
+                        fillColor: '#666',
+                        fillOpacity: 0.7,
+                        strokeWeight: 1,
+                        strokeColor: '#333'
+                    },
+                    zIndex: 1
+                });
+                allSiteMarkers.push(marker);
+            });
+            
+            allSitesVisible = true;
+            btn.textContent = 'Hide All Sites';
+            btn.style.background = '#666';
+            log('Showing all 247 sites (gray dots)');
+        }, 50);
+    }
 }
 
 async function showRoute() {
