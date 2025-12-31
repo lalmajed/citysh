@@ -270,23 +270,15 @@ function toggleAllSites() {
                     position: {lat: s.lat, lng: s.lon},
                     map: map,
                     title: s.site_id + ' (' + s.site_direction + ')',
-                    icon: {
-                        path: google.maps.SymbolPath.CIRCLE,
-                        scale: 6,
-                        fillColor: '#666',
-                        fillOpacity: 0.7,
-                        strokeWeight: 1,
-                        strokeColor: '#333'
-                    },
                     zIndex: 1
                 });
                 allSiteMarkers.push(marker);
             });
             
             allSitesVisible = true;
-            btn.textContent = 'Hide All Sites';
+            btn.textContent = '📍 Hide All Sites';
             btn.style.background = '#666';
-            log('Showing all 247 sites (gray dots)');
+            log('Showing all 247 sites (red markers)');
         }, 50);
     }
 }
