@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riyadh Sites Distance Data Viewer</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; background: #1a1a2e; color: #eee; padding: 20px; }
+        h1 { color: #00d9ff; margin-bottom: 20px; text-align: center; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .load-section { background: #16213e; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+        .load-section h2 { color: #00d9ff; margin-bottom: 15px; font-size: 1.1rem; }
+        .load-buttons { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .btn { padding: 12px 20px; font-size: 1rem; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; }
+        .btn-part1 { background: #4285f4; color: white; }
+        .btn-part2 { background: #ea4335; color: white; }
+        .btn-combine { background: #34a853; color: white; }
+        .btn-export { background: #fbbc05; color: #333; }
+        .btn:hover { opacity: 0.9; transform: scale(1.02); }
+        .btn:disabled { background: #666; cursor: not-allowed; }
+        input[type="file"] { display: none; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+        .stat { background: #0f3460; padding: 20px; border-radius: 10px; text-align: center; }
+        .stat-value { font-size: 2rem; font-weight: bold; color: #00d9ff; }
+        .stat-label { font-size: 0.85rem; color: #aaa; margin-top: 5px; }
+        .data-section { background: #16213e; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+        .data-section h2 { color: #00d9ff; margin-bottom: 15px; }
+        .matrix-controls { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; align-items: center; }
+        select { padding: 10px; font-size: 1rem; border-radius: 6px; border: none; background: #0f3460; color: #eee; min-width: 200px; }
+        .search-box { padding: 10px; font-size: 1rem; border-radius: 6px; border: none; background: #0f3460; color: #eee; width: 200px; }
+        .table-container { max-height: 500px; overflow: auto; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #0f3460; }
+        th { background: #0f3460; color: #00d9ff; position: sticky; top: 0; z-index: 10; }
+        tr:hover { background: #1a3a5c; }
+        .waypoints { color: #34a853; font-weight: bold; }
+        .distance { color: #4285f4; }
+        .time { color: #fbbc05; }
+        .log { background: #0a0a15; color: #0f0; padding: 15px; font-family: monospace; font-size: 0.8rem; height: 150px; overflow-y: auto; border-radius: 8px; margin-top: 15px; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab { padding: 10px 20px; background: #0f3460; border: none; color: #aaa; cursor: pointer; border-radius: 6px 6px 0 0; }
+        .tab.active { background: #00d9ff; color: #1a1a2e; }
+        .progress-bar { height: 8px; background: #0f3460; border-radius: 4px; margin: 10px 0; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #4285f4, #34a853); transition: width 0.3s; }
+        .part-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; margin-left: 5px; }
+        .part1-badge { background: #4285f4; }
+        .part2-badge { background: #ea4335; }
+    </style>
+</head>
+<body>
+    <h1>🗺️ Riyadh Sites Distance Data Viewer</h1>
+    
+    <div class="container">
+        <div class="load-section">
+            <h2>📂 Load Data</h2>
+            <div class="load-buttons">
+                <button class="btn btn-part1" onclick="document.getElementById('filePart1').click()">
+                    Load Part 1 JSON
+                </button>
+                <input type="file" id="filePart1" accept=".json" onchange="loadFile(this, 1)">
+                
+                <button class="btn btn-part2" onclick="document.getElementById('filePart2').click()">
+                    Load Part 2 JSON
+                </button>
+                <input type="file" id="filePart2" accept=".json" onchange="loadFile(this, 2)">
+                
+                <button class="btn btn-combine" onclick="combineData()" id="combineBtn" disabled>
+                    Combine Parts
+                </button>
+                
+                <span style="color:#aaa; margin-left:20px;">Or load from localStorage:</span>
+                <button class="btn" style="background:#666;" onclick="loadFromLocalStorage(1)">Part 1 Cache</button>
+                <button class="btn" style="background:#666;" onclick="loadFromLocalStorage(2)">Part 2 Cache</button>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width:0%"></div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value" id="statPart1">0</div>
+                    <div class="stat-label">Part 1 Routes</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="statPart2">0</div>
+                    <div class="stat-label">Part 2 Routes</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="statTotal">0</div>
+                    <div class="stat-label">Total Routes</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="statWaypoints">0</div>
+                    <div class="stat-label">Routes w/ Waypoints</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="statPercent">0%</div>
+                    <div class="stat-label">Matrix Complete</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="data-section">
+            <h2>📊 Data Explorer</h2>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('routes')">All Routes</button>
+                <button class="tab" onclick="showTab('matrix')">Distance Matrix</button>
+                <button class="tab" onclick="showTab('waypoints')">Waypoints Only</button>
+                <button class="tab" onclick="showTab('origin')">By Origin</button>
+            </div>
+            
+            <div class="matrix-controls">
+                <input type="text" class="search-box" id="searchBox" placeholder="Search site ID..." oninput="filterTable()">
+                <select id="originFilter" onchange="filterByOrigin()">
+                    <option value="">All Origins</option>
+                </select>
+                <select id="destFilter" onchange="filterTable()">
+                    <option value="">All Destinations</option>
+                </select>
+                <button class="btn btn-export" onclick="exportCombinedCSV()">Export Distance CSV</button>
+                <button class="btn btn-export" onclick="exportTimeCSV()">Export Time CSV</button>
+                <button class="btn btn-export" onclick="exportFullJSON()">Export Full JSON</button>
+            </div>
+            
+            <div class="table-container" id="tableContainer">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Origin</th>
+                            <th>Destination</th>
+                            <th>Distance (km)</th>
+                            <th>Time (min)</th>
+                            <th>Waypoints</th>
+                            <th>Source</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="load-section">
+            <h2>📝 Log</h2>
+            <div class="log" id="log"></div>
+        </div>
+    </div>
+
+    <script>
+const SITES = [{"site_id": "RUHSM001", "lat": 24.7403322023658, "lon": 46.6273981332779}, {"site_id": "RUHSM002", "lat": 24.740427194217, "lon": 46.6274785995483}, {"site_id": "RUHSM003", "lat": 24.7546965432207, "lon": 46.6325774788857}, {"site_id": "RUHSM007", "lat": 24.6726265911391, "lon": 46.656776368618}, {"site_id": "RUHSM009", "lat": 24.7209740445557, "lon": 46.6058734059334}, {"site_id": "RUHSM012", "lat": 24.6483701639916, "lon": 46.7946767807007}, {"site_id": "RUHSM015", "lat": 24.5439855825558, "lon": 46.872533261776}, {"site_id": "RUHSM018", "lat": 24.8287062928303, "lon": 46.6193702816963}, {"site_id": "RUHSM019", "lat": 24.8178075375809, "lon": 46.6184422373772}, {"site_id": "RUHSM022", "lat": 24.670488879256, "lon": 46.6602820158005}, {"site_id": "RUHSM023", "lat": 24.780546768419, "lon": 46.7285308241844}, {"site_id": "RUHSM024", "lat": 24.6799116099266, "lon": 46.6544723510742}, {"site_id": "RUHSM025", "lat": 24.7649189230075, "lon": 46.6561299562454}, {"site_id": "RUHSM026", "lat": 24.7731896590511, "lon": 46.7319613695145}, {"site_id": "RUHSM027", "lat": 24.6750541016666, "lon": 46.6531071066856}, {"site_id": "RUHSM029", "lat": 24.9694129976553, "lon": 46.7820569872856}, {"site_id": "RUHSM030", "lat": 25.0012034832327, "lon": 46.7709928750992}, {"site_id": "RUHSM032", "lat": 24.7120199687664, "lon": 46.6719147562981}, {"site_id": "RUHSM033", "lat": 24.7897540511277, "lon": 46.7158091068268}, {"site_id": "RUHSM034", "lat": 24.6755122958506, "lon": 46.6905936598778}, {"site_id": "RUHSM035", "lat": 24.6203516108267, "lon": 46.5742367506027}, {"site_id": "RUHSM038", "lat": 24.6846274081011, "lon": 46.7023712396622}, {"site_id": "RUHSM042", "lat": 24.740704875449, "lon": 46.5987414121628}, {"site_id": "RUHSM044", "lat": 24.8400178982926, "lon": 46.6072306036949}, {"site_id": "RUHSM045", "lat": 24.6261962301252, "lon": 46.7836314439774}, {"site_id": "RUHSM046", "lat": 24.5856708282881, "lon": 46.6952633857727}, {"site_id": "RUHSM049", "lat": 24.8066959557292, "lon": 46.7554226517677}, {"site_id": "RUHSM051", "lat": 24.5581848394885, "lon": 46.6767024993897}, {"site_id": "RUHSM052", "lat": 24.7243240497979, "lon": 46.6658690571785}, {"site_id": "RUHSM053", "lat": 24.6729043824091, "lon": 46.6916853189468}, {"site_id": "RUHSM054", "lat": 24.6123632798959, "lon": 46.7067539691925}, {"site_id": "RUHSM055", "lat": 24.6110781730948, "lon": 46.707022190094}, {"site_id": "RUHSM057", "lat": 24.6656945509571, "lon": 46.6192603111267}, {"site_id": "RUHSM059", "lat": 24.831956030886, "lon": 46.8484577536583}, {"site_id": "RUHSM060", "lat": 24.8321897210297, "lon": 46.7234346270561}, {"site_id": "RUHSM062", "lat": 24.7980377711983, "lon": 46.569601893425}, {"site_id": "RUHSM069", "lat": 24.56560566558, "lon": 46.6250592470169}, {"site_id": "RUHSM070", "lat": 24.6942463632656, "lon": 46.5634649991989}, {"site_id": "RUHSM071", "lat": 24.6711544395348, "lon": 46.6223931312561}, {"site_id": "RUHSM072", "lat": 24.6707963331305, "lon": 46.6222590208054}, {"site_id": "RUHSM073", "lat": 24.6870447823229, "lon": 46.6315904259682}, {"site_id": "RUHSM074", "lat": 24.6869545710959, "lon": 46.6317647695541}, {"site_id": "RUHSM077", "lat": 24.8111586340332, "lon": 46.7348715662956}, {"site_id": "RUHSM078", "lat": 24.8110612436613, "lon": 46.7346113920212}, {"site_id": "RUHSM079", "lat": 24.5588531422709, "lon": 46.6225674748421}, {"site_id": "RUHSM080", "lat": 24.5589824415937, "lon": 46.622556746006}, {"site_id": "RUHSM093", "lat": 24.8325232108086, "lon": 46.8203857541084}, {"site_id": "RUHSM095", "lat": 24.7800816178938, "lon": 46.8530228734016}, {"site_id": "RUHSM096", "lat": 24.5348626583046, "lon": 46.6983264684677}, {"site_id": "RUHSM097", "lat": 24.598323749187, "lon": 46.7443531751633}, {"site_id": "RUHSM098", "lat": 24.8195992645787, "lon": 46.8459257483482}, {"site_id": "RUHSM100", "lat": 24.5686573528817, "lon": 46.8897798657417}, {"site_id": "RUHSM102", "lat": 24.7352066774981, "lon": 46.6819301247597}, {"site_id": "RUHSM106", "lat": 24.7087793016666, "lon": 46.7659583687782}, {"site_id": "RUHSM110", "lat": 24.8409306555311, "lon": 46.5533074736595}, {"site_id": "RUHSM111", "lat": 24.8410231157739, "lon": 46.5536212921143}, {"site_id": "RUHSM112", "lat": 24.5972800762424, "lon": 46.6084000468254}, {"site_id": "RUHSM113", "lat": 24.5971435038554, "lon": 46.6084751486778}, {"site_id": "RUHSM114", "lat": 24.5475208005664, "lon": 46.7195722460747}, {"site_id": "RUHSM116", "lat": 24.9070265631544, "lon": 46.9199708104134}, {"site_id": "RUHSM117", "lat": 24.5381879590055, "lon": 46.6897889971733}, {"site_id": "RUHSM118", "lat": 24.5382806827733, "lon": 46.6898936033249}, {"site_id": "RUHSM121", "lat": 24.6462394879027, "lon": 46.6858944296837}, {"site_id": "RUHSM122", "lat": 24.7958463762615, "lon": 46.7296761274338}, {"site_id": "RUHSM125", "lat": 24.771906272745, "lon": 46.732605099678}, {"site_id": "RUHSM128", "lat": 24.6981526522312, "lon": 46.6789072751999}, {"site_id": "RUHSM129", "lat": 24.6876372637067, "lon": 46.7106726765633}, {"site_id": "RUHSM130", "lat": 24.6636397195435, "lon": 46.7306765913963}, {"site_id": "RUHSM131", "lat": 24.6634934669944, "lon": 46.7308187484741}, {"site_id": "RUHSM136", "lat": 24.620424801656, "lon": 46.5808054804802}, {"site_id": "RUHSM140", "lat": 24.8769760481679, "lon": 46.8059206008911}, {"site_id": "RUHSM141", "lat": 24.8769687507318, "lon": 46.8060520291329}, {"site_id": "RUHSM142", "lat": 24.5674108328895, "lon": 46.655505001545}, {"site_id": "RUHSM144", "lat": 24.5638614614901, "lon": 46.717287003994}, {"site_id": "RUHSM145", "lat": 24.5687663130558, "lon": 46.8898630142212}, {"site_id": "RUHSM147", "lat": 24.6038597752923, "lon": 46.6194561123848}, {"site_id": "RUHSM148", "lat": 24.6040012164286, "lon": 46.6193461418152}, {"site_id": "RUHSM152", "lat": 24.6854562001529, "lon": 46.6520261764526}, {"site_id": "RUHSM153", "lat": 24.6855219810628, "lon": 46.6522246599197}, {"site_id": "RUHSM156", "lat": 24.7259342868167, "lon": 46.7802920937538}, {"site_id": "RUHSM157", "lat": 24.6409759484262, "lon": 46.8291538953781}, {"site_id": "RUHSM160", "lat": 24.6086054881289, "lon": 46.7729669809341}, {"site_id": "RUHSM161", "lat": 24.6336106991616, "lon": 46.8119421601295}, {"site_id": "RUHSM164", "lat": 24.5796291806517, "lon": 46.5517866611481}, {"site_id": "RUHSM165", "lat": 24.5797877232525, "lon": 46.5518108010292}, {"site_id": "RUHSM168", "lat": 24.5844927893916, "lon": 46.7547172307968}, {"site_id": "RUHSM169", "lat": 24.5982237727608, "lon": 46.6173076629639}, {"site_id": "RUHSM170", "lat": 24.5981359902433, "lon": 46.6171762347221}, {"site_id": "RUHSM173", "lat": 24.7946969705971, "lon": 46.6560655832291}, {"site_id": "RUHSM174", "lat": 24.5079388888788, "lon": 46.9285324215889}, {"site_id": "RUHSM175", "lat": 24.5081024122122, "lon": 46.9286692142487}, {"site_id": "RUHSM178", "lat": 25.0159432570743, "lon": 46.7664411664009}, {"site_id": "RUHSM179", "lat": 25.0158897994536, "lon": 46.7662614583969}, {"site_id": "RUHSM180", "lat": 24.66748117972, "lon": 46.7952159047127}, {"site_id": "RUHSM181", "lat": 24.6672764432188, "lon": 46.7952185869217}, {"site_id": "RUHSM182", "lat": 24.6433261861909, "lon": 46.8339711427689}, {"site_id": "RUHSM187", "lat": 24.642784983054, "lon": 46.7355394363403}, {"site_id": "RUHSM188", "lat": 24.6011674755442, "lon": 46.6398543119431}, {"site_id": "RUHSM189", "lat": 24.6013016369983, "lon": 46.6397336125374}, {"site_id": "RUHSM190", "lat": 24.6326745415304, "lon": 46.5654820203781}, {"site_id": "RUHSM191", "lat": 24.8129651971553, "lon": 46.6760292649269}, {"site_id": "RUHSM192", "lat": 24.8127826050202, "lon": 46.6761177778244}, {"site_id": "RUHSM195", "lat": 24.7299152397197, "lon": 46.8647655844688}, {"site_id": "RUHSM196", "lat": 24.7999978581173, "lon": 46.6526859998703}, {"site_id": "RUHSM198", "lat": 24.7694781484828, "lon": 46.6684493422508}, {"site_id": "RUHSM201", "lat": 24.615255335399, "lon": 46.7573323845863}, {"site_id": "RUHSM207", "lat": 24.7444197548951, "lon": 46.6082498431206}, {"site_id": "RUHSM208", "lat": 24.823774152058, "lon": 46.7285388708115}, {"site_id": "RUHSM209", "lat": 24.8236621627272, "lon": 46.7282545566559}, {"site_id": "RUHSM210", "lat": 24.7432407032976, "lon": 46.8001833558083}, {"site_id": "RUHSM211", "lat": 24.7433162129597, "lon": 46.8002933263779}, {"site_id": "RUHSM212", "lat": 24.6725825464765, "lon": 46.8299263715744}, {"site_id": "RUHSM213", "lat": 24.6725337944213, "lon": 46.8298190832138}, {"site_id": "RUHSM216", "lat": 24.5872366876198, "lon": 46.5884765982628}, {"site_id": "RUHSM217", "lat": 24.5871147808519, "lon": 46.5885651111603}, {"site_id": "RUHSM218", "lat": 24.7088894173431, "lon": 46.8437933921814}, {"site_id": "RUHSM221", "lat": 24.6402519488123, "lon": 46.75511687994}, {"site_id": "RUHSM224", "lat": 24.7455602489784, "lon": 46.8242803215981}, {"site_id": "RUHSM225", "lat": 24.7454847342479, "lon": 46.8241676688194}, {"site_id": "RUHSM226", "lat": 24.7641928838335, "lon": 46.8337565660477}, {"site_id": "RUHSM227", "lat": 24.764122238671, "lon": 46.8336492776871}, {"site_id": "RUHSM228", "lat": 24.7395185293973, "lon": 46.5959626436234}, {"site_id": "RUHSM232", "lat": 24.4701528666928, "lon": 46.612468957901}, {"site_id": "RUHSM233", "lat": 24.5476209553064, "lon": 46.6873374581337}, {"site_id": "RUHSM234", "lat": 24.5477331800292, "lon": 46.6874313354492}];
+
+let data = {
+    part1: { dist: {}, time: {}, waypoints: {} },
+    part2: { dist: {}, time: {}, waypoints: {} },
+    combined: { dist: {}, time: {}, waypoints: {} }
+};
+
+let currentTab = 'routes';
+let allRoutes = [];
+
+function log(msg) {
+    const el = document.getElementById('log');
+    el.innerHTML += '[' + new Date().toLocaleTimeString() + '] ' + msg + '\n';
+    el.scrollTop = el.scrollHeight;
+}
+
+function loadFile(input, part) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    log('Loading ' + file.name + '...');
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const json = JSON.parse(e.target.result);
+            if (part === 1) {
+                data.part1.dist = json.distance_km || {};
+                data.part1.time = json.time_min || {};
+                data.part1.waypoints = json.waypoints || {};
+                log('Part 1 loaded: ' + Object.keys(data.part1.dist).length + ' routes');
+            } else {
+                data.part2.dist = json.distance_km || {};
+                data.part2.time = json.time_min || {};
+                data.part2.waypoints = json.waypoints || {};
+                log('Part 2 loaded: ' + Object.keys(data.part2.dist).length + ' routes');
+            }
+            updateStats();
+            checkCombineReady();
+            buildRoutesList();
+            renderTable();
+        } catch(err) {
+            log('ERROR: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+function loadFromLocalStorage(part) {
+    const key = part === 1 ? 'riyadh_gmaps_matrix_part1' : 'riyadh_gmaps_matrix_part2';
+    try {
+        const stored = localStorage.getItem(key);
+        if (!stored) {
+            log('No data found in localStorage for Part ' + part);
+            return;
+        }
+        const json = JSON.parse(stored);
+        if (part === 1) {
+            data.part1.dist = json.dist || {};
+            data.part1.time = json.time || {};
+            data.part1.waypoints = json.waypoints || {};
+            log('Part 1 loaded from cache: ' + Object.keys(data.part1.dist).length + ' routes');
+        } else {
+            data.part2.dist = json.dist || {};
+            data.part2.time = json.time || {};
+            data.part2.waypoints = json.waypoints || {};
+            log('Part 2 loaded from cache: ' + Object.keys(data.part2.dist).length + ' routes');
+        }
+        updateStats();
+        checkCombineReady();
+        buildRoutesList();
+        renderTable();
+    } catch(err) {
+        log('ERROR loading from localStorage: ' + err.message);
+    }
+}
+
+function checkCombineReady() {
+    const p1 = Object.keys(data.part1.dist).length;
+    const p2 = Object.keys(data.part2.dist).length;
+    document.getElementById('combineBtn').disabled = (p1 === 0 && p2 === 0);
+}
+
+function combineData() {
+    data.combined.dist = { ...data.part1.dist, ...data.part2.dist };
+    data.combined.time = { ...data.part1.time, ...data.part2.time };
+    data.combined.waypoints = { ...data.part1.waypoints, ...data.part2.waypoints };
+    
+    log('Combined: ' + Object.keys(data.combined.dist).length + ' total routes');
+    updateStats();
+    buildRoutesList();
+    renderTable();
+}
+
+function updateStats() {
+    const p1 = Object.keys(data.part1.dist).length;
+    const p2 = Object.keys(data.part2.dist).length;
+    const total = Object.keys(data.combined.dist).length || (p1 + p2);
+    const maxRoutes = 247 * 246; // 60762
+    
+    let wpCount = 0;
+    const wpData = Object.keys(data.combined.waypoints).length > 0 ? data.combined.waypoints : 
+                   { ...data.part1.waypoints, ...data.part2.waypoints };
+    for (const k in wpData) {
+        if (wpData[k] && wpData[k].length > 0) wpCount++;
+    }
+    
+    document.getElementById('statPart1').textContent = p1.toLocaleString();
+    document.getElementById('statPart2').textContent = p2.toLocaleString();
+    document.getElementById('statTotal').textContent = total.toLocaleString();
+    document.getElementById('statWaypoints').textContent = wpCount.toLocaleString();
+    document.getElementById('statPercent').textContent = ((total / maxRoutes) * 100).toFixed(1) + '%';
+    document.getElementById('progressFill').style.width = ((total / maxRoutes) * 100) + '%';
+}
+
+function buildRoutesList() {
+    allRoutes = [];
+    
+    const distData = Object.keys(data.combined.dist).length > 0 ? data.combined.dist : 
+                     { ...data.part1.dist, ...data.part2.dist };
+    const timeData = Object.keys(data.combined.time).length > 0 ? data.combined.time :
+                     { ...data.part1.time, ...data.part2.time };
+    const wpData = Object.keys(data.combined.waypoints).length > 0 ? data.combined.waypoints :
+                   { ...data.part1.waypoints, ...data.part2.waypoints };
+    
+    for (const key in distData) {
+        const [i, j] = key.split('_').map(Number);
+        const originId = SITES[i]?.site_id || 'Unknown';
+        const destId = SITES[j]?.site_id || 'Unknown';
+        const wp = wpData[key] || [];
+        const source = data.part1.dist[key] !== undefined ? 1 : 2;
+        
+        allRoutes.push({
+            key,
+            originIdx: i,
+            destIdx: j,
+            origin: originId,
+            dest: destId,
+            dist: distData[key],
+            time: timeData[key],
+            waypoints: wp,
+            source
+        });
+    }
+    
+    // Populate filters
+    const origins = [...new Set(allRoutes.map(r => r.origin))].sort();
+    const dests = [...new Set(allRoutes.map(r => r.dest))].sort();
+    
+    const originSelect = document.getElementById('originFilter');
+    originSelect.innerHTML = '<option value="">All Origins</option>';
+    origins.forEach(o => {
+        originSelect.innerHTML += '<option value="' + o + '">' + o + '</option>';
+    });
+    
+    const destSelect = document.getElementById('destFilter');
+    destSelect.innerHTML = '<option value="">All Destinations</option>';
+    dests.forEach(d => {
+        destSelect.innerHTML += '<option value="' + d + '">' + d + '</option>';
+    });
+}
+
+function renderTable() {
+    const tbody = document.getElementById('tableBody');
+    const search = document.getElementById('searchBox').value.toLowerCase();
+    const originFilter = document.getElementById('originFilter').value;
+    const destFilter = document.getElementById('destFilter').value;
+    
+    let filtered = allRoutes;
+    
+    // Apply tab filter
+    if (currentTab === 'waypoints') {
+        filtered = filtered.filter(r => r.waypoints.length > 0);
+    }
+    
+    // Apply search
+    if (search) {
+        filtered = filtered.filter(r => 
+            r.origin.toLowerCase().includes(search) || 
+            r.dest.toLowerCase().includes(search)
+        );
+    }
+    
+    // Apply origin filter
+    if (originFilter) {
+        filtered = filtered.filter(r => r.origin === originFilter);
+    }
+    
+    // Apply dest filter
+    if (destFilter) {
+        filtered = filtered.filter(r => r.dest === destFilter);
+    }
+    
+    // Limit display for performance
+    const limit = 1000;
+    const display = filtered.slice(0, limit);
+    
+    tbody.innerHTML = display.map(r => {
+        const wpStr = r.waypoints.length > 0 ? 
+            r.waypoints.map(idx => SITES[idx]?.site_id || idx).join(', ') : '-';
+        const badge = r.source === 1 ? 
+            '<span class="part-badge part1-badge">P1</span>' :
+            '<span class="part-badge part2-badge">P2</span>';
+        
+        return '<tr>' +
+            '<td>' + r.origin + '</td>' +
+            '<td>' + r.dest + '</td>' +
+            '<td class="distance">' + r.dist.toFixed(2) + '</td>' +
+            '<td class="time">' + r.time.toFixed(1) + '</td>' +
+            '<td class="waypoints">' + wpStr + '</td>' +
+            '<td>' + badge + '</td>' +
+        '</tr>';
+    }).join('');
+    
+    if (filtered.length > limit) {
+        log('Showing ' + limit + ' of ' + filtered.length + ' routes');
+    }
+}
+
+function showTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    renderTable();
+}
+
+function filterTable() {
+    renderTable();
+}
+
+function filterByOrigin() {
+    renderTable();
+}
+
+function exportCombinedCSV() {
+    const distData = Object.keys(data.combined.dist).length > 0 ? data.combined.dist : 
+                     { ...data.part1.dist, ...data.part2.dist };
+    
+    let csv = ',' + SITES.map(s => s.site_id).join(',') + '\n';
+    SITES.forEach((s, i) => {
+        let row = [s.site_id];
+        SITES.forEach((_, j) => {
+            const key = i + '_' + j;
+            row.push(i === j ? '0' : (distData[key]?.toFixed(2) || ''));
+        });
+        csv += row.join(',') + '\n';
+    });
+    
+    download(csv, 'riyadh_combined_distance_km.csv', 'text/csv');
+    log('Exported distance CSV');
+}
+
+function exportTimeCSV() {
+    const timeData = Object.keys(data.combined.time).length > 0 ? data.combined.time :
+                     { ...data.part1.time, ...data.part2.time };
+    
+    let csv = ',' + SITES.map(s => s.site_id).join(',') + '\n';
+    SITES.forEach((s, i) => {
+        let row = [s.site_id];
+        SITES.forEach((_, j) => {
+            const key = i + '_' + j;
+            row.push(i === j ? '0' : (timeData[key]?.toFixed(1) || ''));
+        });
+        csv += row.join(',') + '\n';
+    });
+    
+    download(csv, 'riyadh_combined_time_min.csv', 'text/csv');
+    log('Exported time CSV');
+}
+
+function exportFullJSON() {
+    const distData = Object.keys(data.combined.dist).length > 0 ? data.combined.dist : 
+                     { ...data.part1.dist, ...data.part2.dist };
+    const timeData = Object.keys(data.combined.time).length > 0 ? data.combined.time :
+                     { ...data.part1.time, ...data.part2.time };
+    const wpData = Object.keys(data.combined.waypoints).length > 0 ? data.combined.waypoints :
+                   { ...data.part1.waypoints, ...data.part2.waypoints };
+    
+    const json = {
+        source: 'Google Maps - Combined',
+        sites: SITES,
+        total_routes: Object.keys(distData).length,
+        distance_km: distData,
+        time_min: timeData,
+        waypoints: wpData
+    };
+    
+    download(JSON.stringify(json, null, 2), 'riyadh_combined_full.json', 'application/json');
+    log('Exported full JSON');
+}
+
+function download(content, filename, type) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([content], { type }));
+    a.download = filename;
+    a.click();
+}
+
+// Init
+log('Data Viewer ready!');
+log('Load Part 1 and/or Part 2 JSON files, or load from localStorage');
+    </script>
+</body>
+</html>
