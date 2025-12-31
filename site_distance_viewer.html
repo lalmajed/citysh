@@ -253,15 +253,8 @@ async function showRoute() {
     const details = document.getElementById('routeDetails');
     details.innerHTML = '<div class="loading">Loading route...</div>';
     
-    // Reset ALL markers to default small gray
-    markers.forEach(m => m.setIcon({
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 5,
-        fillColor: '#999',
-        fillOpacity: 0.5,
-        strokeWeight: 1,
-        strokeColor: '#666'
-    }));
+    // Reset ALL markers to default
+    markers.forEach(m => m.setIcon(null));
     
     const cacheKey = iA + '_' + iB;
     const cachedWaypoints = CACHE.waypoints[cacheKey] || [];
@@ -287,24 +280,15 @@ async function showRoute() {
         
         directionsRenderer.setDirections(res);
         
-        // Mark ORIGIN - big green
-        markers[iA].setIcon({
-            url: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
-            scaledSize: new google.maps.Size(40, 40)
-        });
+        // Mark ORIGIN - Google green
+        markers[iA].setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
         
-        // Mark DESTINATION - big red
-        markers[iB].setIcon({
-            url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
-            scaledSize: new google.maps.Size(40, 40)
-        });
+        // Mark DESTINATION - Google red
+        markers[iB].setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
         
-        // Mark WAYPOINTS - orange/yellow
+        // Mark WAYPOINTS - Google orange
         cachedWaypoints.forEach((idx, i) => {
-            markers[idx].setIcon({
-                url: 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
-                scaledSize: new google.maps.Size(35, 35)
-            });
+            markers[idx].setIcon('http://maps.google.com/mapfiles/ms/icons/orange-dot.png');
         });
         
         // Calculate totals from cached data or response
