@@ -556,8 +556,8 @@ async function startParallelAll() {
                 }
             }
             
-            // Save periodically
-            if (completed % 100 === 0) {
+            // Save frequently to not lose progress
+            if (completed % 20 === 0) {
                 saveCache();
                 updateParallelProgress(totalRoutesDone);
             }
