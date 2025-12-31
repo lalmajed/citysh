@@ -410,26 +410,36 @@ function initMap() {
     log('Click START to begin parallel extraction with 84 workers');
 }
 
-async function fetchRoute(i, j) {
-    return new Promise(async (resolve) => {
-        directionsService.route({
-            origin: {lat: SITES[i].lat, lng: SITES[i].lon},
-            destination: {lat: SITES[j].lat, lng: SITES[j].lon},
-            travelMode: 'DRIVING'
-        }, async (res, status) => {
-            if (status === 'OK') {
-                const leg = res.routes[0].legs[0];
-                const dist = leg.distance.value/1000;
-                const time = leg.duration.value/60;
-                const path = res.routes[0].overview_path;
-                
-                // Find and verify waypoints
-                const waypoints = await findWaypointsOnPath(path, i, j, dist);
-                
-                resolve({ dist, time, waypoints });
-            } else resolve({error: status});
+async function fetchRoute(i, j, retries = 3) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        const result = await new Promise(async (resolve) => {
+            directionsService.route({
+                origin: {lat: SITES[i].lat, lng: SITES[i].lon},
+                destination: {lat: SITES[j].lat, lng: SITES[j].lon},
+                travelMode: 'DRIVING'
+            }, async (res, status) => {
+                if (status === 'OK') {
+                    const leg = res.routes[0].legs[0];
+                    const dist = leg.distance.value/1000;
+                    const time = leg.duration.value/60;
+                    const path = res.routes[0].overview_path;
+                    
+                    // Find and verify waypoints
+                    const waypoints = await findWaypointsOnPath(path, i, j, dist);
+                    
+                    resolve({ dist, time, waypoints });
+                } else resolve({error: status, retryable: status === 'UNKNOWN_ERROR' || status === 'OVER_QUERY_LIMIT'});
+            });
         });
-    });
+        
+        if (!result.error) return result;
+        if (!result.retryable || attempt === retries) return result;
+        
+        // Wait before retry with exponential backoff
+        const delay = 1000 * attempt + Math.random() * 500;
+        log('  Retry ' + attempt + '/' + retries + ' for ' + SITES[i].site_id + '→' + SITES[j].site_id + ' (waiting ' + Math.round(delay) + 'ms)');
+        await new Promise(r => setTimeout(r, delay));
+    }
 }
 
 async function startAutoCalc() {
@@ -564,7 +574,7 @@ async function startParallelAll() {
                 }
                 
                 // Rate limit - important to avoid Google blocking
-                await new Promise(r => setTimeout(r, 200));
+                await new Promise(r => setTimeout(r, 300 + Math.random() * 200));
             }
             
             saveCache();
