@@ -134,7 +134,8 @@ const SITES = [{"site_id": "RUHSM001", "lat": 24.7403322023658, "lon": 46.627398
 
 // Cache storage
 let CACHE = { dist: {}, time: {}, waypoints: {}, source: {} };
-let map, markers = [], directionsService, directionsRenderer;
+let map, directionsService, directionsRenderer;
+let routeMarkers = []; // Only markers for current route
 
 function loadFromLocalStorage(part) {
     const key = part === 1 ? 'riyadh_gmaps_matrix_part1' : 'riyadh_gmaps_matrix_part2';
@@ -225,13 +226,13 @@ function log(msg) {
 function initMap() {
     map = new google.maps.Map(document.getElementById('map'), { center: {lat: 24.7136, lng: 46.6753}, zoom: 10 });
     directionsService = new google.maps.DirectionsService();
-    directionsRenderer = new google.maps.DirectionsRenderer({ map, suppressMarkers: true });
-    
-    SITES.forEach((s, i) => {
-        markers.push(new google.maps.Marker({ position: {lat: s.lat, lng: s.lon}, map, title: s.site_id }));
+    directionsRenderer = new google.maps.DirectionsRenderer({ 
+        map, 
+        suppressMarkers: true,
+        polylineOptions: { strokeColor: '#4285f4', strokeWeight: 5 }
     });
     
-    // Populate dropdowns
+    // Populate dropdowns - NO markers created here for speed
     const oSel = document.getElementById('originSel');
     const dSel = document.getElementById('destSel');
     SITES.forEach((s, i) => {
@@ -253,8 +254,9 @@ async function showRoute() {
     const details = document.getElementById('routeDetails');
     details.innerHTML = '<div class="loading">Loading route...</div>';
     
-    // Reset ALL markers to default
-    markers.forEach(m => m.setIcon(null));
+    // Clear previous route markers
+    routeMarkers.forEach(m => m.setMap(null));
+    routeMarkers = [];
     
     const cacheKey = iA + '_' + iB;
     const cachedWaypoints = CACHE.waypoints[cacheKey] || [];
@@ -280,15 +282,33 @@ async function showRoute() {
         
         directionsRenderer.setDirections(res);
         
-        // Mark ORIGIN - Google green
-        markers[iA].setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
+        // Create ORIGIN marker - Google green
+        routeMarkers.push(new google.maps.Marker({
+            position: {lat: SITES[iA].lat, lng: SITES[iA].lon},
+            map: map,
+            icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+            title: 'Origin: ' + SITES[iA].site_id,
+            zIndex: 100
+        }));
         
-        // Mark DESTINATION - Google red
-        markers[iB].setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
+        // Create DESTINATION marker - Google red
+        routeMarkers.push(new google.maps.Marker({
+            position: {lat: SITES[iB].lat, lng: SITES[iB].lon},
+            map: map,
+            icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+            title: 'Destination: ' + SITES[iB].site_id,
+            zIndex: 100
+        }));
         
-        // Mark WAYPOINTS - Google orange
+        // Create WAYPOINT markers - Google orange
         cachedWaypoints.forEach((idx, i) => {
-            markers[idx].setIcon('http://maps.google.com/mapfiles/ms/icons/orange-dot.png');
+            routeMarkers.push(new google.maps.Marker({
+                position: {lat: SITES[idx].lat, lng: SITES[idx].lon},
+                map: map,
+                icon: 'http://maps.google.com/mapfiles/ms/icons/orange-dot.png',
+                title: 'Waypoint ' + (i+1) + ': ' + SITES[idx].site_id,
+                zIndex: 99
+            }));
         });
         
         // Calculate totals from cached data or response
@@ -336,6 +356,7 @@ async function showRoute() {
         html += '</div>';
         details.innerHTML = html;
         
+        // Fit map to route
         const bounds = new google.maps.LatLngBounds();
         stops.forEach(idx => bounds.extend({lat: SITES[idx].lat, lng: SITES[idx].lon}));
         map.fitBounds(bounds, 50);
