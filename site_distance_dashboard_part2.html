@@ -508,28 +508,22 @@ async function startParallelAll() {
     const workerCount = parseInt(document.getElementById('workerCount').value);
     log('═══════════════════════════════════');
     log('PART 2: STARTING ' + workerCount + ' PARALLEL WORKERS');
-    log('Processing origins 124-246 (123 origins)');
-    log('With FULL waypoint verification');
+    log('Processing INDIVIDUAL ROUTES in parallel!');
     log('═══════════════════════════════════');
     
-    // Find incomplete origins IN THIS PART ONLY (124-246)
-    const incompleteOrigins = [];
+    // Build list of ALL incomplete routes for Part 2 origins
+    const incompleteRoutes = [];
     for (let i = ORIGIN_START; i <= ORIGIN_END; i++) {
-        let done = 0;
         for (let j = 0; j < SITES.length; j++) {
-            if (i !== j && getCached(i, j)) done++;
-        }
-        if (done < 246) {
-            incompleteOrigins.push({ idx: i, done: done });
+            if (i !== j && !getCached(i, j)) {
+                incompleteRoutes.push({ origin: i, dest: j });
+            }
         }
     }
     
-    // Sort: most complete first
-    incompleteOrigins.sort((a, b) => b.done - a.done);
+    log('Found ' + incompleteRoutes.length + ' incomplete routes');
     
-    log('Found ' + incompleteOrigins.length + ' incomplete origins in Part 2');
-    
-    if (incompleteOrigins.length === 0) {
+    if (incompleteRoutes.length === 0) {
         log('PART 2 ALL COMPLETE!');
         parallelRunning = false;
         document.getElementById('startAllBtn').style.display = 'block';
@@ -537,67 +531,55 @@ async function startParallelAll() {
         return;
     }
     
-    let currentIdx = 0;
+    let routeIdx = 0;
     let totalRoutesDone = Object.keys(CACHE.dist).length;
+    let completed = 0;
     
-    // Worker function - processes one origin at a time with full verification
+    // Worker function - grabs individual routes
     async function worker(workerId) {
-        while (parallelRunning && currentIdx < incompleteOrigins.length) {
-            const origin = incompleteOrigins[currentIdx++];
-            if (!origin) break;
+        while (parallelRunning && routeIdx < incompleteRoutes.length) {
+            const route = incompleteRoutes[routeIdx++];
+            if (!route) break;
             
-            const originSite = SITES[origin.idx];
-            log('[W' + workerId + '] Starting ' + originSite.site_id + ' (' + origin.done + '/246 done)');
+            // Skip if already cached (another worker got it)
+            if (getCached(route.origin, route.dest)) continue;
             
-            let routesDone = 0;
-            for (let j = 0; j < SITES.length && parallelRunning; j++) {
-                if (j === origin.idx) continue;
-                if (getCached(origin.idx, j)) { routesDone++; continue; }
+            const r = await fetchRoute(route.origin, route.dest);
+            if (!r.error) {
+                setCache(route.origin, route.dest, r.dist, r.time, r.waypoints);
+                totalRoutesDone++;
+                completed++;
                 
-                // Full route fetch with waypoint verification
-                const r = await fetchRoute(origin.idx, j);
-                if (!r.error) {
-                    setCache(origin.idx, j, r.dist, r.time, r.waypoints);
-                    totalRoutesDone++;
-                    routesDone++;
-                    
-                    const wpInfo = r.waypoints.length > 0 ? ' [' + r.waypoints.length + ' wp]' : '';
-                    log('[W' + workerId + '] ' + originSite.site_id + '→' + SITES[j].site_id + ': ' + r.dist.toFixed(1) + 'km' + wpInfo);
+                const wpInfo = r.waypoints.length > 0 ? ' [' + r.waypoints.length + ' wp]' : '';
+                if (completed % 10 === 0) {
+                    log('[W' + workerId + '] ' + SITES[route.origin].site_id + '→' + SITES[route.dest].site_id + wpInfo + ' (' + completed + ' done)');
                 }
-                
-                // Save periodically
-                if (totalRoutesDone % 50 === 0) {
-                    saveCache();
-                    updateParallelProgress(totalRoutesDone);
-                }
-                
-                // Rate limit - minimal
-                await new Promise(r => setTimeout(r, 50 + Math.random() * 50));
             }
             
-            saveCache();
-            log('[W' + workerId + '] Finished ' + originSite.site_id);
+            // Save periodically
+            if (completed % 100 === 0) {
+                saveCache();
+                updateParallelProgress(totalRoutesDone);
+            }
         }
         
         activeWorkers--;
-        log('[W' + workerId + '] Worker stopped');
         
         if (activeWorkers === 0) {
+            saveCache();
             parallelRunning = false;
             document.getElementById('startAllBtn').style.display = 'block';
             document.getElementById('stopAllBtn').style.display = 'none';
             log('═══════════════════════════════════');
-            log('PART 2 ALL WORKERS FINISHED!');
-            log('Total routes: ' + Object.keys(CACHE.dist).length);
+            log('PART 2 COMPLETE! Total: ' + Object.keys(CACHE.dist).length + ' routes');
             log('═══════════════════════════════════');
         }
     }
     
-    // Start workers
+    // Start ALL workers at once
     activeWorkers = workerCount;
     for (let w = 0; w < workerCount; w++) {
         worker(w + 1);
-        await new Promise(r => setTimeout(r, 100)); // Stagger worker starts
     }
 }
 
