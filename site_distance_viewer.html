@@ -190,12 +190,13 @@
                 <div class="panel" id="recheckProgress" style="display:none;background:#fff8e1;border:3px solid #ff9800;">
                     <h2 style="color:#e65100;margin:0 0 10px 0;">⏳ RE-CHECK IN PROGRESS</h2>
                     <div style="background:#ddd;height:30px;border-radius:8px;overflow:hidden;margin-bottom:10px;">
-                        <div id="recheckBar" style="background:linear-gradient(90deg,#ff9800,#f44336);height:100%;width:0%;transition:width 0.3s;"></div>
+                        <div id="recheckBar" style="background:linear-gradient(90deg,#ff9800,#f44336);height:100%;width:0%;transition:width 0.1s;"></div>
                     </div>
-                    <div id="recheckStats" style="font-size:1.2rem;font-weight:bold;text-align:center;color:#333;">
+                    <div id="recheckStats" style="font-size:1.5rem;font-weight:bold;text-align:center;color:#333;">
                         Starting...
                     </div>
-                    <div id="recheckDetails" style="font-size:0.85rem;color:#666;text-align:center;margin-top:5px;"></div>
+                    <div id="recheckDetails" style="font-size:1rem;color:#666;text-align:center;margin-top:8px;"></div>
+                    <div id="recheckLive" style="font-size:0.9rem;color:#e65100;text-align:center;margin-top:10px;font-family:monospace;background:#fff;padding:8px;border-radius:4px;"></div>
                 </div>
             </div>
             
@@ -958,6 +959,9 @@ async function recheckAllRoutes() {
     async function processRoute(route) {
         const iA = route.origin, iB = route.dest;
         
+        // Show live update
+        document.getElementById('recheckLive').textContent = '🔍 Checking: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id;
+        
         return new Promise(resolve => {
             directionsService.route({
                 origin: {lat: SITES[iA].lat, lng: SITES[iA].lon},
@@ -966,6 +970,15 @@ async function recheckAllRoutes() {
             }, async (res, status) => {
                 if (status !== 'OK') {
                     errors++;
+                    completed++;
+                    document.getElementById('recheckLive').textContent = '✗ Error: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id + ' (' + status + ')';
+                    document.getElementById('recheckLive').style.background = '#ffcdd2';
+                    
+                    const pct = (completed / routes.length * 100).toFixed(1);
+                    document.getElementById('recheckBar').style.width = pct + '%';
+                    document.getElementById('recheckStats').textContent = pct + '% Complete';
+                    document.getElementById('recheckDetails').textContent = completed + ' / ' + routes.length + ' routes | ✓ Updated: ' + updated + ' | ✗ Errors: ' + errors;
+                    
                     resolve();
                     return;
                 }
@@ -1027,8 +1040,19 @@ async function recheckAllRoutes() {
                 if (JSON.stringify(oldWp) !== JSON.stringify(newWp)) {
                     CACHE.waypoints[route.key] = newWp;
                     updated++;
-                    log('Updated ' + SITES[iA].site_id + '→' + SITES[iB].site_id + ': ' + oldWp.length + '→' + newWp.length + ' waypoints');
+                    const msg = '✓ UPDATED: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id + ' (' + oldWp.length + '→' + newWp.length + ' waypoints)';
+                    document.getElementById('recheckLive').textContent = msg;
+                    document.getElementById('recheckLive').style.background = '#c8e6c9';
+                    log(msg);
+                } else {
+                    document.getElementById('recheckLive').style.background = '#fff';
                 }
+                
+                completed++;
+                const pct = (completed / routes.length * 100).toFixed(1);
+                document.getElementById('recheckBar').style.width = pct + '%';
+                document.getElementById('recheckStats').textContent = pct + '% Complete';
+                document.getElementById('recheckDetails').textContent = completed + ' / ' + routes.length + ' routes | ✓ Updated: ' + updated + ' | ✗ Errors: ' + errors;
                 
                 resolve();
             });
@@ -1040,17 +1064,12 @@ async function recheckAllRoutes() {
         const batch = routes.slice(idx, idx + workers);
         await Promise.all(batch.map(r => processRoute(r)));
         
-        completed += batch.length;
         idx += workers;
-        
-        const pct = (completed / routes.length * 100).toFixed(1);
-        document.getElementById('recheckBar').style.width = pct + '%';
-        document.getElementById('recheckStats').textContent = pct + '% Complete';
-        document.getElementById('recheckDetails').textContent = completed + ' / ' + routes.length + ' routes | ✓ Updated: ' + updated + ' | ✗ Errors: ' + errors;
         
         // Save periodically
         if (completed % 100 === 0) {
             localStorage.setItem('riyadh_gmaps_viewer_cache', JSON.stringify(CACHE));
+            document.getElementById('recheckLive').textContent = '💾 Saved progress...';
         }
         
         await new Promise(r => setTimeout(r, 50));
