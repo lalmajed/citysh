@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Google Maps Routes & Waypoints (Part 1 + Part 2)</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 20px; }
+        h1 { color: #4285f4; margin-bottom: 5px; }
+        .subtitle { color: #666; margin-bottom: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .stat-row { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .stat { flex: 1; min-width: 100px; background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .stat-value { font-size: 1.5rem; font-weight: bold; color: #4285f4; }
+        .stat-value.part1 { color: #4285f4; }
+        .stat-value.part2 { color: #ea4335; }
+        .stat-label { color: #666; font-size: 0.75rem; }
+        .grid { display: grid; grid-template-columns: 350px 1fr; gap: 15px; }
+        .panel { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .panel h2 { color: #4285f4; font-size: 0.9rem; margin-bottom: 10px; border-bottom: 2px solid #4285f4; padding-bottom: 8px; }
+        select { width: 100%; padding: 10px; font-size: 0.9rem; border: 2px solid #ddd; border-radius: 6px; margin-bottom: 10px; }
+        .btn { width: 100%; padding: 12px; background: #4285f4; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
+        .btn:hover { background: #3367d6; }
+        .btn-sm { padding: 8px 15px; font-size: 0.8rem; width: auto; margin: 3px; }
+        .btn-part1 { background: #4285f4; }
+        .btn-part2 { background: #ea4335; }
+        .btn-combine { background: #34a853; }
+        #map { height: 400px; border-radius: 10px; }
+        .route-result { background: #e8f5e9; padding: 15px; border-radius: 8px; }
+        .route-header { display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #c8e6c9; }
+        .route-title { font-weight: bold; color: #2e7d32; font-size: 1.1rem; }
+        .route-totals { display: flex; gap: 20px; }
+        .route-total { text-align: center; }
+        .total-num { font-size: 1.8rem; font-weight: bold; color: #1565c0; }
+        .total-label { font-size: 0.7rem; color: #666; }
+        .waypoint { display: flex; align-items: center; padding: 10px; background: white; border-radius: 6px; margin: 5px 0; border-left: 4px solid #ffc107; }
+        .waypoint.start { border-left-color: #4caf50; }
+        .waypoint.end { border-left-color: #f44336; }
+        .wp-icon { width: 30px; height: 30px; border-radius: 50%; background: #ffc107; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px; }
+        .waypoint.start .wp-icon { background: #4caf50; }
+        .waypoint.end .wp-icon { background: #f44336; }
+        .wp-info { flex: 1; }
+        .wp-name { font-weight: 600; }
+        .wp-road { font-size: 0.75rem; color: #666; direction: rtl; }
+        .trip-seg { background: #e3f2fd; padding: 8px 12px; margin: 3px 0; border-radius: 6px; display: flex; justify-content: space-between; border-left: 3px solid #2196f3; }
+        .trip-label { font-weight: 500; color: #1565c0; }
+        .trip-values { font-weight: bold; color: #0d47a1; }
+        .no-data { text-align: center; padding: 30px; color: #999; }
+        .loading { text-align: center; padding: 20px; color: #666; }
+        .cached-list { max-height: 300px; overflow-y: auto; }
+        .cached-item { padding: 8px; margin: 3px 0; background: #f5f5f5; border-radius: 4px; cursor: pointer; font-size: 0.85rem; display: flex; justify-content: space-between; }
+        .cached-item:hover { background: #e3f2fd; }
+        .cached-item .route { font-weight: 500; }
+        .cached-item .dist { color: #2e7d32; }
+        .cached-item.part1 { border-left: 3px solid #4285f4; }
+        .cached-item.part2 { border-left: 3px solid #ea4335; }
+        .load-btns { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+        .source-badge { font-size: 0.65rem; padding: 2px 5px; border-radius: 3px; color: white; margin-left: 5px; }
+        .source-badge.p1 { background: #4285f4; }
+        .source-badge.p2 { background: #ea4335; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- TOP PROGRESS BAR - ALWAYS VISIBLE WHEN RUNNING -->
+        <div id="topProgress" style="display:none;background:linear-gradient(135deg,#ff9800,#f44336);padding:20px;border-radius:10px;margin-bottom:20px;color:white;box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+            <h2 style="margin:0 0 15px 0;text-align:center;">⏳ RE-CHECK IN PROGRESS</h2>
+            <div style="background:rgba(255,255,255,0.3);height:40px;border-radius:20px;overflow:hidden;margin-bottom:15px;">
+                <div id="topBar" style="background:white;height:100%;width:0%;transition:width 0.2s;border-radius:20px;"></div>
+            </div>
+            <div id="topStats" style="font-size:2rem;font-weight:bold;text-align:center;">0%</div>
+            <div id="topDetails" style="font-size:1.1rem;text-align:center;margin-top:10px;opacity:0.9;">Starting...</div>
+            <div id="topLive" style="font-size:1rem;text-align:center;margin-top:15px;background:rgba(0,0,0,0.2);padding:10px;border-radius:8px;font-family:monospace;"></div>
+        </div>
+        
+        <h1>Google Maps Routes Viewer (Part 1 + Part 2)</h1>
+        <p class="subtitle">View cached routes with waypoints from both extraction parts</p>
+        
+        <div class="stat-row">
+            <div class="stat"><div class="stat-value part1" id="statPart1">0</div><div class="stat-label">Part 1 Routes</div></div>
+            <div class="stat"><div class="stat-value part2" id="statPart2">0</div><div class="stat-label">Part 2 Routes</div></div>
+            <div class="stat"><div class="stat-value" id="totalCached">0</div><div class="stat-label">Total Routes</div></div>
+            <div class="stat"><div class="stat-value" id="wpCount">0</div><div class="stat-label">With Waypoints</div></div>
+            <div class="stat"><div class="stat-value" id="percentDone">0%</div><div class="stat-label">Matrix Complete</div></div>
+        </div>
+        
+        <div class="grid">
+            <div class="sidebar">
+                <div class="panel">
+                    <h2>Load Data</h2>
+                    <div class="load-btns">
+                        <button class="btn btn-sm btn-part1" onclick="loadFromLocalStorage(1)">Load Part 1</button>
+                        <button class="btn btn-sm btn-part2" onclick="loadFromLocalStorage(2)">Load Part 2</button>
+                        <button class="btn btn-sm btn-combine" onclick="combineData()">Combine</button>
+                    </div>
+                    <div class="load-btns" style="margin-top:8px;">
+                        <input type="file" id="jsonUpload1" accept=".json" onchange="uploadJSON(this, 1)" style="display:none;">
+                        <input type="file" id="jsonUpload2" accept=".json" onchange="uploadJSON(this, 2)" style="display:none;">
+                        <button class="btn btn-sm btn-part1" onclick="document.getElementById('jsonUpload1').click()">📁 Upload P1 JSON</button>
+                        <button class="btn btn-sm btn-part2" onclick="document.getElementById('jsonUpload2').click()">📁 Upload P2 JSON</button>
+                    </div>
+                    <button class="btn" id="toggleSitesBtn" onclick="toggleAllSites()" style="background:#9c27b0; margin-top:10px;">📍 Show All 247 Sites on Map</button>
+                </div>
+                
+                <div class="panel">
+                    <h2>Select Route</h2>
+                    <select id="originSel"><option value="">-- Origin --</option></select>
+                    <select id="destSel"><option value="">-- Destination --</option></select>
+                    <button class="btn" onclick="showRoute()">Show Route with Waypoints</button>
+                </div>
+                
+                <div class="panel">
+                    <h2>Cached Routes (click to view)</h2>
+                    <div class="cached-list" id="cachedList">
+                        <div class="no-data">Click Load Part 1/2 above</div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>Download</h2>
+                    <button class="btn btn-sm" onclick="downloadCSV('dist')">Distance CSV</button>
+                    <button class="btn btn-sm" onclick="downloadCSV('time')">Time CSV</button>
+                    <button class="btn btn-sm" onclick="downloadJSON()">Full JSON</button>
+                </div>
+                
+                <div class="panel" style="background:#e3f2fd;">
+                    <h2 style="color:#1565c0;">🔗 Merge Results</h2>
+                    <div style="font-size:0.75rem;color:#666;margin-bottom:10px;">
+                        Upload JSON files from all 3 browsers to combine
+                    </div>
+                    <input type="file" id="mergeFile" accept=".json" multiple onchange="mergeJSONFiles(this)" style="display:none;">
+                    <button class="btn" onclick="document.getElementById('mergeFile').click()" style="background:#1565c0;color:white;width:100%;">
+                        📂 Select Multiple JSONs to Merge
+                    </button>
+                    <div id="mergeStatus" style="margin-top:8px;font-size:0.8rem;"></div>
+                </div>
+                
+                <div class="panel" style="background:#fff3e0;">
+                    <h2 style="color:#e65100;">🔍 Re-check Waypoints (Test Settings)</h2>
+                    <div style="font-size:0.75rem;color:#666;margin-bottom:10px;">
+                        Test different thresholds on selected route before running on all
+                    </div>
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:0.8rem;">Path threshold (meters):</label>
+                        <select id="testThreshold" style="width:100%;padding:5px;">
+                            <option value="0.05">50m (strict)</option>
+                            <option value="0.10">100m</option>
+                            <option value="0.15">150m</option>
+                            <option value="0.20">200m</option>
+                            <option value="0.30" selected>300m (wide)</option>
+                            <option value="0.50">500m (very wide)</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:0.8rem;">Distance increase threshold:</label>
+                        <select id="testDistThreshold" style="width:100%;padding:5px;">
+                            <option value="0.001">0.1% (ultra strict)</option>
+                            <option value="0.005" selected>0.5% (strict)</option>
+                            <option value="0.01">1% (moderate)</option>
+                            <option value="0.02">2% (relaxed)</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:0.8rem;"><input type="checkbox" id="testSkipDirection"> Skip direction check</label>
+                    </div>
+                    <button class="btn" onclick="recheckWaypoints()" style="background:#e65100;">
+                        🔍 Re-check Selected Route
+                    </button>
+                    <div style="margin-top:10px;border-top:1px solid #ffcc80;padding-top:10px;">
+                        <div style="font-size:0.75rem;color:#bf360c;margin-bottom:8px;">
+                            ⚠️ Split across browsers to speed up!
+                        </div>
+                        <div style="margin-bottom:8px;">
+                            <label style="font-size:0.8rem;">Which portion to process:</label>
+                            <select id="recheckPortion" style="width:100%;padding:5px;">
+                                <option value="all">ALL routes (slow!)</option>
+                                <option value="1">Browser 1: First third (0-33%)</option>
+                                <option value="2">Browser 2: Middle third (33-66%)</option>
+                                <option value="3">Browser 3: Last third (66-100%)</option>
+                            </select>
+                        </div>
+                        <div style="margin-bottom:8px;">
+                            <label style="font-size:0.8rem;">Parallel workers:</label>
+                            <select id="recheckWorkers" style="width:100%;padding:5px;">
+                                <option value="5" selected>5 (safe)</option>
+                                <option value="10">10 (moderate)</option>
+                                <option value="20">20 (fast - may error)</option>
+                            </select>
+                        </div>
+                        <button class="btn" onclick="recheckAllRoutes()" id="startRecheckBtn" style="background:#b71c1c;color:white;width:100%;">
+                            🚀 RE-CHECK SELECTED PORTION
+                        </button>
+                        <button class="btn" onclick="stopRecheck()" id="stopRecheckBtn" style="background:#666;color:white;width:100%;margin-top:5px;display:none;">
+                            ⏹️ STOP
+                        </button>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <div class="main">
+                <div class="panel">
+                    <div id="map"></div>
+                </div>
+                
+                <div class="panel">
+                    <h2>Verification Log</h2>
+                    <div id="verifyLog" style="background:#1e1e1e;color:#0f0;padding:10px;font-family:monospace;font-size:0.8rem;max-height:150px;overflow-y:auto;border-radius:6px;">
+                        Load data and select a route to view
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>Route Details</h2>
+                    <div id="routeDetails">
+                        <div class="no-data">Select a route to see waypoints and trip segments</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+const SITES = [{"site_id": "RUHSM001", "lat": 24.7403322023658, "lon": 46.6273981332779, "road_name": "طريق الأمير تركي بن عبدالعزيز الأول", "site_direction": "S"}, {"site_id": "RUHSM002", "lat": 24.740427194217, "lon": 46.6274785995483, "road_name": "طريق الأمير تركي بن عبدالعزيز الأول", "site_direction": "N"}, {"site_id": "RUHSM003", "lat": 24.7546965432207, "lon": 46.6325774788857, "road_name": "الدائري الشمالي", "site_direction": "E"}, {"site_id": "RUHSM007", "lat": 24.6726265911391, "lon": 46.656776368618, "road_name": "طريق الملك خالد", "site_direction": "S"}, {"site_id": "RUHSM009", "lat": 24.7209740445557, "lon": 46.6058734059334, "road_name": "طريق الملك خالد", "site_direction": "N"}, {"site_id": "RUHSM012", "lat": 24.6483701639916, "lon": 46.7946767807007, "road_name": "طريق الدائري الشرقي", "site_direction": "N"}, {"site_id": "RUHSM015", "lat": 24.5439855825558, "lon": 46.872533261776, "road_name": "الخرج", "site_direction": "S"}, {"site_id": "RUHSM018", "lat": 24.8287062928303, "lon": 46.6193702816963, "road_name": "طريق الملك سلمان", "site_direction": "E"}, {"site_id": "RUHSM019", "lat": 24.8178075375809, "lon": 46.6184422373772, "road_name": "طريق الملك فهد", "site_direction": "S"}, {"site_id": "RUHSM022", "lat": 24.670488879256, "lon": 46.6602820158005, "road_name": "طريق الملك خالد", "site_direction": "N"}, {"site_id": "RUHSM023", "lat": 24.780546768419, "lon": 46.7285308241844, "road_name": null, "site_direction": "N"}, {"site_id": "RUHSM024", "lat": 24.6799116099266, "lon": 46.6544723510742, "road_name": "شارع أم الحمام", "site_direction": "S"}, {"site_id": "RUHSM025", "lat": 24.7649189230075, "lon": 46.6561299562454, "road_name": "الدائري الشمالي", "site_direction": "W"}, {"site_id": "RUHSM026", "lat": 24.7731896590511, "lon": 46.7319613695145, "road_name": "الدائري الشرقي", "site_direction": "S"}, {"site_id": "RUHSM027", "lat": 24.6750541016666, "lon": 46.6531071066856, "road_name": "طريق الملك خالد", "site_direction": "E"}, {"site_id": "RUHSM029", "lat": 24.9694129976553, "lon": 46.7820569872856, "road_name": null, "site_direction": "N"}, {"site_id": "RUHSM030", "lat": 25.0012034832327, "lon": 46.7709928750992, "road_name": "طريق الجنادرية", "site_direction": "S"}, {"site_id": "RUHSM032", "lat": 24.7120199687664, "lon": 46.6719147562981, "road_name": "طريق الملك فهد الفرعي", "site_direction": "S"}, {"site_id": "RUHSM033", "lat": 24.7897540511277, "lon": 46.7158091068268, "road_name": "الطريق الدائري الشمالي", "site_direction": "E"}, {"site_id": "RUHSM034", "lat": 24.6755122958506, "lon": 46.6905936598778, "road_name": null, "site_direction": "N"}, {"site_id": "RUHSM035", "lat": 24.6203516108267, "lon": 46.5742367506027, "road_name": "طريق مكة المكرمة", "site_direction": "E"}, {"site_id": "RUHSM038", "lat": 24.6846274081011, "lon": 46.7023712396622, "road_name": null, "site_direction": "W"}, {"site_id": "RUHSM042", "lat": 24.740704875449, "lon": 46.5987414121628, "road_name": "الطريق الدائري الشمالي", "site_direction": "W"}, {"site_id": "RUHSM044", "lat": 24.8400178982926, "lon": 46.6072306036949, "road_name": null, "site_direction": "S"}, {"site_id": "RUHSM045", "lat": 24.6261962301252, "lon": 46.7836314439774, "road_name": "طريق الدائري الجنوبي", "site_direction": "W"}, {"site_id": "RUHSM046", "lat": 24.5856708282881, "lon": 46.6952633857727, "road_name": "طريق الدائري الجنوبي", "site_direction": "E"}, {"site_id": "RUHSM049", "lat": 24.8066959557292, "lon": 46.7554226517677, "road_name": "طريق الدمام", "site_direction": "W"}, {"site_id": "RUHSM051", "lat": 24.5581848394885, "lon": 46.6767024993897, "road_name": "طريق ديراب", "site_direction": "E"}, {"site_id": "RUHSM052", "lat": 24.7243240497979, "lon": 46.6658690571785, "road_name": "طريق الملك فهد", "site_direction": "N"}, {"site_id": "RUHSM053", "lat": 24.6729043824091, "lon": 46.6916853189468, "road_name": null, "site_direction": "S"}, {"site_id": "RUHSM054", "lat": 24.6123632798959, "lon": 46.7067539691925, "road_name": "طريق الملك فهد", "site_direction": "S"}, {"site_id": "RUHSM055", "lat": 24.6110781730948, "lon": 46.707022190094, "road_name": "طريق الملك فهد", "site_direction": "N"}, {"site_id": "RUHSM057", "lat": 24.6656945509571, "lon": 46.6192603111267, "road_name": "طريق جدة", "site_direction": "E"}, {"site_id": "RUHSM059", "lat": 24.831956030886, "lon": 46.8484577536583, "road_name": "طريق الجنادرية", "site_direction": "S"}, {"site_id": "RUHSM060", "lat": 24.8321897210297, "lon": 46.7234346270561, "road_name": "Airport Road", "site_direction": "S"}, {"site_id": "RUHSM062", "lat": 24.7980377711983, "lon": 46.569601893425, "road_name": null, "site_direction": "W"}, {"site_id": "RUHSM069", "lat": 24.56560566558, "lon": 46.6250592470169, "road_name": "الطريق الدائري الغربي", "site_direction": "E"}, {"site_id": "RUHSM070", "lat": 24.6942463632656, "lon": 46.5634649991989, "road_name": "الطريق الدائري الغربي", "site_direction": "S"}, {"site_id": "RUHSM071", "lat": 24.6711544395348, "lon": 46.6223931312561, "road_name": "طريق عبد الله بن حذافة السهمي", "site_direction": "N"}, {"site_id": "RUHSM072", "lat": 24.6707963331305, "lon": 46.6222590208054, "road_name": "طريق عبد الله بن حذافة السهمي", "site_direction": "S"}, {"site_id": "RUHSM073", "lat": 24.6870447823229, "lon": 46.6315904259682, "road_name": "Flags Roundabout", "site_direction": "W"}, {"site_id": "RUHSM074", "lat": 24.6869545710959, "lon": 46.6317647695541, "road_name": "شارع عمرو الضمري", "site_direction": "E"}, {"site_id": "RUHSM077", "lat": 24.8111586340332, "lon": 46.7348715662956, "road_name": "طريق سعيد بن زيد", "site_direction": "N"}, {"site_id": "RUHSM078", "lat": 24.8110612436613, "lon": 46.7346113920212, "road_name": "طريق سعيد بن زيد", "site_direction": "S"}, {"site_id": "RUHSM079", "lat": 24.5588531422709, "lon": 46.6225674748421, "road_name": "Al Tawhed", "site_direction": "E"}, {"site_id": "RUHSM080", "lat": 24.5589824415937, "lon": 46.622556746006, "road_name": "Al Tawhed", "site_direction": "W"}, {"site_id": "RUHSM093", "lat": 24.8325232108086, "lon": 46.8203857541084, "road_name": "طريق الدمام", "site_direction": "W"}, {"site_id": "RUHSM095", "lat": 24.7800816178938, "lon": 46.8530228734016, "road_name": "طريق خريص", "site_direction": "E"}, {"site_id": "RUHSM096", "lat": 24.5348626583046, "lon": 46.6983264684677, "road_name": "Al-Khaleefa Al Mamoun", "site_direction": "N"}, {"site_id": "RUHSM097", "lat": 24.598323749187, "lon": 46.7443531751633, "road_name": "طريق الدائري الجنوبي", "site_direction": "S"}, {"site_id": "RUHSM098", "lat": 24.8195992645787, "lon": 46.8459257483482, "road_name": "طريق الجنادرية", "site_direction": "N"}, {"site_id": "RUHSM100", "lat": 24.5686573528817, "lon": 46.8897798657417, "road_name": "طريق الخرج السريع", "site_direction": "S"}, {"site_id": "RUHSM102", "lat": 24.7352066774981, "lon": 46.6819301247597, "road_name": null, "site_direction": "E"}, {"site_id": "RUHSM106", "lat": 24.7087793016666, "lon": 46.7659583687782, "road_name": "الدائري الشرقي", "site_direction": "N"}, {"site_id": "RUHSM110", "lat": 24.8409306555311, "lon": 46.5533074736595, "road_name": "الملك خالد", "site_direction": "S"}, {"site_id": "RUHSM111", "lat": 24.8410231157739, "lon": 46.5536212921143, "road_name": "الملك خالد", "site_direction": "N"}, {"site_id": "RUHSM112", "lat": 24.5972800762424, "lon": 46.6084000468254, "road_name": "الإمام أبي حنيفة", "site_direction": "W"}, {"site_id": "RUHSM113", "lat": 24.5971435038554, "lon": 46.6084751486778, "road_name": "الإمام أبي حنيفة", "site_direction": "E"}, {"site_id": "RUHSM114", "lat": 24.5475208005664, "lon": 46.7195722460747, "road_name": "عرفات", "site_direction": "W"}, {"site_id": "RUHSM116", "lat": 24.9070265631544, "lon": 46.9199708104134, "road_name": null, "site_direction": "W"}, {"site_id": "RUHSM117", "lat": 24.5381879590055, "lon": 46.6897889971733, "road_name": "الإمام مسلم", "site_direction": "S"}, {"site_id": "RUHSM118", "lat": 24.5382806827733, "lon": 46.6898936033249, "road_name": "الإمام مسلم", "site_direction": "N"}, {"site_id": "RUHSM121", "lat": 24.6462394879027, "lon": 46.6858944296837, "road_name": "الأمير طلال بن عبدالعزيز", "site_direction": "E"}, {"site_id": "RUHSM122", "lat": 24.7958463762615, "lon": 46.7296761274338, "road_name": "طريق الدمام", "site_direction": "W"}, {"site_id": "RUHSM125", "lat": 24.771906272745, "lon": 46.732605099678, "road_name": "الدائري الشرقي", "site_direction": "S"}, {"site_id": "RUHSM128", "lat": 24.6981526522312, "lon": 46.6789072751999, "road_name": "طريق الملك فهد", "site_direction": "S"}, {"site_id": "RUHSM129", "lat": 24.6876372637067, "lon": 46.7106726765633, "road_name": "طريق مكة المكرمة", "site_direction": "E"}, {"site_id": "RUHSM130", "lat": 24.6636397195435, "lon": 46.7306765913963, "road_name": "شارع الجامعة", "site_direction": "W"}, {"site_id": "RUHSM131", "lat": 24.6634934669944, "lon": 46.7308187484741, "road_name": "شارع الجامعة", "site_direction": "E"}, {"site_id": "RUHSM136", "lat": 24.620424801656, "lon": 46.5808054804802, "road_name": "الطريق الدائري الغربي", "site_direction": "N"}, {"site_id": "RUHSM140", "lat": 24.8769760481679, "lon": 46.8059206008911, "road_name": "Al Thumama", "site_direction": "S"}, {"site_id": "RUHSM141", "lat": 24.8769687507318, "lon": 46.8060520291329, "road_name": "Al Thumama", "site_direction": "N"}, {"site_id": "RUHSM142", "lat": 24.5674108328895, "lon": 46.655505001545, "road_name": "طريق الدائري الجنوبي", "site_direction": "W"}, {"site_id": "RUHSM144", "lat": 24.5638614614901, "lon": 46.717287003994, "road_name": "Al-Marouj", "site_direction": "E"}, {"site_id": "RUHSM145", "lat": 24.5687663130558, "lon": 46.8898630142212, "road_name": "طريق الخرج السريع", "site_direction": "W"}, {"site_id": "RUHSM147", "lat": 24.6038597752923, "lon": 46.6194561123848, "road_name": "الإمام أبي حنيفة", "site_direction": "E"}, {"site_id": "RUHSM148", "lat": 24.6040012164286, "lon": 46.6193461418152, "road_name": "الإمام أبي حنيفة", "site_direction": "W"}, {"site_id": "RUHSM152", "lat": 24.6854562001529, "lon": 46.6520261764526, "road_name": "شارع أم الحمام", "site_direction": "S"}, {"site_id": "RUHSM153", "lat": 24.6855219810628, "lon": 46.6522246599197, "road_name": "شارع أم الحمام", "site_direction": "N"}, {"site_id": "RUHSM156", "lat": 24.7259342868167, "lon": 46.7802920937538, "road_name": "طريق خريص", "site_direction": "E"}, {"site_id": "RUHSM157", "lat": 24.6409759484262, "lon": 46.8291538953781, "road_name": "طريق الدائري الجنوبي", "site_direction": "E"}, {"site_id": "RUHSM160", "lat": 24.6086054881289, "lon": 46.7729669809341, "road_name": "طريق الخرج", "site_direction": "N"}, {"site_id": "RUHSM161", "lat": 24.6336106991616, "lon": 46.8119421601295, "road_name": "طريق الدائري الجنوبي", "site_direction": "E"}, {"site_id": "RUHSM164", "lat": 24.5796291806517, "lon": 46.5517866611481, "road_name": "بلال بن رباح", "site_direction": "E"}, {"site_id": "RUHSM165", "lat": 24.5797877232525, "lon": 46.5518108010292, "road_name": "بلال بن رباح", "site_direction": "W"}, {"site_id": "RUHSM168", "lat": 24.5844927893916, "lon": 46.7547172307968, "road_name": "An-Nasar Road", "site_direction": "E"}, {"site_id": "RUHSM169", "lat": 24.5982237727608, "lon": 46.6173076629639, "road_name": "حمزة بن عبد المطلب", "site_direction": "N"}, {"site_id": "RUHSM170", "lat": 24.5981359902433, "lon": 46.6171762347221, "road_name": "حمزة بن عبد المطلب", "site_direction": "S"}, {"site_id": "RUHSM173", "lat": 24.7946969705971, "lon": 46.6560655832291, "road_name": "طريق الملك عبدالعزيز", "site_direction": "N"}, {"site_id": "RUHSM174", "lat": 24.5079388888788, "lon": 46.9285324215889, "road_name": "Al Kharj", "site_direction": "S"}, {"site_id": "RUHSM175", "lat": 24.5081024122122, "lon": 46.9286692142487, "road_name": "Al Kharj", "site_direction": "N"}, {"site_id": "RUHSM178", "lat": 25.0159432570743, "lon": 46.7664411664009, "road_name": "طريق الجنادرية", "site_direction": "N"}, {"site_id": "RUHSM179", "lat": 25.0158897994536, "lon": 46.7662614583969, "road_name": "طريق الجنادرية", "site_direction": "S"}, {"site_id": "RUHSM180", "lat": 24.66748117972, "lon": 46.7952159047127, "road_name": "أبو عبيدة عامر بن الجراح", "site_direction": "W"}, {"site_id": "RUHSM181", "lat": 24.6672764432188, "lon": 46.7952185869217, "road_name": "أبو عبيدة عامر بن الجراح", "site_direction": "E"}, {"site_id": "RUHSM182", "lat": 24.6433261861909, "lon": 46.8339711427689, "road_name": "طريق الدائري الجنوبي", "site_direction": "S"}, {"site_id": "RUHSM187", "lat": 24.642784983054, "lon": 46.7355394363403, "road_name": "الخرج", "site_direction": "N"}, {"site_id": "RUHSM188", "lat": 24.6011674755442, "lon": 46.6398543119431, "road_name": "ابن الجوزي", "site_direction": "N"}, {"site_id": "RUHSM189", "lat": 24.6013016369983, "lon": 46.6397336125374, "road_name": "ابن الجوزي", "site_direction": "S"}, {"site_id": "RUHSM190", "lat": 24.6326745415304, "lon": 46.5654820203781, "road_name": "طريق نجد", "site_direction": "W"}, {"site_id": "RUHSM191", "lat": 24.8129651971553, "lon": 46.6760292649269, "road_name": null, "site_direction": "S"}, {"site_id": "RUHSM192", "lat": 24.8127826050202, "lon": 46.6761177778244, "road_name": "الثمامة", "site_direction": "N"}, {"site_id": "RUHSM195", "lat": 24.7299152397197, "lon": 46.8647655844688, "road_name": "الطريق الدائري الثاني", "site_direction": "S"}, {"site_id": "RUHSM196", "lat": 24.7999978581173, "lon": 46.6526859998703, "road_name": "الربيع - اليرموك", "site_direction": "E"}, {"site_id": "RUHSM198", "lat": 24.7694781484828, "lon": 46.6684493422508, "road_name": "طريق الملك عبدالعزيز", "site_direction": "S"}, {"site_id": "RUHSM201", "lat": 24.615255335399, "lon": 46.7573323845863, "road_name": null, "site_direction": "S"}, {"site_id": "RUHSM207", "lat": 24.7444197548951, "lon": 46.6082498431206, "road_name": "الطريق الدائري الشمالي", "site_direction": "E"}, {"site_id": "RUHSM208", "lat": 24.823774152058, "lon": 46.7285388708115, "road_name": "طريق سعيد بن زيد", "site_direction": "N"}, {"site_id": "RUHSM209", "lat": 24.8236621627272, "lon": 46.7282545566559, "road_name": "طريق سعيد بن زيد", "site_direction": "S"}, {"site_id": "RUHSM210", "lat": 24.7432407032976, "lon": 46.8001833558083, "road_name": "عبدالرحمن الناصر", "site_direction": "S"}, {"site_id": "RUHSM211", "lat": 24.7433162129597, "lon": 46.8002933263779, "road_name": "عبدالرحمن الناصر", "site_direction": "N"}, {"site_id": "RUHSM212", "lat": 24.6725825464765, "lon": 46.8299263715744, "road_name": "شارع ابن ماجة", "site_direction": "N"}, {"site_id": "RUHSM213", "lat": 24.6725337944213, "lon": 46.8298190832138, "road_name": "شارع ابن ماجة", "site_direction": "S"}, {"site_id": "RUHSM216", "lat": 24.5872366876198, "lon": 46.5884765982628, "road_name": "خديجة بنت خويلد", "site_direction": "W"}, {"site_id": "RUHSM217", "lat": 24.5871147808519, "lon": 46.5885651111603, "road_name": "خديجة بنت خويلد", "site_direction": "E"}, {"site_id": "RUHSM218", "lat": 24.7088894173431, "lon": 46.8437933921814, "road_name": "طريق طلحة بن عبيدالله", "site_direction": "W"}, {"site_id": "RUHSM221", "lat": 24.6402519488123, "lon": 46.75511687994, "road_name": "طريق المدينة المنورة", "site_direction": "E"}, {"site_id": "RUHSM224", "lat": 24.7455602489784, "lon": 46.8242803215981, "road_name": "شارع حسان بن ثابت", "site_direction": "N"}, {"site_id": "RUHSM225", "lat": 24.7454847342479, "lon": 46.8241676688194, "road_name": "شارع حسان بن ثابت", "site_direction": "S"}, {"site_id": "RUHSM226", "lat": 24.7641928838335, "lon": 46.8337565660477, "road_name": "شارع ابن الهيثم", "site_direction": "N"}, {"site_id": "RUHSM227", "lat": 24.764122238671, "lon": 46.8336492776871, "road_name": "شارع ابن الهيثم", "site_direction": "S"}, {"site_id": "RUHSM228", "lat": 24.7395185293973, "lon": 46.5959626436234, "road_name": "الطريق الدائري الشمالي", "site_direction": "W"}, {"site_id": "RUHSM232", "lat": 24.4701528666928, "lon": 46.612468957901, "road_name": "ديراب", "site_direction": "E"}, {"site_id": "RUHSM233", "lat": 24.5476209553064, "lon": 46.6873374581337, "road_name": "الخليل بن أحمد", "site_direction": "E"}, {"site_id": "RUHSM234", "lat": 24.5477331800292, "lon": 46.6874313354492, "road_name": "الخليل بن أحمد", "site_direction": "W"}];
+
+// Cache storage
+let CACHE = { dist: {}, time: {}, waypoints: {}, source: {} };
+let map, directionsService, directionsRenderer;
+let routeMarkers = []; // Only markers for current route
+let allSiteMarkers = []; // All 247 site markers
+let allSitesVisible = false;
+
+function loadFromLocalStorage(part) {
+    const key = part === 1 ? 'riyadh_gmaps_matrix_part1' : 'riyadh_gmaps_matrix_part2';
+    try {
+        const stored = localStorage.getItem(key);
+        if (!stored) {
+            alert('No data in localStorage for Part ' + part);
+            return;
+        }
+        const json = JSON.parse(stored);
+        const dist = json.dist || {};
+        const time = json.time || {};
+        const wp = json.waypoints || {};
+        
+        // Merge into main cache with source tracking
+        for (const k in dist) {
+            CACHE.dist[k] = dist[k];
+            CACHE.time[k] = time[k];
+            CACHE.source[k] = part;
+            if (wp[k]) CACHE.waypoints[k] = wp[k];
+        }
+        
+        updateStats();
+        renderCachedList();
+        log('Loaded Part ' + part + ': ' + Object.keys(dist).length + ' routes');
+    } catch(e) {
+        alert('Error loading Part ' + part + ': ' + e.message);
+    }
+}
+
+function combineData() {
+    loadFromLocalStorage(1);
+    loadFromLocalStorage(2);
+    log('Combined Part 1 + Part 2');
+}
+
+function uploadJSON(input, part) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const json = JSON.parse(e.target.result);
+            const dist = json.distance_km || json.dist || {};
+            const time = json.time_min || json.time || {};
+            const wp = json.waypoints || {};
+            
+            let count = 0, wpCount = 0;
+            const distKeys = Object.keys(dist);
+            log('JSON contains ' + distKeys.length + ' routes');
+            
+            for (const k of distKeys) {
+                CACHE.dist[k] = dist[k];
+                CACHE.time[k] = time[k];
+                CACHE.source[k] = part;
+                // Always store waypoints (even empty arrays)
+                CACHE.waypoints[k] = wp[k] || [];
+                if (wp[k] && wp[k].length > 0) wpCount++;
+                count++;
+            }
+            
+            log('Loaded into memory: ' + count + ' routes');
+            log('Total in CACHE now: ' + Object.keys(CACHE.dist).length);
+            
+            // Try to save to localStorage (might fail if too big)
+            try {
+                const cacheStr = JSON.stringify(CACHE);
+                const sizeMB = (cacheStr.length / 1024 / 1024).toFixed(2);
+                log('Cache size: ' + sizeMB + ' MB');
+                
+                if (cacheStr.length > 4 * 1024 * 1024) {
+                    log('⚠️ Cache too large for localStorage (' + sizeMB + 'MB), keeping in memory only');
+                } else {
+                    localStorage.setItem('riyadh_gmaps_viewer_cache', cacheStr);
+                    log('✓ Saved to localStorage');
+                }
+            } catch(storageErr) {
+                log('⚠️ localStorage save failed: ' + storageErr.message);
+                log('Data is in memory - proceed with re-check, download when done');
+            }
+            
+            updateStats();
+            renderCachedList();
+            log('═══════════════════════════════════');
+            log('UPLOADED Part ' + part + ': ' + file.name);
+            log('Loaded ' + count + ' routes (' + wpCount + ' with waypoints)');
+            log('Total now: ' + Object.keys(CACHE.dist).length + ' routes');
+            log('Saved to browser cache!');
+            log('═══════════════════════════════════');
+            alert('Loaded ' + count + ' routes from Part ' + part + '!\n(' + wpCount + ' with waypoints)');
+        } catch(err) {
+            alert('Error: ' + err.message);
+            log('Upload error: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+    input.value = '';
+}
+
+function updateStats() {
+    let p1 = 0, p2 = 0, wpCount = 0;
+    for (const k in CACHE.dist) {
+        if (CACHE.source[k] === 1) p1++;
+        else if (CACHE.source[k] === 2) p2++;
+        if (CACHE.waypoints[k] && CACHE.waypoints[k].length > 0) wpCount++;
+    }
+    const total = Object.keys(CACHE.dist).length;
+    
+    document.getElementById('statPart1').textContent = p1.toLocaleString();
+    document.getElementById('statPart2').textContent = p2.toLocaleString();
+    document.getElementById('totalCached').textContent = total.toLocaleString();
+    document.getElementById('wpCount').textContent = wpCount.toLocaleString();
+    document.getElementById('percentDone').textContent = ((total / 60762) * 100).toFixed(1) + '%';
+}
+
+function renderCachedList() {
+    const list = document.getElementById('cachedList');
+    const keys = Object.keys(CACHE.dist).slice(-100).reverse();
+    
+    if (keys.length === 0) {
+        list.innerHTML = '<div class="no-data">No cached routes - Load Part 1/2</div>';
+        return;
+    }
+    
+    let html = '';
+    keys.forEach(key => {
+        const [i, j] = key.split('_').map(Number);
+        if (!SITES[i] || !SITES[j]) return;
+        const wpCount = CACHE.waypoints[key] ? CACHE.waypoints[key].length : 0;
+        const wpText = wpCount > 0 ? ' <span style="color:#4caf50">[' + wpCount + ' wp]</span>' : '';
+        const partClass = CACHE.source[key] === 1 ? 'part1' : 'part2';
+        html += '<div class="cached-item ' + partClass + '" onclick="selectRoute(' + i + ',' + j + ')">' +
+            '<span class="route">' + SITES[i].site_id + ' → ' + SITES[j].site_id + wpText + '</span>' +
+            '<span class="dist">' + CACHE.dist[key].toFixed(1) + ' km</span></div>';
+    });
+    list.innerHTML = html;
+}
+
+function selectRoute(i, j) {
+    document.getElementById('originSel').value = i;
+    document.getElementById('destSel').value = j;
+    showRoute();
+}
+
+function log(msg) {
+    const el = document.getElementById('verifyLog');
+    el.innerHTML += '<div>[' + new Date().toLocaleTimeString() + '] ' + msg + '</div>';
+    el.scrollTop = el.scrollHeight;
+}
+
+let mapLoaded = false;
+
+function initMap() {
+    // Init map
+    map = new google.maps.Map(document.getElementById('map'), { center: {lat: 24.7136, lng: 46.6753}, zoom: 10 });
+    directionsService = new google.maps.DirectionsService();
+    directionsRenderer = new google.maps.DirectionsRenderer({ map, suppressMarkers: true });
+    mapLoaded = true;
+    
+    // Populate dropdowns
+    const oSel = document.getElementById('originSel');
+    const dSel = document.getElementById('destSel');
+    SITES.forEach((s, i) => {
+        const opt = '<option value="' + i + '">' + s.site_id + ' (' + s.site_direction + ')</option>';
+        oSel.innerHTML += opt;
+        dSel.innerHTML += opt;
+    });
+    
+    // Auto-load viewer cache if exists
+    try {
+        const viewerCache = localStorage.getItem('riyadh_gmaps_viewer_cache');
+        if (viewerCache) {
+            const data = JSON.parse(viewerCache);
+            CACHE.dist = data.dist || {};
+            CACHE.time = data.time || {};
+            CACHE.waypoints = data.waypoints || {};
+            CACHE.source = data.source || {};
+            
+            const wpRoutes = Object.values(CACHE.waypoints).filter(w => w && w.length > 0).length;
+            log('✓ Auto-loaded cache: ' + Object.keys(CACHE.dist).length + ' routes');
+            updateStats();
+            renderCachedList();
+        } else {
+            log('Ready! Upload JSON or load Part 1/Part 2.');
+        }
+    } catch(e) {
+        log('Ready! Upload JSON or load Part 1/Part 2.');
+    }
+    
+    log('✓ Map ready');
+}
+
+function toggleAllSites() {
+    const btn = document.getElementById('toggleSitesBtn');
+    
+    if (allSitesVisible) {
+        // Hide all sites
+        allSiteMarkers.forEach(m => m.setMap(null));
+        allSiteMarkers = [];
+        allSitesVisible = false;
+        btn.textContent = 'Show All Sites';
+        btn.style.background = '#9c27b0';
+        log('Hidden all site markers');
+    } else {
+        // Show all sites
+        log('Loading 247 site markers...');
+        btn.textContent = 'Loading...';
+        
+        setTimeout(() => {
+            SITES.forEach((s, i) => {
+                const marker = new google.maps.Marker({
+                    position: {lat: s.lat, lng: s.lon},
+                    map: map,
+                    title: s.site_id + ' (' + s.site_direction + ')',
+                    zIndex: 1
+                });
+                allSiteMarkers.push(marker);
+            });
+            
+            allSitesVisible = true;
+            btn.textContent = '📍 Hide All Sites';
+            btn.style.background = '#666';
+            log('Showing all 247 sites (red markers)');
+        }, 50);
+    }
+}
+
+async function showRoute() {
+    const iA = parseInt(document.getElementById('originSel').value);
+    const iB = parseInt(document.getElementById('destSel').value);
+    
+    if (isNaN(iA) || isNaN(iB)) { alert('Select both sites'); return; }
+    if (iA === iB) { alert('Select different sites'); return; }
+    
+    const details = document.getElementById('routeDetails');
+    details.innerHTML = '<div class="loading">Loading route...</div>';
+    
+    // Clear previous route markers
+    routeMarkers.forEach(m => m.setMap(null));
+    routeMarkers = [];
+    
+    const cacheKey = iA + '_' + iB;
+    const cachedWaypoints = CACHE.waypoints[cacheKey] || [];
+    
+    log('Route: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id);
+    
+    // Build waypoints for request
+    const waypoints = cachedWaypoints.map(idx => ({
+        location: { lat: SITES[idx].lat, lng: SITES[idx].lon },
+        stopover: true
+    }));
+    
+    directionsService.route({
+        origin: {lat: SITES[iA].lat, lng: SITES[iA].lon},
+        destination: {lat: SITES[iB].lat, lng: SITES[iB].lon},
+        waypoints: waypoints,
+        travelMode: 'DRIVING'
+    }, (res, status) => {
+        if (status !== 'OK') {
+            details.innerHTML = '<div class="no-data" style="color:red;">Error: ' + status + '</div>';
+            return;
+        }
+        
+        directionsRenderer.setDirections(res);
+        
+        // Create ORIGIN marker - Google green
+        routeMarkers.push(new google.maps.Marker({
+            position: {lat: SITES[iA].lat, lng: SITES[iA].lon},
+            map: map,
+            icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+            title: 'Origin: ' + SITES[iA].site_id,
+            zIndex: 100
+        }));
+        
+        // Create DESTINATION marker - Google red
+        routeMarkers.push(new google.maps.Marker({
+            position: {lat: SITES[iB].lat, lng: SITES[iB].lon},
+            map: map,
+            icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+            title: 'Destination: ' + SITES[iB].site_id,
+            zIndex: 100
+        }));
+        
+        // Create WAYPOINT markers - Google orange
+        cachedWaypoints.forEach((idx, i) => {
+            routeMarkers.push(new google.maps.Marker({
+                position: {lat: SITES[idx].lat, lng: SITES[idx].lon},
+                map: map,
+                icon: 'http://maps.google.com/mapfiles/ms/icons/orange-dot.png',
+                title: 'Waypoint ' + (i+1) + ': ' + SITES[idx].site_id,
+                zIndex: 99
+            }));
+        });
+        
+        // Calculate totals from cached data or response
+        let totalDist = 0, totalTime = 0;
+        res.routes[0].legs.forEach(leg => {
+            totalDist += leg.distance.value / 1000;
+            totalTime += leg.duration.value / 60;
+        });
+        
+        const stops = [iA, ...cachedWaypoints, iB];
+        const source = CACHE.source[cacheKey];
+        const sourceBadge = source ? '<span class="source-badge p' + source + '">Part ' + source + '</span>' : '';
+        
+        // Build HTML
+        let html = '<div class="route-result">' +
+            '<div class="route-header">' +
+            '<span class="route-title">' + SITES[iA].site_id + ' → ' + SITES[iB].site_id + sourceBadge + '</span>' +
+            '<div class="route-totals">' +
+            '<div class="route-total"><div class="total-num">' + totalDist.toFixed(1) + '</div><div class="total-label">km</div></div>' +
+            '<div class="route-total"><div class="total-num">' + Math.round(totalTime) + '</div><div class="total-label">min</div></div>' +
+            '<div class="route-total"><div class="total-num">' + stops.length + '</div><div class="total-label">stops</div></div>' +
+            '</div></div>';
+        
+        stops.forEach((idx, i) => {
+            const s = SITES[idx];
+            const cls = i === 0 ? 'start' : i === stops.length - 1 ? 'end' : '';
+            const icon = i === 0 ? 'A' : i === stops.length - 1 ? 'B' : i;
+            
+            html += '<div class="waypoint ' + cls + '">' +
+                '<div class="wp-icon">' + icon + '</div>' +
+                '<div class="wp-info">' +
+                '<div class="wp-name">' + s.site_id + ' (' + s.site_direction + ')</div>' +
+                '<div class="wp-road">' + (s.road_name || '') + '</div>' +
+                '</div></div>';
+            
+            if (i < res.routes[0].legs.length) {
+                const leg = res.routes[0].legs[i];
+                html += '<div class="trip-seg">' +
+                    '<span class="trip-label">Trip ' + (i+1) + '</span>' +
+                    '<span class="trip-values">' + (leg.distance.value/1000).toFixed(1) + ' km · ' + Math.round(leg.duration.value/60) + ' min</span>' +
+                    '</div>';
+            }
+        });
+        
+        html += '</div>';
+        details.innerHTML = html;
+        
+        // Fit map to route
+        const bounds = new google.maps.LatLngBounds();
+        stops.forEach(idx => bounds.extend({lat: SITES[idx].lat, lng: SITES[idx].lon}));
+        map.fitBounds(bounds, 50);
+        
+        log('Displayed route with ' + cachedWaypoints.length + ' waypoints');
+    });
+}
+
+function downloadCSV(type) {
+    let csv = ',' + SITES.map(s => s.site_id).join(',') + '\n';
+    SITES.forEach((s, i) => {
+        let row = [s.site_id];
+        SITES.forEach((_, j) => {
+            if (i === j) row.push('0');
+            else {
+                const val = type === 'dist' ? CACHE.dist[i+'_'+j] : CACHE.time[i+'_'+j];
+                row.push(val !== undefined ? val.toFixed(type === 'dist' ? 2 : 1) : '');
+            }
+        });
+        csv += row.join(',') + '\n';
+    });
+    download(csv, 'riyadh_' + type + '.csv', 'text/csv');
+}
+
+function downloadJSON() {
+    const data = {
+        source: 'Google Maps Routes (Updated ' + new Date().toISOString() + ')', 
+        sites: SITES, 
+        distance_km: CACHE.dist, 
+        time_min: CACHE.time,
+        waypoints: CACHE.waypoints,
+        routeCount: Object.keys(CACHE.dist).length,
+        waypointCount: Object.values(CACHE.waypoints).filter(w => w && w.length > 0).length
+    };
+    
+    log('Downloading JSON with ' + data.routeCount + ' routes, ' + data.waypointCount + ' routes have waypoints');
+    download(JSON.stringify(data, null, 2), 'riyadh_routes_' + Date.now() + '.json', 'application/json');
+}
+
+function mergeJSONFiles(input) {
+    const files = input.files;
+    if (!files || files.length === 0) return;
+    
+    log('═══════════════════════════════════');
+    log('MERGING ' + files.length + ' JSON files...');
+    
+    const statusDiv = document.getElementById('mergeStatus');
+    statusDiv.innerHTML = 'Reading files...';
+    
+    let filesRead = 0;
+    let totalRoutes = 0;
+    let totalWaypoints = 0;
+    
+    // Reset cache for fresh merge
+    CACHE = { dist: {}, time: {}, waypoints: {}, source: {} };
+    
+    Array.from(files).forEach((file, idx) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const json = JSON.parse(e.target.result);
+                const dist = json.distance_km || json.dist || {};
+                const time = json.time_min || json.time || {};
+                const wp = json.waypoints || {};
+                
+                let count = 0, wpCount = 0;
+                for (const k in dist) {
+                    // Only update if we don't have it OR if new one has waypoints and old doesn't
+                    const existingWp = CACHE.waypoints[k] || [];
+                    const newWp = wp[k] || [];
+                    
+                    if (!CACHE.dist[k] || (newWp.length > 0 && existingWp.length === 0)) {
+                        CACHE.dist[k] = dist[k];
+                        CACHE.time[k] = time[k];
+                        CACHE.waypoints[k] = newWp;
+                        if (newWp.length > 0) wpCount++;
+                    }
+                    count++;
+                }
+                
+                log('File ' + (idx+1) + ' (' + file.name + '): ' + count + ' routes, ' + wpCount + ' with waypoints');
+                totalRoutes += count;
+                totalWaypoints += wpCount;
+                
+            } catch(err) {
+                log('ERROR reading ' + file.name + ': ' + err.message);
+            }
+            
+            filesRead++;
+            
+            if (filesRead === files.length) {
+                // All files read - update display
+                const finalRoutes = Object.keys(CACHE.dist).length;
+                const finalWp = Object.values(CACHE.waypoints).filter(w => w && w.length > 0).length;
+                
+                log('');
+                log('═══════════════════════════════════');
+                log('MERGE COMPLETE!');
+                log('Total unique routes: ' + finalRoutes);
+                log('Routes with waypoints: ' + finalWp);
+                log('═══════════════════════════════════');
+                
+                statusDiv.innerHTML = '✓ Merged! ' + finalRoutes + ' routes, ' + finalWp + ' with waypoints';
+                statusDiv.style.color = 'green';
+                
+                updateStats();
+                renderCachedList();
+                
+                alert('Merged ' + files.length + ' files!\n\n' + finalRoutes + ' unique routes\n' + finalWp + ' with waypoints\n\nClick "Full JSON" to download merged data.');
+            }
+        };
+        reader.readAsText(file);
+    });
+}
+
+function download(c, f, t) {
+    const a = document.createElement('a'); 
+    a.href = URL.createObjectURL(new Blob([c],{type:t})); 
+    a.download = f; 
+    a.click();
+}
+
+// Haversine distance
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Get route direction at path index
+function getRouteDir(path, idx) {
+    const i = Math.min(Math.max(idx, 0), path.length - 2);
+    const dLat = path[i + 1].lat() - path[i].lat();
+    const dLon = path[i + 1].lng() - path[i].lng();
+    if (Math.abs(dLat) > Math.abs(dLon)) return dLat > 0 ? 'N' : 'S';
+    return dLon > 0 ? 'E' : 'W';
+}
+
+async function recheckWaypoints() {
+    const iA = parseInt(document.getElementById('originSel').value);
+    const iB = parseInt(document.getElementById('destSel').value);
+    
+    if (isNaN(iA) || isNaN(iB)) { alert('Select a route first!'); return; }
+    if (iA === iB) { alert('Select different sites'); return; }
+    
+    const pathThreshold = parseFloat(document.getElementById('testThreshold').value);
+    const distThreshold = parseFloat(document.getElementById('testDistThreshold').value);
+    const skipDirection = document.getElementById('testSkipDirection').checked;
+    
+    log('═══════════════════════════════════');
+    log('RE-CHECKING WAYPOINTS: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id);
+    log('Settings:');
+    log('  Path threshold: ' + (pathThreshold * 1000) + 'm');
+    log('  Distance threshold: ' + (distThreshold * 100) + '%');
+    log('  Skip direction check: ' + skipDirection);
+    log('═══════════════════════════════════');
+    
+    // Get route from Google
+    log('Fetching route from Google...');
+    
+    directionsService.route({
+        origin: {lat: SITES[iA].lat, lng: SITES[iA].lon},
+        destination: {lat: SITES[iB].lat, lng: SITES[iB].lon},
+        travelMode: 'DRIVING'
+    }, async (res, status) => {
+        if (status !== 'OK') {
+            log('ERROR: ' + status);
+            return;
+        }
+        
+        const path = res.routes[0].overview_path;
+        const directDist = res.routes[0].legs[0].distance.value / 1000;
+        
+        log('Route fetched: ' + directDist.toFixed(2) + 'km, ' + path.length + ' path points');
+        
+        // STEP 1: Find candidates near path
+        log('');
+        log('STEP 1: Finding candidates within ' + (pathThreshold * 1000) + 'm of path...');
+        let candidates = [];
+        
+        SITES.forEach((site, idx) => {
+            if (idx === iA || idx === iB) return;
+            
+            let minDist = Infinity, pathIdx = 0;
+            for (let i = 0; i < path.length; i++) {
+                const d = haversine(site.lat, site.lon, path[i].lat(), path[i].lng());
+                if (d < minDist) { minDist = d; pathIdx = i; }
+            }
+            
+            if (minDist < pathThreshold) {
+                candidates.push({ idx, pathIdx, dist: minDist });
+                log('  ✓ ' + site.site_id + ' (' + site.site_direction + ') - ' + (minDist * 1000).toFixed(0) + 'm from path');
+            }
+        });
+        
+        log('Found ' + candidates.length + ' candidates');
+        
+        if (candidates.length === 0) {
+            log('No candidates found. Try increasing path threshold.');
+            return;
+        }
+        
+        // STEP 2: Direction check (optional)
+        if (!skipDirection) {
+            log('');
+            log('STEP 2: Checking direction match...');
+            candidates = candidates.filter(c => {
+                const routeDir = getRouteDir(path, c.pathIdx);
+                const siteDir = SITES[c.idx].site_direction;
+                const match = siteDir === routeDir;
+                log('  ' + SITES[c.idx].site_id + ': site=' + siteDir + ', route=' + routeDir + ' → ' + (match ? '✓ MATCH' : '✗ WRONG'));
+                return match;
+            });
+            log(candidates.length + ' candidates after direction filter');
+        } else {
+            log('');
+            log('STEP 2: Direction check SKIPPED');
+        }
+        
+        if (candidates.length === 0) {
+            log('No candidates passed direction check. Try enabling "Skip direction check".');
+            return;
+        }
+        
+        // STEP 3: Verify with Google
+        log('');
+        log('STEP 3: Verifying with Google (threshold: ' + (distThreshold * 100) + '%)...');
+        
+        const verified = [];
+        for (const c of candidates) {
+            const result = await new Promise(resolve => {
+                directionsService.route({
+                    origin: {lat: SITES[iA].lat, lng: SITES[iA].lon},
+                    destination: {lat: SITES[iB].lat, lng: SITES[iB].lon},
+                    waypoints: [{location: {lat: SITES[c.idx].lat, lng: SITES[c.idx].lon}, stopover: true}],
+                    travelMode: 'DRIVING'
+                }, (res2, st2) => {
+                    if (st2 === 'OK') {
+                        let totalDist = 0;
+                        res2.routes[0].legs.forEach(leg => totalDist += leg.distance.value);
+                        totalDist /= 1000;
+                        const increase = (totalDist - directDist) / directDist;
+                        resolve({ totalDist, increase, ok: increase < distThreshold });
+                    } else {
+                        resolve({ ok: false, error: st2 });
+                    }
+                });
+            });
+            
+            if (result.ok) {
+                log('  ✓ ' + SITES[c.idx].site_id + ' ON ROUTE (direct: ' + directDist.toFixed(2) + 'km, with wp: ' + result.totalDist.toFixed(2) + 'km, +' + (result.increase * 100).toFixed(2) + '%)');
+                verified.push(c.idx);
+            } else if (result.error) {
+                log('  ✗ ' + SITES[c.idx].site_id + ' ERROR: ' + result.error);
+            } else {
+                log('  ✗ ' + SITES[c.idx].site_id + ' OFF ROUTE (+' + (result.increase * 100).toFixed(2) + '% > ' + (distThreshold * 100) + '%)');
+            }
+            
+            await new Promise(r => setTimeout(r, 200)); // Rate limit
+        }
+        
+        log('');
+        log('═══════════════════════════════════');
+        log('RESULT: ' + verified.length + ' waypoints found');
+        if (verified.length > 0) {
+            log('Waypoints: ' + verified.map(i => SITES[i].site_id).join(', '));
+        }
+        
+        // Compare with cached
+        const cacheKey = iA + '_' + iB;
+        const cached = CACHE.waypoints[cacheKey] || [];
+        log('');
+        log('CACHED waypoints: ' + (cached.length > 0 ? cached.map(i => SITES[i].site_id).join(', ') : 'None'));
+        
+        if (verified.length !== cached.length) {
+            log('⚠️ DIFFERENCE DETECTED! New: ' + verified.length + ', Cached: ' + cached.length);
+        }
+        log('═══════════════════════════════════');
+    });
+}
+
+let recheckRunning = false;
+
+function stopRecheck() {
+    recheckRunning = false;
+    log('⏹️ STOPPING... (will stop after current batch)');
+    const ts = document.getElementById('topStats');
+    const tl = document.getElementById('topLive');
+    if (ts) ts.textContent = 'STOPPING...';
+    if (tl) tl.textContent = 'Will stop after current batch completes...';
+}
+
+async function recheckAllRoutes() {
+    try {
+        if (recheckRunning) { alert('Already running!'); return; }
+        
+        // Check if map is loaded
+        if (!directionsService) {
+            alert('Map not loaded yet! Please wait for the map to load first.');
+            return;
+        }
+        
+        // Check if data is loaded
+        if (Object.keys(CACHE.dist).length === 0) {
+            alert('No data loaded! Please upload a JSON file first.');
+            return;
+        }
+        
+        console.log('RE-CHECK STARTED');
+        log('RE-CHECK STARTED...');
+        
+        // SHOW BIG TOP PROGRESS BAR - with null checks
+        const topProgress = document.getElementById('topProgress');
+        const topStats = document.getElementById('topStats');
+        const topDetails = document.getElementById('topDetails');
+        const topLive = document.getElementById('topLive');
+        const startBtn = document.getElementById('startRecheckBtn');
+        const stopBtn = document.getElementById('stopRecheckBtn');
+        
+        if (topProgress) topProgress.style.display = 'block';
+        if (topStats) topStats.textContent = '0%';
+        if (topDetails) topDetails.textContent = 'Building route list...';
+        if (topLive) topLive.textContent = '⏳ Please wait...';
+        if (startBtn) startBtn.style.display = 'none';
+        if (stopBtn) stopBtn.style.display = 'block';
+        
+        // Scroll to top so user sees progress
+        window.scrollTo(0, 0);
+    
+    const pathThreshold = parseFloat(document.getElementById('testThreshold').value);
+    const distThreshold = parseFloat(document.getElementById('testDistThreshold').value);
+    const skipDirection = document.getElementById('testSkipDirection').checked;
+    const workers = parseInt(document.getElementById('recheckWorkers').value);
+    
+    // Build list of all routes to recheck - use ACTUAL keys from cache
+    const cacheKeys = Object.keys(CACHE.dist);
+    log('CACHE.dist has ' + cacheKeys.length + ' keys');
+    
+    // Show sample keys
+    if (cacheKeys.length > 0) {
+        log('Sample keys: ' + cacheKeys.slice(0, 5).join(', '));
+    }
+    
+    // Build site_id to index lookup
+    const siteIdToIdx = {};
+    SITES.forEach((s, i) => {
+        siteIdToIdx[s.site_id] = i;
+        siteIdToIdx[i] = i; // also support numeric
+        siteIdToIdx[String(i)] = i;
+    });
+    
+    // Parse ALL keys from cache
+    let routes = [];
+    for (const key of cacheKeys) {
+        const parts = key.split('_');
+        if (parts.length !== 2) continue;
+        
+        let iA = siteIdToIdx[parts[0]];
+        let iB = siteIdToIdx[parts[1]];
+        
+        // If not found, try parsing as numbers
+        if (iA === undefined) iA = parseInt(parts[0]);
+        if (iB === undefined) iB = parseInt(parts[1]);
+        
+        if (iA !== undefined && iB !== undefined && !isNaN(iA) && !isNaN(iB) && iA !== iB) {
+            routes.push({ origin: iA, dest: iB, key });
+        }
+    }
+    
+    log('Routes parsed from cache: ' + routes.length + ' / ' + cacheKeys.length);
+    
+    if (routes.length === 0) {
+        alert('Could not parse route keys.\n\nSample keys: ' + cacheKeys.slice(0,3).join(', '));
+        return;
+    }
+    
+    // Split by portion
+    const portion = document.getElementById('recheckPortion').value;
+    let selectedRoutes = routes;
+    let portionLabel = 'ALL';
+    
+    if (portion !== 'all') {
+        const totalRoutes = routes.length;
+        const third = Math.ceil(totalRoutes / 3);
+        
+        if (portion === '1') {
+            selectedRoutes = routes.slice(0, third);
+            portionLabel = 'Browser 1 (0-33%)';
+        } else if (portion === '2') {
+            selectedRoutes = routes.slice(third, third * 2);
+            portionLabel = 'Browser 2 (33-66%)';
+        } else if (portion === '3') {
+            selectedRoutes = routes.slice(third * 2);
+            portionLabel = 'Browser 3 (66-100%)';
+        }
+        
+        log('Selected portion: ' + portionLabel + ' = ' + selectedRoutes.length + ' routes');
+    }
+    
+    document.getElementById('topDetails').textContent = 'Found ' + selectedRoutes.length + ' routes to check';
+    
+    if (!confirm('Re-check ' + selectedRoutes.length + ' routes (' + portionLabel + ')?\n\nSettings:\n- Path threshold: ' + (pathThreshold*1000) + 'm\n- Distance threshold: ' + (distThreshold*100) + '%\n- Skip direction: ' + skipDirection + '\n- Workers: ' + workers)) {
+        // User cancelled - hide progress
+        if (topProgress) topProgress.style.display = 'none';
+        if (startBtn) startBtn.style.display = 'block';
+        if (stopBtn) stopBtn.style.display = 'none';
+        return;
+    }
+    
+    // Use selectedRoutes instead of routes
+    routes = selectedRoutes;
+    
+    recheckRunning = true;
+    document.getElementById('topStats').textContent = '0%';
+    document.getElementById('topDetails').textContent = 'Starting ' + routes.length + ' routes...';
+    document.getElementById('topLive').textContent = '🚀 Beginning re-check...';
+    
+    log('═══════════════════════════════════');
+    log('RE-CHECKING ALL ' + routes.length + ' ROUTES');
+    log('Settings: path=' + (pathThreshold*1000) + 'm, dist=' + (distThreshold*100) + '%, skipDir=' + skipDirection);
+    log('═══════════════════════════════════');
+    
+    let completed = 0, updated = 0, errors = 0;
+    let idx = 0;
+    
+    // Helper to safely update UI
+    function updateUI(id, prop, value) {
+        const el = document.getElementById(id);
+        if (el) {
+            if (prop === 'text') el.textContent = value;
+            else if (prop === 'width') el.style.width = value;
+            else if (prop === 'display') el.style.display = value;
+        }
+    }
+    
+    async function processRoute(route) {
+        const iA = route.origin, iB = route.dest;
+        
+        // Show live update
+        updateUI('topLive', 'text', '🔍 Checking: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id);
+        
+        return new Promise(resolve => {
+            directionsService.route({
+                origin: {lat: SITES[iA].lat, lng: SITES[iA].lon},
+                destination: {lat: SITES[iB].lat, lng: SITES[iB].lon},
+                travelMode: 'DRIVING'
+            }, async (res, status) => {
+                if (status !== 'OK') {
+                    errors++;
+                    completed++;
+                    updateUI('topLive', 'text', '✗ Error: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id + ' (' + status + ')');
+                    
+                    const pct = (completed / routes.length * 100).toFixed(1);
+                    updateUI('topBar', 'width', pct + '%');
+                    updateUI('topStats', 'text', pct + '%');
+                    updateUI('topDetails', 'text', completed + ' / ' + routes.length + ' | ✓ ' + updated + ' updated | ✗ ' + errors + ' errors');
+                    
+                    resolve();
+                    return;
+                }
+                
+                const path = res.routes[0].overview_path;
+                const directDist = res.routes[0].legs[0].distance.value / 1000;
+                
+                // Find candidates
+                let candidates = [];
+                SITES.forEach((site, idx) => {
+                    if (idx === iA || idx === iB) return;
+                    let minDist = Infinity, pathIdx = 0;
+                    for (let i = 0; i < path.length; i++) {
+                        const d = haversine(site.lat, site.lon, path[i].lat(), path[i].lng());
+                        if (d < minDist) { minDist = d; pathIdx = i; }
+                    }
+                    if (minDist < pathThreshold) {
+                        candidates.push({ idx, pathIdx, dist: minDist });
+                    }
+                });
+                
+                // Direction filter
+                if (!skipDirection && candidates.length > 0) {
+                    candidates = candidates.filter(c => {
+                        const routeDir = getRouteDir(path, c.pathIdx);
+                        return SITES[c.idx].site_direction === routeDir;
+                    });
+                }
+                
+                // Verify with Google
+                const verified = [];
+                for (const c of candidates) {
+                    const result = await new Promise(res2 => {
+                        directionsService.route({
+                            origin: {lat: SITES[iA].lat, lng: SITES[iA].lon},
+                            destination: {lat: SITES[iB].lat, lng: SITES[iB].lon},
+                            waypoints: [{location: {lat: SITES[c.idx].lat, lng: SITES[c.idx].lon}, stopover: true}],
+                            travelMode: 'DRIVING'
+                        }, (res3, st3) => {
+                            if (st3 === 'OK') {
+                                let totalDist = 0;
+                                res3.routes[0].legs.forEach(leg => totalDist += leg.distance.value);
+                                totalDist /= 1000;
+                                const increase = (totalDist - directDist) / directDist;
+                                res2({ ok: increase < distThreshold });
+                            } else {
+                                res2({ ok: false });
+                            }
+                        });
+                    });
+                    if (result.ok) verified.push(c.idx);
+                    await new Promise(r => setTimeout(r, 100));
+                }
+                
+                // Compare and update
+                const oldWp = CACHE.waypoints[route.key] || [];
+                const newWp = verified.sort((a,b) => a-b);
+                
+                if (JSON.stringify(oldWp) !== JSON.stringify(newWp)) {
+                    CACHE.waypoints[route.key] = newWp;
+                    updated++;
+                    const msg = '✓ UPDATED: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id + ' (' + oldWp.length + '→' + newWp.length + ' waypoints)';
+                    updateUI('topLive', 'text', msg);
+                    log(msg);
+                }
+                
+                completed++;
+                const pct = (completed / routes.length * 100).toFixed(1);
+                updateUI('topBar', 'width', pct + '%');
+                updateUI('topStats', 'text', pct + '%');
+                updateUI('topDetails', 'text', completed + ' / ' + routes.length + ' | ✓ ' + updated + ' updated | ✗ ' + errors + ' errors');
+                
+                resolve();
+            });
+        });
+    }
+    
+    // Process in batches
+    while (idx < routes.length && recheckRunning) {
+        const batch = routes.slice(idx, idx + workers);
+        await Promise.all(batch.map(r => processRoute(r)));
+        
+        idx += workers;
+        
+        // Save periodically
+        if (completed % 100 === 0 && completed > 0) {
+            localStorage.setItem('riyadh_gmaps_viewer_cache', JSON.stringify(CACHE));
+            updateUI('topLive', 'text', '💾 Saved progress at ' + completed + ' routes...');
+        }
+        
+        await new Promise(r => setTimeout(r, 50));
+    }
+    
+    // Final save
+    localStorage.setItem('riyadh_gmaps_viewer_cache', JSON.stringify(CACHE));
+    
+    recheckRunning = false;
+    updateUI('stopRecheckBtn', 'display', 'none');
+    updateUI('startRecheckBtn', 'display', 'block');
+    updateUI('topProgress', 'display', 'none');
+    
+    log('');
+    log('═══════════════════════════════════');
+    log('COMPLETE! Checked: ' + completed + ', Updated: ' + updated + ', Errors: ' + errors);
+    log('Data saved to browser cache!');
+    log('Click "Full JSON" to download updated data.');
+    log('═══════════════════════════════════');
+    
+    // Refresh display
+    renderCachedList();
+    updateStats();
+    
+    alert('Done! Updated ' + updated + ' routes.\n\nData is saved!\nClick "Full JSON" to download.');
+    
+    } catch(err) {
+        console.error('RE-CHECK ERROR:', err);
+        alert('ERROR: ' + err.message);
+        log('ERROR: ' + err.message);
+        const tp = document.getElementById('topProgress');
+        const sb = document.getElementById('startRecheckBtn');
+        const stb = document.getElementById('stopRecheckBtn');
+        if (tp) tp.style.display = 'none';
+        if (sb) sb.style.display = 'block';
+        if (stb) stb.style.display = 'none';
+    }
+}
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
+</body>
+</html>
