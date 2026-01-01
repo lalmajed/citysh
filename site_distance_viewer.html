@@ -83,6 +83,12 @@
                         <button class="btn btn-sm btn-part2" onclick="loadFromLocalStorage(2)">Load Part 2</button>
                         <button class="btn btn-sm btn-combine" onclick="combineData()">Combine</button>
                     </div>
+                    <div class="load-btns" style="margin-top:8px;">
+                        <input type="file" id="jsonUpload1" accept=".json" onchange="uploadJSON(this, 1)" style="display:none;">
+                        <input type="file" id="jsonUpload2" accept=".json" onchange="uploadJSON(this, 2)" style="display:none;">
+                        <button class="btn btn-sm btn-part1" onclick="document.getElementById('jsonUpload1').click()">📁 Upload P1 JSON</button>
+                        <button class="btn btn-sm btn-part2" onclick="document.getElementById('jsonUpload2').click()">📁 Upload P2 JSON</button>
+                    </div>
                     <button class="btn" id="toggleSitesBtn" onclick="toggleAllSites()" style="background:#9c27b0; margin-top:10px;">📍 Show All 247 Sites on Map</button>
                 </div>
                 
@@ -173,6 +179,44 @@ function combineData() {
     loadFromLocalStorage(1);
     loadFromLocalStorage(2);
     log('Combined Part 1 + Part 2');
+}
+
+function uploadJSON(input, part) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const json = JSON.parse(e.target.result);
+            const dist = json.distance_km || json.dist || {};
+            const time = json.time_min || json.time || {};
+            const wp = json.waypoints || {};
+            
+            let count = 0;
+            for (const k in dist) {
+                CACHE.dist[k] = dist[k];
+                CACHE.time[k] = time[k];
+                CACHE.source[k] = part;
+                if (wp[k]) CACHE.waypoints[k] = wp[k];
+                count++;
+            }
+            
+            updateStats();
+            renderCachedList();
+            log('═══════════════════════════════════');
+            log('UPLOADED Part ' + part + ': ' + file.name);
+            log('Loaded ' + count + ' routes');
+            log('Total now: ' + Object.keys(CACHE.dist).length + ' routes');
+            log('═══════════════════════════════════');
+            alert('Loaded ' + count + ' routes from Part ' + part + '!');
+        } catch(err) {
+            alert('Error: ' + err.message);
+            log('Upload error: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+    input.value = '';
 }
 
 function updateStats() {
