@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Segmentation Viewer</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 20px; }
+        h1 { color: #1565c0; margin-bottom: 5px; }
+        .subtitle { color: #666; margin-bottom: 20px; }
+        .container { max-width: 1600px; margin: 0 auto; }
+        .stat-row { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .stat { flex: 1; min-width: 120px; background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .stat-value { font-size: 1.5rem; font-weight: bold; color: #1565c0; }
+        .stat-value.green { color: #2e7d32; }
+        .stat-value.orange { color: #f57c00; }
+        .stat-value.red { color: #c62828; }
+        .stat-label { color: #666; font-size: 0.75rem; }
+        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 15px; }
+        .panel { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .panel h2 { color: #1565c0; font-size: 0.9rem; margin-bottom: 10px; border-bottom: 2px solid #1565c0; padding-bottom: 8px; }
+        select, input { width: 100%; padding: 10px; font-size: 0.9rem; border: 2px solid #ddd; border-radius: 6px; margin-bottom: 10px; }
+        .btn { width: 100%; padding: 12px; background: #1565c0; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
+        .btn:hover { background: #0d47a1; }
+        .btn-sm { padding: 8px 15px; font-size: 0.8rem; width: auto; margin: 3px; }
+        .btn-green { background: #2e7d32; }
+        .btn-purple { background: #7b1fa2; }
+        #map { height: 500px; border-radius: 10px; }
+        .trip-item { padding: 10px; margin: 5px 0; border-radius: 6px; cursor: pointer; border-left: 4px solid #ddd; background: #f9f9f9; }
+        .trip-item:hover { background: #e3f2fd; }
+        .trip-item.normal { border-left-color: #4caf50; }
+        .trip-item.slow { border-left-color: #ff9800; }
+        .trip-item.break { border-left-color: #f44336; }
+        .trip-item.selected { background: #bbdefb; }
+        .trip-header { display: flex; justify-content: space-between; font-weight: 500; }
+        .trip-details { font-size: 0.8rem; color: #666; margin-top: 5px; }
+        .trip-ratio { font-weight: bold; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; }
+        .trip-ratio.normal { background: #c8e6c9; color: #2e7d32; }
+        .trip-ratio.slow { background: #ffe0b2; color: #e65100; }
+        .trip-ratio.break { background: #ffcdd2; color: #c62828; }
+        .trips-list { max-height: 400px; overflow-y: auto; }
+        .no-data { text-align: center; padding: 30px; color: #999; }
+        .time-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .input-group { margin-bottom: 10px; }
+        .input-group label { display: block; font-size: 0.8rem; color: #666; margin-bottom: 4px; }
+        .legend { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; }
+        .legend-color { width: 16px; height: 16px; border-radius: 3px; }
+        .config-section { background: #e8f5e9; padding: 10px; border-radius: 6px; margin-bottom: 10px; }
+        .config-section h3 { font-size: 0.85rem; color: #2e7d32; margin-bottom: 8px; }
+        .path-info { background: #fff3e0; padding: 15px; border-radius: 8px; margin-top: 10px; }
+        .path-info h3 { color: #e65100; margin-bottom: 10px; }
+        .path-item { padding: 8px; background: white; border-radius: 4px; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 Route Segmentation Viewer</h1>
+        <p class="subtitle">Analyze vehicle trips with temporal and spatial coherence checking</p>
+        
+        <div class="stat-row">
+            <div class="stat"><div class="stat-value" id="statVehicles">10</div><div class="stat-label">Vehicles</div></div>
+            <div class="stat"><div class="stat-value" id="statOdPairs">60,762</div><div class="stat-label">OD Pairs</div></div>
+            <div class="stat"><div class="stat-value" id="statTrips">0</div><div class="stat-label">Trips Shown</div></div>
+            <div class="stat"><div class="stat-value green" id="statNormal">0</div><div class="stat-label">Normal</div></div>
+            <div class="stat"><div class="stat-value orange" id="statSlow">0</div><div class="stat-label">Slow</div></div>
+            <div class="stat"><div class="stat-value red" id="statBreak">0</div><div class="stat-label">Break</div></div>
+        </div>
+        
+        <div class="grid">
+            <div class="sidebar">
+                <div class="panel">
+                    <h2>📁 Load Data</h2>
+                    <input type="file" id="tripsFile" accept=".json,.csv,.parquet" onchange="loadTripsFile(this)">
+                    <div style="font-size:0.75rem;color:#666;margin-bottom:10px;">
+                        Upload trips file with: vehicle_id, camera_prev, camera_next, timestamp_prev, timestamp_next
+                    </div>
+                    <button class="btn btn-sm btn-purple" onclick="loadSampleData()">Load Sample Data (10 Vehicles)</button>
+                </div>
+                
+                <div class="panel">
+                    <h2>🚗 Select Vehicle</h2>
+                    <select id="vehicleSel" onchange="onVehicleChange()">
+                        <option value="">-- Select Vehicle --</option>
+                    </select>
+                </div>
+                
+                <div class="panel">
+                    <h2>⏰ Time Window</h2>
+                    <div class="time-inputs">
+                        <div class="input-group">
+                            <label>Start Date</label>
+                            <input type="date" id="startDate" value="2025-07-31">
+                        </div>
+                        <div class="input-group">
+                            <label>End Date</label>
+                            <input type="date" id="endDate" value="2025-08-31">
+                        </div>
+                    </div>
+                    <div class="time-inputs">
+                        <div class="input-group">
+                            <label>Start Time</label>
+                            <input type="time" id="startTime" value="00:00">
+                        </div>
+                        <div class="input-group">
+                            <label>End Time</label>
+                            <input type="time" id="endTime" value="23:59">
+                        </div>
+                    </div>
+                    <button class="btn" onclick="showRoute()">Show Route</button>
+                </div>
+                
+                <div class="panel">
+                    <h2>⚙️ Normal Band Configuration</h2>
+                    <div class="config-section">
+                        <h3>You derive these from your data:</h3>
+                        <div class="input-group">
+                            <label>r_min (5th percentile)</label>
+                            <input type="number" id="rMin" value="0.2" step="0.01">
+                        </div>
+                        <div class="input-group">
+                            <label>r_max (95th percentile)</label>
+                            <input type="number" id="rMax" value="10" step="0.1">
+                        </div>
+                        <div style="font-size:0.7rem;color:#666;">
+                            ratio = obs_time / exp_time<br>
+                            Normal: r_min ≤ ratio ≤ r_max
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>📏 Spatial Threshold</h2>
+                    <div class="input-group">
+                        <label>Distance to corridor (meters)</label>
+                        <input type="number" id="spatialThreshold" value="500" step="50">
+                    </div>
+                    <div style="font-size:0.7rem;color:#666;">
+                        Site must be within this distance of the Google polyline corridor
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>🗺️ Map Controls</h2>
+                    <button class="btn btn-sm btn-purple" id="toggleSitesBtn" onclick="toggleAllSites()">📍 Show All 247 Sites</button>
+                    <button class="btn btn-sm btn-green" onclick="fitMapToBounds()">🔍 Fit to Route</button>
+                </div>
+            </div>
+            
+            <div class="main">
+                <div class="panel">
+                    <div class="legend">
+                        <div class="legend-item"><div class="legend-color" style="background:#4caf50;"></div> Normal (ratio ≤ r_max)</div>
+                        <div class="legend-item"><div class="legend-color" style="background:#ff9800;"></div> Slow (r_max < ratio ≤ 2×r_max)</div>
+                        <div class="legend-item"><div class="legend-color" style="background:#f44336;"></div> Break (ratio > 2×r_max)</div>
+                    </div>
+                    <div id="map"></div>
+                </div>
+                
+                <div class="panel">
+                    <h2>📋 Trips List</h2>
+                    <div class="trips-list" id="tripsList">
+                        <div class="no-data">Select a vehicle and click "Show Route" to see trips</div>
+                    </div>
+                </div>
+                
+                <div class="panel path-info" id="pathInfo" style="display:none;">
+                    <h3>🛤️ Path Segmentation</h3>
+                    <div id="pathsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+// ============================================
+// SITES DATA (247 camera sites)
+// ============================================
+const SITES = [{"site_id": "RUHSM001", "lat": 24.7403322023658, "lon": 46.6273981332779, "road_name": "طريق الأمير تركي بن عبدالعزيز الأول", "site_direction": "S"}, {"site_id": "RUHSM002", "lat": 24.740427194217, "lon": 46.6274785995483, "road_name": "طريق الأمير تركي بن عبدالعزيز الأول", "site_direction": "N"}, {"site_id": "RUHSM003", "lat": 24.7546965432207, "lon": 46.6325774788857, "road_name": "الدائري الشمالي", "site_direction": "E"}, {"site_id": "RUHSM007", "lat": 24.6726265911391, "lon": 46.656776368618, "road_name": "طريق الملك خالد", "site_direction": "S"}, {"site_id": "RUHSM009", "lat": 24.7209740445557, "lon": 46.6058734059334, "road_name": "طريق الملك خالد", "site_direction": "N"}, {"site_id": "RUHSM012", "lat": 24.6483701639916, "lon": 46.7946767807007, "road_name": "طريق الدائري الشرقي", "site_direction": "N"}, {"site_id": "RUHSM015", "lat": 24.5439855825558, "lon": 46.872533261776, "road_name": "الخرج", "site_direction": "S"}, {"site_id": "RUHSM018", "lat": 24.8287062928303, "lon": 46.6193702816963, "road_name": "طريق الملك سلمان", "site_direction": "E"}, {"site_id": "RUHSM019", "lat": 24.8178075375809, "lon": 46.6184422373772, "road_name": "طريق الملك فهد", "site_direction": "S"}, {"site_id": "RUHSM022", "lat": 24.670488879256, "lon": 46.6602820158005, "road_name": "طريق الملك خالد", "site_direction": "N"}, {"site_id": "RUHSM023", "lat": 24.780546768419, "lon": 46.7285308241844, "road_name": null, "site_direction": "N"}, {"site_id": "RUHSM024", "lat": 24.6799116099266, "lon": 46.6544723510742, "road_name": "شارع أم الحمام", "site_direction": "S"}, {"site_id": "RUHSM025", "lat": 24.7649189230075, "lon": 46.6561299562454, "road_name": "الدائري الشمالي", "site_direction": "W"}, {"site_id": "RUHSM026", "lat": 24.7731896590511, "lon": 46.7319613695145, "road_name": "الدائري الشرقي", "site_direction": "S"}, {"site_id": "RUHSM027", "lat": 24.6750541016666, "lon": 46.6531071066856, "road_name": "طريق الملك خالد", "site_direction": "E"}, {"site_id": "RUHSM029", "lat": 24.9694129976553, "lon": 46.7820569872856, "road_name": null, "site_direction": "N"}, {"site_id": "RUHSM030", "lat": 25.0012034832327, "lon": 46.7709928750992, "road_name": "طريق الجنادرية", "site_direction": "S"}, {"site_id": "RUHSM032", "lat": 24.7120199687664, "lon": 46.6719147562981, "road_name": "طريق الملك فهد الفرعي", "site_direction": "S"}, {"site_id": "RUHSM033", "lat": 24.7897540511277, "lon": 46.7158091068268, "road_name": "الطريق الدائري الشمالي", "site_direction": "E"}, {"site_id": "RUHSM034", "lat": 24.6755122958506, "lon": 46.6905936598778, "road_name": null, "site_direction": "N"}, {"site_id": "RUHSM035", "lat": 24.6203516108267, "lon": 46.5742367506027, "road_name": "طريق مكة المكرمة", "site_direction": "E"}, {"site_id": "RUHSM038", "lat": 24.6846274081011, "lon": 46.7023712396622, "road_name": null, "site_direction": "W"}, {"site_id": "RUHSM042", "lat": 24.740704875449, "lon": 46.5987414121628, "road_name": "الطريق الدائري الشمالي", "site_direction": "W"}, {"site_id": "RUHSM044", "lat": 24.8400178982926, "lon": 46.6072306036949, "road_name": null, "site_direction": "S"}, {"site_id": "RUHSM045", "lat": 24.6261962301252, "lon": 46.7836314439774, "road_name": "طريق الدائري الجنوبي", "site_direction": "W"}, {"site_id": "RUHSM046", "lat": 24.5856708282881, "lon": 46.6952633857727, "road_name": "طريق الدائري الجنوبي", "site_direction": "E"}, {"site_id": "RUHSM049", "lat": 24.8066959557292, "lon": 46.7554226517677, "road_name": "طريق الدمام", "site_direction": "W"}, {"site_id": "RUHSM051", "lat": 24.5581848394885, "lon": 46.6767024993897, "road_name": "طريق ديراب", "site_direction": "E"}, {"site_id": "RUHSM052", "lat": 24.7243240497979, "lon": 46.6658690571785, "road_name": "طريق الملك فهد", "site_direction": "N"}, {"site_id": "RUHSM053", "lat": 24.6729043824091, "lon": 46.6916853189468, "road_name": null, "site_direction": "S"}, {"site_id": "RUHSM054", "lat": 24.6123632798959, "lon": 46.7067539691925, "road_name": "طريق الملك فهد", "site_direction": "S"}, {"site_id": "RUHSM055", "lat": 24.6110781730948, "lon": 46.707022190094, "road_name": "طريق الملك فهد", "site_direction": "N"}, {"site_id": "RUHSM057", "lat": 24.6656945509571, "lon": 46.6192603111267, "road_name": "طريق جدة", "site_direction": "E"}, {"site_id": "RUHSM059", "lat": 24.831956030886, "lon": 46.8484577536583, "road_name": "طريق الجنادرية", "site_direction": "S"}, {"site_id": "RUHSM060", "lat": 24.8321897210297, "lon": 46.7234346270561, "road_name": "Airport Road", "site_direction": "S"}, {"site_id": "RUHSM062", "lat": 24.7980377711983, "lon": 46.569601893425, "road_name": null, "site_direction": "W"}, {"site_id": "RUHSM069", "lat": 24.56560566558, "lon": 46.6250592470169, "road_name": "الطريق الدائري الغربي", "site_direction": "E"}, {"site_id": "RUHSM070", "lat": 24.6942463632656, "lon": 46.5634649991989, "road_name": "الطريق الدائري الغربي", "site_direction": "S"}, {"site_id": "RUHSM071", "lat": 24.6711544395348, "lon": 46.6223931312561, "road_name": "طريق عبد الله بن حذافة السهمي", "site_direction": "N"}, {"site_id": "RUHSM072", "lat": 24.6707963331305, "lon": 46.6222590208054, "road_name": "طريق عبد الله بن حذافة السهمي", "site_direction": "S"}, {"site_id": "RUHSM073", "lat": 24.6870447823229, "lon": 46.6315904259682, "road_name": "Flags Roundabout", "site_direction": "W"}, {"site_id": "RUHSM074", "lat": 24.6869545710959, "lon": 46.6317647695541, "road_name": "شارع عمرو الضمري", "site_direction": "E"}, {"site_id": "RUHSM077", "lat": 24.8111586340332, "lon": 46.7348715662956, "road_name": "طريق سعيد بن زيد", "site_direction": "N"}, {"site_id": "RUHSM078", "lat": 24.8110612436613, "lon": 46.7346113920212, "road_name": "طريق سعيد بن زيد", "site_direction": "S"}, {"site_id": "RUHSM079", "lat": 24.5588531422709, "lon": 46.6225674748421, "road_name": "Al Tawhed", "site_direction": "E"}, {"site_id": "RUHSM080", "lat": 24.5589824415937, "lon": 46.622556746006, "road_name": "Al Tawhed", "site_direction": "W"}, {"site_id": "RUHSM093", "lat": 24.8325232108086, "lon": 46.8203857541084, "road_name": "طريق الدمام", "site_direction": "W"}, {"site_id": "RUHSM095", "lat": 24.7800816178938, "lon": 46.8530228734016, "road_name": "طريق خريص", "site_direction": "E"}, {"site_id": "RUHSM096", "lat": 24.5348626583046, "lon": 46.6983264684677, "road_name": "Al-Khaleefa Al Mamoun", "site_direction": "N"}, {"site_id": "RUHSM097", "lat": 24.598323749187, "lon": 46.7443531751633, "road_name": "طريق الدائري الجنوبي", "site_direction": "S"}, {"site_id": "RUHSM098", "lat": 24.8195992645787, "lon": 46.8459257483482, "road_name": "طريق الجنادرية", "site_direction": "N"}, {"site_id": "RUHSM100", "lat": 24.5686573528817, "lon": 46.8897798657417, "road_name": "طريق الخرج السريع", "site_direction": "S"}, {"site_id": "RUHSM102", "lat": 24.7352066774981, "lon": 46.6819301247597, "road_name": null, "site_direction": "E"}, {"site_id": "RUHSM106", "lat": 24.7087793016666, "lon": 46.7659583687782, "road_name": "الدائري الشرقي", "site_direction": "N"}, {"site_id": "RUHSM110", "lat": 24.8409306555311, "lon": 46.5533074736595, "road_name": "الملك خالد", "site_direction": "S"}, {"site_id": "RUHSM111", "lat": 24.8410231157739, "lon": 46.5536212921143, "road_name": "الملك خالد", "site_direction": "N"}, {"site_id": "RUHSM112", "lat": 24.5972800762424, "lon": 46.6084000468254, "road_name": "الإمام أبي حنيفة", "site_direction": "W"}, {"site_id": "RUHSM113", "lat": 24.5971435038554, "lon": 46.6084751486778, "road_name": "الإمام أبي حنيفة", "site_direction": "E"}, {"site_id": "RUHSM114", "lat": 24.5475208005664, "lon": 46.7195722460747, "road_name": "عرفات", "site_direction": "W"}, {"site_id": "RUHSM116", "lat": 24.9070265631544, "lon": 46.9199708104134, "road_name": null, "site_direction": "W"}, {"site_id": "RUHSM117", "lat": 24.5381879590055, "lon": 46.6897889971733, "road_name": "الإمام مسلم", "site_direction": "S"}, {"site_id": "RUHSM118", "lat": 24.5382806827733, "lon": 46.6898936033249, "road_name": "الإمام مسلم", "site_direction": "N"}, {"site_id": "RUHSM121", "lat": 24.6462394879027, "lon": 46.6858944296837, "road_name": "الأمير طلال بن عبدالعزيز", "site_direction": "E"}, {"site_id": "RUHSM122", "lat": 24.7958463762615, "lon": 46.7296761274338, "road_name": "طريق الدمام", "site_direction": "W"}, {"site_id": "RUHSM125", "lat": 24.771906272745, "lon": 46.732605099678, "road_name": "الدائري الشرقي", "site_direction": "S"}, {"site_id": "RUHSM128", "lat": 24.6981526522312, "lon": 46.6789072751999, "road_name": "طريق الملك فهد", "site_direction": "S"}, {"site_id": "RUHSM129", "lat": 24.6876372637067, "lon": 46.7106726765633, "road_name": "طريق مكة المكرمة", "site_direction": "E"}, {"site_id": "RUHSM130", "lat": 24.6636397195435, "lon": 46.7306765913963, "road_name": "شارع الجامعة", "site_direction": "W"}, {"site_id": "RUHSM131", "lat": 24.6634934669944, "lon": 46.7308187484741, "road_name": "شارع الجامعة", "site_direction": "E"}, {"site_id": "RUHSM136", "lat": 24.620424801656, "lon": 46.5808054804802, "road_name": "الطريق الدائري الغربي", "site_direction": "N"}, {"site_id": "RUHSM140", "lat": 24.8769760481679, "lon": 46.8059206008911, "road_name": "Al Thumama", "site_direction": "S"}, {"site_id": "RUHSM141", "lat": 24.8769687507318, "lon": 46.8060520291329, "road_name": "Al Thumama", "site_direction": "N"}, {"site_id": "RUHSM142", "lat": 24.5674108328895, "lon": 46.655505001545, "road_name": "طريق الدائري الجنوبي", "site_direction": "W"}, {"site_id": "RUHSM144", "lat": 24.5638614614901, "lon": 46.717287003994, "road_name": "Al-Marouj", "site_direction": "E"}, {"site_id": "RUHSM145", "lat": 24.5687663130558, "lon": 46.8898630142212, "road_name": "طريق الخرج السريع", "site_direction": "W"}, {"site_id": "RUHSM147", "lat": 24.6038597752923, "lon": 46.6194561123848, "road_name": "الإمام أبي حنيفة", "site_direction": "E"}, {"site_id": "RUHSM148", "lat": 24.6040012164286, "lon": 46.6193461418152, "road_name": "الإمام أبي حنيفة", "site_direction": "W"}, {"site_id": "RUHSM152", "lat": 24.6854562001529, "lon": 46.6520261764526, "road_name": "شارع أم الحمام", "site_direction": "S"}, {"site_id": "RUHSM153", "lat": 24.6855219810628, "lon": 46.6522246599197, "road_name": "شارع أم الحمام", "site_direction": "N"}, {"site_id": "RUHSM156", "lat": 24.7259342868167, "lon": 46.7802920937538, "road_name": "طريق خريص", "site_direction": "E"}, {"site_id": "RUHSM157", "lat": 24.6409759484262, "lon": 46.8291538953781, "road_name": "طريق الدائري الجنوبي", "site_direction": "E"}, {"site_id": "RUHSM160", "lat": 24.6086054881289, "lon": 46.7729669809341, "road_name": "طريق الخرج", "site_direction": "N"}, {"site_id": "RUHSM161", "lat": 24.6336106991616, "lon": 46.8119421601295, "road_name": "طريق الدائري الجنوبي", "site_direction": "E"}, {"site_id": "RUHSM164", "lat": 24.5796291806517, "lon": 46.5517866611481, "road_name": "بلال بن رباح", "site_direction": "E"}, {"site_id": "RUHSM165", "lat": 24.5797877232525, "lon": 46.5518108010292, "road_name": "بلال بن رباح", "site_direction": "W"}, {"site_id": "RUHSM168", "lat": 24.5844927893916, "lon": 46.7547172307968, "road_name": "An-Nasar Road", "site_direction": "E"}, {"site_id": "RUHSM169", "lat": 24.5982237727608, "lon": 46.6173076629639, "road_name": "حمزة بن عبد المطلب", "site_direction": "N"}, {"site_id": "RUHSM170", "lat": 24.5981359902433, "lon": 46.6171762347221, "road_name": "حمزة بن عبد المطلب", "site_direction": "S"}, {"site_id": "RUHSM173", "lat": 24.7946969705971, "lon": 46.6560655832291, "road_name": "طريق الملك عبدالعزيز", "site_direction": "N"}, {"site_id": "RUHSM174", "lat": 24.5079388888788, "lon": 46.9285324215889, "road_name": "Al Kharj", "site_direction": "S"}, {"site_id": "RUHSM175", "lat": 24.5081024122122, "lon": 46.9286692142487, "road_name": "Al Kharj", "site_direction": "N"}, {"site_id": "RUHSM178", "lat": 25.0159432570743, "lon": 46.7664411664009, "road_name": "طريق الجنادرية", "site_direction": "N"}, {"site_id": "RUHSM179", "lat": 25.0158897994536, "lon": 46.7662614583969, "road_name": "طريق الجنادرية", "site_direction": "S"}, {"site_id": "RUHSM180", "lat": 24.66748117972, "lon": 46.7952159047127, "road_name": "أبو عبيدة عامر بن الجراح", "site_direction": "W"}, {"site_id": "RUHSM181", "lat": 24.6672764432188, "lon": 46.7952185869217, "road_name": "أبو عبيدة عامر بن الجراح", "site_direction": "E"}, {"site_id": "RUHSM182", "lat": 24.6433261861909, "lon": 46.8339711427689, "road_name": "طريق الدائري الجنوبي", "site_direction": "S"}, {"site_id": "RUHSM187", "lat": 24.642784983054, "lon": 46.7355394363403, "road_name": "الخرج", "site_direction": "N"}, {"site_id": "RUHSM188", "lat": 24.6011674755442, "lon": 46.6398543119431, "road_name": "ابن الجوزي", "site_direction": "N"}, {"site_id": "RUHSM189", "lat": 24.6013016369983, "lon": 46.6397336125374, "road_name": "ابن الجوزي", "site_direction": "S"}, {"site_id": "RUHSM190", "lat": 24.6326745415304, "lon": 46.5654820203781, "road_name": "طريق نجد", "site_direction": "W"}, {"site_id": "RUHSM191", "lat": 24.8129651971553, "lon": 46.6760292649269, "road_name": null, "site_direction": "S"}, {"site_id": "RUHSM192", "lat": 24.8127826050202, "lon": 46.6761177778244, "road_name": "الثمامة", "site_direction": "N"}, {"site_id": "RUHSM195", "lat": 24.7299152397197, "lon": 46.8647655844688, "road_name": "الطريق الدائري الثاني", "site_direction": "S"}, {"site_id": "RUHSM196", "lat": 24.7999978581173, "lon": 46.6526859998703, "road_name": "الربيع - اليرموك", "site_direction": "E"}, {"site_id": "RUHSM198", "lat": 24.7694781484828, "lon": 46.6684493422508, "road_name": "طريق الملك عبدالعزيز", "site_direction": "S"}, {"site_id": "RUHSM201", "lat": 24.615255335399, "lon": 46.7573323845863, "road_name": null, "site_direction": "S"}, {"site_id": "RUHSM207", "lat": 24.7444197548951, "lon": 46.6082498431206, "road_name": "الطريق الدائري الشمالي", "site_direction": "E"}, {"site_id": "RUHSM208", "lat": 24.823774152058, "lon": 46.7285388708115, "road_name": "طريق سعيد بن زيد", "site_direction": "N"}, {"site_id": "RUHSM209", "lat": 24.8236621627272, "lon": 46.7282545566559, "road_name": "طريق سعيد بن زيد", "site_direction": "S"}, {"site_id": "RUHSM210", "lat": 24.7432407032976, "lon": 46.8001833558083, "road_name": "عبدالرحمن الناصر", "site_direction": "S"}, {"site_id": "RUHSM211", "lat": 24.7433162129597, "lon": 46.8002933263779, "road_name": "عبدالرحمن الناصر", "site_direction": "N"}, {"site_id": "RUHSM212", "lat": 24.6725825464765, "lon": 46.8299263715744, "road_name": "شارع ابن ماجة", "site_direction": "N"}, {"site_id": "RUHSM213", "lat": 24.6725337944213, "lon": 46.8298190832138, "road_name": "شارع ابن ماجة", "site_direction": "S"}, {"site_id": "RUHSM216", "lat": 24.5872366876198, "lon": 46.5884765982628, "road_name": "خديجة بنت خويلد", "site_direction": "W"}, {"site_id": "RUHSM217", "lat": 24.5871147808519, "lon": 46.5885651111603, "road_name": "خديجة بنت خويلد", "site_direction": "E"}, {"site_id": "RUHSM218", "lat": 24.7088894173431, "lon": 46.8437933921814, "road_name": "طريق طلحة بن عبيدالله", "site_direction": "W"}, {"site_id": "RUHSM221", "lat": 24.6402519488123, "lon": 46.75511687994, "road_name": "طريق المدينة المنورة", "site_direction": "E"}, {"site_id": "RUHSM224", "lat": 24.7455602489784, "lon": 46.8242803215981, "road_name": "شارع حسان بن ثابت", "site_direction": "N"}, {"site_id": "RUHSM225", "lat": 24.7454847342479, "lon": 46.8241676688194, "road_name": "شارع حسان بن ثابت", "site_direction": "S"}, {"site_id": "RUHSM226", "lat": 24.7641928838335, "lon": 46.8337565660477, "road_name": "شارع ابن الهيثم", "site_direction": "N"}, {"site_id": "RUHSM227", "lat": 24.764122238671, "lon": 46.8336492776871, "road_name": "شارع ابن الهيثم", "site_direction": "S"}, {"site_id": "RUHSM228", "lat": 24.7395185293973, "lon": 46.5959626436234, "road_name": "الطريق الدائري الشمالي", "site_direction": "W"}, {"site_id": "RUHSM232", "lat": 24.4701528666928, "lon": 46.612468957901, "road_name": "ديراب", "site_direction": "E"}, {"site_id": "RUHSM233", "lat": 24.5476209553064, "lon": 46.6873374581337, "road_name": "الخليل بن أحمد", "site_direction": "E"}, {"site_id": "RUHSM234", "lat": 24.5477331800292, "lon": 46.6874313354492, "road_name": "الخليل بن أحمد", "site_direction": "W"}];
+
+// Build site lookup by site_id
+const SITE_LOOKUP = {};
+SITES.forEach((s, i) => { SITE_LOOKUP[s.site_id] = { ...s, idx: i }; });
+
+// ============================================
+// GOOGLE OD TABLE (will be loaded)
+// ============================================
+let GOOGLE_OD = {}; // key: "u_site_v_site" -> { exp_time_min, distance_km }
+
+// ============================================
+// TRIPS DATA
+// ============================================
+let ALL_TRIPS = []; // All loaded trips
+let currentTrips = []; // Filtered trips for current view
+
+// ============================================
+// MAP VARIABLES
+// ============================================
+let map, directionsService, directionsRenderer;
+let tripMarkers = [];
+let tripPolylines = [];
+let allSiteMarkers = [];
+let allSitesVisible = false;
+
+// ============================================
+// 10 PLACEHOLDER VEHICLES
+// ============================================
+const PLACEHOLDER_VEHICLES = [
+    'VEHICLE_001',
+    'VEHICLE_002', 
+    'VEHICLE_003',
+    'VEHICLE_004',
+    'VEHICLE_005',
+    'VEHICLE_006',
+    'VEHICLE_007',
+    'VEHICLE_008',
+    'VEHICLE_009',
+    'VEHICLE_010'
+];
+
+// ============================================
+// INITIALIZE
+// ============================================
+async function initMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 24.7136, lng: 46.6753 },
+        zoom: 11
+    });
+    directionsService = new google.maps.DirectionsService();
+    directionsRenderer = new google.maps.DirectionsRenderer({ map, suppressMarkers: true });
+    
+    // Load Google OD table
+    await loadGoogleOdTable();
+    
+    // Populate vehicle dropdown with placeholders
+    populateVehicleDropdown(PLACEHOLDER_VEHICLES);
+    
+    console.log('Map initialized');
+}
+
+async function loadGoogleOdTable() {
+    try {
+        const response = await fetch('google_od_table.json');
+        if (response.ok) {
+            GOOGLE_OD = await response.json();
+            console.log('Loaded Google OD table:', Object.keys(GOOGLE_OD).length, 'pairs');
+            document.getElementById('statOdPairs').textContent = Object.keys(GOOGLE_OD).length.toLocaleString();
+        }
+    } catch (e) {
+        console.log('Could not load google_od_table.json, will compute on demand');
+    }
+}
+
+function populateVehicleDropdown(vehicles) {
+    const sel = document.getElementById('vehicleSel');
+    sel.innerHTML = '<option value="">-- Select Vehicle --</option>';
+    vehicles.forEach(v => {
+        sel.innerHTML += `<option value="${v}">${v}</option>`;
+    });
+    document.getElementById('statVehicles').textContent = vehicles.length;
+}
+
+function onVehicleChange() {
+    // Clear current display when vehicle changes
+    document.getElementById('tripsList').innerHTML = '<div class="no-data">Click "Show Route" to see trips</div>';
+    clearMapOverlays();
+}
+
+// ============================================
+// DATA LOADING
+// ============================================
+function loadTripsFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            // Handle array or object with trips
+            let trips = Array.isArray(data) ? data : (data.trips || []);
+            
+            ALL_TRIPS = trips;
+            
+            // Extract unique vehicles
+            const vehicles = [...new Set(trips.map(t => t.vehicle_id))].filter(Boolean).sort();
+            
+            if (vehicles.length > 0) {
+                populateVehicleDropdown(vehicles);
+            }
+            
+            alert(`Loaded ${trips.length} trips from ${vehicles.length} vehicles`);
+            console.log('Sample trip:', trips[0]);
+            
+        } catch (err) {
+            alert('Error parsing file: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+function loadSampleData() {
+    // Generate sample trips for 10 placeholder vehicles
+    const sampleTrips = [];
+    const siteIds = SITES.map(s => s.site_id);
+    
+    PLACEHOLDER_VEHICLES.forEach(vehicleId => {
+        // Generate 20-50 trips per vehicle
+        const numTrips = 20 + Math.floor(Math.random() * 30);
+        let currentTime = new Date('2025-08-01T08:00:00').getTime();
+        
+        for (let i = 0; i < numTrips; i++) {
+            const uIdx = Math.floor(Math.random() * siteIds.length);
+            let vIdx = Math.floor(Math.random() * siteIds.length);
+            while (vIdx === uIdx) vIdx = Math.floor(Math.random() * siteIds.length);
+            
+            const uSite = siteIds[uIdx];
+            const vSite = siteIds[vIdx];
+            
+            // Look up expected time
+            const odKey = `${uSite}_${vSite}`;
+            const expTime = GOOGLE_OD[odKey]?.exp_time_min || (5 + Math.random() * 20);
+            
+            // Generate observed time with some variation
+            const ratio = 0.5 + Math.random() * 15; // ratio between 0.5 and 15.5
+            const obsTimeMin = expTime * ratio;
+            
+            const tPrev = new Date(currentTime);
+            const tNext = new Date(currentTime + obsTimeMin * 60 * 1000);
+            
+            sampleTrips.push({
+                vehicle_id: vehicleId,
+                camera_prev: uSite,
+                camera_next: vSite,
+                timestamp_prev: tPrev.toISOString(),
+                timestamp_next: tNext.toISOString(),
+                obs_time_min: obsTimeMin,
+                exp_time_min: expTime
+            });
+            
+            currentTime = tNext.getTime() + (Math.random() * 30 + 5) * 60 * 1000; // 5-35 min gap
+        }
+    });
+    
+    ALL_TRIPS = sampleTrips;
+    populateVehicleDropdown(PLACEHOLDER_VEHICLES);
+    alert(`Generated ${sampleTrips.length} sample trips for ${PLACEHOLDER_VEHICLES.length} vehicles`);
+}
+
+// ============================================
+// ROUTE DISPLAY
+// ============================================
+function showRoute() {
+    const vehicleId = document.getElementById('vehicleSel').value;
+    if (!vehicleId) {
+        alert('Please select a vehicle');
+        return;
+    }
+    
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    
+    const rMin = parseFloat(document.getElementById('rMin').value) || 0.2;
+    const rMax = parseFloat(document.getElementById('rMax').value) || 10;
+    
+    // Filter trips for this vehicle and time window
+    let filtered = ALL_TRIPS.filter(t => t.vehicle_id === vehicleId);
+    
+    // Apply date/time filter
+    if (startDate && endDate) {
+        const windowStart = new Date(`${startDate}T${startTime || '00:00'}`);
+        const windowEnd = new Date(`${endDate}T${endTime || '23:59'}`);
+        
+        filtered = filtered.filter(t => {
+            const tPrev = new Date(t.timestamp_prev);
+            return tPrev >= windowStart && tPrev <= windowEnd;
+        });
+    }
+    
+    // Sort by timestamp
+    filtered.sort((a, b) => new Date(a.timestamp_prev) - new Date(b.timestamp_prev));
+    
+    // Calculate ratios and classify
+    currentTrips = filtered.map((t, idx) => {
+        const uSite = t.camera_prev;
+        const vSite = t.camera_next;
+        
+        // Get expected time from Google OD table
+        const odKey = `${uSite}_${vSite}`;
+        let expTime = t.exp_time_min;
+        if (GOOGLE_OD[odKey]) {
+            expTime = GOOGLE_OD[odKey].exp_time_min;
+        }
+        
+        // Calculate observed time in minutes
+        let obsTime = t.obs_time_min;
+        if (!obsTime && t.timestamp_prev && t.timestamp_next) {
+            const tPrev = new Date(t.timestamp_prev);
+            const tNext = new Date(t.timestamp_next);
+            obsTime = (tNext - tPrev) / (1000 * 60);
+        }
+        
+        // Calculate ratio
+        const ratio = expTime > 0 ? obsTime / expTime : 999;
+        
+        // Classify
+        let classification = 'normal';
+        if (ratio > rMax * 2) {
+            classification = 'break';
+        } else if (ratio > rMax) {
+            classification = 'slow';
+        }
+        
+        return {
+            ...t,
+            idx,
+            obs_time_min: obsTime,
+            exp_time_min: expTime,
+            ratio,
+            classification
+        };
+    });
+    
+    // Update stats
+    updateStats();
+    
+    // Render trips list
+    renderTripsList();
+    
+    // Display on map
+    displayTripsOnMap();
+}
+
+function updateStats() {
+    const normal = currentTrips.filter(t => t.classification === 'normal').length;
+    const slow = currentTrips.filter(t => t.classification === 'slow').length;
+    const brk = currentTrips.filter(t => t.classification === 'break').length;
+    
+    document.getElementById('statTrips').textContent = currentTrips.length;
+    document.getElementById('statNormal').textContent = normal;
+    document.getElementById('statSlow').textContent = slow;
+    document.getElementById('statBreak').textContent = brk;
+}
+
+function renderTripsList() {
+    const list = document.getElementById('tripsList');
+    
+    if (currentTrips.length === 0) {
+        list.innerHTML = '<div class="no-data">No trips found for selected criteria</div>';
+        return;
+    }
+    
+    let html = '';
+    currentTrips.forEach((t, i) => {
+        const uSite = SITE_LOOKUP[t.camera_prev];
+        const vSite = SITE_LOOKUP[t.camera_next];
+        
+        const time = new Date(t.timestamp_prev).toLocaleTimeString();
+        
+        html += `
+        <div class="trip-item ${t.classification}" onclick="highlightTrip(${i})" data-idx="${i}">
+            <div class="trip-header">
+                <span>${t.camera_prev} → ${t.camera_next}</span>
+                <span class="trip-ratio ${t.classification}">${t.ratio.toFixed(2)}x</span>
+            </div>
+            <div class="trip-details">
+                <span>🕐 ${time}</span> |
+                <span>Obs: ${t.obs_time_min?.toFixed(1) || '?'} min</span> |
+                <span>Exp: ${t.exp_time_min?.toFixed(1) || '?'} min</span>
+            </div>
+        </div>`;
+    });
+    
+    list.innerHTML = html;
+}
+
+function clearMapOverlays() {
+    tripMarkers.forEach(m => m.setMap(null));
+    tripMarkers = [];
+    tripPolylines.forEach(p => p.setMap(null));
+    tripPolylines = [];
+    directionsRenderer.setDirections({ routes: [] });
+}
+
+function displayTripsOnMap() {
+    clearMapOverlays();
+    
+    if (currentTrips.length === 0) return;
+    
+    const bounds = new google.maps.LatLngBounds();
+    
+    // Add markers and lines for each trip
+    currentTrips.forEach((t, idx) => {
+        const uSite = SITE_LOOKUP[t.camera_prev];
+        const vSite = SITE_LOOKUP[t.camera_next];
+        
+        if (!uSite || !vSite) return;
+        
+        const color = t.classification === 'normal' ? '#4caf50' : 
+                      t.classification === 'slow' ? '#ff9800' : '#f44336';
+        
+        // Draw line
+        const line = new google.maps.Polyline({
+            path: [
+                { lat: uSite.lat, lng: uSite.lon },
+                { lat: vSite.lat, lng: vSite.lon }
+            ],
+            strokeColor: color,
+            strokeOpacity: 0.7,
+            strokeWeight: 3,
+            map: map
+        });
+        tripPolylines.push(line);
+        
+        // Add click listener
+        line.addListener('click', () => highlightTrip(idx));
+        
+        bounds.extend({ lat: uSite.lat, lng: uSite.lon });
+        bounds.extend({ lat: vSite.lat, lng: vSite.lon });
+    });
+    
+    // Add start/end markers
+    if (currentTrips.length > 0) {
+        const firstTrip = currentTrips[0];
+        const lastTrip = currentTrips[currentTrips.length - 1];
+        
+        const startSite = SITE_LOOKUP[firstTrip.camera_prev];
+        const endSite = SITE_LOOKUP[lastTrip.camera_next];
+        
+        if (startSite) {
+            tripMarkers.push(new google.maps.Marker({
+                position: { lat: startSite.lat, lng: startSite.lon },
+                map: map,
+                icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                title: 'Route Start: ' + firstTrip.camera_prev,
+                zIndex: 100
+            }));
+        }
+        
+        if (endSite) {
+            tripMarkers.push(new google.maps.Marker({
+                position: { lat: endSite.lat, lng: endSite.lon },
+                map: map,
+                icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                title: 'Route End: ' + lastTrip.camera_next,
+                zIndex: 100
+            }));
+        }
+    }
+    
+    map.fitBounds(bounds, 50);
+}
+
+function highlightTrip(idx) {
+    // Unhighlight all
+    document.querySelectorAll('.trip-item').forEach(el => el.classList.remove('selected'));
+    
+    // Highlight selected
+    const el = document.querySelector(`.trip-item[data-idx="${idx}"]`);
+    if (el) el.classList.add('selected');
+    
+    // Reset polyline styles
+    tripPolylines.forEach((p, i) => {
+        const t = currentTrips[i];
+        if (t) {
+            const color = t.classification === 'normal' ? '#4caf50' : 
+                          t.classification === 'slow' ? '#ff9800' : '#f44336';
+            p.setOptions({ strokeOpacity: i === idx ? 1 : 0.5, strokeWeight: i === idx ? 5 : 3 });
+        }
+    });
+    
+    // Show trip details
+    const trip = currentTrips[idx];
+    if (trip) {
+        showTripDetails(trip);
+    }
+}
+
+function showTripDetails(trip) {
+    const uSite = SITE_LOOKUP[trip.camera_prev];
+    const vSite = SITE_LOOKUP[trip.camera_next];
+    
+    console.log('Trip details:', trip);
+    console.log('From:', uSite);
+    console.log('To:', vSite);
+    
+    // Center map on this trip
+    if (uSite && vSite) {
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend({ lat: uSite.lat, lng: uSite.lon });
+        bounds.extend({ lat: vSite.lat, lng: vSite.lon });
+        map.fitBounds(bounds, 100);
+    }
+}
+
+// ============================================
+// SPATIAL COHERENCE CHECK
+// ============================================
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Check if a point is within distance threshold of a polyline
+function pointToPolylineDistance(point, polyline) {
+    let minDist = Infinity;
+    
+    for (let i = 0; i < polyline.length - 1; i++) {
+        const dist = pointToSegmentDistance(point, polyline[i], polyline[i+1]);
+        if (dist < minDist) minDist = dist;
+    }
+    
+    return minDist;
+}
+
+function pointToSegmentDistance(point, segStart, segEnd) {
+    // Simplified point-to-line-segment distance
+    const dist1 = haversine(point.lat, point.lon, segStart.lat, segStart.lng);
+    const dist2 = haversine(point.lat, point.lon, segEnd.lat, segEnd.lng);
+    return Math.min(dist1, dist2);
+}
+
+// Check spatial coherence for a trip
+async function checkSpatialCoherence(uSite, vSite, testSite) {
+    const threshold = parseFloat(document.getElementById('spatialThreshold').value) / 1000; // Convert to km
+    
+    // Get Google route for u->v
+    return new Promise(resolve => {
+        directionsService.route({
+            origin: { lat: SITE_LOOKUP[uSite].lat, lng: SITE_LOOKUP[uSite].lon },
+            destination: { lat: SITE_LOOKUP[vSite].lat, lng: SITE_LOOKUP[vSite].lon },
+            travelMode: 'DRIVING'
+        }, (result, status) => {
+            if (status !== 'OK') {
+                resolve({ ok: false, error: status });
+                return;
+            }
+            
+            const path = result.routes[0].overview_path;
+            const polyline = path.map(p => ({ lat: p.lat(), lng: p.lng() }));
+            const testPoint = SITE_LOOKUP[testSite];
+            
+            const dist = pointToPolylineDistance(testPoint, polyline);
+            resolve({ ok: dist <= threshold, distance: dist * 1000 }); // Return distance in meters
+        });
+    });
+}
+
+// ============================================
+// MAP CONTROLS
+// ============================================
+function toggleAllSites() {
+    const btn = document.getElementById('toggleSitesBtn');
+    
+    if (allSitesVisible) {
+        allSiteMarkers.forEach(m => m.setMap(null));
+        allSiteMarkers = [];
+        allSitesVisible = false;
+        btn.textContent = '📍 Show All 247 Sites';
+        btn.style.background = '#7b1fa2';
+    } else {
+        SITES.forEach((s, i) => {
+            const marker = new google.maps.Marker({
+                position: { lat: s.lat, lng: s.lon },
+                map: map,
+                title: s.site_id + ' (' + s.site_direction + ')',
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 6,
+                    fillColor: '#1565c0',
+                    fillOpacity: 0.8,
+                    strokeColor: '#fff',
+                    strokeWeight: 1
+                },
+                zIndex: 1
+            });
+            allSiteMarkers.push(marker);
+        });
+        
+        allSitesVisible = true;
+        btn.textContent = '📍 Hide All Sites';
+        btn.style.background = '#666';
+    }
+}
+
+function fitMapToBounds() {
+    if (currentTrips.length === 0) return;
+    
+    const bounds = new google.maps.LatLngBounds();
+    currentTrips.forEach(t => {
+        const uSite = SITE_LOOKUP[t.camera_prev];
+        const vSite = SITE_LOOKUP[t.camera_next];
+        if (uSite) bounds.extend({ lat: uSite.lat, lng: uSite.lon });
+        if (vSite) bounds.extend({ lat: vSite.lat, lng: vSite.lon });
+    });
+    map.fitBounds(bounds, 50);
+}
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
+</body>
+</html>
