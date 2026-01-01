@@ -857,45 +857,24 @@ let recheckRunning = false;
 function stopRecheck() {
     recheckRunning = false;
     log('⏹️ STOPPING... (will stop after current batch)');
-    const ts = document.getElementById('topStats');
-    const tl = document.getElementById('topLive');
-    if (ts) ts.textContent = 'STOPPING...';
-    if (tl) tl.textContent = 'Will stop after current batch completes...';
+    document.getElementById('topStats').textContent = 'STOPPING...';
+    document.getElementById('topLive').textContent = 'Will stop after current batch completes...';
 }
 
 async function recheckAllRoutes() {
     try {
         if (recheckRunning) { alert('Already running!'); return; }
         
-        // Check if map is loaded
-        if (!directionsService) {
-            alert('Map not loaded yet! Please wait for the map to load first.');
-            return;
-        }
-        
-        // Check if data is loaded
-        if (Object.keys(CACHE.dist).length === 0) {
-            alert('No data loaded! Please upload a JSON file first.');
-            return;
-        }
-        
         console.log('RE-CHECK STARTED');
         log('RE-CHECK STARTED...');
         
-        // SHOW BIG TOP PROGRESS BAR - with null checks
-        const topProgress = document.getElementById('topProgress');
-        const topStats = document.getElementById('topStats');
-        const topDetails = document.getElementById('topDetails');
-        const topLive = document.getElementById('topLive');
-        const startBtn = document.getElementById('startRecheckBtn');
-        const stopBtn = document.getElementById('stopRecheckBtn');
-        
-        if (topProgress) topProgress.style.display = 'block';
-        if (topStats) topStats.textContent = '0%';
-        if (topDetails) topDetails.textContent = 'Building route list...';
-        if (topLive) topLive.textContent = '⏳ Please wait...';
-        if (startBtn) startBtn.style.display = 'none';
-        if (stopBtn) stopBtn.style.display = 'block';
+        // SHOW BIG TOP PROGRESS BAR
+        document.getElementById('topProgress').style.display = 'block';
+        document.getElementById('topStats').textContent = '0%';
+        document.getElementById('topDetails').textContent = 'Building route list...';
+        document.getElementById('topLive').textContent = '⏳ Please wait...';
+        document.getElementById('startRecheckBtn').style.display = 'none';
+        document.getElementById('stopRecheckBtn').style.display = 'block';
         
         // Scroll to top so user sees progress
         window.scrollTo(0, 0);
@@ -974,9 +953,9 @@ async function recheckAllRoutes() {
     
     if (!confirm('Re-check ' + selectedRoutes.length + ' routes (' + portionLabel + ')?\n\nSettings:\n- Path threshold: ' + (pathThreshold*1000) + 'm\n- Distance threshold: ' + (distThreshold*100) + '%\n- Skip direction: ' + skipDirection + '\n- Workers: ' + workers)) {
         // User cancelled - hide progress
-        if (topProgress) topProgress.style.display = 'none';
-        if (startBtn) startBtn.style.display = 'block';
-        if (stopBtn) stopBtn.style.display = 'none';
+        document.getElementById('topProgress').style.display = 'none';
+        document.getElementById('startRecheckBtn').style.display = 'block';
+        document.getElementById('stopRecheckBtn').style.display = 'none';
         return;
     }
     
@@ -996,21 +975,11 @@ async function recheckAllRoutes() {
     let completed = 0, updated = 0, errors = 0;
     let idx = 0;
     
-    // Helper to safely update UI
-    function updateUI(id, prop, value) {
-        const el = document.getElementById(id);
-        if (el) {
-            if (prop === 'text') el.textContent = value;
-            else if (prop === 'width') el.style.width = value;
-            else if (prop === 'display') el.style.display = value;
-        }
-    }
-    
     async function processRoute(route) {
         const iA = route.origin, iB = route.dest;
         
         // Show live update
-        updateUI('topLive', 'text', '🔍 Checking: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id);
+        document.getElementById('topLive').textContent = '🔍 Checking: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id;
         
         return new Promise(resolve => {
             directionsService.route({
@@ -1021,12 +990,12 @@ async function recheckAllRoutes() {
                 if (status !== 'OK') {
                     errors++;
                     completed++;
-                    updateUI('topLive', 'text', '✗ Error: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id + ' (' + status + ')');
+                    document.getElementById('topLive').textContent = '✗ Error: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id + ' (' + status + ')';
                     
                     const pct = (completed / routes.length * 100).toFixed(1);
-                    updateUI('topBar', 'width', pct + '%');
-                    updateUI('topStats', 'text', pct + '%');
-                    updateUI('topDetails', 'text', completed + ' / ' + routes.length + ' | ✓ ' + updated + ' updated | ✗ ' + errors + ' errors');
+                    document.getElementById('topBar').style.width = pct + '%';
+                    document.getElementById('topStats').textContent = pct + '%';
+                    document.getElementById('topDetails').textContent = completed + ' / ' + routes.length + ' | ✓ ' + updated + ' updated | ✗ ' + errors + ' errors';
                     
                     resolve();
                     return;
@@ -1090,15 +1059,15 @@ async function recheckAllRoutes() {
                     CACHE.waypoints[route.key] = newWp;
                     updated++;
                     const msg = '✓ UPDATED: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id + ' (' + oldWp.length + '→' + newWp.length + ' waypoints)';
-                    updateUI('topLive', 'text', msg);
+                    document.getElementById('topLive').textContent = msg;
                     log(msg);
                 }
                 
                 completed++;
                 const pct = (completed / routes.length * 100).toFixed(1);
-                updateUI('topBar', 'width', pct + '%');
-                updateUI('topStats', 'text', pct + '%');
-                updateUI('topDetails', 'text', completed + ' / ' + routes.length + ' | ✓ ' + updated + ' updated | ✗ ' + errors + ' errors');
+                document.getElementById('topBar').style.width = pct + '%';
+                document.getElementById('topStats').textContent = pct + '%';
+                document.getElementById('topDetails').textContent = completed + ' / ' + routes.length + ' | ✓ ' + updated + ' updated | ✗ ' + errors + ' errors';
                 
                 resolve();
             });
@@ -1115,7 +1084,7 @@ async function recheckAllRoutes() {
         // Save periodically
         if (completed % 100 === 0 && completed > 0) {
             localStorage.setItem('riyadh_gmaps_viewer_cache', JSON.stringify(CACHE));
-            updateUI('topLive', 'text', '💾 Saved progress at ' + completed + ' routes...');
+            document.getElementById('topLive').textContent = '💾 Saved progress at ' + completed + ' routes...';
         }
         
         await new Promise(r => setTimeout(r, 50));
@@ -1125,9 +1094,9 @@ async function recheckAllRoutes() {
     localStorage.setItem('riyadh_gmaps_viewer_cache', JSON.stringify(CACHE));
     
     recheckRunning = false;
-    updateUI('stopRecheckBtn', 'display', 'none');
-    updateUI('startRecheckBtn', 'display', 'block');
-    updateUI('topProgress', 'display', 'none');
+    document.getElementById('stopRecheckBtn').style.display = 'none';
+    document.getElementById('startRecheckBtn').style.display = 'block';
+    document.getElementById('topProgress').style.display = 'none';
     
     log('');
     log('═══════════════════════════════════');
@@ -1146,12 +1115,9 @@ async function recheckAllRoutes() {
         console.error('RE-CHECK ERROR:', err);
         alert('ERROR: ' + err.message);
         log('ERROR: ' + err.message);
-        const tp = document.getElementById('topProgress');
-        const sb = document.getElementById('startRecheckBtn');
-        const stb = document.getElementById('stopRecheckBtn');
-        if (tp) tp.style.display = 'none';
-        if (sb) sb.style.display = 'block';
-        if (stb) stb.style.display = 'none';
+        document.getElementById('topProgress').style.display = 'none';
+        document.getElementById('startRecheckBtn').style.display = 'block';
+        document.getElementById('stopRecheckBtn').style.display = 'none';
     }
 }
 
