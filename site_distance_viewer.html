@@ -803,32 +803,45 @@ async function recheckAllRoutes() {
     const skipDirection = document.getElementById('testSkipDirection').checked;
     const workers = parseInt(document.getElementById('recheckWorkers').value);
     
-    // Build list of all routes to recheck
-    const routes = [];
+    // Build list of all routes to recheck - use ACTUAL keys from cache
     const cacheKeys = Object.keys(CACHE.dist);
     log('CACHE.dist has ' + cacheKeys.length + ' keys');
     
-    // Show sample keys to debug format
+    // Show sample keys
     if (cacheKeys.length > 0) {
         log('Sample keys: ' + cacheKeys.slice(0, 5).join(', '));
     }
     
-    for (let i = 0; i < SITES.length; i++) {
-        for (let j = 0; j < SITES.length; j++) {
-            if (i === j) continue;
-            const key = i + '_' + j;
-            if (CACHE.dist[key] !== undefined) {
-                routes.push({ origin: i, dest: j, key });
-            }
+    // Build site_id to index lookup
+    const siteIdToIdx = {};
+    SITES.forEach((s, i) => {
+        siteIdToIdx[s.site_id] = i;
+        siteIdToIdx[i] = i; // also support numeric
+        siteIdToIdx[String(i)] = i;
+    });
+    
+    // Parse ALL keys from cache
+    const routes = [];
+    for (const key of cacheKeys) {
+        const parts = key.split('_');
+        if (parts.length !== 2) continue;
+        
+        let iA = siteIdToIdx[parts[0]];
+        let iB = siteIdToIdx[parts[1]];
+        
+        // If not found, try parsing as numbers
+        if (iA === undefined) iA = parseInt(parts[0]);
+        if (iB === undefined) iB = parseInt(parts[1]);
+        
+        if (iA !== undefined && iB !== undefined && !isNaN(iA) && !isNaN(iB) && iA !== iB) {
+            routes.push({ origin: iA, dest: iB, key });
         }
     }
     
-    log('Routes matched by index format (i_j): ' + routes.length);
+    log('Routes parsed from cache: ' + routes.length + ' / ' + cacheKeys.length);
     
     if (routes.length === 0) {
-        // Maybe keys are in different format - try to use them directly
-        log('No index-format routes found. Checking if keys are in different format...');
-        alert('No routes found with expected key format (e.g., "0_1").\n\nYour JSON has keys like: ' + cacheKeys.slice(0,3).join(', '));
+        alert('Could not parse route keys.\n\nSample keys: ' + cacheKeys.slice(0,3).join(', '));
         return;
     }
     
