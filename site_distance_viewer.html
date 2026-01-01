@@ -384,14 +384,12 @@ function log(msg) {
 let mapLoaded = false;
 
 function initMap() {
-    map = new google.maps.Map(document.getElementById('map'), { center: {lat:24.7, lng:46.7}, zoom: 10 });
+    // Init map
+    map = new google.maps.Map(document.getElementById('map'), { center: {lat: 24.7136, lng: 46.6753}, zoom: 10 });
     directionsService = new google.maps.DirectionsService();
     directionsRenderer = new google.maps.DirectionsRenderer({ map, suppressMarkers: true });
     mapLoaded = true;
-    log('✓ Map ready');
-}
-
-function initPage() {
+    
     // Populate dropdowns
     const oSel = document.getElementById('originSel');
     const dSel = document.getElementById('destSel');
@@ -401,7 +399,7 @@ function initPage() {
         dSel.innerHTML += opt;
     });
     
-    // Auto-load viewer cache if exists (from previous re-check sessions)
+    // Auto-load viewer cache if exists
     try {
         const viewerCache = localStorage.getItem('riyadh_gmaps_viewer_cache');
         if (viewerCache) {
@@ -412,9 +410,7 @@ function initPage() {
             CACHE.source = data.source || {};
             
             const wpRoutes = Object.values(CACHE.waypoints).filter(w => w && w.length > 0).length;
-            log('✓ Auto-loaded viewer cache:');
-            log('  Routes: ' + Object.keys(CACHE.dist).length);
-            log('  Routes with waypoints: ' + wpRoutes);
+            log('✓ Auto-loaded cache: ' + Object.keys(CACHE.dist).length + ' routes');
             updateStats();
             renderCachedList();
         } else {
@@ -423,18 +419,9 @@ function initPage() {
     } catch(e) {
         log('Ready! Upload JSON or load Part 1/Part 2.');
     }
+    
+    log('✓ Map ready');
 }
-
-// Wait for Google Maps then init
-function waitForMaps() {
-    if (typeof google !== 'undefined' && google.maps) {
-        initMap();
-        initPage();
-    } else {
-        setTimeout(waitForMaps, 100);
-    }
-}
-waitForMaps();
 
 function toggleAllSites() {
     const btn = document.getElementById('toggleSitesBtn');
