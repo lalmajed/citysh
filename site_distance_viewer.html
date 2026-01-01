@@ -144,6 +144,32 @@
                     <button class="btn" onclick="recheckWaypoints()" style="background:#e65100;">
                         🔍 Re-check Selected Route
                     </button>
+                    <div style="margin-top:10px;border-top:1px solid #ffcc80;padding-top:10px;">
+                        <div style="font-size:0.75rem;color:#bf360c;margin-bottom:8px;">
+                            ⚠️ This will re-check ALL routes with your settings
+                        </div>
+                        <div style="margin-bottom:8px;">
+                            <label style="font-size:0.8rem;">Parallel workers:</label>
+                            <select id="recheckWorkers" style="width:100%;padding:5px;">
+                                <option value="5">5 (safe)</option>
+                                <option value="10" selected>10 (moderate)</option>
+                                <option value="20">20 (fast)</option>
+                                <option value="50">50 (aggressive)</option>
+                            </select>
+                        </div>
+                        <button class="btn" onclick="recheckAllRoutes()" style="background:#b71c1c;color:white;width:100%;">
+                            🚀 RE-CHECK ALL ROUTES
+                        </button>
+                        <button class="btn" onclick="stopRecheck()" id="stopRecheckBtn" style="background:#666;color:white;width:100%;margin-top:5px;display:none;">
+                            ⏹️ STOP
+                        </button>
+                        <div id="recheckProgress" style="margin-top:8px;font-size:0.8rem;display:none;">
+                            <div style="background:#ddd;height:20px;border-radius:4px;overflow:hidden;">
+                                <div id="recheckBar" style="background:#e65100;height:100%;width:0%;transition:width 0.3s;"></div>
+                            </div>
+                            <div id="recheckStats" style="margin-top:4px;"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -671,6 +697,172 @@ async function recheckWaypoints() {
         }
         log('═══════════════════════════════════');
     });
+}
+
+let recheckRunning = false;
+
+function stopRecheck() {
+    recheckRunning = false;
+    log('⏹️ STOPPING... (will stop after current batch)');
+}
+
+async function recheckAllRoutes() {
+    if (recheckRunning) { alert('Already running!'); return; }
+    
+    const pathThreshold = parseFloat(document.getElementById('testThreshold').value);
+    const distThreshold = parseFloat(document.getElementById('testDistThreshold').value);
+    const skipDirection = document.getElementById('testSkipDirection').checked;
+    const workers = parseInt(document.getElementById('recheckWorkers').value);
+    
+    // Build list of all routes to recheck
+    const routes = [];
+    for (let i = 0; i < SITES.length; i++) {
+        for (let j = 0; j < SITES.length; j++) {
+            if (i === j) continue;
+            const key = i + '_' + j;
+            if (CACHE.dist[key] !== undefined) {
+                routes.push({ origin: i, dest: j, key });
+            }
+        }
+    }
+    
+    if (routes.length === 0) {
+        alert('No routes in cache to re-check!');
+        return;
+    }
+    
+    if (!confirm('Re-check waypoints for ' + routes.length + ' routes?\n\nSettings:\n- Path threshold: ' + (pathThreshold*1000) + 'm\n- Distance threshold: ' + (distThreshold*100) + '%\n- Skip direction: ' + skipDirection + '\n- Workers: ' + workers)) {
+        return;
+    }
+    
+    recheckRunning = true;
+    document.getElementById('stopRecheckBtn').style.display = 'block';
+    document.getElementById('recheckProgress').style.display = 'block';
+    
+    log('═══════════════════════════════════');
+    log('RE-CHECKING ALL ' + routes.length + ' ROUTES');
+    log('Settings: path=' + (pathThreshold*1000) + 'm, dist=' + (distThreshold*100) + '%, skipDir=' + skipDirection);
+    log('═══════════════════════════════════');
+    
+    let completed = 0, updated = 0, errors = 0;
+    let idx = 0;
+    
+    async function processRoute(route) {
+        const iA = route.origin, iB = route.dest;
+        
+        return new Promise(resolve => {
+            directionsService.route({
+                origin: {lat: SITES[iA].lat, lng: SITES[iA].lon},
+                destination: {lat: SITES[iB].lat, lng: SITES[iB].lon},
+                travelMode: 'DRIVING'
+            }, async (res, status) => {
+                if (status !== 'OK') {
+                    errors++;
+                    resolve();
+                    return;
+                }
+                
+                const path = res.routes[0].overview_path;
+                const directDist = res.routes[0].legs[0].distance.value / 1000;
+                
+                // Find candidates
+                let candidates = [];
+                SITES.forEach((site, idx) => {
+                    if (idx === iA || idx === iB) return;
+                    let minDist = Infinity, pathIdx = 0;
+                    for (let i = 0; i < path.length; i++) {
+                        const d = haversine(site.lat, site.lon, path[i].lat(), path[i].lng());
+                        if (d < minDist) { minDist = d; pathIdx = i; }
+                    }
+                    if (minDist < pathThreshold) {
+                        candidates.push({ idx, pathIdx, dist: minDist });
+                    }
+                });
+                
+                // Direction filter
+                if (!skipDirection && candidates.length > 0) {
+                    candidates = candidates.filter(c => {
+                        const routeDir = getRouteDir(path, c.pathIdx);
+                        return SITES[c.idx].site_direction === routeDir;
+                    });
+                }
+                
+                // Verify with Google
+                const verified = [];
+                for (const c of candidates) {
+                    const result = await new Promise(res2 => {
+                        directionsService.route({
+                            origin: {lat: SITES[iA].lat, lng: SITES[iA].lon},
+                            destination: {lat: SITES[iB].lat, lng: SITES[iB].lon},
+                            waypoints: [{location: {lat: SITES[c.idx].lat, lng: SITES[c.idx].lon}, stopover: true}],
+                            travelMode: 'DRIVING'
+                        }, (res3, st3) => {
+                            if (st3 === 'OK') {
+                                let totalDist = 0;
+                                res3.routes[0].legs.forEach(leg => totalDist += leg.distance.value);
+                                totalDist /= 1000;
+                                const increase = (totalDist - directDist) / directDist;
+                                res2({ ok: increase < distThreshold });
+                            } else {
+                                res2({ ok: false });
+                            }
+                        });
+                    });
+                    if (result.ok) verified.push(c.idx);
+                    await new Promise(r => setTimeout(r, 100));
+                }
+                
+                // Compare and update
+                const oldWp = CACHE.waypoints[route.key] || [];
+                const newWp = verified.sort((a,b) => a-b);
+                
+                if (JSON.stringify(oldWp) !== JSON.stringify(newWp)) {
+                    CACHE.waypoints[route.key] = newWp;
+                    updated++;
+                    log('Updated ' + SITES[iA].site_id + '→' + SITES[iB].site_id + ': ' + oldWp.length + '→' + newWp.length + ' waypoints');
+                }
+                
+                resolve();
+            });
+        });
+    }
+    
+    // Process in batches
+    while (idx < routes.length && recheckRunning) {
+        const batch = routes.slice(idx, idx + workers);
+        await Promise.all(batch.map(r => processRoute(r)));
+        
+        completed += batch.length;
+        idx += workers;
+        
+        const pct = (completed / routes.length * 100).toFixed(1);
+        document.getElementById('recheckBar').style.width = pct + '%';
+        document.getElementById('recheckStats').textContent = completed + '/' + routes.length + ' (' + pct + '%) | Updated: ' + updated + ' | Errors: ' + errors;
+        
+        // Save periodically
+        if (completed % 100 === 0) {
+            localStorage.setItem('riyadh_gmaps_viewer_cache', JSON.stringify(CACHE));
+        }
+        
+        await new Promise(r => setTimeout(r, 50));
+    }
+    
+    // Final save
+    localStorage.setItem('riyadh_gmaps_viewer_cache', JSON.stringify(CACHE));
+    
+    recheckRunning = false;
+    document.getElementById('stopRecheckBtn').style.display = 'none';
+    
+    log('');
+    log('═══════════════════════════════════');
+    log('COMPLETE! Checked: ' + completed + ', Updated: ' + updated + ', Errors: ' + errors);
+    log('═══════════════════════════════════');
+    
+    // Refresh display
+    displayRoutes();
+    updateStats();
+    
+    alert('Done! Updated ' + updated + ' routes.');
 }
 
 // Wait for Google Maps
