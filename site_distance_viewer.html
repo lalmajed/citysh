@@ -175,7 +175,15 @@
             
             <div class="main">
                 <div class="panel">
-                    <div id="map"></div>
+                    <div id="mapContainer" style="height:400px;position:relative;">
+                        <div id="mapPlaceholder" style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#2d2d2d;border-radius:8px;">
+                            <div style="color:#888;margin-bottom:15px;">Map loads on demand to speed up page</div>
+                            <button onclick="loadMapNow()" style="padding:15px 30px;font-size:1.1rem;background:#4285f4;color:white;border:none;border-radius:8px;cursor:pointer;">
+                                🗺️ Load Map
+                            </button>
+                        </div>
+                        <div id="map" style="height:100%;border-radius:8px;display:none;"></div>
+                    </div>
                 </div>
                 
                 <div class="panel">
@@ -329,7 +337,32 @@ function log(msg) {
     el.scrollTop = el.scrollHeight;
 }
 
-function initMap() {
+let mapLoaded = false;
+
+function loadMapNow() {
+    if (mapLoaded) return;
+    
+    document.getElementById('mapPlaceholder').innerHTML = '<div style="color:#888;">Loading map...</div>';
+    
+    // Load Google Maps script
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js';
+    script.onload = function() {
+        // Wait for google.maps to be ready
+        const checkReady = setInterval(() => {
+            if (typeof google !== 'undefined' && google.maps) {
+                clearInterval(checkReady);
+                actuallyInitMap();
+            }
+        }, 100);
+    };
+    document.head.appendChild(script);
+}
+
+function actuallyInitMap() {
+    document.getElementById('map').style.display = 'block';
+    document.getElementById('mapPlaceholder').style.display = 'none';
+    
     map = new google.maps.Map(document.getElementById('map'), { center: {lat: 24.7136, lng: 46.6753}, zoom: 10 });
     directionsService = new google.maps.DirectionsService();
     directionsRenderer = new google.maps.DirectionsRenderer({ 
@@ -338,7 +371,12 @@ function initMap() {
         polylineOptions: { strokeColor: '#4285f4', strokeWeight: 5 }
     });
     
-    // Populate dropdowns - NO markers created here for speed
+    mapLoaded = true;
+    log('Map loaded! Select a route to display.');
+}
+
+function initPage() {
+    // Populate dropdowns - NO map yet for speed
     const oSel = document.getElementById('originSel');
     const dSel = document.getElementById('destSel');
     SITES.forEach((s, i) => {
@@ -347,9 +385,12 @@ function initMap() {
         dSel.innerHTML += opt;
     });
     
-    log('Ready! Click Load Part 1 or Part 2');
-    log('Click "Show All Sites" to display all 247 markers');
+    log('Ready! Load Part 1/Part 2 data first.');
+    log('Click "Load Map" when you need to visualize routes.');
 }
+
+// Start immediately - no waiting for Google Maps
+initPage();
 
 function toggleAllSites() {
     const btn = document.getElementById('toggleSitesBtn');
@@ -387,6 +428,8 @@ function toggleAllSites() {
 }
 
 async function showRoute() {
+    if (!mapLoaded) { alert('Load the map first!'); loadMapNow(); return; }
+    
     const iA = parseInt(document.getElementById('originSel').value);
     const iB = parseInt(document.getElementById('destSel').value);
     
@@ -557,6 +600,8 @@ function getRouteDir(path, idx) {
 }
 
 async function recheckWaypoints() {
+    if (!mapLoaded) { alert('Load the map first!'); loadMapNow(); return; }
+    
     const iA = parseInt(document.getElementById('originSel').value);
     const iB = parseInt(document.getElementById('destSel').value);
     
@@ -707,6 +752,7 @@ function stopRecheck() {
 }
 
 async function recheckAllRoutes() {
+    if (!mapLoaded) { alert('Load the map first!'); loadMapNow(); return; }
     if (recheckRunning) { alert('Already running!'); return; }
     
     const pathThreshold = parseFloat(document.getElementById('testThreshold').value);
@@ -865,16 +911,6 @@ async function recheckAllRoutes() {
     alert('Done! Updated ' + updated + ' routes.');
 }
 
-// Wait for Google Maps
-function waitForMaps() {
-    if (typeof google !== 'undefined' && google.maps) {
-        initMap();
-    } else {
-        setTimeout(waitForMaps, 100);
-    }
-}
-waitForMaps();
     </script>
-    <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
 </body>
 </html>
