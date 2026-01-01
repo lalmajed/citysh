@@ -113,6 +113,18 @@
                     <button class="btn btn-sm" onclick="downloadJSON()">Full JSON</button>
                 </div>
                 
+                <div class="panel" style="background:#e3f2fd;">
+                    <h2 style="color:#1565c0;">🔗 Merge Results</h2>
+                    <div style="font-size:0.75rem;color:#666;margin-bottom:10px;">
+                        Upload JSON files from all 3 browsers to combine
+                    </div>
+                    <input type="file" id="mergeFile" accept=".json" multiple onchange="mergeJSONFiles(this)" style="display:none;">
+                    <button class="btn" onclick="document.getElementById('mergeFile').click()" style="background:#1565c0;color:white;width:100%;">
+                        📂 Select Multiple JSONs to Merge
+                    </button>
+                    <div id="mergeStatus" style="margin-top:8px;font-size:0.8rem;"></div>
+                </div>
+                
                 <div class="panel" style="background:#fff3e0;">
                     <h2 style="color:#e65100;">🔍 Re-check Waypoints (Test Settings)</h2>
                     <div style="font-size:0.75rem;color:#666;margin-bottom:10px;">
@@ -146,19 +158,27 @@
                     </button>
                     <div style="margin-top:10px;border-top:1px solid #ffcc80;padding-top:10px;">
                         <div style="font-size:0.75rem;color:#bf360c;margin-bottom:8px;">
-                            ⚠️ This will re-check ALL routes with your settings
+                            ⚠️ Split across browsers to speed up!
+                        </div>
+                        <div style="margin-bottom:8px;">
+                            <label style="font-size:0.8rem;">Which portion to process:</label>
+                            <select id="recheckPortion" style="width:100%;padding:5px;">
+                                <option value="all">ALL routes (slow!)</option>
+                                <option value="1">Browser 1: First third (0-33%)</option>
+                                <option value="2">Browser 2: Middle third (33-66%)</option>
+                                <option value="3">Browser 3: Last third (66-100%)</option>
+                            </select>
                         </div>
                         <div style="margin-bottom:8px;">
                             <label style="font-size:0.8rem;">Parallel workers:</label>
                             <select id="recheckWorkers" style="width:100%;padding:5px;">
-                                <option value="5">5 (safe)</option>
-                                <option value="10" selected>10 (moderate)</option>
-                                <option value="20">20 (fast)</option>
-                                <option value="50">50 (aggressive)</option>
+                                <option value="5" selected>5 (safe)</option>
+                                <option value="10">10 (moderate)</option>
+                                <option value="20">20 (fast - may error)</option>
                             </select>
                         </div>
                         <button class="btn" onclick="recheckAllRoutes()" style="background:#b71c1c;color:white;width:100%;">
-                            🚀 RE-CHECK ALL ROUTES
+                            🚀 RE-CHECK SELECTED PORTION
                         </button>
                         <button class="btn" onclick="stopRecheck()" id="stopRecheckBtn" style="background:#666;color:white;width:100%;margin-top:5px;display:none;">
                             ⏹️ STOP
@@ -605,11 +625,8 @@ function downloadCSV(type) {
 }
 
 function downloadJSON() {
-    // Save to localStorage first to ensure we have latest
-    localStorage.setItem('riyadh_gmaps_viewer_cache', JSON.stringify(CACHE));
-    
     const data = {
-        source: 'Google Maps Part 1 + Part 2 (Updated ' + new Date().toISOString() + ')', 
+        source: 'Google Maps Routes (Updated ' + new Date().toISOString() + ')', 
         sites: SITES, 
         distance_km: CACHE.dist, 
         time_min: CACHE.time,
@@ -619,7 +636,83 @@ function downloadJSON() {
     };
     
     log('Downloading JSON with ' + data.routeCount + ' routes, ' + data.waypointCount + ' routes have waypoints');
-    download(JSON.stringify(data, null, 2), 'riyadh_combined_' + Date.now() + '.json', 'application/json');
+    download(JSON.stringify(data, null, 2), 'riyadh_routes_' + Date.now() + '.json', 'application/json');
+}
+
+function mergeJSONFiles(input) {
+    const files = input.files;
+    if (!files || files.length === 0) return;
+    
+    log('═══════════════════════════════════');
+    log('MERGING ' + files.length + ' JSON files...');
+    
+    const statusDiv = document.getElementById('mergeStatus');
+    statusDiv.innerHTML = 'Reading files...';
+    
+    let filesRead = 0;
+    let totalRoutes = 0;
+    let totalWaypoints = 0;
+    
+    // Reset cache for fresh merge
+    CACHE = { dist: {}, time: {}, waypoints: {}, source: {} };
+    
+    Array.from(files).forEach((file, idx) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const json = JSON.parse(e.target.result);
+                const dist = json.distance_km || json.dist || {};
+                const time = json.time_min || json.time || {};
+                const wp = json.waypoints || {};
+                
+                let count = 0, wpCount = 0;
+                for (const k in dist) {
+                    // Only update if we don't have it OR if new one has waypoints and old doesn't
+                    const existingWp = CACHE.waypoints[k] || [];
+                    const newWp = wp[k] || [];
+                    
+                    if (!CACHE.dist[k] || (newWp.length > 0 && existingWp.length === 0)) {
+                        CACHE.dist[k] = dist[k];
+                        CACHE.time[k] = time[k];
+                        CACHE.waypoints[k] = newWp;
+                        if (newWp.length > 0) wpCount++;
+                    }
+                    count++;
+                }
+                
+                log('File ' + (idx+1) + ' (' + file.name + '): ' + count + ' routes, ' + wpCount + ' with waypoints');
+                totalRoutes += count;
+                totalWaypoints += wpCount;
+                
+            } catch(err) {
+                log('ERROR reading ' + file.name + ': ' + err.message);
+            }
+            
+            filesRead++;
+            
+            if (filesRead === files.length) {
+                // All files read - update display
+                const finalRoutes = Object.keys(CACHE.dist).length;
+                const finalWp = Object.values(CACHE.waypoints).filter(w => w && w.length > 0).length;
+                
+                log('');
+                log('═══════════════════════════════════');
+                log('MERGE COMPLETE!');
+                log('Total unique routes: ' + finalRoutes);
+                log('Routes with waypoints: ' + finalWp);
+                log('═══════════════════════════════════');
+                
+                statusDiv.innerHTML = '✓ Merged! ' + finalRoutes + ' routes, ' + finalWp + ' with waypoints';
+                statusDiv.style.color = 'green';
+                
+                updateStats();
+                renderCachedList();
+                
+                alert('Merged ' + files.length + ' files!\n\n' + finalRoutes + ' unique routes\n' + finalWp + ' with waypoints\n\nClick "Full JSON" to download merged data.');
+            }
+        };
+        reader.readAsText(file);
+    });
 }
 
 function download(c, f, t) {
@@ -845,9 +938,35 @@ async function recheckAllRoutes() {
         return;
     }
     
-    if (!confirm('Re-check waypoints for ' + routes.length + ' routes?\n\nSettings:\n- Path threshold: ' + (pathThreshold*1000) + 'm\n- Distance threshold: ' + (distThreshold*100) + '%\n- Skip direction: ' + skipDirection + '\n- Workers: ' + workers)) {
+    // Split by portion
+    const portion = document.getElementById('recheckPortion').value;
+    let selectedRoutes = routes;
+    let portionLabel = 'ALL';
+    
+    if (portion !== 'all') {
+        const totalRoutes = routes.length;
+        const third = Math.ceil(totalRoutes / 3);
+        
+        if (portion === '1') {
+            selectedRoutes = routes.slice(0, third);
+            portionLabel = 'Browser 1 (0-33%)';
+        } else if (portion === '2') {
+            selectedRoutes = routes.slice(third, third * 2);
+            portionLabel = 'Browser 2 (33-66%)';
+        } else if (portion === '3') {
+            selectedRoutes = routes.slice(third * 2);
+            portionLabel = 'Browser 3 (66-100%)';
+        }
+        
+        log('Selected portion: ' + portionLabel + ' = ' + selectedRoutes.length + ' routes');
+    }
+    
+    if (!confirm('Re-check ' + selectedRoutes.length + ' routes (' + portionLabel + ')?\n\nSettings:\n- Path threshold: ' + (pathThreshold*1000) + 'm\n- Distance threshold: ' + (distThreshold*100) + '%\n- Skip direction: ' + skipDirection + '\n- Workers: ' + workers)) {
         return;
     }
+    
+    // Use selectedRoutes instead of routes
+    routes = selectedRoutes;
     
     recheckRunning = true;
     document.getElementById('stopRecheckBtn').style.display = 'block';
