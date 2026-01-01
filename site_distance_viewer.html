@@ -261,7 +261,10 @@ function uploadJSON(input, part) {
             const wp = json.waypoints || {};
             
             let count = 0, wpCount = 0;
-            for (const k in dist) {
+            const distKeys = Object.keys(dist);
+            log('JSON contains ' + distKeys.length + ' routes');
+            
+            for (const k of distKeys) {
                 CACHE.dist[k] = dist[k];
                 CACHE.time[k] = time[k];
                 CACHE.source[k] = part;
@@ -271,8 +274,25 @@ function uploadJSON(input, part) {
                 count++;
             }
             
-            // Save to viewer cache
-            localStorage.setItem('riyadh_gmaps_viewer_cache', JSON.stringify(CACHE));
+            log('Loaded into memory: ' + count + ' routes');
+            log('Total in CACHE now: ' + Object.keys(CACHE.dist).length);
+            
+            // Try to save to localStorage (might fail if too big)
+            try {
+                const cacheStr = JSON.stringify(CACHE);
+                const sizeMB = (cacheStr.length / 1024 / 1024).toFixed(2);
+                log('Cache size: ' + sizeMB + ' MB');
+                
+                if (cacheStr.length > 4 * 1024 * 1024) {
+                    log('⚠️ Cache too large for localStorage (' + sizeMB + 'MB), keeping in memory only');
+                } else {
+                    localStorage.setItem('riyadh_gmaps_viewer_cache', cacheStr);
+                    log('✓ Saved to localStorage');
+                }
+            } catch(storageErr) {
+                log('⚠️ localStorage save failed: ' + storageErr.message);
+                log('Data is in memory - proceed with re-check, download when done');
+            }
             
             updateStats();
             renderCachedList();
@@ -826,6 +846,14 @@ async function recheckAllRoutes() {
     
     // Build list of all routes to recheck
     const routes = [];
+    const cacheKeys = Object.keys(CACHE.dist);
+    log('CACHE.dist has ' + cacheKeys.length + ' keys');
+    
+    // Show sample keys to debug format
+    if (cacheKeys.length > 0) {
+        log('Sample keys: ' + cacheKeys.slice(0, 5).join(', '));
+    }
+    
     for (let i = 0; i < SITES.length; i++) {
         for (let j = 0; j < SITES.length; j++) {
             if (i === j) continue;
@@ -836,8 +864,12 @@ async function recheckAllRoutes() {
         }
     }
     
+    log('Routes matched by index format (i_j): ' + routes.length);
+    
     if (routes.length === 0) {
-        alert('No routes in cache to re-check!');
+        // Maybe keys are in different format - try to use them directly
+        log('No index-format routes found. Checking if keys are in different format...');
+        alert('No routes found with expected key format (e.g., "0_1").\n\nYour JSON has keys like: ' + cacheKeys.slice(0,3).join(', '));
         return;
     }
     
