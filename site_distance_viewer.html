@@ -112,6 +112,39 @@
                     <button class="btn btn-sm" onclick="downloadCSV('time')">Time CSV</button>
                     <button class="btn btn-sm" onclick="downloadJSON()">Full JSON</button>
                 </div>
+                
+                <div class="panel" style="background:#fff3e0;">
+                    <h2 style="color:#e65100;">🔍 Re-check Waypoints (Test Settings)</h2>
+                    <div style="font-size:0.75rem;color:#666;margin-bottom:10px;">
+                        Test different thresholds on selected route before running on all
+                    </div>
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:0.8rem;">Path threshold (meters):</label>
+                        <select id="testThreshold" style="width:100%;padding:5px;">
+                            <option value="0.05">50m (strict)</option>
+                            <option value="0.10">100m</option>
+                            <option value="0.15">150m</option>
+                            <option value="0.20">200m</option>
+                            <option value="0.30" selected>300m (wide)</option>
+                            <option value="0.50">500m (very wide)</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:0.8rem;">Distance increase threshold:</label>
+                        <select id="testDistThreshold" style="width:100%;padding:5px;">
+                            <option value="0.001">0.1% (ultra strict)</option>
+                            <option value="0.005" selected>0.5% (strict)</option>
+                            <option value="0.01">1% (moderate)</option>
+                            <option value="0.02">2% (relaxed)</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:0.8rem;"><input type="checkbox" id="testSkipDirection"> Skip direction check</label>
+                    </div>
+                    <button class="btn" onclick="recheckWaypoints()" style="background:#e65100;">
+                        🔍 Re-check Selected Route
+                    </button>
+                </div>
             </div>
             
             <div class="main">
@@ -479,6 +512,165 @@ function download(c, f, t) {
     a.href = URL.createObjectURL(new Blob([c],{type:t})); 
     a.download = f; 
     a.click();
+}
+
+// Haversine distance
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Get route direction at path index
+function getRouteDir(path, idx) {
+    const i = Math.min(Math.max(idx, 0), path.length - 2);
+    const dLat = path[i + 1].lat() - path[i].lat();
+    const dLon = path[i + 1].lng() - path[i].lng();
+    if (Math.abs(dLat) > Math.abs(dLon)) return dLat > 0 ? 'N' : 'S';
+    return dLon > 0 ? 'E' : 'W';
+}
+
+async function recheckWaypoints() {
+    const iA = parseInt(document.getElementById('originSel').value);
+    const iB = parseInt(document.getElementById('destSel').value);
+    
+    if (isNaN(iA) || isNaN(iB)) { alert('Select a route first!'); return; }
+    if (iA === iB) { alert('Select different sites'); return; }
+    
+    const pathThreshold = parseFloat(document.getElementById('testThreshold').value);
+    const distThreshold = parseFloat(document.getElementById('testDistThreshold').value);
+    const skipDirection = document.getElementById('testSkipDirection').checked;
+    
+    log('═══════════════════════════════════');
+    log('RE-CHECKING WAYPOINTS: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id);
+    log('Settings:');
+    log('  Path threshold: ' + (pathThreshold * 1000) + 'm');
+    log('  Distance threshold: ' + (distThreshold * 100) + '%');
+    log('  Skip direction check: ' + skipDirection);
+    log('═══════════════════════════════════');
+    
+    // Get route from Google
+    log('Fetching route from Google...');
+    
+    directionsService.route({
+        origin: {lat: SITES[iA].lat, lng: SITES[iA].lon},
+        destination: {lat: SITES[iB].lat, lng: SITES[iB].lon},
+        travelMode: 'DRIVING'
+    }, async (res, status) => {
+        if (status !== 'OK') {
+            log('ERROR: ' + status);
+            return;
+        }
+        
+        const path = res.routes[0].overview_path;
+        const directDist = res.routes[0].legs[0].distance.value / 1000;
+        
+        log('Route fetched: ' + directDist.toFixed(2) + 'km, ' + path.length + ' path points');
+        
+        // STEP 1: Find candidates near path
+        log('');
+        log('STEP 1: Finding candidates within ' + (pathThreshold * 1000) + 'm of path...');
+        let candidates = [];
+        
+        SITES.forEach((site, idx) => {
+            if (idx === iA || idx === iB) return;
+            
+            let minDist = Infinity, pathIdx = 0;
+            for (let i = 0; i < path.length; i++) {
+                const d = haversine(site.lat, site.lon, path[i].lat(), path[i].lng());
+                if (d < minDist) { minDist = d; pathIdx = i; }
+            }
+            
+            if (minDist < pathThreshold) {
+                candidates.push({ idx, pathIdx, dist: minDist });
+                log('  ✓ ' + site.site_id + ' (' + site.site_direction + ') - ' + (minDist * 1000).toFixed(0) + 'm from path');
+            }
+        });
+        
+        log('Found ' + candidates.length + ' candidates');
+        
+        if (candidates.length === 0) {
+            log('No candidates found. Try increasing path threshold.');
+            return;
+        }
+        
+        // STEP 2: Direction check (optional)
+        if (!skipDirection) {
+            log('');
+            log('STEP 2: Checking direction match...');
+            candidates = candidates.filter(c => {
+                const routeDir = getRouteDir(path, c.pathIdx);
+                const siteDir = SITES[c.idx].site_direction;
+                const match = siteDir === routeDir;
+                log('  ' + SITES[c.idx].site_id + ': site=' + siteDir + ', route=' + routeDir + ' → ' + (match ? '✓ MATCH' : '✗ WRONG'));
+                return match;
+            });
+            log(candidates.length + ' candidates after direction filter');
+        } else {
+            log('');
+            log('STEP 2: Direction check SKIPPED');
+        }
+        
+        if (candidates.length === 0) {
+            log('No candidates passed direction check. Try enabling "Skip direction check".');
+            return;
+        }
+        
+        // STEP 3: Verify with Google
+        log('');
+        log('STEP 3: Verifying with Google (threshold: ' + (distThreshold * 100) + '%)...');
+        
+        const verified = [];
+        for (const c of candidates) {
+            const result = await new Promise(resolve => {
+                directionsService.route({
+                    origin: {lat: SITES[iA].lat, lng: SITES[iA].lon},
+                    destination: {lat: SITES[iB].lat, lng: SITES[iB].lon},
+                    waypoints: [{location: {lat: SITES[c.idx].lat, lng: SITES[c.idx].lon}, stopover: true}],
+                    travelMode: 'DRIVING'
+                }, (res2, st2) => {
+                    if (st2 === 'OK') {
+                        let totalDist = 0;
+                        res2.routes[0].legs.forEach(leg => totalDist += leg.distance.value);
+                        totalDist /= 1000;
+                        const increase = (totalDist - directDist) / directDist;
+                        resolve({ totalDist, increase, ok: increase < distThreshold });
+                    } else {
+                        resolve({ ok: false, error: st2 });
+                    }
+                });
+            });
+            
+            if (result.ok) {
+                log('  ✓ ' + SITES[c.idx].site_id + ' ON ROUTE (direct: ' + directDist.toFixed(2) + 'km, with wp: ' + result.totalDist.toFixed(2) + 'km, +' + (result.increase * 100).toFixed(2) + '%)');
+                verified.push(c.idx);
+            } else if (result.error) {
+                log('  ✗ ' + SITES[c.idx].site_id + ' ERROR: ' + result.error);
+            } else {
+                log('  ✗ ' + SITES[c.idx].site_id + ' OFF ROUTE (+' + (result.increase * 100).toFixed(2) + '% > ' + (distThreshold * 100) + '%)');
+            }
+            
+            await new Promise(r => setTimeout(r, 200)); // Rate limit
+        }
+        
+        log('');
+        log('═══════════════════════════════════');
+        log('RESULT: ' + verified.length + ' waypoints found');
+        if (verified.length > 0) {
+            log('Waypoints: ' + verified.map(i => SITES[i].site_id).join(', '));
+        }
+        
+        // Compare with cached
+        const cacheKey = iA + '_' + iB;
+        const cached = CACHE.waypoints[cacheKey] || [];
+        log('');
+        log('CACHED waypoints: ' + (cached.length > 0 ? cached.map(i => SITES[i].site_id).join(', ') : 'None'));
+        
+        if (verified.length !== cached.length) {
+            log('⚠️ DIFFERENCE DETECTED! New: ' + verified.length + ', Cached: ' + cached.length);
+        }
+        log('═══════════════════════════════════');
+    });
 }
 
 // Wait for Google Maps

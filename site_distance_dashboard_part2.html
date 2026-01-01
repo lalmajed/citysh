@@ -236,8 +236,20 @@ async function findWaypointsOnPath(path, startIdx, endIdx, directDist) {
         return [];
     }
     
-    // STEP 2: Skip direction check - let Google verification be the filter
-    log('STEP 2: Skipping direction check, Google will verify');
+    // STEP 2: Check LOCAL route direction at each candidate's position
+    log('STEP 2: Checking LOCAL route direction at each candidate...');
+    candidates = candidates.filter(c => {
+        const localDir = getLocalRouteDirection(path, c.pathIdx);
+        const siteDir = SITES[c.idx].site_direction;
+        const match = siteDir === localDir;
+        log('  ' + SITES[c.idx].site_id + ': site=' + siteDir + ', route=' + localDir + ' → ' + (match ? '✓ MATCH' : '✗ WRONG SIDE'));
+        return match;
+    });
+    
+    if (candidates.length === 0) {
+        log('No candidates match local route direction');
+        return [];
+    }
     
     // STEP 3: Verify with Google Maps IN PARALLEL
     log('STEP 3: Verifying ' + candidates.length + ' in parallel...');
