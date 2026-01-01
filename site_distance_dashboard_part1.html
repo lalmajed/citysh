@@ -101,12 +101,16 @@
             </div>
             
             <div class="panel">
-                <h2>DOWNLOAD</h2>
+                <h2>DOWNLOAD / UPLOAD</h2>
                 <div class="downloads">
                     <button class="btn btn-download" onclick="downloadDistCSV()">Distance CSV</button>
                     <button class="btn btn-download" onclick="downloadTimeCSV()">Time CSV</button>
                     <button class="btn btn-download" onclick="downloadJSON()">Full JSON</button>
                     <button class="btn btn-download" onclick="clearCache()" style="background:#ea4335;">Clear Cache</button>
+                </div>
+                <div style="margin-top:10px;">
+                    <input type="file" id="jsonUpload" accept=".json" onchange="uploadJSON(this)" style="display:none;">
+                    <button class="btn btn-download" onclick="document.getElementById('jsonUpload').click()" style="background:#9c27b0;width:100%;">📁 Upload JSON to Merge</button>
                 </div>
             </div>
             
@@ -640,6 +644,45 @@ function clearCache() {
         updateStats(); 
         log('Part 1 cache cleared'); 
     }
+}
+
+function uploadJSON(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const json = JSON.parse(e.target.result);
+            const dist = json.distance_km || json.dist || {};
+            const time = json.time_min || json.time || {};
+            const wp = json.waypoints || {};
+            
+            let merged = 0;
+            for (const k in dist) {
+                if (CACHE.dist[k] === undefined) {
+                    CACHE.dist[k] = dist[k];
+                    CACHE.time[k] = time[k];
+                    if (wp[k]) CACHE.waypoints[k] = wp[k];
+                    merged++;
+                }
+            }
+            
+            saveCache();
+            updateStats();
+            log('═══════════════════════════════════');
+            log('UPLOADED: ' + file.name);
+            log('Merged ' + merged + ' new routes');
+            log('Total now: ' + Object.keys(CACHE.dist).length + ' routes');
+            log('═══════════════════════════════════');
+            alert('Merged ' + merged + ' new routes!\nTotal: ' + Object.keys(CACHE.dist).length);
+        } catch(err) {
+            alert('Error parsing JSON: ' + err.message);
+            log('Upload error: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+    input.value = ''; // Reset for next upload
 }
 
     </script>
