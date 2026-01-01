@@ -177,19 +177,25 @@
                                 <option value="20">20 (fast - may error)</option>
                             </select>
                         </div>
-                        <button class="btn" onclick="recheckAllRoutes()" style="background:#b71c1c;color:white;width:100%;">
+                        <button class="btn" onclick="recheckAllRoutes()" id="startRecheckBtn" style="background:#b71c1c;color:white;width:100%;">
                             🚀 RE-CHECK SELECTED PORTION
                         </button>
                         <button class="btn" onclick="stopRecheck()" id="stopRecheckBtn" style="background:#666;color:white;width:100%;margin-top:5px;display:none;">
                             ⏹️ STOP
                         </button>
-                        <div id="recheckProgress" style="margin-top:8px;font-size:0.8rem;display:none;">
-                            <div style="background:#ddd;height:20px;border-radius:4px;overflow:hidden;">
-                                <div id="recheckBar" style="background:#e65100;height:100%;width:0%;transition:width 0.3s;"></div>
-                            </div>
-                            <div id="recheckStats" style="margin-top:4px;"></div>
-                        </div>
                     </div>
+                </div>
+                
+                <!-- BIG PROGRESS DISPLAY -->
+                <div class="panel" id="recheckProgress" style="display:none;background:#fff8e1;border:3px solid #ff9800;">
+                    <h2 style="color:#e65100;margin:0 0 10px 0;">⏳ RE-CHECK IN PROGRESS</h2>
+                    <div style="background:#ddd;height:30px;border-radius:8px;overflow:hidden;margin-bottom:10px;">
+                        <div id="recheckBar" style="background:linear-gradient(90deg,#ff9800,#f44336);height:100%;width:0%;transition:width 0.3s;"></div>
+                    </div>
+                    <div id="recheckStats" style="font-size:1.2rem;font-weight:bold;text-align:center;color:#333;">
+                        Starting...
+                    </div>
+                    <div id="recheckDetails" style="font-size:0.85rem;color:#666;text-align:center;margin-top:5px;"></div>
                 </div>
             </div>
             
@@ -864,6 +870,7 @@ let recheckRunning = false;
 function stopRecheck() {
     recheckRunning = false;
     log('⏹️ STOPPING... (will stop after current batch)');
+    document.getElementById('recheckStats').textContent = 'STOPPING...';
 }
 
 async function recheckAllRoutes() {
@@ -947,8 +954,11 @@ async function recheckAllRoutes() {
     routes = selectedRoutes;
     
     recheckRunning = true;
+    document.getElementById('startRecheckBtn').style.display = 'none';
     document.getElementById('stopRecheckBtn').style.display = 'block';
     document.getElementById('recheckProgress').style.display = 'block';
+    document.getElementById('recheckStats').textContent = 'Starting...';
+    document.getElementById('recheckDetails').textContent = '';
     
     log('═══════════════════════════════════');
     log('RE-CHECKING ALL ' + routes.length + ' ROUTES');
@@ -1048,7 +1058,8 @@ async function recheckAllRoutes() {
         
         const pct = (completed / routes.length * 100).toFixed(1);
         document.getElementById('recheckBar').style.width = pct + '%';
-        document.getElementById('recheckStats').textContent = completed + '/' + routes.length + ' (' + pct + '%) | Updated: ' + updated + ' | Errors: ' + errors;
+        document.getElementById('recheckStats').textContent = pct + '% Complete';
+        document.getElementById('recheckDetails').textContent = completed + ' / ' + routes.length + ' routes | ✓ Updated: ' + updated + ' | ✗ Errors: ' + errors;
         
         // Save periodically
         if (completed % 100 === 0) {
@@ -1063,6 +1074,8 @@ async function recheckAllRoutes() {
     
     recheckRunning = false;
     document.getElementById('stopRecheckBtn').style.display = 'none';
+    document.getElementById('startRecheckBtn').style.display = 'block';
+    document.getElementById('recheckProgress').style.display = 'none';
     
     log('');
     log('═══════════════════════════════════');
