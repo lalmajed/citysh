@@ -56,7 +56,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🚗 Route Segmentation Viewer</h1>
+        <h1>Route Segmentation Viewer</h1>
         <p class="subtitle">Analyze vehicle trips with temporal and spatial coherence checking</p>
         
         <div class="stat-row">
@@ -71,23 +71,23 @@
         <div class="grid">
             <div class="sidebar">
                 <div class="panel">
-                    <h2>📁 Load Data</h2>
-                    <input type="file" id="tripsFile" accept=".json,.csv,.parquet" onchange="loadTripsFile(this)">
+                    <h2>Load Data</h2>
+                    <input type="file" id="tripsFile" accept=".json,.csv" onchange="loadTripsFile(this)">
                     <div style="font-size:0.75rem;color:#666;margin-bottom:10px;">
-                        Upload trips file with: vehicle_id, camera_prev, camera_next, timestamp_prev, timestamp_next
+                        Upload trips JSON with: vehicle_id, camera_prev, camera_next, timestamp_prev, timestamp_next
                     </div>
                     <button class="btn btn-sm btn-purple" onclick="loadSampleData()">Load Sample Data (10 Vehicles)</button>
                 </div>
                 
                 <div class="panel">
-                    <h2>🚗 Select Vehicle</h2>
+                    <h2>Select Vehicle</h2>
                     <select id="vehicleSel" onchange="onVehicleChange()">
                         <option value="">-- Select Vehicle --</option>
                     </select>
                 </div>
                 
                 <div class="panel">
-                    <h2>⏰ Time Window</h2>
+                    <h2>Time Window</h2>
                     <div class="time-inputs">
                         <div class="input-group">
                             <label>Start Date</label>
@@ -112,7 +112,7 @@
                 </div>
                 
                 <div class="panel">
-                    <h2>⚙️ Normal Band Configuration</h2>
+                    <h2>Normal Band Configuration</h2>
                     <div class="config-section">
                         <h3>You derive these from your data:</h3>
                         <div class="input-group">
@@ -131,7 +131,7 @@
                 </div>
                 
                 <div class="panel">
-                    <h2>📏 Spatial Threshold</h2>
+                    <h2>Spatial Threshold</h2>
                     <div class="input-group">
                         <label>Distance to corridor (meters)</label>
                         <input type="number" id="spatialThreshold" value="500" step="50">
@@ -142,9 +142,9 @@
                 </div>
                 
                 <div class="panel">
-                    <h2>🗺️ Map Controls</h2>
-                    <button class="btn btn-sm btn-purple" id="toggleSitesBtn" onclick="toggleAllSites()">📍 Show All 247 Sites</button>
-                    <button class="btn btn-sm btn-green" onclick="fitMapToBounds()">🔍 Fit to Route</button>
+                    <h2>Map Controls</h2>
+                    <button class="btn btn-sm btn-purple" id="toggleSitesBtn" onclick="toggleAllSites()">Show All 247 Sites</button>
+                    <button class="btn btn-sm btn-green" onclick="fitMapToBounds()">Fit to Route</button>
                 </div>
             </div>
             
@@ -159,14 +159,14 @@
                 </div>
                 
                 <div class="panel">
-                    <h2>📋 Trips List</h2>
+                    <h2>Trips List</h2>
                     <div class="trips-list" id="tripsList">
                         <div class="no-data">Select a vehicle and click "Show Route" to see trips</div>
                     </div>
                 </div>
                 
                 <div class="panel path-info" id="pathInfo" style="display:none;">
-                    <h3>🛤️ Path Segmentation</h3>
+                    <h3>Path Segmentation</h3>
                     <div id="pathsList"></div>
                 </div>
             </div>
@@ -468,7 +468,7 @@ function renderTripsList() {
                 <span class="trip-ratio ${t.classification}">${t.ratio.toFixed(2)}x</span>
             </div>
             <div class="trip-details">
-                <span>🕐 ${time}</span> |
+                <span>${time}</span> |
                 <span>Obs: ${t.obs_time_min?.toFixed(1) || '?'} min</span> |
                 <span>Exp: ${t.exp_time_min?.toFixed(1) || '?'} min</span>
             </div>
@@ -663,7 +663,7 @@ function toggleAllSites() {
         allSiteMarkers.forEach(m => m.setMap(null));
         allSiteMarkers = [];
         allSitesVisible = false;
-        btn.textContent = '📍 Show All 247 Sites';
+        btn.textContent = 'Show All 247 Sites';
         btn.style.background = '#7b1fa2';
     } else {
         SITES.forEach((s, i) => {
@@ -685,7 +685,7 @@ function toggleAllSites() {
         });
         
         allSitesVisible = true;
-        btn.textContent = '📍 Hide All Sites';
+        btn.textContent = 'Hide All Sites';
         btn.style.background = '#666';
     }
 }
