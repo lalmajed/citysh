@@ -149,7 +149,7 @@ function haversine(lat1, lon1, lat2, lon2) {
 // Find candidate waypoints near the path (pre-filter)
 function findCandidatesNearPath(path, startIdx, endIdx) {
     const candidates = [];
-    const THRESHOLD = 0.15; // 150 meters - wider to catch more waypoints
+    const THRESHOLD = 0.30; // 300 meters - wider to catch waypoints on simplified path
     
     log('Path has ' + path.length + ' points');
     
@@ -190,11 +190,10 @@ async function verifyWaypointWithGoogle(startIdx, waypointIdx, endIdx, directDis
                 res.routes[0].legs.forEach(leg => totalDist += leg.distance.value);
                 totalDist = totalDist / 1000; // km
                 
-                // ULTRA STRICT: 0.1% threshold
-                // If waypoint is truly ON the route, distance should be IDENTICAL
-                // Even tiny detour to wrong side adds measurable distance
+                // STRICT: 0.5% threshold
+                // If waypoint is truly ON the route, distance increase is minimal
                 const increase = (totalDist - directDist) / directDist;
-                const isOnRoute = increase < 0.001; // 0.1% - essentially zero increase
+                const isOnRoute = increase < 0.005; // 0.5% - allows for minor GPS variations
                 
                 const result = isOnRoute ? '✓ ON ROUTE' : '✗ OFF';
                 log('  ' + result + ' ' + SITES[waypointIdx].site_id + 
@@ -237,20 +236,8 @@ async function findWaypointsOnPath(path, startIdx, endIdx, directDist) {
         return [];
     }
     
-    // STEP 2: Check LOCAL route direction at each candidate's position
-    log('STEP 2: Checking LOCAL route direction at each candidate...');
-    candidates = candidates.filter(c => {
-        const localDir = getLocalRouteDirection(path, c.pathIdx);
-        const siteDir = SITES[c.idx].site_direction;
-        const match = siteDir === localDir;
-        log('  ' + SITES[c.idx].site_id + ': site=' + siteDir + ', route=' + localDir + ' → ' + (match ? '✓ MATCH' : '✗ WRONG SIDE'));
-        return match;
-    });
-    
-    if (candidates.length === 0) {
-        log('No candidates match local route direction');
-        return [];
-    }
+    // STEP 2: Skip direction check - let Google verification be the filter
+    log('STEP 2: Skipping direction check, Google will verify');
     
     // STEP 3: Verify with Google Maps IN PARALLEL
     log('STEP 3: Verifying ' + candidates.length + ' in parallel...');
