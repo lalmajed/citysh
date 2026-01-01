@@ -963,11 +963,9 @@ async function recheckAllRoutes() {
     routes = selectedRoutes;
     
     recheckRunning = true;
-    document.getElementById('startRecheckBtn').style.display = 'none';
-    document.getElementById('stopRecheckBtn').style.display = 'block';
-    document.getElementById('recheckProgress').style.display = 'block';
-    document.getElementById('recheckStats').textContent = 'Starting...';
-    document.getElementById('recheckDetails').textContent = '';
+    document.getElementById('topStats').textContent = '0%';
+    document.getElementById('topDetails').textContent = 'Starting ' + routes.length + ' routes...';
+    document.getElementById('topLive').textContent = '🚀 Beginning re-check...';
     
     log('═══════════════════════════════════');
     log('RE-CHECKING ALL ' + routes.length + ' ROUTES');
