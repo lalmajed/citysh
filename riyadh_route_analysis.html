@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riyadh Route Analysis - Path Segmentation Explained</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        
+        .header { 
+            background: linear-gradient(135deg, #1a73e8, #0d47a1); 
+            color: white; padding: 15px 20px; 
+        }
+        .header h1 { font-size: 1.3em; }
+        
+        .container { display: flex; height: calc(100vh - 56px); }
+        
+        .sidebar { 
+            width: 500px; background: white; 
+            border-right: 1px solid #ddd; 
+            overflow-y: auto;
+            padding: 15px;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #fafafa;
+            border-radius: 8px;
+            border-left: 4px solid #1a73e8;
+        }
+        .section h3 { color: #1a73e8; margin-bottom: 10px; font-size: 1em; }
+        .section p { font-size: 0.9em; color: #444; line-height: 1.6; margin: 8px 0; }
+        .section code { background: #e3f2fd; padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
+        .section ul { margin: 10px 0 10px 20px; font-size: 0.9em; color: #444; }
+        .section li { margin: 5px 0; line-height: 1.5; }
+        
+        .formula {
+            background: #fff3e0;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
+        .example-box {
+            background: #e8f5e9;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #a5d6a7;
+        }
+        .example-box h4 { color: #2e7d32; margin-bottom: 8px; }
+        
+        .warning-box {
+            background: #ffebee;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border: 1px solid #ef9a9a;
+        }
+        .warning-box h4 { color: #c62828; margin-bottom: 8px; }
+        
+        .path-item {
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border: 2px solid;
+        }
+        .path-item.path-1 { border-color: #1976d2; background: #e3f2fd; }
+        .path-item.path-2 { border-color: #388e3c; background: #e8f5e9; }
+        .path-item.path-3 { border-color: #f57c00; background: #fff3e0; }
+        
+        .trip-row {
+            display: flex;
+            align-items: center;
+            padding: 6px 10px;
+            margin: 4px 0;
+            background: white;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+        .trip-arrow { margin: 0 8px; color: #666; }
+        .trip-status { margin-left: auto; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; }
+        .status-ok { background: #e8f5e9; color: #2e7d32; }
+        .status-break { background: #ffebee; color: #c62828; }
+        
+        .map-container { flex: 1; position: relative; }
+        #map { width: 100%; height: 100%; }
+        
+        .map-legend {
+            position: absolute; bottom: 20px; left: 20px;
+            background: white; padding: 12px 15px;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            font-size: 0.85em; z-index: 5;
+        }
+        .map-legend h4 { margin-bottom: 8px; color: #333; }
+        .legend-item { display: flex; align-items: center; margin: 5px 0; }
+        .legend-color { width: 20px; height: 4px; margin-right: 8px; border-radius: 2px; }
+        
+        .corridor-info {
+            position: absolute; top: 20px; right: 20px;
+            background: white; padding: 15px;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            max-width: 320px; z-index: 5;
+        }
+        .corridor-info h4 { color: #1a73e8; margin-bottom: 10px; }
+        .corridor-info p { font-size: 0.85em; color: #666; line-height: 1.5; margin: 5px 0; }
+        
+        .highlight { background: #ffeb3b; padding: 0 4px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Path Segmentation: Corridor-Based Approach</h1>
+    </div>
+    
+    <div class="container">
+        <div class="sidebar">
+            <div class="section">
+                <h3>Key Principle</h3>
+                <p><strong>Do NOT treat deviation from Google route as automatically abnormal.</strong></p>
+                <p><strong>Do NOT delete or skip any Trip.</strong></p>
+                <p>We only decide: <span class="highlight">Does the current Path continue, or does a new Path start?</span></p>
+            </div>
+            
+            <div class="section">
+                <h3>1. Corridor Compatibility</h3>
+                <p>For each observed trip (Camera_i to Camera_j), we compute:</p>
+                <div class="formula">
+                    corridor = Google shortest path from Path_Start to Camera_j<br>
+                    d = perpendicular distance from Camera_i to corridor<br>
+                    <br>
+                    IF d > epsilon_spatial (e.g., 2km):<br>
+                    &nbsp;&nbsp;Camera_i is OUTSIDE the corridor<br>
+                    &nbsp;&nbsp;=> Start NEW PATH
+                </div>
+                <p>This checks if the observed camera lies within a reasonable spatial buffer of the expected route.</p>
+            </div>
+            
+            <div class="section">
+                <h3>2. Why Spatial Incompatibility Triggers Path Break</h3>
+                <p>Even if the <strong>time ratio is normal</strong>, spatial deviation indicates:</p>
+                <ul>
+                    <li>The vehicle has left the original travel corridor</li>
+                    <li>A new destination/purpose has emerged</li>
+                    <li>The path should be segmented for analytical clarity</li>
+                </ul>
+                <p>This is a <strong>path-level phenomenon</strong>, not a trip-level anomaly because:</p>
+                <ul>
+                    <li>The individual trip A->B is valid and complete</li>
+                    <li>No data is deleted or marked as error</li>
+                    <li>We simply recognize a new travel segment began</li>
+                </ul>
+            </div>
+            
+            <div class="section">
+                <h3>3. Example: Skipping vs. Deviating</h3>
+                
+                <div class="example-box">
+                    <h4>Acceptable: Camera B Skipped</h4>
+                    <p>Observed: <code>A -> C</code></p>
+                    <p>Google route A->C passes through B</p>
+                    <p>B was not detected (sensor miss, timing, lane)</p>
+                    <p><strong>Result: Same Path continues</strong> - C is on the corridor from A</p>
+                </div>
+                
+                <div class="warning-box">
+                    <h4>Path Break: Camera X Outside Corridor</h4>
+                    <p>Observed: <code>A -> X</code></p>
+                    <p>Google route A->C does NOT include X</p>
+                    <p>X is 5km away from the A->C corridor</p>
+                    <p><strong>Result: NEW PATH starts at X</strong> - vehicle left the corridor</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>4. Live Example from Data</h3>
+                <p><strong>Vehicle:</strong> 1354JSB</p>
+                <p><strong>Date:</strong> 2025-08-20</p>
+                
+                <div class="path-item path-1">
+                    <strong>Path 1 (Blue)</strong> - Morning commute corridor
+                    <div class="trip-row">
+                        <span>RUHSM052</span>
+                        <span class="trip-arrow">-></span>
+                        <span>RUHTE319</span>
+                        <span class="trip-status status-ok">On Corridor</span>
+                    </div>
+                    <div class="trip-row">
+                        <span>RUHTE319</span>
+                        <span class="trip-arrow">-></span>
+                        <span>RUHTE318</span>
+                        <span class="trip-status status-ok">On Corridor</span>
+                    </div>
+                </div>
+                
+                <div class="path-item path-2">
+                    <strong>Path 2 (Green)</strong> - New corridor after gap
+                    <div class="trip-row">
+                        <span>RUHSM026</span>
+                        <span class="trip-arrow">-></span>
+                        <span>RUHSM157</span>
+                        <span class="trip-status status-break">Gap > 15min</span>
+                    </div>
+                </div>
+                
+                <div class="path-item path-3">
+                    <strong>Path 3 (Orange)</strong> - Different area
+                    <div class="trip-row">
+                        <span>RUHSM012</span>
+                        <span class="trip-arrow">-></span>
+                        <span>RUHSM221</span>
+                        <span class="trip-status status-break">Outside Corridor</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>5. Path Segmentation Rules</h3>
+                <div class="formula">
+                    NEW PATH starts when ANY of these is true:<br><br>
+                    1. Time Gap > 15 minutes<br>
+                    2. Distance from corridor > epsilon_spatial<br>
+                    3. Time ratio > threshold AND spatial deviation<br><br>
+                    Otherwise: SAME PATH continues
+                </div>
+            </div>
+        </div>
+        
+        <div class="map-container">
+            <div id="map"></div>
+            
+            <div class="map-legend">
+                <h4>Map Legend</h4>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #4caf50;"></div>
+                    <span>Path Start (Origin)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f44336;"></div>
+                    <span>Path End</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #1976d2; height: 3px;"></div>
+                    <span>Path 1 (Morning)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #388e3c; height: 3px;"></div>
+                    <span>Path 2 (Midday)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f57c00; height: 3px;"></div>
+                    <span>Path 3 (Afternoon)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(25,118,210,0.2); width: 20px; height: 12px;"></div>
+                    <span>Corridor Buffer (epsilon)</span>
+                </div>
+            </div>
+            
+            <div class="corridor-info">
+                <h4>Corridor Visualization</h4>
+                <p>The <strong>shaded area</strong> around each path shows the spatial corridor (epsilon = 2km).</p>
+                <p>Cameras <strong>inside</strong> the corridor: Path continues</p>
+                <p>Cameras <strong>outside</strong> the corridor: New path starts</p>
+                <p style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+                    <strong>Note:</strong> Skipped cameras (like B in A->C) are acceptable if C remains on the corridor.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyless Google Maps API -->
+    <script src="https://cdn.jsdelivr.net/gh/nickolass/Keyless-Google-Maps-API@2.1/mapsJavaScriptAPI.js"></script>
+    
+    <script>
+        const SITES = [{"site_id": "RUHSM001", "latitude": 24.7403322023658, "longitude": 46.6273981332779}, {"site_id": "RUHSM002", "latitude": 24.740427194217, "longitude": 46.6274785995483}, {"site_id": "RUHSM003", "latitude": 24.7546965432207, "longitude": 46.6325774788857}, {"site_id": "RUHSM007", "latitude": 24.6726265911391, "longitude": 46.656776368618}, {"site_id": "RUHSM009", "latitude": 24.7209740445557, "longitude": 46.6058734059334}, {"site_id": "RUHSM012", "latitude": 24.6483701639916, "longitude": 46.7946767807007}, {"site_id": "RUHSM015", "latitude": 24.5439855825558, "longitude": 46.872533261776}, {"site_id": "RUHSM018", "latitude": 24.8287062928303, "longitude": 46.6193702816963}, {"site_id": "RUHSM019", "latitude": 24.8178075375809, "longitude": 46.6184422373772}, {"site_id": "RUHSM022", "latitude": 24.670488879256, "longitude": 46.6602820158005}, {"site_id": "RUHSM023", "latitude": 24.780546768419, "longitude": 46.7285308241844}, {"site_id": "RUHSM024", "latitude": 24.6799116099266, "longitude": 46.6544723510742}, {"site_id": "RUHSM025", "latitude": 24.7649189230075, "longitude": 46.6561299562454}, {"site_id": "RUHSM026", "latitude": 24.7731896590511, "longitude": 46.7319613695145}, {"site_id": "RUHSM027", "latitude": 24.6750541016666, "longitude": 46.6531071066856}, {"site_id": "RUHSM029", "latitude": 24.9694129976553, "longitude": 46.7820569872856}, {"site_id": "RUHSM030", "latitude": 25.0012034832327, "longitude": 46.7709928750992}, {"site_id": "RUHSM032", "latitude": 24.7120199687664, "longitude": 46.6719147562981}, {"site_id": "RUHSM033", "latitude": 24.7897540511277, "longitude": 46.7158091068268}, {"site_id": "RUHSM034", "latitude": 24.6755122958506, "longitude": 46.6905936598778}, {"site_id": "RUHSM035", "latitude": 24.6203516108267, "longitude": 46.5742367506027}, {"site_id": "RUHSM038", "latitude": 24.6846274081011, "longitude": 46.7023712396622}, {"site_id": "RUHSM042", "latitude": 24.740704875449, "longitude": 46.5987414121628}, {"site_id": "RUHSM044", "latitude": 24.8400178982926, "longitude": 46.6072306036949}, {"site_id": "RUHSM045", "latitude": 24.6261962301252, "longitude": 46.7836314439774}, {"site_id": "RUHSM046", "latitude": 24.5856708282881, "longitude": 46.6952633857727}, {"site_id": "RUHSM049", "latitude": 24.8066959557292, "longitude": 46.7554226517677}, {"site_id": "RUHSM051", "latitude": 24.5581848394885, "longitude": 46.6767024993897}, {"site_id": "RUHSM052", "latitude": 24.7243240497979, "longitude": 46.6658690571785}, {"site_id": "RUHSM053", "latitude": 24.6729043824091, "longitude": 46.6916853189468}, {"site_id": "RUHSM054", "latitude": 24.6123632798959, "longitude": 46.7067539691925}, {"site_id": "RUHSM055", "latitude": 24.6110781730948, "longitude": 46.707022190094}, {"site_id": "RUHSM057", "latitude": 24.6656945509571, "longitude": 46.6192603111267}, {"site_id": "RUHSM059", "latitude": 24.831956030886, "longitude": 46.8484577536583}, {"site_id": "RUHSM060", "latitude": 24.8321897210297, "longitude": 46.7234346270561}, {"site_id": "RUHSM062", "latitude": 24.7980377711983, "longitude": 46.569601893425}, {"site_id": "RUHSM069", "latitude": 24.56560566558, "longitude": 46.6250592470169}, {"site_id": "RUHSM070", "latitude": 24.6942463632656, "longitude": 46.5634649991989}, {"site_id": "RUHSM071", "latitude": 24.6711544395348, "longitude": 46.6223931312561}, {"site_id": "RUHSM072", "latitude": 24.6707963331305, "longitude": 46.6222590208054}, {"site_id": "RUHSM073", "latitude": 24.6870447823229, "longitude": 46.6315904259682}, {"site_id": "RUHSM074", "latitude": 24.6869545710959, "longitude": 46.6317647695541}, {"site_id": "RUHSM077", "latitude": 24.8111586340332, "longitude": 46.7348715662956}, {"site_id": "RUHSM078", "latitude": 24.8110612436613, "longitude": 46.7346113920212}, {"site_id": "RUHSM079", "latitude": 24.5588531422709, "longitude": 46.6225674748421}, {"site_id": "RUHSM080", "latitude": 24.5589824415937, "longitude": 46.622556746006}, {"site_id": "RUHSM093", "latitude": 24.8325232108086, "longitude": 46.8203857541084}, {"site_id": "RUHSM095", "latitude": 24.7800816178938, "longitude": 46.8530228734016}, {"site_id": "RUHSM096", "latitude": 24.5348626583046, "longitude": 46.6983264684677}, {"site_id": "RUHSM097", "latitude": 24.598323749187, "longitude": 46.7443531751633}, {"site_id": "RUHSM098", "latitude": 24.8195992645787, "longitude": 46.8459257483482}, {"site_id": "RUHSM100", "latitude": 24.5686573528817, "longitude": 46.8897798657417}, {"site_id": "RUHSM102", "latitude": 24.7352066774981, "longitude": 46.6819301247597}, {"site_id": "RUHSM106", "latitude": 24.7087793016666, "longitude": 46.7659583687782}, {"site_id": "RUHSM110", "latitude": 24.8409306555311, "longitude": 46.5533074736595}, {"site_id": "RUHSM111", "latitude": 24.8410231157739, "longitude": 46.5536212921143}, {"site_id": "RUHSM112", "latitude": 24.5972800762424, "longitude": 46.6084000468254}, {"site_id": "RUHSM113", "latitude": 24.5971435038554, "longitude": 46.6084751486778}, {"site_id": "RUHSM114", "latitude": 24.5475208005664, "longitude": 46.7195722460747}, {"site_id": "RUHSM116", "latitude": 24.9070265631544, "longitude": 46.9199708104134}, {"site_id": "RUHSM117", "latitude": 24.5381879590055, "longitude": 46.6897889971733}, {"site_id": "RUHSM118", "latitude": 24.5382806827733, "longitude": 46.6898936033249}, {"site_id": "RUHSM121", "latitude": 24.6462394879027, "longitude": 46.6858944296837}, {"site_id": "RUHSM122", "latitude": 24.7958463762615, "longitude": 46.7296761274338}, {"site_id": "RUHSM125", "latitude": 24.771906272745, "longitude": 46.732605099678}, {"site_id": "RUHSM128", "latitude": 24.6981526522312, "longitude": 46.6789072751999}, {"site_id": "RUHSM129", "latitude": 24.6876372637067, "longitude": 46.7106726765633}, {"site_id": "RUHSM130", "latitude": 24.6636397195435, "longitude": 46.7306765913963}, {"site_id": "RUHSM131", "latitude": 24.6634934669944, "longitude": 46.7308187484741}, {"site_id": "RUHSM136", "latitude": 24.620424801656, "longitude": 46.5808054804802}, {"site_id": "RUHSM140", "latitude": 24.8769760481679, "longitude": 46.8059206008911}, {"site_id": "RUHSM141", "latitude": 24.8769687507318, "longitude": 46.8060520291329}, {"site_id": "RUHSM142", "latitude": 24.5674108328895, "longitude": 46.655505001545}, {"site_id": "RUHSM144", "latitude": 24.5638614614901, "longitude": 46.717287003994}, {"site_id": "RUHSM145", "latitude": 24.5687663130558, "longitude": 46.8898630142212}, {"site_id": "RUHSM147", "latitude": 24.6038597752923, "longitude": 46.6194561123848}, {"site_id": "RUHSM148", "latitude": 24.6040012164286, "longitude": 46.6193461418152}, {"site_id": "RUHSM152", "latitude": 24.6854562001529, "longitude": 46.6520261764526}, {"site_id": "RUHSM153", "latitude": 24.6855219810628, "longitude": 46.6522246599197}, {"site_id": "RUHSM156", "latitude": 24.7259342868167, "longitude": 46.7802920937538}, {"site_id": "RUHSM157", "latitude": 24.6409759484262, "longitude": 46.8291538953781}, {"site_id": "RUHSM160", "latitude": 24.6086054881289, "longitude": 46.7729669809341}, {"site_id": "RUHSM161", "latitude": 24.6336106991616, "longitude": 46.8119421601295}, {"site_id": "RUHSM164", "latitude": 24.5796291806517, "longitude": 46.5517866611481}, {"site_id": "RUHSM165", "latitude": 24.5797877232525, "longitude": 46.5518108010292}, {"site_id": "RUHSM168", "latitude": 24.5844927893916, "longitude": 46.7547172307968}, {"site_id": "RUHSM169", "latitude": 24.5982237727608, "longitude": 46.6173076629639}, {"site_id": "RUHSM170", "latitude": 24.5981359902433, "longitude": 46.6171762347221}, {"site_id": "RUHSM173", "latitude": 24.7946969705971, "longitude": 46.6560655832291}, {"site_id": "RUHSM174", "latitude": 24.5079388888788, "longitude": 46.9285324215889}, {"site_id": "RUHSM175", "latitude": 24.5081024122122, "longitude": 46.9286692142487}, {"site_id": "RUHSM178", "latitude": 25.0159432570743, "longitude": 46.7664411664009}, {"site_id": "RUHSM179", "latitude": 25.0158897994536, "longitude": 46.7662614583969}, {"site_id": "RUHSM180", "latitude": 24.66748117972, "longitude": 46.7952159047127}, {"site_id": "RUHSM181", "latitude": 24.6672764432188, "longitude": 46.7952185869217}, {"site_id": "RUHSM182", "latitude": 24.6433261861909, "longitude": 46.8339711427689}, {"site_id": "RUHSM187", "latitude": 24.642784983054, "longitude": 46.7355394363403}, {"site_id": "RUHSM188", "latitude": 24.6011674755442, "longitude": 46.6398543119431}, {"site_id": "RUHSM189", "latitude": 24.6013016369983, "longitude": 46.6397336125374}, {"site_id": "RUHSM190", "latitude": 24.6326745415304, "longitude": 46.5654820203781}, {"site_id": "RUHSM191", "latitude": 24.8129651971553, "longitude": 46.6760292649269}, {"site_id": "RUHSM192", "latitude": 24.8127826050202, "longitude": 46.6761177778244}, {"site_id": "RUHSM195", "latitude": 24.7299152397197, "longitude": 46.8647655844688}, {"site_id": "RUHSM196", "latitude": 24.7999978581173, "longitude": 46.6526859998703}, {"site_id": "RUHSM198", "latitude": 24.7694781484828, "longitude": 46.6684493422508}, {"site_id": "RUHSM201", "latitude": 24.615255335399, "longitude": 46.7573323845863}, {"site_id": "RUHSM207", "latitude": 24.7444197548951, "longitude": 46.6082498431206}, {"site_id": "RUHSM208", "latitude": 24.823774152058, "longitude": 46.7285388708115}, {"site_id": "RUHSM209", "latitude": 24.8236621627272, "longitude": 46.7282545566559}, {"site_id": "RUHSM210", "latitude": 24.7432407032976, "longitude": 46.8001833558083}, {"site_id": "RUHSM211", "latitude": 24.7433162129597, "longitude": 46.8002933263779}, {"site_id": "RUHSM212", "latitude": 24.6725825464765, "longitude": 46.8299263715744}, {"site_id": "RUHSM213", "latitude": 24.6725337944213, "longitude": 46.8298190832138}, {"site_id": "RUHSM216", "latitude": 24.5872366876198, "longitude": 46.5884765982628}, {"site_id": "RUHSM217", "latitude": 24.5871147808519, "longitude": 46.5885651111603}, {"site_id": "RUHSM218", "latitude": 24.7088894173431, "longitude": 46.8437933921814}, {"site_id": "RUHSM221", "latitude": 24.6402519488123, "longitude": 46.75511687994}, {"site_id": "RUHSM224", "latitude": 24.7455602489784, "longitude": 46.8242803215981}, {"site_id": "RUHSM225", "latitude": 24.7454847342479, "longitude": 46.8241676688194}, {"site_id": "RUHSM226", "latitude": 24.7641928838335, "longitude": 46.8337565660477}, {"site_id": "RUHSM227", "latitude": 24.764122238671, "longitude": 46.8336492776871}, {"site_id": "RUHSM228", "latitude": 24.7395185293973, "longitude": 46.5959626436234}, {"site_id": "RUHSM232", "latitude": 24.4701528666928, "longitude": 46.612468957901}, {"site_id": "RUHSM233", "latitude": 24.5476209553064, "longitude": 46.6873374581337}, {"site_id": "RUHSM234", "latitude": 24.5477331800292, "longitude": 46.6874313354492}, {"site_id": "RUHSM235", "latitude": 24.6672178504822, "longitude": 46.7845594882965}, {"site_id": "RUHSM238", "latitude": 24.4949618404793, "longitude": 46.9437834620476}, {"site_id": "RUHSM239", "latitude": 24.4951033915724, "longitude": 46.9439175724983}, {"site_id": "RUHSM240", "latitude": 24.6486919902838, "longitude": 46.7140683531761}, {"site_id": "RUHSM241", "latitude": 24.6487358708835, "longitude": 46.7141970992088}, {"site_id": "RUHSM242", "latitude": 24.5620708697593, "longitude": 46.5307635068893}, {"site_id": "RUHSM243", "latitude": 24.5622074829673, "longitude": 46.5307849645615}, {"site_id": "RUHSM244", "latitude": 24.5925682421353, "longitude": 46.5811836719513}, {"site_id": "RUHSM245", "latitude": 24.592451165573, "longitude": 46.5809771418572}, {"site_id": "RUHSM246", "latitude": 24.5606828008027, "longitude": 46.5485760569573}, {"site_id": "RUHSM247", "latitude": 24.5608462580163, "longitude": 46.5485733747482}, {"site_id": "RUHSM248", "latitude": 24.5591532055241, "longitude": 46.5682715177536}, {"site_id": "RUHSM249", "latitude": 24.5593190901152, "longitude": 46.5683010220528}, {"site_id": "RUHSM250", "latitude": 24.7962287009035, "longitude": 46.7782375216484}, {"site_id": "RUHSM251", "latitude": 24.7963431075156, "longitude": 46.778157055378}, {"site_id": "RUHSM252", "latitude": 24.6506762784333, "longitude": 46.7848706245422}, {"site_id": "RUHSM253", "latitude": 24.6505348901065, "longitude": 46.7849349975586}, {"site_id": "RUHSM254", "latitude": 24.6017820953835, "longitude": 46.6995683312416}, {"site_id": "RUHSM255", "latitude": 24.6019428426154, "longitude": 46.6995227336884}, {"site_id": "RUHSM257", "latitude": 24.5417677210066, "longitude": 46.6960680484772}, {"site_id": "RUHSM258", "latitude": 24.5416505969815, "longitude": 46.6959768533707}, {"site_id": "RUHSM260", "latitude": 24.6184495728811, "longitude": 46.5350738167763}, {"site_id": "RUHSM261", "latitude": 24.8220580564739, "longitude": 46.8324986100197}, {"site_id": "RUHSM262", "latitude": 24.7625659273025, "longitude": 46.8108746409416}, {"site_id": "RUHSM263", "latitude": 24.7625074578522, "longitude": 46.810756623745}, {"site_id": "RUHSM265", "latitude": 24.6282468000288, "longitude": 46.5544849634171}, {"site_id": "RUHSM266", "latitude": 24.621812214839, "longitude": 46.5321287512779}, {"site_id": "RUHSM267", "latitude": 24.8855940582138, "longitude": 46.7199504375458}, {"site_id": "RUHSM268", "latitude": 24.5686427243791, "longitude": 46.5279042720795}, {"site_id": "RUHSM269", "latitude": 24.56878873, "longitude": 46.52792484}, {"site_id": "RUHSM270", "latitude": 24.6423900305582, "longitude": 46.7355823516846}, {"site_id": "RUHSM271", "latitude": 24.7657883617786, "longitude": 46.7543041706085}, {"site_id": "RUHSM274", "latitude": 24.8155925940606, "longitude": 46.6353213787079}, {"site_id": "RUHSM275", "latitude": 24.8347697001099, "longitude": 46.7905327677727}, {"site_id": "RUHSM276", "latitude": 24.8346966545502, "longitude": 46.7903396487236}, {"site_id": "RUHSM278", "latitude": 24.6766160926836, "longitude": 46.8499436974526}, {"site_id": "RUHSM279", "latitude": 24.6765527121673, "longitude": 46.8497881293297}, {"site_id": "RUHSM280", "latitude": 24.8184475122469, "longitude": 46.8023881316185}, {"site_id": "RUHSM281", "latitude": 24.8183549901527, "longitude": 46.8022164702416}, {"site_id": "RUHSM286", "latitude": 24.6720829180904, "longitude": 46.5581783652306}, {"site_id": "RUHSM287", "latitude": 24.6433213464037, "longitude": 46.5461325645447}, {"site_id": "RUHSM290", "latitude": 24.6155723237174, "longitude": 46.7154604196549}, {"site_id": "RUHSM291", "latitude": 24.6155430622212, "longitude": 46.7153263092041}, {"site_id": "RUHSM292", "latitude": 24.6999315543658, "longitude": 46.7230913043022}, {"site_id": "RUHSM296", "latitude": 24.7779751316449, "longitude": 46.7809116840363}, {"site_id": "RUHSM304", "latitude": 24.7020076530006, "longitude": 46.6487458348274}, {"site_id": "RUHSM305", "latitude": 24.8371752096259, "longitude": 46.6561380028725}, {"site_id": "RUHSM306", "latitude": 24.7059527461551, "longitude": 46.6575327515602}, {"site_id": "RUHSM308", "latitude": 24.6226168155053, "longitude": 46.5494531393051}, {"site_id": "RUHSM312", "latitude": 25.0212345764591, "longitude": 46.6135954856873}, {"site_id": "RUHSM313", "latitude": 25.0214120108395, "longitude": 46.6135391592979}, {"site_id": "RUHSM315", "latitude": 24.5423701171962, "longitude": 46.7042890191078}, {"site_id": "RUHSM316", "latitude": 24.5422652060434, "longitude": 46.7044472694397}, {"site_id": "RUHSM325", "latitude": 24.5786754649118, "longitude": 46.741595864296}, {"site_id": "RUHSM326", "latitude": 24.5788146164014, "longitude": 46.7415341734886}, {"site_id": "RUHSM336", "latitude": 24.9067906009768, "longitude": 46.977547109127}, {"site_id": "RUHSM337", "latitude": 24.9066907889091, "longitude": 46.9776409864426}, {"site_id": "RUHSM340", "latitude": 24.9288681103428, "longitude": 46.7166620492935}, {"site_id": "RUHSM345", "latitude": 24.6962883540936, "longitude": 46.8563032150269}, {"site_id": "RUHSM350", "latitude": 24.7642247877842, "longitude": 46.6931256651878}, {"site_id": "RUHSM358", "latitude": 24.7884113106178, "longitude": 46.6334706544876}, {"site_id": "RUHSM359", "latitude": 24.7553980581506, "longitude": 46.6502237319946}, {"site_id": "RUHSM360", "latitude": 24.5945431171705, "longitude": 46.7034012079239}, {"site_id": "RUHSM368", "latitude": 24.6352978544649, "longitude": 46.6226264834404}, {"site_id": "RUHSM369", "latitude": 24.6351466822632, "longitude": 46.6227042675018}, {"site_id": "RUHSM380", "latitude": 24.841429643951, "longitude": 46.8063712120056}, {"site_id": "RUHSM381", "latitude": 24.8413541914201, "longitude": 46.8061780929566}, {"site_id": "RUHSM396", "latitude": 24.3294130168959, "longitude": 46.8735444545746}, {"site_id": "RUHSM397", "latitude": 24.3294912044514, "longitude": 46.8738126754761}, {"site_id": "RUHSM432", "latitude": 24.8907017220214, "longitude": 46.8079134821892}, {"site_id": "RUHSM433", "latitude": 24.8907309072334, "longitude": 46.8077713251114}, {"site_id": "RUHSM451", "latitude": 24.6446348177146, "longitude": 46.6930103302002}, {"site_id": "RUHSM452", "latitude": 24.6443911519871, "longitude": 46.6931363940239}, {"site_id": "RUHSM455", "latitude": 24.5519562952254, "longitude": 46.6132870316506}, {"site_id": "RUHSM456", "latitude": 24.5520953694537, "longitude": 46.6132897138596}, {"site_id": "RUHSM458", "latitude": 24.8195554339359, "longitude": 46.7520859837532}, {"site_id": "RUHSM459", "latitude": 24.5847343246958, "longitude": 46.6552877426148}, {"site_id": "RUHSM460", "latitude": 24.5848514020341, "longitude": 46.6554942727089}, {"site_id": "RUHSM467", "latitude": 24.6270665833972, "longitude": 46.5201660990715}, {"site_id": "RUHSM468", "latitude": 24.6266960872229, "longitude": 46.5199971199036}, {"site_id": "RUHSM525", "latitude": 25.012863802906, "longitude": 46.6809833049774}, {"site_id": "RUHSM526", "latitude": 25.0128613773877, "longitude": 46.6811040043831}, {"site_id": "RUHSM530", "latitude": 24.6072056361663, "longitude": 46.660198867321}, {"site_id": "RUHSM531", "latitude": 24.6073153598916, "longitude": 46.6601157188416}, {"site_id": "RUHSM540", "latitude": 24.625494022299, "longitude": 46.6844916343689}, {"site_id": "RUHSM541", "latitude": 24.6253794264026, "longitude": 46.6844862699509}, {"site_id": "RUHSM542", "latitude": 24.9065182947864, "longitude": 46.6434082388878}, {"site_id": "RUHSM543", "latitude": 24.9064526219956, "longitude": 46.6431882977486}, {"site_id": "RUHSM546", "latitude": 24.7902436855305, "longitude": 46.8545919656754}, {"site_id": "RUHSM547", "latitude": 24.7901097595178, "longitude": 46.8544578552246}, {"site_id": "RUHSM555", "latitude": 24.8721018851866, "longitude": 46.6604670882225}, {"site_id": "RUHSM556", "latitude": 24.8720069697679, "longitude": 46.6602981090546}, {"site_id": "RUHSM559", "latitude": 24.5441977464061, "longitude": 46.8807810544968}, {"site_id": "RUHSM560", "latitude": 24.5442490050968, "longitude": 46.8806630373001}, {"site_id": "RUHSM576", "latitude": 24.856359089514, "longitude": 46.7374357581139}, {"site_id": "RUHSM577", "latitude": 24.8563639531407, "longitude": 46.7373177409172}, {"site_id": "RUHTE304", "latitude": 24.5842414097686, "longitude": 46.7537328600884}, {"site_id": "RUHTE305", "latitude": 24.5903877908723, "longitude": 46.7684072256088}, {"site_id": "RUHTE306", "latitude": 24.5905317003463, "longitude": 46.7683106660843}, {"site_id": "RUHTE309", "latitude": 24.6524997358911, "longitude": 46.837058365345}, {"site_id": "RUHTE311", "latitude": 24.6064936135113, "longitude": 46.7306846380234}, {"site_id": "RUHTE312", "latitude": 24.7251035336184, "longitude": 46.846419274807}, {"site_id": "RUHTE313", "latitude": 24.7251863658135, "longitude": 46.8465641140938}, {"site_id": "RUHTE315", "latitude": 24.6141750770559, "longitude": 46.8200236558914}, {"site_id": "RUHTE316", "latitude": 24.6142896999613, "longitude": 46.8201014399529}, {"site_id": "RUHTE317", "latitude": 24.6667255799159, "longitude": 46.5599271655083}, {"site_id": "RUHTE318", "latitude": 24.8014076405187, "longitude": 46.7830601334572}, {"site_id": "RUHTE319", "latitude": 24.8013516499019, "longitude": 46.7829152941704}, {"site_id": "RUHTE320", "latitude": 24.5822390462004, "longitude": 46.800848543644}, {"site_id": "RUHTE321", "latitude": 24.5821049042435, "longitude": 46.8009102344513}, {"site_id": "RUHTE325", "latitude": 24.8405124734256, "longitude": 46.6326740384102}, {"site_id": "RUHTE326", "latitude": 24.84056807361, "longitude": 46.632821559906}, {"site_id": "RUHTE327", "latitude": 25.0019957881179, "longitude": 46.5249887108803}, {"site_id": "RUHTE329", "latitude": 24.7977018282743, "longitude": 46.6402861475945}, {"site_id": "RUHTE330", "latitude": 24.7980061369433, "longitude": 46.6402700543404}, {"site_id": "RUHTE331", "latitude": 24.5881342040044, "longitude": 46.6691654920578}, {"site_id": "RUHTE332", "latitude": 24.6438528149027, "longitude": 46.5914431214333}, {"site_id": "RUHTE333", "latitude": 24.643733326556, "longitude": 46.5916550159454}, {"site_id": "RUHTE334", "latitude": 24.6315966143575, "longitude": 46.8755158782005}, {"site_id": "RUHTE335", "latitude": 24.6308021511539, "longitude": 46.8756607174873}, {"site_id": "RUHTE336", "latitude": 24.9054087603904, "longitude": 46.5742716193199}, {"site_id": "RUHTE337", "latitude": 24.9053406696483, "longitude": 46.5741160511971}];
+        const ROUTE = {"vehicle_id": "1354JSB", "date": "2025-08-20", "detections": [{"site_id": "RUHSM052", "timestamp": "2025-08-20T06:46:26.756000", "lat": 24.7243240497979, "lon": 46.6658690571785}, {"site_id": "RUHTE319", "timestamp": "2025-08-20T08:08:44.742000", "lat": 24.8013516499019, "lon": 46.7829152941704}, {"site_id": "RUHTE318", "timestamp": "2025-08-20T08:20:52.895000", "lat": 24.8014076405187, "lon": 46.7830601334572}, {"site_id": "RUHSM044", "timestamp": "2025-08-20T09:01:22.023000", "lat": 24.8400178982926, "lon": 46.6072306036949}, {"site_id": "RUHSM250", "timestamp": "2025-08-20T09:03:11.476000", "lat": 24.7962287009035, "lon": 46.7782375216484}, {"site_id": "RUHTE318", "timestamp": "2025-08-20T09:03:23.627000", "lat": 24.8014076405187, "lon": 46.7830601334572}, {"site_id": "RUHTE319", "timestamp": "2025-08-20T09:09:49.136000", "lat": 24.8013516499019, "lon": 46.7829152941704}, {"site_id": "RUHSM026", "timestamp": "2025-08-20T09:24:06.997000", "lat": 24.7731896590511, "lon": 46.7319613695145}, {"site_id": "RUHSM157", "timestamp": "2025-08-20T09:39:45.427000", "lat": 24.6409759484262, "lon": 46.8291538953781}, {"site_id": "RUHTE318", "timestamp": "2025-08-20T09:58:19.257000", "lat": 24.8014076405187, "lon": 46.7830601334572}, {"site_id": "RUHTE319", "timestamp": "2025-08-20T10:14:49.492000", "lat": 24.8013516499019, "lon": 46.7829152941704}, {"site_id": "RUHSM281", "timestamp": "2025-08-20T12:15:52.173000", "lat": 24.8183549901527, "lon": 46.8022164702416}, {"site_id": "RUHTE319", "timestamp": "2025-08-20T12:51:07.886000", "lat": 24.8013516499019, "lon": 46.7829152941704}, {"site_id": "RUHTE318", "timestamp": "2025-08-20T13:06:48.862000", "lat": 24.8014076405187, "lon": 46.7830601334572}, {"site_id": "RUHTE319", "timestamp": "2025-08-20T13:13:06.277000", "lat": 24.8013516499019, "lon": 46.7829152941704}, {"site_id": "RUHTE318", "timestamp": "2025-08-20T13:20:47.363000", "lat": 24.8014076405187, "lon": 46.7830601334572}, {"site_id": "RUHSM281", "timestamp": "2025-08-20T13:51:39.813000", "lat": 24.8183549901527, "lon": 46.8022164702416}, {"site_id": "RUHTE319", "timestamp": "2025-08-20T13:59:19.050000", "lat": 24.8013516499019, "lon": 46.7829152941704}, {"site_id": "RUHTE318", "timestamp": "2025-08-20T14:46:49.365000", "lat": 24.8014076405187, "lon": 46.7830601334572}, {"site_id": "RUHTE319", "timestamp": "2025-08-20T15:40:17.782000", "lat": 24.8013516499019, "lon": 46.7829152941704}, {"site_id": "RUHTE318", "timestamp": "2025-08-20T17:04:38.331000", "lat": 24.8014076405187, "lon": 46.7830601334572}, {"site_id": "RUHTE319", "timestamp": "2025-08-20T17:18:12.992000", "lat": 24.8013516499019, "lon": 46.7829152941704}, {"site_id": "RUHTE318", "timestamp": "2025-08-20T17:55:51.882000", "lat": 24.8014076405187, "lon": 46.7830601334572}, {"site_id": "RUHTE319", "timestamp": "2025-08-20T18:01:44.362000", "lat": 24.8013516499019, "lon": 46.7829152941704}, {"site_id": "RUHSM012", "timestamp": "2025-08-20T18:22:25.428000", "lat": 24.6483701639916, "lon": 46.7946767807007}, {"site_id": "RUHSM221", "timestamp": "2025-08-20T18:47:31.755000", "lat": 24.6402519488123, "lon": 46.75511687994}, {"site_id": "RUHTE319", "timestamp": "2025-08-20T18:52:31.380000", "lat": 24.8013516499019, "lon": 46.7829152941704}, {"site_id": "RUHTE318", "timestamp": "2025-08-20T19:04:22.879000", "lat": 24.8014076405187, "lon": 46.7830601334572}, {"site_id": "RUHTE319", "timestamp": "2025-08-20T19:10:36.136000", "lat": 24.8013516499019, "lon": 46.7829152941704}, {"site_id": "RUHSM157", "timestamp": "2025-08-20T19:33:46.920000", "lat": 24.6409759484262, "lon": 46.8291538953781}, {"site_id": "RUHTE318", "timestamp": "2025-08-20T19:34:48.630000", "lat": 24.8014076405187, "lon": 46.7830601334572}, {"site_id": "RUHTE319", "timestamp": "2025-08-20T19:42:26.242000", "lat": 24.8013516499019, "lon": 46.7829152941704}, {"site_id": "RUHSM451", "timestamp": "2025-08-20T21:20:57.223000", "lat": 24.6446348177146, "lon": 46.6930103302002}], "trips": [{"camera_prev": "RUHSM052", "camera_next": "RUHTE319", "t_prev": "2025-08-20T06:46:26.756000", "t_next": "2025-08-20T08:08:44.742000", "obs_time_seconds": 4938}, {"camera_prev": "RUHTE319", "camera_next": "RUHTE318", "t_prev": "2025-08-20T08:08:45.138000", "t_next": "2025-08-20T08:20:52.895000", "obs_time_seconds": 727}, {"camera_prev": "RUHTE319", "camera_next": "RUHSM044", "t_prev": "2025-08-20T08:50:08.798000", "t_next": "2025-08-20T09:01:22.023000", "obs_time_seconds": 674}, {"camera_prev": "RUHSM044", "camera_next": "RUHSM250", "t_prev": "2025-08-20T09:01:22.023000", "t_next": "2025-08-20T09:03:11.476000", "obs_time_seconds": 109}, {"camera_prev": "RUHSM250", "camera_next": "RUHTE318", "t_prev": "2025-08-20T09:03:11.476000", "t_next": "2025-08-20T09:03:23.627000", "obs_time_seconds": 12}, {"camera_prev": "RUHTE318", "camera_next": "RUHTE319", "t_prev": "2025-08-20T09:03:23.627000", "t_next": "2025-08-20T09:09:49.136000", "obs_time_seconds": 386}, {"camera_prev": "RUHTE319", "camera_next": "RUHSM026", "t_prev": "2025-08-20T09:09:49.136000", "t_next": "2025-08-20T09:24:06.997000", "obs_time_seconds": 857}, {"camera_prev": "RUHSM026", "camera_next": "RUHSM157", "t_prev": "2025-08-20T09:24:06.997000", "t_next": "2025-08-20T09:39:45.427000", "obs_time_seconds": 939}, {"camera_prev": "RUHSM157", "camera_next": "RUHTE318", "t_prev": "2025-08-20T09:39:45.427000", "t_next": "2025-08-20T09:58:19.257000", "obs_time_seconds": 1114}, {"camera_prev": "RUHTE318", "camera_next": "RUHTE319", "t_prev": "2025-08-20T09:58:19.257000", "t_next": "2025-08-20T10:14:49.492000", "obs_time_seconds": 990}, {"camera_prev": "RUHTE319", "camera_next": "RUHSM281", "t_prev": "2025-08-20T11:52:43.608000", "t_next": "2025-08-20T12:15:52.173000", "obs_time_seconds": 1389}, {"camera_prev": "RUHSM281", "camera_next": "RUHTE319", "t_prev": "2025-08-20T12:15:52.173000", "t_next": "2025-08-20T12:51:07.886000", "obs_time_seconds": 2115}, {"camera_prev": "RUHTE319", "camera_next": "RUHTE318", "t_prev": "2025-08-20T12:51:07.886000", "t_next": "2025-08-20T13:06:48.862000", "obs_time_seconds": 941}, {"camera_prev": "RUHTE318", "camera_next": "RUHTE319", "t_prev": "2025-08-20T13:06:49.340000", "t_next": "2025-08-20T13:13:06.277000", "obs_time_seconds": 377}, {"camera_prev": "RUHTE319", "camera_next": "RUHTE318", "t_prev": "2025-08-20T13:13:06.277000", "t_next": "2025-08-20T13:20:47.363000", "obs_time_seconds": 461}, {"camera_prev": "RUHTE318", "camera_next": "RUHSM281", "t_prev": "2025-08-20T13:20:47.363000", "t_next": "2025-08-20T13:51:39.813000", "obs_time_seconds": 1852}, {"camera_prev": "RUHSM281", "camera_next": "RUHTE319", "t_prev": "2025-08-20T13:51:40.494000", "t_next": "2025-08-20T13:59:19.050000", "obs_time_seconds": 459}, {"camera_prev": "RUHTE319", "camera_next": "RUHTE318", "t_prev": "2025-08-20T14:46:01.763000", "t_next": "2025-08-20T14:46:49.365000", "obs_time_seconds": 48}, {"camera_prev": "RUHTE318", "camera_next": "RUHTE319", "t_prev": "2025-08-20T14:46:49.365000", "t_next": "2025-08-20T15:40:17.782000", "obs_time_seconds": 3208}, {"camera_prev": "RUHTE319", "camera_next": "RUHTE318", "t_prev": "2025-08-20T16:50:46.534000", "t_next": "2025-08-20T17:04:38.331000", "obs_time_seconds": 832}, {"camera_prev": "RUHTE318", "camera_next": "RUHTE319", "t_prev": "2025-08-20T17:04:38.331000", "t_next": "2025-08-20T17:18:12.992000", "obs_time_seconds": 814}, {"camera_prev": "RUHTE319", "camera_next": "RUHTE318", "t_prev": "2025-08-20T17:36:59.005000", "t_next": "2025-08-20T17:55:51.882000", "obs_time_seconds": 1132}, {"camera_prev": "RUHTE318", "camera_next": "RUHTE319", "t_prev": "2025-08-20T17:55:51.882000", "t_next": "2025-08-20T18:01:44.362000", "obs_time_seconds": 353}, {"camera_prev": "RUHTE319", "camera_next": "RUHSM012", "t_prev": "2025-08-20T18:01:44.362000", "t_next": "2025-08-20T18:22:25.428000", "obs_time_seconds": 1241}, {"camera_prev": "RUHSM012", "camera_next": "RUHSM221", "t_prev": "2025-08-20T18:22:25.428000", "t_next": "2025-08-20T18:47:31.755000", "obs_time_seconds": 1506}, {"camera_prev": "RUHSM221", "camera_next": "RUHTE319", "t_prev": "2025-08-20T18:47:31.755000", "t_next": "2025-08-20T18:52:31.380000", "obs_time_seconds": 300}, {"camera_prev": "RUHTE319", "camera_next": "RUHTE318", "t_prev": "2025-08-20T18:52:31.380000", "t_next": "2025-08-20T19:04:22.879000", "obs_time_seconds": 711}, {"camera_prev": "RUHTE318", "camera_next": "RUHTE319", "t_prev": "2025-08-20T19:04:22.879000", "t_next": "2025-08-20T19:10:36.136000", "obs_time_seconds": 374}, {"camera_prev": "RUHTE319", "camera_next": "RUHSM157", "t_prev": "2025-08-20T19:10:36.136000", "t_next": "2025-08-20T19:33:46.920000", "obs_time_seconds": 1390}, {"camera_prev": "RUHSM157", "camera_next": "RUHTE318", "t_prev": "2025-08-20T19:33:46.920000", "t_next": "2025-08-20T19:34:48.630000", "obs_time_seconds": 62}, {"camera_prev": "RUHTE318", "camera_next": "RUHTE319", "t_prev": "2025-08-20T19:34:48.630000", "t_next": "2025-08-20T19:42:26.242000", "obs_time_seconds": 458}, {"camera_prev": "RUHSM032", "camera_next": "RUHSM451", "t_prev": "2025-08-20T21:08:42.118000", "t_next": "2025-08-20T21:20:57.223000", "obs_time_seconds": 735}]};
+        
+        const SITE_LOOKUP = {};
+        SITES.forEach(s => { SITE_LOOKUP[s.site_id] = s; });
+        
+        const PATH_COLORS = ['#1976d2', '#388e3c', '#f57c00', '#7b1fa2', '#00897b'];
+        const EPSILON_SPATIAL = 2000; // 2km in meters
+        
+        let map;
+        
+        function waitForGoogle(callback) {
+            if (typeof google !== 'undefined' && google.maps) {
+                callback();
+            } else {
+                setTimeout(() => waitForGoogle(callback), 100);
+            }
+        }
+        
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 24.75, lng: 46.7 },
+                zoom: 11,
+                mapTypeId: 'roadmap'
+            });
+            
+            // Add all site markers
+            SITES.forEach(site => {
+                new google.maps.Marker({
+                    position: { lat: site.latitude, lng: site.longitude },
+                    map: map,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 5,
+                        fillColor: '#e53935',
+                        fillOpacity: 0.7,
+                        strokeColor: '#b71c1c',
+                        strokeWeight: 1
+                    },
+                    title: site.site_id
+                });
+            });
+            
+            // Process and draw paths
+            drawPaths();
+        }
+        
+        function drawPaths() {
+            const trips = ROUTE.trips;
+            const bounds = new google.maps.LatLngBounds();
+            
+            // Simple path segmentation based on time gaps
+            let paths = [];
+            let currentPath = { trips: [], color: PATH_COLORS[0] };
+            
+            trips.forEach((trip, i) => {
+                const fromSite = SITE_LOOKUP[trip.camera_prev];
+                const toSite = SITE_LOOKUP[trip.camera_next];
+                
+                if (!fromSite || !toSite) return;
+                
+                // Check for time gap
+                let gapMin = 0;
+                if (i > 0) {
+                    const prevEnd = new Date(trips[i-1].t_next);
+                    const currStart = new Date(trip.t_prev);
+                    gapMin = (currStart - prevEnd) / 60000;
+                }
+                
+                if (gapMin > 15 && currentPath.trips.length > 0) {
+                    paths.push(currentPath);
+                    currentPath = { trips: [], color: PATH_COLORS[paths.length % PATH_COLORS.length] };
+                }
+                
+                currentPath.trips.push({
+                    from: { lat: fromSite.latitude, lng: fromSite.longitude, id: trip.camera_prev },
+                    to: { lat: toSite.latitude, lng: toSite.longitude, id: trip.camera_next }
+                });
+            });
+            
+            if (currentPath.trips.length > 0) {
+                paths.push(currentPath);
+            }
+            
+            // Draw each path
+            paths.forEach((path, pathIdx) => {
+                const coords = [];
+                
+                path.trips.forEach((trip, i) => {
+                    if (i === 0) coords.push({ lat: trip.from.lat, lng: trip.from.lng });
+                    coords.push({ lat: trip.to.lat, lng: trip.to.lng });
+                });
+                
+                // Draw corridor buffer (polygon)
+                if (coords.length >= 2) {
+                    const bufferCoords = createCorridorBuffer(coords, EPSILON_SPATIAL);
+                    new google.maps.Polygon({
+                        paths: bufferCoords,
+                        strokeColor: path.color,
+                        strokeOpacity: 0.3,
+                        strokeWeight: 1,
+                        fillColor: path.color,
+                        fillOpacity: 0.1,
+                        map: map
+                    });
+                }
+                
+                // Draw path line
+                new google.maps.Polyline({
+                    path: coords,
+                    geodesic: true,
+                    strokeColor: path.color,
+                    strokeOpacity: 0.9,
+                    strokeWeight: 5,
+                    map: map
+                });
+                
+                coords.forEach(c => bounds.extend(c));
+                
+                // Add start/end markers
+                if (coords.length > 0) {
+                    // Start marker
+                    new google.maps.Marker({
+                        position: coords[0],
+                        map: map,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 12,
+                            fillColor: '#4caf50',
+                            fillOpacity: 1,
+                            strokeColor: '#2e7d32',
+                            strokeWeight: 3
+                        },
+                        title: 'Path ' + (pathIdx + 1) + ' Start'
+                    });
+                    
+                    // End marker
+                    new google.maps.Marker({
+                        position: coords[coords.length - 1],
+                        map: map,
+                        icon: {
+                            path: google.maps.SymbolPath.CIRCLE,
+                            scale: 10,
+                            fillColor: '#f44336',
+                            fillOpacity: 1,
+                            strokeColor: '#c62828',
+                            strokeWeight: 2
+                        },
+                        title: 'Path ' + (pathIdx + 1) + ' End'
+                    });
+                }
+            });
+            
+            map.fitBounds(bounds);
+        }
+        
+        // Create a simple corridor buffer around a path
+        function createCorridorBuffer(coords, bufferMeters) {
+            const left = [];
+            const right = [];
+            
+            for (let i = 0; i < coords.length; i++) {
+                let bearing;
+                if (i === 0) {
+                    bearing = getBearing(coords[0], coords[1]);
+                } else if (i === coords.length - 1) {
+                    bearing = getBearing(coords[i-1], coords[i]);
+                } else {
+                    const b1 = getBearing(coords[i-1], coords[i]);
+                    const b2 = getBearing(coords[i], coords[i+1]);
+                    bearing = (b1 + b2) / 2;
+                }
+                
+                const leftPoint = offsetPoint(coords[i], bearing - 90, bufferMeters);
+                const rightPoint = offsetPoint(coords[i], bearing + 90, bufferMeters);
+                
+                left.push(leftPoint);
+                right.unshift(rightPoint);
+            }
+            
+            return left.concat(right);
+        }
+        
+        function getBearing(from, to) {
+            const lat1 = from.lat * Math.PI / 180;
+            const lat2 = to.lat * Math.PI / 180;
+            const dLon = (to.lng - from.lng) * Math.PI / 180;
+            
+            const y = Math.sin(dLon) * Math.cos(lat2);
+            const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+            
+            return Math.atan2(y, x) * 180 / Math.PI;
+        }
+        
+        function offsetPoint(point, bearing, distance) {
+            const R = 6371000; // Earth radius in meters
+            const lat1 = point.lat * Math.PI / 180;
+            const lon1 = point.lng * Math.PI / 180;
+            const brng = bearing * Math.PI / 180;
+            
+            const lat2 = Math.asin(Math.sin(lat1) * Math.cos(distance/R) + 
+                         Math.cos(lat1) * Math.sin(distance/R) * Math.cos(brng));
+            const lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(distance/R) * Math.cos(lat1),
+                         Math.cos(distance/R) - Math.sin(lat1) * Math.sin(lat2));
+            
+            return { lat: lat2 * 180 / Math.PI, lng: lon2 * 180 / Math.PI };
+        }
+        
+        window.initMap = initMap;
+        document.addEventListener('DOMContentLoaded', function() {
+            waitForGoogle(initMap);
+        });
+    </script>
+</body>
+</html>
