@@ -902,7 +902,7 @@ async function recheckAllRoutes() {
     });
     
     // Parse ALL keys from cache
-    const routes = [];
+    let routes = [];
     for (const key of cacheKeys) {
         const parts = key.split('_');
         if (parts.length !== 2) continue;
