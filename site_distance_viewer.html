@@ -63,6 +63,17 @@
 </head>
 <body>
     <div class="container">
+        <!-- TOP PROGRESS BAR - ALWAYS VISIBLE WHEN RUNNING -->
+        <div id="topProgress" style="display:none;background:linear-gradient(135deg,#ff9800,#f44336);padding:20px;border-radius:10px;margin-bottom:20px;color:white;box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+            <h2 style="margin:0 0 15px 0;text-align:center;">⏳ RE-CHECK IN PROGRESS</h2>
+            <div style="background:rgba(255,255,255,0.3);height:40px;border-radius:20px;overflow:hidden;margin-bottom:15px;">
+                <div id="topBar" style="background:white;height:100%;width:0%;transition:width 0.2s;border-radius:20px;"></div>
+            </div>
+            <div id="topStats" style="font-size:2rem;font-weight:bold;text-align:center;">0%</div>
+            <div id="topDetails" style="font-size:1.1rem;text-align:center;margin-top:10px;opacity:0.9;">Starting...</div>
+            <div id="topLive" style="font-size:1rem;text-align:center;margin-top:15px;background:rgba(0,0,0,0.2);padding:10px;border-radius:8px;font-family:monospace;"></div>
+        </div>
+        
         <h1>Google Maps Routes Viewer (Part 1 + Part 2)</h1>
         <p class="subtitle">View cached routes with waypoints from both extraction parts</p>
         
@@ -186,18 +197,6 @@
                     </div>
                 </div>
                 
-                <!-- BIG PROGRESS DISPLAY -->
-                <div class="panel" id="recheckProgress" style="display:none;background:#fff8e1;border:3px solid #ff9800;">
-                    <h2 style="color:#e65100;margin:0 0 10px 0;">⏳ RE-CHECK IN PROGRESS</h2>
-                    <div style="background:#ddd;height:30px;border-radius:8px;overflow:hidden;margin-bottom:10px;">
-                        <div id="recheckBar" style="background:linear-gradient(90deg,#ff9800,#f44336);height:100%;width:0%;transition:width 0.1s;"></div>
-                    </div>
-                    <div id="recheckStats" style="font-size:1.5rem;font-weight:bold;text-align:center;color:#333;">
-                        Starting...
-                    </div>
-                    <div id="recheckDetails" style="font-size:1rem;color:#666;text-align:center;margin-top:8px;"></div>
-                    <div id="recheckLive" style="font-size:0.9rem;color:#e65100;text-align:center;margin-top:10px;font-family:monospace;background:#fff;padding:8px;border-radius:4px;"></div>
-                </div>
             </div>
             
             <div class="main">
@@ -858,7 +857,8 @@ let recheckRunning = false;
 function stopRecheck() {
     recheckRunning = false;
     log('⏹️ STOPPING... (will stop after current batch)');
-    document.getElementById('recheckStats').textContent = 'STOPPING...';
+    document.getElementById('topStats').textContent = 'STOPPING...';
+    document.getElementById('topLive').textContent = 'Will stop after current batch completes...';
 }
 
 async function recheckAllRoutes() {
@@ -868,13 +868,16 @@ async function recheckAllRoutes() {
         console.log('RE-CHECK STARTED');
         log('RE-CHECK STARTED...');
         
-        // IMMEDIATE FEEDBACK - show progress panel right away
-        document.getElementById('recheckProgress').style.display = 'block';
-        document.getElementById('recheckStats').textContent = 'Preparing...';
-        document.getElementById('recheckDetails').textContent = 'Building route list...';
-        document.getElementById('recheckLive').textContent = '⏳ Please wait...';
+        // SHOW BIG TOP PROGRESS BAR
+        document.getElementById('topProgress').style.display = 'block';
+        document.getElementById('topStats').textContent = '0%';
+        document.getElementById('topDetails').textContent = 'Building route list...';
+        document.getElementById('topLive').textContent = '⏳ Please wait...';
         document.getElementById('startRecheckBtn').style.display = 'none';
         document.getElementById('stopRecheckBtn').style.display = 'block';
+        
+        // Scroll to top so user sees progress
+        window.scrollTo(0, 0);
     
     const pathThreshold = parseFloat(document.getElementById('testThreshold').value);
     const distThreshold = parseFloat(document.getElementById('testDistThreshold').value);
@@ -946,11 +949,11 @@ async function recheckAllRoutes() {
         log('Selected portion: ' + portionLabel + ' = ' + selectedRoutes.length + ' routes');
     }
     
-    document.getElementById('recheckDetails').textContent = 'Found ' + selectedRoutes.length + ' routes to check';
+    document.getElementById('topDetails').textContent = 'Found ' + selectedRoutes.length + ' routes to check';
     
     if (!confirm('Re-check ' + selectedRoutes.length + ' routes (' + portionLabel + ')?\n\nSettings:\n- Path threshold: ' + (pathThreshold*1000) + 'm\n- Distance threshold: ' + (distThreshold*100) + '%\n- Skip direction: ' + skipDirection + '\n- Workers: ' + workers)) {
         // User cancelled - hide progress
-        document.getElementById('recheckProgress').style.display = 'none';
+        document.getElementById('topProgress').style.display = 'none';
         document.getElementById('startRecheckBtn').style.display = 'block';
         document.getElementById('stopRecheckBtn').style.display = 'none';
         return;
@@ -978,7 +981,7 @@ async function recheckAllRoutes() {
         const iA = route.origin, iB = route.dest;
         
         // Show live update
-        document.getElementById('recheckLive').textContent = '🔍 Checking: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id;
+        document.getElementById('topLive').textContent = '🔍 Checking: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id;
         
         return new Promise(resolve => {
             directionsService.route({
@@ -989,13 +992,12 @@ async function recheckAllRoutes() {
                 if (status !== 'OK') {
                     errors++;
                     completed++;
-                    document.getElementById('recheckLive').textContent = '✗ Error: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id + ' (' + status + ')';
-                    document.getElementById('recheckLive').style.background = '#ffcdd2';
+                    document.getElementById('topLive').textContent = '✗ Error: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id + ' (' + status + ')';
                     
                     const pct = (completed / routes.length * 100).toFixed(1);
-                    document.getElementById('recheckBar').style.width = pct + '%';
-                    document.getElementById('recheckStats').textContent = pct + '% Complete';
-                    document.getElementById('recheckDetails').textContent = completed + ' / ' + routes.length + ' routes | ✓ Updated: ' + updated + ' | ✗ Errors: ' + errors;
+                    document.getElementById('topBar').style.width = pct + '%';
+                    document.getElementById('topStats').textContent = pct + '%';
+                    document.getElementById('topDetails').textContent = completed + ' / ' + routes.length + ' | ✓ ' + updated + ' updated | ✗ ' + errors + ' errors';
                     
                     resolve();
                     return;
@@ -1059,18 +1061,15 @@ async function recheckAllRoutes() {
                     CACHE.waypoints[route.key] = newWp;
                     updated++;
                     const msg = '✓ UPDATED: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id + ' (' + oldWp.length + '→' + newWp.length + ' waypoints)';
-                    document.getElementById('recheckLive').textContent = msg;
-                    document.getElementById('recheckLive').style.background = '#c8e6c9';
+                    document.getElementById('topLive').textContent = msg;
                     log(msg);
-                } else {
-                    document.getElementById('recheckLive').style.background = '#fff';
                 }
                 
                 completed++;
                 const pct = (completed / routes.length * 100).toFixed(1);
-                document.getElementById('recheckBar').style.width = pct + '%';
-                document.getElementById('recheckStats').textContent = pct + '% Complete';
-                document.getElementById('recheckDetails').textContent = completed + ' / ' + routes.length + ' routes | ✓ Updated: ' + updated + ' | ✗ Errors: ' + errors;
+                document.getElementById('topBar').style.width = pct + '%';
+                document.getElementById('topStats').textContent = pct + '%';
+                document.getElementById('topDetails').textContent = completed + ' / ' + routes.length + ' | ✓ ' + updated + ' updated | ✗ ' + errors + ' errors';
                 
                 resolve();
             });
@@ -1085,9 +1084,9 @@ async function recheckAllRoutes() {
         idx += workers;
         
         // Save periodically
-        if (completed % 100 === 0) {
+        if (completed % 100 === 0 && completed > 0) {
             localStorage.setItem('riyadh_gmaps_viewer_cache', JSON.stringify(CACHE));
-            document.getElementById('recheckLive').textContent = '💾 Saved progress...';
+            document.getElementById('topLive').textContent = '💾 Saved progress at ' + completed + ' routes...';
         }
         
         await new Promise(r => setTimeout(r, 50));
@@ -1099,7 +1098,7 @@ async function recheckAllRoutes() {
     recheckRunning = false;
     document.getElementById('stopRecheckBtn').style.display = 'none';
     document.getElementById('startRecheckBtn').style.display = 'block';
-    document.getElementById('recheckProgress').style.display = 'none';
+    document.getElementById('topProgress').style.display = 'none';
     
     log('');
     log('═══════════════════════════════════');
@@ -1118,7 +1117,7 @@ async function recheckAllRoutes() {
         console.error('RE-CHECK ERROR:', err);
         alert('ERROR: ' + err.message);
         log('ERROR: ' + err.message);
-        document.getElementById('recheckProgress').style.display = 'none';
+        document.getElementById('topProgress').style.display = 'none';
         document.getElementById('startRecheckBtn').style.display = 'block';
         document.getElementById('stopRecheckBtn').style.display = 'none';
     }
