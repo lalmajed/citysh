@@ -662,6 +662,13 @@
         }
         
         function initMap() {
+            if (typeof google === 'undefined' || !google.maps) {
+                console.log('Waiting for Google Maps API...');
+                setTimeout(initMap, 100);
+                return;
+            }
+            
+            console.log('Initializing map...');
             map = new google.maps.Map(document.getElementById('map'), {
                 center: { lat: 24.7136, lng: 46.6753 },
                 zoom: 10,
@@ -681,18 +688,14 @@
                     strokeOpacity: 0.8
                 }
             });
+            console.log('Map ready!');
         }
+        
+        // Initialize map when API is loaded
+        window.onload = function() {
+            setTimeout(initMap, 500);
+        };
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?callback=initMap" async defer></script>
-    <script>
-        // Fallback for keyless API
-        if (typeof google === 'undefined') {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js';
-            script.async = true;
-            script.defer = true;
-            document.head.appendChild(script);
-        }
-    </script>
+    <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
 </body>
 </html>
