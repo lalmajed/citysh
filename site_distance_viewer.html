@@ -814,6 +814,59 @@ function getRouteDir(path, idx) {
     return dLon > 0 ? 'E' : 'W';
 }
 
+// Filter nearby duplicates - if two waypoints are within 100m, keep only the better one
+function filterNearbyDuplicates(waypointIdxs, path) {
+    if (waypointIdxs.length < 2) return waypointIdxs;
+    
+    const dominated = new Set();
+    
+    for (let i = 0; i < waypointIdxs.length; i++) {
+        if (dominated.has(i)) continue;
+        
+        for (let j = i + 1; j < waypointIdxs.length; j++) {
+            if (dominated.has(j)) continue;
+            
+            const siteA = SITES[waypointIdxs[i]];
+            const siteB = SITES[waypointIdxs[j]];
+            
+            // Check if sites are very close (within 100m)
+            const dist = haversine(siteA.lat, siteA.lon, siteB.lat, siteB.lon);
+            if (dist < 0.1) { // 100 meters
+                // Find path index for each
+                let pathIdxA = 0, pathIdxB = 0;
+                let minDistA = Infinity, minDistB = Infinity;
+                
+                for (let p = 0; p < path.length; p++) {
+                    const dA = haversine(siteA.lat, siteA.lon, path[p].lat(), path[p].lng());
+                    const dB = haversine(siteB.lat, siteB.lon, path[p].lat(), path[p].lng());
+                    if (dA < minDistA) { minDistA = dA; pathIdxA = p; }
+                    if (dB < minDistB) { minDistB = dB; pathIdxB = p; }
+                }
+                
+                // Get route direction at that point
+                const avgIdx = Math.floor((pathIdxA + pathIdxB) / 2);
+                const routeDir = getRouteDir(path, avgIdx);
+                
+                // Keep the one matching route direction
+                if (siteA.site_direction === routeDir && siteB.site_direction !== routeDir) {
+                    dominated.add(j);
+                } else if (siteB.site_direction === routeDir && siteA.site_direction !== routeDir) {
+                    dominated.add(i);
+                } else {
+                    // Same direction or neither matches - keep closer one
+                    if (minDistA <= minDistB) {
+                        dominated.add(j);
+                    } else {
+                        dominated.add(i);
+                    }
+                }
+            }
+        }
+    }
+    
+    return waypointIdxs.filter((_, idx) => !dominated.has(idx));
+}
+
 async function recheckWaypoints() {
     const iA = parseInt(document.getElementById('originSel').value);
     const iB = parseInt(document.getElementById('destSel').value);
@@ -939,11 +992,22 @@ async function recheckWaypoints() {
             await new Promise(r => setTimeout(r, 200)); // Rate limit
         }
         
+        // STEP 4: Filter nearby duplicates (within 100m)
+        log('');
+        log('STEP 4: Filtering nearby duplicates (within 100m)...');
+        const beforeFilter = verified.length;
+        const filtered = filterNearbyDuplicates(verified, path);
+        if (beforeFilter !== filtered.length) {
+            log('  Removed ' + (beforeFilter - filtered.length) + ' duplicate(s)');
+        } else {
+            log('  No duplicates found');
+        }
+        
         log('');
         log('═══════════════════════════════════');
-        log('RESULT: ' + verified.length + ' waypoints found');
-        if (verified.length > 0) {
-            log('Waypoints: ' + verified.map(i => SITES[i].site_id).join(', '));
+        log('RESULT: ' + filtered.length + ' waypoints found');
+        if (filtered.length > 0) {
+            log('Waypoints: ' + filtered.map(i => SITES[i].site_id).join(', '));
         }
         
         // Compare with cached
@@ -952,8 +1016,8 @@ async function recheckWaypoints() {
         log('');
         log('CACHED waypoints: ' + (cached.length > 0 ? cached.map(i => SITES[i].site_id).join(', ') : 'None'));
         
-        if (verified.length !== cached.length) {
-            log('⚠️ DIFFERENCE DETECTED! New: ' + verified.length + ', Cached: ' + cached.length);
+        if (filtered.length !== cached.length) {
+            log('⚠️ DIFFERENCE DETECTED! New: ' + filtered.length + ', Cached: ' + cached.length);
         }
         log('═══════════════════════════════════');
     });
@@ -1194,10 +1258,9 @@ async function recheckAllRoutes() {
                     });
                 }
                 
-                // Verify with Google
-                const verified = [];
-                for (const c of candidates) {
-                    const result = await new Promise(res2 => {
+                // Verify with Google (in parallel for speed)
+                const verifyPromises = candidates.map(c => {
+                    return new Promise(res2 => {
                         directionsService.route({
                             origin: {lat: SITES[iA].lat, lng: SITES[iA].lon},
                             destination: {lat: SITES[iB].lat, lng: SITES[iB].lon},
@@ -1209,15 +1272,19 @@ async function recheckAllRoutes() {
                                 res3.routes[0].legs.forEach(leg => totalDist += leg.distance.value);
                                 totalDist /= 1000;
                                 const increase = (totalDist - directDist) / directDist;
-                                res2({ ok: increase < distThreshold });
+                                res2({ ok: increase < distThreshold, idx: c.idx });
                             } else {
-                                res2({ ok: false });
+                                res2({ ok: false, idx: c.idx });
                             }
                         });
                     });
-                    if (result.ok) verified.push(c.idx);
-                    await new Promise(r => setTimeout(r, 100));
-                }
+                });
+                
+                const results = await Promise.all(verifyPromises);
+                let verified = results.filter(r => r.ok).map(r => r.idx);
+                
+                // IMPORTANT: Filter nearby duplicates (within 100m, keep best match)
+                verified = filterNearbyDuplicates(verified, path);
                 
                 // Compare and update
                 const oldWp = CACHE.waypoints[route.key] || [];
