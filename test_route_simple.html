@@ -236,7 +236,13 @@ function runAnalysis() {
                 log((i+1) + '. ' + c.site.site_id + ' (' + c.site.site_direction + ') - ' + c.site.road_name);
             });
             log('');
-            log('Current waypoints in JSON: RUHSM228, RUHSM070, RUHSM286');
+            log('=== COMPARE TO JSON ===');
+            log('JSON waypoints[47_151] = [121, 37, 164]');
+            log('  = RUHSM228, RUHSM070, RUHSM286');
+            log('');
+            if (verified.length !== 3) {
+                log('⚠️ DIFFERENCE! JSON has 3, we found ' + verified.length);
+            }
         }
         
         verifyNext();
