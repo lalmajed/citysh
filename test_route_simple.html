@@ -65,39 +65,33 @@ function haversine(lat1, lon1, lat2, lon2) {
 
 function showAllSites() {
     clearAll();
-    log('\n=== SHOWING ALL SITES IN AREA ===');
-    
-    var minLat = Math.min(ORIGIN.lat, DEST.lat) - 0.03;
-    var maxLat = Math.max(ORIGIN.lat, DEST.lat) + 0.03;
-    var minLon = Math.min(ORIGIN.lon, DEST.lon) - 0.03;
-    var maxLon = Math.max(ORIGIN.lon, DEST.lon) + 0.03;
-    
-    var count = 0;
-    SITES.forEach(function(s) {
-        if (s.lat >= minLat && s.lat <= maxLat && s.lon >= minLon && s.lon <= maxLon) {
-            var color = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
-            if (s.site_id === 'RUHSM095') color = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
-            else if (s.site_id === 'RUHSM266') color = 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
-            else if (['RUHSM228','RUHSM070','RUHSM286'].includes(s.site_id)) color = 'http://maps.google.com/mapfiles/ms/icons/orange-dot.png';
-            
-            var m = new google.maps.Marker({
-                position: {lat: s.lat, lng: s.lon},
-                map: map,
-                icon: {url: color, scaledSize: new google.maps.Size(24,24)},
-                title: s.site_id + ' (' + s.site_direction + ') - ' + s.road_name
-            });
-            markers.push(m);
-            count++;
-        }
-    });
-    
-    log('Showing ' + count + ' sites');
-    log('GREEN = Origin (RUHSM095)');
-    log('BLUE = Destination (RUHSM266)');
-    log('ORANGE = Current waypoints');
+    log('\n=== SHOWING ALL ' + SITES.length + ' SITES ===');
     
     var bounds = new google.maps.LatLngBounds();
-    markers.forEach(m => bounds.extend(m.getPosition()));
+    
+    SITES.forEach(function(s) {
+        var color = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
+        if (s.site_id === 'RUHSM095') color = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
+        else if (s.site_id === 'RUHSM266') color = 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
+        else if (['RUHSM228','RUHSM070','RUHSM286'].includes(s.site_id)) color = 'http://maps.google.com/mapfiles/ms/icons/orange-dot.png';
+        
+        var m = new google.maps.Marker({
+            position: {lat: s.lat, lng: s.lon},
+            map: map,
+            icon: {url: color, scaledSize: new google.maps.Size(20,20)},
+            title: s.site_id + ' (' + s.site_direction + ') - ' + s.road_name
+        });
+        markers.push(m);
+        bounds.extend(m.getPosition());
+    });
+    
+    log('Showing ALL ' + SITES.length + ' sites at their geolocations');
+    log('');
+    log('GREEN = Origin (RUHSM095)');
+    log('BLUE = Destination (RUHSM266)');
+    log('ORANGE = Current waypoints from JSON');
+    log('RED = All other sites');
+    
     map.fitBounds(bounds);
 }
 
