@@ -118,10 +118,14 @@
                 </div>
                 
                 <div class="panel">
-                    <h2>Download</h2>
+                    <h2>Download & Storage</h2>
                     <button class="btn btn-sm" onclick="downloadCSV('dist')">Distance CSV</button>
                     <button class="btn btn-sm" onclick="downloadCSV('time')">Time CSV</button>
                     <button class="btn btn-sm" onclick="downloadJSON()">Full JSON</button>
+                    <div style="margin-top:10px;padding-top:10px;border-top:1px solid #ddd;">
+                        <div id="storageInfo" style="font-size:0.75rem;color:#666;margin-bottom:8px;">Storage: calculating...</div>
+                        <button class="btn btn-sm" onclick="clearCache()" style="background:#f44336;">🗑️ Clear Browser Cache</button>
+                    </div>
                 </div>
                 
                 <div class="panel" style="background:#e3f2fd;">
@@ -340,6 +344,7 @@ function uploadJSON(input, part) {
             log('Saved to browser cache!');
             log('═══════════════════════════════════');
             alert('Loaded ' + count + ' routes from Part ' + part + '!\n(' + wpCount + ' with waypoints)');
+            updateStorageInfo();
         } catch(err) {
             alert('Error: ' + err.message);
             log('Upload error: ' + err.message);
@@ -457,6 +462,7 @@ function initMap() {
     }
     
     log('✓ Map ready');
+    updateStorageInfo();
 }
 
 function toggleAllSites() {
@@ -748,6 +754,48 @@ function download(c, f, t) {
     a.href = URL.createObjectURL(new Blob([c],{type:t})); 
     a.download = f; 
     a.click();
+}
+
+function updateStorageInfo() {
+    try {
+        let total = 0;
+        for (let key in localStorage) {
+            if (localStorage.hasOwnProperty(key)) {
+                total += localStorage[key].length * 2; // UTF-16 = 2 bytes per char
+            }
+        }
+        const usedMB = (total / 1024 / 1024).toFixed(2);
+        const cacheSize = localStorage.getItem('riyadh_gmaps_viewer_cache');
+        const cacheMB = cacheSize ? (cacheSize.length * 2 / 1024 / 1024).toFixed(2) : '0';
+        document.getElementById('storageInfo').innerHTML = 
+            'Storage: ' + usedMB + ' MB used<br>Route cache: ' + cacheMB + ' MB';
+    } catch(e) {
+        document.getElementById('storageInfo').textContent = 'Storage: unavailable';
+    }
+}
+
+function clearCache() {
+    if (!confirm('Clear all cached route data from browser?\n\nThis will NOT delete any downloaded JSON files.\nMake sure you have downloaded your data first!')) {
+        return;
+    }
+    
+    try {
+        localStorage.removeItem('riyadh_gmaps_viewer_cache');
+        localStorage.removeItem('riyadh_gmaps_matrix_part1');
+        localStorage.removeItem('riyadh_gmaps_matrix_part2');
+        
+        // Reset in-memory cache
+        CACHE = { dist: {}, time: {}, waypoints: {}, source: {} };
+        
+        updateStats();
+        renderCachedList();
+        updateStorageInfo();
+        
+        log('✓ Browser cache cleared!');
+        alert('Cache cleared!\n\nYou can now upload JSON files again.');
+    } catch(e) {
+        alert('Error clearing cache: ' + e.message);
+    }
 }
 
 // Haversine distance
@@ -1200,17 +1248,29 @@ async function recheckAllRoutes() {
         
         idx += workers;
         
-        // Save periodically
+        // Save periodically (with error handling for quota)
         if (completed % 100 === 0 && completed > 0) {
-            localStorage.setItem('riyadh_gmaps_viewer_cache', JSON.stringify(CACHE));
-            updateUI('topLive', 'text', '💾 Saved progress at ' + completed + ' routes...');
+            try {
+                localStorage.setItem('riyadh_gmaps_viewer_cache', JSON.stringify(CACHE));
+                updateUI('topLive', 'text', '💾 Saved progress at ' + completed + ' routes...');
+            } catch(e) {
+                // Quota exceeded - skip localStorage save, data stays in memory
+                updateUI('topLive', 'text', '⚠️ Progress at ' + completed + ' (too large for localStorage)');
+            }
         }
         
         await new Promise(r => setTimeout(r, 50));
     }
     
-    // Final save
-    localStorage.setItem('riyadh_gmaps_viewer_cache', JSON.stringify(CACHE));
+    // Final save (with error handling for quota)
+    let savedToStorage = false;
+    try {
+        localStorage.setItem('riyadh_gmaps_viewer_cache', JSON.stringify(CACHE));
+        savedToStorage = true;
+        log('✓ Saved to localStorage');
+    } catch(e) {
+        log('⚠️ Data too large for localStorage - use "Full JSON" to download!');
+    }
     
     recheckRunning = false;
     updateUI('stopRecheckBtn', 'display', 'none');
@@ -1228,7 +1288,16 @@ async function recheckAllRoutes() {
     renderCachedList();
     updateStats();
     
-    alert('Done! Updated ' + updated + ' routes.\n\nData is saved!\nClick "Full JSON" to download.');
+    updateStorageInfo();
+    
+    if (savedToStorage) {
+        alert('Done! Updated ' + updated + ' routes.\n\nData saved to browser!\nClick "Full JSON" to download.');
+    } else {
+        // Auto-download since we can't save to localStorage
+        log('🔄 Auto-downloading JSON since localStorage is full...');
+        downloadJSON();
+        alert('Done! Updated ' + updated + ' routes.\n\n⚠️ Data too large for browser storage!\n\n✅ JSON file auto-downloaded!\nKeep this file safe - your data is NOT saved in the browser.');
+    }
     
     } catch(err) {
         console.error('RE-CHECK ERROR:', err);
