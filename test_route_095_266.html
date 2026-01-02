@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Route: RUHSM095 → RUHSM266</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; background: #1a1a2e; color: #eee; }
+        .container { display: grid; grid-template-columns: 400px 1fr; height: 100vh; }
+        .sidebar { padding: 15px; overflow-y: auto; background: #16213e; }
+        h1 { color: #00d4ff; font-size: 1.2rem; margin-bottom: 10px; }
+        h2 { color: #ff6b6b; font-size: 0.9rem; margin: 15px 0 8px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .info { background: #0f3460; padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 0.85rem; }
+        .info strong { color: #00d4ff; }
+        #map { height: 100%; }
+        .btn { padding: 12px 20px; background: #e94560; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin: 5px 0; width: 100%; }
+        .btn:hover { background: #ff6b6b; }
+        .btn-blue { background: #00d4ff; color: #000; }
+        .btn-green { background: #4ecca3; color: #000; }
+        .log { background: #0a0a0a; color: #0f0; padding: 10px; font-family: monospace; font-size: 0.75rem; height: 200px; overflow-y: auto; border-radius: 6px; white-space: pre-wrap; }
+        .site-list { max-height: 300px; overflow-y: auto; }
+        .site { padding: 8px; margin: 4px 0; background: #0f3460; border-radius: 6px; font-size: 0.8rem; border-left: 4px solid #333; cursor: pointer; }
+        .site:hover { background: #1a4080; }
+        .site.verified { border-left-color: #4ecca3; background: #0f4030; }
+        .site.candidate { border-left-color: #ffa500; }
+        .site.road-match { border-left-color: #e94560; }
+        .site .id { font-weight: bold; color: #00d4ff; }
+        .site .road { color: #aaa; direction: rtl; text-align: left; }
+        .site .dist { color: #4ecca3; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0; }
+        .stat { background: #0f3460; padding: 10px; border-radius: 6px; text-align: center; }
+        .stat-val { font-size: 1.5rem; font-weight: bold; color: #00d4ff; }
+        .stat-label { font-size: 0.65rem; color: #888; }
+        .legend { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; font-size: 0.75rem; }
+        .legend span { display: flex; align-items: center; gap: 4px; }
+        .legend-color { width: 15px; height: 15px; border-radius: 3px; }
+        select { width: 100%; padding: 8px; background: #0f3460; color: white; border: 1px solid #333; border-radius: 6px; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>🔍 Route Test: RUHSM095 → RUHSM266</h1>
+            
+            <div class="info">
+                <strong>Origin:</strong> RUHSM095 (E) - طريق خريص (Khurais Road)<br>
+                <strong>Destination:</strong> RUHSM266 (S) - طريق نجد (Najd Road)<br>
+                <strong>Current waypoints:</strong> [121, 37, 164]
+            </div>
+            
+            <button class="btn" onclick="runTest()">🚀 Run Full Analysis</button>
+            <button class="btn btn-blue" onclick="showAllSitesInArea()">📍 Show All Sites in Area</button>
+            <button class="btn btn-green" onclick="showCurrentWaypoints()">✅ Show Current Waypoints</button>
+            
+            <h2>⚙️ Settings</h2>
+            <div class="info">
+                <label>Path proximity (m):</label>
+                <select id="pathThreshold">
+                    <option value="300">300m (original)</option>
+                    <option value="500" selected>500m</option>
+                    <option value="750">750m</option>
+                    <option value="1000">1000m</option>
+                    <option value="1500">1500m</option>
+                </select>
+                <label>Polyline weight:</label>
+                <select id="polyWeight">
+                    <option value="4">4px (thin)</option>
+                    <option value="8">8px</option>
+                    <option value="12" selected>12px (thick)</option>
+                    <option value="16">16px (very thick)</option>
+                    <option value="24">24px (ultra thick)</option>
+                </select>
+                <label style="display:block;margin-top:8px;">
+                    <input type="checkbox" id="useRoadMatch" checked> Match by road name
+                </label>
+            </div>
+            
+            <div class="stats">
+                <div class="stat"><div class="stat-val" id="statTotal">0</div><div class="stat-label">In Area</div></div>
+                <div class="stat"><div class="stat-val" id="statCandidates">0</div><div class="stat-label">Candidates</div></div>
+                <div class="stat"><div class="stat-val" id="statVerified">0</div><div class="stat-label">On Route</div></div>
+            </div>
+            
+            <div class="legend">
+                <span><div class="legend-color" style="background:#4ecca3;"></div> On Route</span>
+                <span><div class="legend-color" style="background:#ffa500;"></div> Near Path</span>
+                <span><div class="legend-color" style="background:#e94560;"></div> Road Match</span>
+                <span><div class="legend-color" style="background:#666;"></div> Other</span>
+            </div>
+            
+            <h2>📋 Sites Found</h2>
+            <div class="site-list" id="siteList">
+                <div style="color:#666;text-align:center;padding:20px;">Click Run Full Analysis</div>
+            </div>
+            
+            <h2>📝 Log</h2>
+            <div class="log" id="log">Ready. Click Run Full Analysis to start.</div>
+        </div>
+        
+        <div id="map"></div>
+    </div>
+    
+    <script>
+// Site data embedded from google_matrix_part1 (5).json
+const SITES = [{"site_id":"RUHSM001","lat":24.7294082283483,"lon":46.7024481296539,"osmid":28377682,"road_name":"06370631064a0642 06270644062306450627064606310020062a0631064306490020062806460020063906280650063906320627064406320632064a0632 06270644062306480644","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM002","lat":24.7299619686809,"lon":46.7012876868248,"osmid":28377682,"road_name":"06370631064a0642 06270644062306450627064606310020062a0631064306490020062806460020063906280650063906320627064406320632064a0632 06270644062306480644","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM003","lat":24.8080833424558,"lon":46.7313370108604,"osmid":37891838,"road_name":"06270644062f062706260631064a 06270644063406450627064406490","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM007","lat":24.7136547956893,"lon":46.6755640506744,"osmid":77814025,"road_name":"06370631064a0642 06270644064506440643 062e062706440650","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM009","lat":24.7043714797169,"lon":46.6738779544830,"osmid":77814025,"road_name":"06370631064a0642 06270644064506440643 062e062706440650","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM012","lat":24.7832032313564,"lon":46.7784631252289,"osmid":84808858,"road_name":"06370631064a0642 06270644062f062706260631064a 06270644063406310642064a","road_direction":"NE","site_direction":"N"},{"site_id":"RUHSM018","lat":24.7680697178116,"lon":46.6384553909302,"osmid":111055932,"road_name":"06370631064a0642 06270644064506440643 0633064406450627064606","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM019","lat":24.7521436579296,"lon":46.6291421651840,"osmid":111055949,"road_name":"06370631064a0642 06270644064506440643 06410647062f","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM022","lat":24.6987037779847,"lon":46.6729527711868,"osmid":77814025,"road_name":"06370631064a0642 06270644064506440643 062e062706440650","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM023","lat":24.7446994181665,"lon":46.7540550231934,"osmid":242785972,"road_name":"","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM024","lat":24.6906393605104,"lon":46.6717252135277,"osmid":265285938,"road_name":"0634062706310639 062306450020062706440650064506270645","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM025","lat":24.7796065012135,"lon":46.6497108936310,"osmid":268024568,"road_name":"06270644062f062706260631064a 06270644063406450627064406490","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM026","lat":24.7656667330098,"lon":46.7806510925293,"osmid":268069785,"road_name":"06270644062f062706260631064a 06270644063406310642064a","road_direction":"SW","site_direction":"S"},{"site_id":"RUHSM027","lat":24.6863393217936,"lon":46.6731950640678,"osmid":77814025,"road_name":"06370631064a0642 06270644064506440643 062e062706440650","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM032","lat":24.7327287254219,"lon":46.6431766748428,"osmid":306008093,"road_name":"06370631064a0642 06270644064506440643 06410647062f 0627064406410631063906490","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM033","lat":24.8030953176450,"lon":46.7526020109653,"osmid":37891838,"road_name":"06270644063706310642064a 06270644062f062706260631064a 06270644063406450627064406490","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM034","lat":24.7260019583143,"lon":46.6842074394226,"osmid":329085254,"road_name":"","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM035","lat":24.6576766700635,"lon":46.5983006358147,"osmid":343679589,"road_name":"06370631064a0642 064506430629 06270644064506430631064506290","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM038","lat":24.7219949271118,"lon":46.6709327697754,"osmid":389025541,"road_name":"","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM042","lat":24.7677583285893,"lon":46.6609936952591,"osmid":268024568,"road_name":"06270644063706310642064a 06270644062f062706260631064a 06270644063406450627064406490","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM045","lat":24.6525116424774,"lon":46.6961371898651,"osmid":474695604,"road_name":"06370631064a0642 06270644062f062706260631064a 06270644062c0646064806280649","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM046","lat":24.6427649276556,"lon":46.7377412319183,"osmid":474695604,"road_name":"06370631064a0642 06270644062f062706260631064a 06270644062c0646064806280649","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM049","lat":24.7842006355883,"lon":46.8104645609856,"osmid":499604265,"road_name":"06370631064a0642 06270644062f064506270645","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM052","lat":24.7327903178178,"lon":46.6464948654175,"osmid":306008093,"road_name":"06370631064a0642 06270644064506440643 06410647062f","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM053","lat":24.7263802699595,"lon":46.6484895348549,"osmid":532010684,"road_name":"","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM054","lat":24.7163313805330,"lon":46.6311094164848,"osmid":111055949,"road_name":"06370631064a0642 06270644064506440643 06410647062f","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM055","lat":24.7112009117285,"lon":46.6296818852425,"osmid":111055949,"road_name":"06370631064a0642 06270644064506440643 06410647062f","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM057","lat":24.6763905296740,"lon":46.5949678421021,"osmid":535096179,"road_name":"06370631064a0642 062c062f0629","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM062","lat":24.7482879008839,"lon":46.7552545666695,"osmid":585009695,"road_name":"","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM070","lat":24.6525588584555,"lon":46.6097062826157,"osmid":658831695,"road_name":"06270644063706310642064a 06270644062f062706260631064a 0627064406390631062806490","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM071","lat":24.6845001685494,"lon":46.5988454222679,"osmid":664629082,"road_name":"06370631064a0642 0639062806500020062706440644064706200062806460020062d0630062706410629 06270644063306470645064a","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM072","lat":24.6851336571892,"lon":46.5993800163269,"osmid":664629082,"road_name":"06370631064a0642 0639062806500020062706440644064706200062806460020062d0630062706410629 06270644063306470645064a","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM073","lat":24.6786481135521,"lon":46.5997052192688,"osmid":665045920,"road_name":"Flags Roundabout","road_direction":"NW","site_direction":"W"},{"site_id":"RUHSM074","lat":24.6793633618538,"lon":46.6010895371437,"osmid":665045920,"road_name":"0634062706310639 0639064506310648 06270644063606450631064a","road_direction":"SE","site_direction":"E"},{"site_id":"RUHSM077","lat":24.7621755891893,"lon":46.7923538684845,"osmid":670232085,"road_name":"06370631064a0642 0633063906490650 06280646 0632064a062f","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM078","lat":24.7627133266131,"lon":46.7912608385086,"osmid":670232085,"road_name":"06370631064a0642 0633063906490650 06280646 0632064a062f","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM095","lat":24.7800816178938,"lon":46.8530228734016,"osmid":534338369,"road_name":"06370631064a0642 062e0631064a0635","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM097","lat":24.6310946296015,"lon":46.6456491947174,"osmid":474695604,"road_name":"06370631064a0642 06270644062f062706260631064a 06270644062c0646064806280649","road_direction":"SW","site_direction":"S"},{"site_id":"RUHSM102","lat":24.7219313892430,"lon":46.6901606321335,"osmid":712070155,"road_name":"","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM106","lat":24.7706403133728,"lon":46.8052473068237,"osmid":268069785,"road_name":"06270644062f062706260631064a 06270644063406310642064a","road_direction":"NE","site_direction":"N"},{"site_id":"RUHSM112","lat":24.6558610839741,"lon":46.5760619044304,"osmid":734406990,"road_name":"0627064406250645062706450020062306280649 062d064606490641062906","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM113","lat":24.6550970608808,"lon":46.5757614374161,"osmid":734406990,"road_name":"0627064406250645062706450020062306280649 062d064606490641062906","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM121","lat":24.6802649451773,"lon":46.7117431759834,"osmid":762167605,"road_name":"0627064406230645064a06310020063706440627064400200628064600200639062806500062706440639063206490632","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM122","lat":24.7670932823696,"lon":46.8089199066162,"osmid":499604265,"road_name":"06370631064a0642 06270644062f064506270645","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM125","lat":24.7645818698538,"lon":46.7979204654694,"osmid":268069785,"road_name":"06270644062f062706260631064a 06270644063406310642064a","road_direction":"SW","site_direction":"S"},{"site_id":"RUHSM128","lat":24.7307714908078,"lon":46.6527585983276,"osmid":111055949,"road_name":"06370631064a0642 06270644064506440643 06410647062f","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM129","lat":24.7227823291979,"lon":46.7080390453339,"osmid":775527399,"road_name":"06370631064a0642 064506430629 06270644064506430631064506290","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM130","lat":24.7216406461063,"lon":46.7155641317368,"osmid":779045979,"road_name":"0634062706310639 06270644062c062706450639062906","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM131","lat":24.7211064178618,"lon":46.7143610119820,"osmid":779045979,"road_name":"0634062706310639 06270644062c062706450639062906","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM136","lat":24.6439761896298,"lon":46.5923637151718,"osmid":658831695,"road_name":"06270644063706310642064a 06270644062f062706260631064a 0627064406390631062806490","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM147","lat":24.6526813851689,"lon":46.5651104450226,"osmid":781920115,"road_name":"0627064406250645062706450020062306280649 062d064606490641062906","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM148","lat":24.6532584044831,"lon":46.5655131340027,"osmid":781920115,"road_name":"0627064406250645062706450020062306280649 062d064606490641062906","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM152","lat":24.6889693217986,"lon":46.6685309410095,"osmid":265285938,"road_name":"0634062706310639 062306450020062706440650064506270645","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM153","lat":24.6884007403192,"lon":46.6696763038635,"osmid":265285938,"road_name":"0634062706310639 062306450020062706440650064506270645","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM156","lat":24.7720361310078,"lon":46.8424608707428,"osmid":534338369,"road_name":"06370631064a0642 062e0631064a0635","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM157","lat":24.6674682591685,"lon":46.7620506882668,"osmid":474695604,"road_name":"06370631064a0642 06270644062f062706260631064a 06270644062c0646064806280649","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM161","lat":24.6595915715254,"lon":46.7444612979889,"osmid":474695604,"road_name":"06370631064a0642 06270644062f062706260631064a 06270644062c0646064806280649","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM164","lat":24.5916285636875,"lon":46.5516889095306,"osmid":815048430,"road_name":"0628064406270644 06280646 0631062806270650","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM165","lat":24.5921588740820,"lon":46.5521702170372,"osmid":815048430,"road_name":"0628064406270644 06280646 0631062806270650","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM168","lat":24.6225413339631,"lon":46.6227741241455,"osmid":820988426,"road_name":"An-Nasar Road","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM169","lat":24.6433649127687,"lon":46.5618960857391,"osmid":822113790,"road_name":"062d06450632062906200628064600200639062806500020062706440645063706440628","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM170","lat":24.6427885040989,"lon":46.5625159740448,"osmid":822113790,"road_name":"062d06450632062906200628064600200639062806500020062706440645063706440628","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM173","lat":24.7221048952078,"lon":46.6560044288635,"osmid":838609958,"road_name":"06370631064a0642 06270644064506440643 0639062806500627064406390632064a0632","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM180","lat":24.7639972920152,"lon":46.8155889511108,"osmid":877011161,"road_name":"0623062806480020063906280650062f062906200639062706450631 06280646 062706440650063106270650","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM181","lat":24.7634538867439,"lon":46.8144273757935,"osmid":877011161,"road_name":"0623062806480020063906280650062f062906200639062706450631 06280646 062706440650063106270650","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM182","lat":24.6750200765266,"lon":46.7765078544617,"osmid":474695604,"road_name":"06370631064a0642 06270644062f062706260631064a 06270644062c0646064806280649","road_direction":"SW","site_direction":"S"},{"site_id":"RUHSM187","lat":24.6306903497025,"lon":46.7497830390930,"osmid":892048765,"road_name":"06270644062e0631062c","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM188","lat":24.6612149040543,"lon":46.5620136261,"osmid":896165870,"road_name":"06270628064600200627064406500648063206490","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM189","lat":24.6606063714282,"lon":46.5626628398895,"osmid":896165870,"road_name":"06270628064600200627064406500648063206490","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM190","lat":24.6380696073472,"lon":46.5556730628014,"osmid":899236912,"road_name":"06370631064a0642 0646062c062f","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM191","lat":24.7193088012207,"lon":46.6953653097153,"osmid":900697107,"road_name":"","road_direction":"SW","site_direction":"S"},{"site_id":"RUHSM195","lat":24.7858117498116,"lon":46.8683862686157,"osmid":906115398,"road_name":"06270644063706310642064a 06270644062f062706260631064a 06270644062b062706460649","road_direction":"SW","site_direction":"S"},{"site_id":"RUHSM198","lat":24.7200096628152,"lon":46.7026635408401,"osmid":911430076,"road_name":"06370631064a0642 06270644064506440643 063906280650062706440639063206490632","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM201","lat":24.7161285629696,"lon":46.6899150609970,"osmid":914538095,"road_name":"","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM207","lat":24.7717679299611,"lon":46.6717360615730,"osmid":268024568,"road_name":"06270644063706310642064a 06270644062f062706260631064a 06270644063406450627064406490","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM208","lat":24.7548037498612,"lon":46.7811191082001,"osmid":670232085,"road_name":"06370631064a0642 0633063906490650 06280646 0632064a062f","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM209","lat":24.7553419168706,"lon":46.7800260782242,"osmid":670232085,"road_name":"06370631064a0642 0633063906490650 06280646 0632064a062f","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM210","lat":24.7723568660693,"lon":46.8326613903046,"osmid":921802498,"road_name":"063906280650062706440631062d06450646 06270644064606270635063106","road_direction":"SW","site_direction":"S"},{"site_id":"RUHSM211","lat":24.7729287936609,"lon":46.8317499756813,"osmid":921802498,"road_name":"063906280650062706440631062d06450646 06270644064606270635063106","road_direction":"NE","site_direction":"N"},{"site_id":"RUHSM212","lat":24.7641426813855,"lon":46.7970818281174,"osmid":923277949,"road_name":"0634062706310639 0627062806460020064506270650062906","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM213","lat":24.7647068024082,"lon":46.7959672212601,"osmid":923277949,"road_name":"0634062706310639 0627062806460020064506270650062906","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM216","lat":24.6334543330078,"lon":46.5439203977585,"osmid":936689802,"road_name":"062e062f064a062c062906200628064606420020062e064806490644062f","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM217","lat":24.6327973006373,"lon":46.5435039997101,"osmid":936689802,"road_name":"062e062f064a062c062906200628064606420020062e064806490644062f","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM218","lat":24.7609065403285,"lon":46.5926102995872,"osmid":939461906,"road_name":"06370631064a0642 063706440650062906200628064600200639062806490650062706440644064706","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM221","lat":24.7572119869765,"lon":46.6092920303345,"osmid":941131430,"road_name":"06370631064a0642 06270644064506500640646062906200627064406450646064806310629","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM224","lat":24.7806266679364,"lon":46.8439273834229,"osmid":947212823,"road_name":"0634062706310639 062d0633062706460020062806460020062b0627062806420","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM225","lat":24.7812120206717,"lon":46.8430051207542,"osmid":947212823,"road_name":"0634062706310639 062d0633062706460020062806460020062b0627062806420","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM226","lat":24.7833133996890,"lon":46.8621242046356,"osmid":947262295,"road_name":"0634062706310639 0627062806460020062706440647064a062b0645","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM227","lat":24.7838954628605,"lon":46.8612150549889,"osmid":947262295,"road_name":"0634062706310639 0627062806460020062706440647064a062b0645","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM228","lat":24.7718011568091,"lon":46.6557687520981,"osmid":268024568,"road_name":"06270644063706310642064a 06270644062f062706260631064a 06270644063406450627064406490","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM235","lat":24.7661179946884,"lon":46.7847895622253,"osmid":268069785,"road_name":"East Ring Road","road_direction":"NE","site_direction":"W"},{"site_id":"RUHSM240","lat":24.7244700169696,"lon":46.6679528355598,"osmid":963073588,"road_name":"06270644062306450640063106200639062806500627064406390632064a0632 062806460020064506330627063906500020062806460020062c","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM241","lat":24.7250207660181,"lon":46.6668169498444,"osmid":963073588,"road_name":"06270644062306450640063106200639062806500627064406390632064a0632 062806460020064506330627063906500020062806460020062c","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM244","lat":24.6334206168011,"lon":46.5610463619232,"osmid":964800085,"road_name":"0623063306450627062100200628064606420020062306280649 06280643063106","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM245","lat":24.6328450313227,"lon":46.5617022514343,"osmid":964800085,"road_name":"0623063306450627062100200628064606420020062306280649 06280643063106","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM250","lat":24.7835073706170,"lon":46.8782954812050,"osmid":970618858,"road_name":"0627064406250645062706450020063906280650 0627064406440647 06280646 0633063906480650 06280646 063906280650 0627064406390632064a0632","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM251","lat":24.7840902626695,"lon":46.8774093389511,"osmid":970618858,"road_name":"0627064406250645062706450020063906280650 0627064406440647 06280646 0633063906480650 06280646 063906280650 0627064406390632064a0632","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM252","lat":24.7503166766065,"lon":46.6173472404480,"osmid":970679380,"road_name":"06370631064a0642 06270644064506500640646062906200627064406450646064806310629","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM253","lat":24.7497390676549,"lon":46.6161446571350,"osmid":970679380,"road_name":"06370631064a0642 06270644064506500640064606290020062706440645064606480631062906","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM254","lat":24.6784389959693,"lon":46.6328159570694,"osmid":975269461,"road_name":"06270644063306480650062f064a 06270644063906270645","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM255","lat":24.6789913313773,"lon":46.6333088278770,"osmid":975269461,"road_name":"06270644063306480650062f064a 06270644063906270645","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM260","lat":24.6240166598186,"lon":46.5376415848732,"osmid":983134001,"road_name":"06370631064a0642 0646062c062f","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM261","lat":24.7871568929050,"lon":46.8851065635681,"osmid":970618858,"road_name":"0627064406250645062706450020063906280650 0627064406440647 06280646 0633063906480650 06280646 063906280650 0627064406390632064a0632","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM262","lat":24.7832430553795,"lon":46.8689997196197,"osmid":985176199,"road_name":"0634062706310639 0633064406450627064600200627064406410627063106330649","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM263","lat":24.7838281595161,"lon":46.8680969476700,"osmid":985176199,"road_name":"0634062706310639 0633064406450627064600200627064406410627063106330649","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM265","lat":24.6434756469116,"lon":46.5624105930328,"osmid":986992908,"road_name":"Najran","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM266","lat":24.6218122148390,"lon":46.5321287512779,"osmid":989029936,"road_name":"06370631064a0642 0646062c062f","road_direction":"SE","site_direction":"S"},{"site_id":"RUHSM270","lat":24.7261889988891,"lon":46.6614469885826,"osmid":1001049107,"road_name":"","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM271","lat":24.7758052666509,"lon":46.8312693834305,"osmid":1001103595,"road_name":"","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM278","lat":24.7687614481455,"lon":46.8096065521240,"osmid":1004498633,"road_name":"0634062706310639 06340628064706200627064406500632064a0631062906","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM279","lat":24.7693387135088,"lon":46.8087044954300,"osmid":1004498633,"road_name":"0634062706310639 06340628064706200627064406500632064a0631062906","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM280","lat":24.7728440170992,"lon":46.8567631244659,"osmid":1006149050,"road_name":"06370631064a0642 062706440634064a062e 062c06270628063106200627064406230650064506500020062706440635062806270650","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM281","lat":24.7734148161016,"lon":46.8558445572853,"osmid":1006149050,"road_name":"06370631064a0642 062706440634064a062e 062c06270628063106200627064406230650064506500020062706440635062806270650","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM286","lat":24.6390096913076,"lon":46.5938715934753,"osmid":658831695,"road_name":"06270644063706310642064a 06270644062f062706260631064a 0627064406390631062806490","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM287","lat":24.6264232553254,"lon":46.5615707635879,"osmid":1019007682,"road_name":"06270644063706270626064106","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM290","lat":24.6990689523422,"lon":46.6541478037834,"osmid":1024652689,"road_name":"0634062706310639 062706440020064106310650062706460","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM291","lat":24.6984886929152,"lon":46.6548285484314,"osmid":1024652689,"road_name":"0634062706310639 062706440020064106310650062706460","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM292","lat":24.7152046916195,"lon":46.6664049029350,"osmid":1024729908,"road_name":"06370631064a0642 0635064406270650 0627064406500640064600200627064406230649064806280649","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM296","lat":24.7300698892728,"lon":46.6360169649124,"osmid":1031065498,"road_name":"06370631064a0642 06270644064506440643 063906280650062706440644064706","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM304","lat":24.7219913119118,"lon":46.6621294617653,"osmid":1042050217,"road_name":"06370631064a0642 0627064406390631064806280629","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM306","lat":24.7226178817635,"lon":46.6595029830933,"osmid":1042050220,"road_name":"","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM308","lat":24.6298295481122,"lon":46.5432308912277,"osmid":1042166310,"road_name":"06370631064a0642 0646062c062f","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM325","lat":24.6180119393628,"lon":46.6105012893677,"osmid":1059668825,"road_name":"An-Nasar Road","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM326","lat":24.6185786050917,"lon":46.6109851002693,"osmid":1059668825,"road_name":"An-Nasar Road","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM345","lat":24.7736566823095,"lon":46.8484871387482,"osmid":906115398,"road_name":"06270644063706310642064a 06270644062f062706260631064a 06270644062b062706460649","road_direction":"NE","site_direction":"N"},{"site_id":"RUHSM350","lat":24.7166682313959,"lon":46.6627509891987,"osmid":1094618259,"road_name":"06370631064a0642 0623062806490020062806430631 06270644063506500640064a0642","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM358","lat":24.7021889090379,"lon":46.6277831494808,"osmid":111055949,"road_name":"06370631064a0642 06270644064506440643 06410647062f","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM359","lat":24.7163766148252,"lon":46.6379903554916,"osmid":111055949,"road_name":"06370631064a0642 06270644064506440643 06410647062f","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM360","lat":24.6943127276755,"lon":46.6260915696621,"osmid":111055949,"road_name":"06370631064a0642 06270644064506440643 06410647062f","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM368","lat":24.6685055765088,"lon":46.5780938863754,"osmid":1105704252,"road_name":"06270644062306450640063106200623062d06450650 062806460020063906280650062706440639063206490632","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM369","lat":24.6679198165689,"lon":46.5776912570000,"osmid":1105704252,"road_name":"06270644062306450640063106200623062d06450650 062806460020063906280650062706440639063206490632","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM451","lat":24.7053377652682,"lon":46.6571497917175,"osmid":1222063855,"road_name":"0627064406250645062706450020063906280650062706440639063206490632 062806460020064506500645062f 062806460020063306390648062f","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM452","lat":24.7058911553099,"lon":46.6563105583191,"osmid":1222063855,"road_name":"0627064406250645062706450020063906280650062706440639063206490632 062806460020064506500645062f 062806460020063306390648062f","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM459","lat":24.6622756948431,"lon":46.5684539079666,"osmid":1234259963,"road_name":"0639062706260634062906200628064606420020062306280649 06280643063106","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM460","lat":24.6628551591626,"lon":46.5689395368099,"osmid":1234259963,"road_name":"0639062706260634062906200628064606420020062306280649 06280643063106","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM467","lat":24.5858413498195,"lon":46.5203133821487,"osmid":1246652809,"road_name":"06270644063706270626064106","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM468","lat":24.5851953847461,"lon":46.5196640491486,"osmid":1246652809,"road_name":"Al Taief","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM530","lat":24.6800155379148,"lon":46.5886579751968,"osmid":1285088295,"road_name":"06370631064a0642 06450639062706480640062906200627062806460020062306280649 063306410640062706460","road_direction":"SE","site_direction":"N"},{"site_id":"RUHSM531","lat":24.6794280178411,"lon":46.5893014669418,"osmid":1285088295,"road_name":"06370631064a0642 06450639062706480640062906200627062806460020062306280649 063306410640062706460","road_direction":"NW","site_direction":"S"},{"site_id":"RUHSM540","lat":24.6908082660040,"lon":46.6151249408722,"osmid":1298588691,"road_name":"06270644062306450640063106200641064706500020062806460020064106490635064400200628064600200641063106500627064600200622064400200633063906480650","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM541","lat":24.6902167282691,"lon":46.6147157549858,"osmid":1298588691,"road_name":"06270644062306450640063106200641064706500020062806460020064106490635064400200628064600200641063106500627064600200622064400200633063906480650","road_direction":"NE","site_direction":"E"},{"site_id":"RUHSM546","lat":24.7856395282406,"lon":46.8706972599030,"osmid":1305737618,"road_name":"06370631064a0642 06270644063306440637062706460020064206270628064806330020062806460020063306390650062f","road_direction":"SW","site_direction":"W"},{"site_id":"RUHSM547","lat":24.7850460476929,"lon":46.8699869513512,"osmid":1305737618,"road_name":"06370631064a0642 06270644063306440637062706460020064206270628064806330020062806460020063306390650062f","road_direction":"NE","site_direction":"E"},{"site_id":"RUHTE305","lat":24.6193908009766,"lon":46.6241350173950,"osmid":820988426,"road_name":"An-Nasar Road","road_direction":"NE","site_direction":"E"},{"site_id":"RUHTE306","lat":24.6199548178666,"lon":46.6246141195297,"osmid":820988426,"road_name":"An-Nasar Road","road_direction":"SW","site_direction":"W"},{"site_id":"RUHTE312","lat":24.7806102285117,"lon":46.8726884722710,"osmid":1317626896,"road_name":"0634062706310639 0623062806490020064706310650063106290","road_direction":"NW","site_direction":"S"},{"site_id":"RUHTE313","lat":24.7800281653431,"lon":46.8734025955200,"osmid":1317626896,"road_name":"0634062706310639 0623062806490020064706310650063106290","road_direction":"SE","site_direction":"N"},{"site_id":"RUHTE315","lat":24.7093671862146,"lon":46.7048233747482,"osmid":1325628015,"road_name":"06370631064a0642 06270644062e0631062c 06270644063306310650063906","road_direction":"SW","site_direction":"S"},{"site_id":"RUHTE316","lat":24.7099358261464,"lon":46.7040025591850,"osmid":1325628015,"road_name":"06370631064a0642 06270644062e0631062c 06270644063306310650063906","road_direction":"NE","site_direction":"N"},{"site_id":"RUHTE317","lat":24.6406761878808,"lon":46.5974380075932,"osmid":658831695,"road_name":"06270644063706310642064a 06270644062f062706260631064a 0627064406390631062806490","road_direction":"SE","site_direction":"N"},{"site_id":"RUHTE318","lat":24.7810055584192,"lon":46.8789780139923,"osmid":1326167389,"road_name":"06270644063506500627062806290","road_direction":"SE","site_direction":"N"},{"site_id":"RUHTE319","lat":24.7816146411825,"lon":46.8780726194382,"osmid":1326167389,"road_name":"06270644063506500627062806290","road_direction":"NW","site_direction":"S"},{"site_id":"RUHTE320","lat":24.6873587093428,"lon":46.6067433953285,"osmid":1327043046,"road_name":"Arfat","road_direction":"NE","site_direction":"E"},{"site_id":"RUHTE321","lat":24.6879341765817,"lon":46.6072235107422,"osmid":1327043046,"road_name":"Arfat","road_direction":"SW","site_direction":"W"},{"site_id":"RUHTE332","lat":24.6640649773111,"lon":46.5832611918449,"osmid":535096179,"road_name":"06370631064a0642 062c062f0629","road_direction":"SW","site_direction":"W"},{"site_id":"RUHTE333","lat":24.6634693939306,"lon":46.5828543901443,"osmid":535096179,"road_name":"06370631064a0642 062c062f0629","road_direction":"NE","site_direction":"E"},{"site_id":"RUHTE334","lat":24.7494419476448,"lon":46.7586927413940,"osmid":906115398,"road_name":"06270644063706310642064a 06270644062f062706260631064a 06270644062b062706460649","road_direction":"SE","site_direction":"N"},{"site_id":"RUHTE335","lat":24.7500322687619,"lon":46.7578059434891,"osmid":906115398,"road_name":"06270644063706310642064a 06270644062f062706260631064a 06270644062b062706460649","road_direction":"NW","site_direction":"S"}];
+
+// Decode hex Arabic road names
+function decodeRoadName(s) {
+    if (!s || !s.startsWith('0')) return s || '';
+    try {
+        const parts = s.split(' ');
+        const decoded = parts.map(part => {
+            let chars = [];
+            for (let i = 0; i < part.length; i += 4) {
+                chars.push(String.fromCharCode(parseInt(part.substr(i, 4), 16)));
+            }
+            return chars.join('');
+        });
+        return decoded.join(' ');
+    } catch(e) {
+        return s;
+    }
+}
+
+// Haversine distance in km
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Route direction at path index
+function getRouteDir(path, idx) {
+    const i = Math.min(Math.max(idx, 0), path.length - 2);
+    const dLat = path[i + 1].lat() - path[i].lat();
+    const dLon = path[i + 1].lng() - path[i].lng();
+    if (Math.abs(dLat) > Math.abs(dLon)) return dLat > 0 ? 'N' : 'S';
+    return dLon > 0 ? 'E' : 'W';
+}
+
+var map, directionsService;
+var markers = [];
+var polylines = [];
+
+const ORIGIN_IDX = 47;  // RUHSM095
+const DEST_IDX = 151;   // RUHSM266 (index in our SITES array)
+
+// Find actual indices in embedded SITES array
+let actualOriginIdx = SITES.findIndex(s => s.site_id === 'RUHSM095');
+let actualDestIdx = SITES.findIndex(s => s.site_id === 'RUHSM266');
+
+const CURRENT_WAYPOINTS = [121, 37, 164];  // From JSON
+
+function log(msg) {
+    const el = document.getElementById('log');
+    el.textContent += '\n' + msg;
+    el.scrollTop = el.scrollHeight;
+}
+
+function clearLog() {
+    document.getElementById('log').textContent = '';
+}
+
+function clearMap() {
+    markers.forEach(m => m.setMap(null));
+    markers = [];
+    polylines.forEach(p => p.setMap(null));
+    polylines = [];
+}
+
+function addMarker(lat, lon, title, color, size = 32) {
+    const colors = {
+        green: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+        red: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+        orange: 'http://maps.google.com/mapfiles/ms/icons/orange-dot.png',
+        blue: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+        purple: 'http://maps.google.com/mapfiles/ms/icons/purple-dot.png',
+        yellow: 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+        pink: 'http://maps.google.com/mapfiles/ms/icons/pink-dot.png'
+    };
+    const marker = new google.maps.Marker({
+        position: { lat, lng: lon },
+        map: map,
+        icon: size === 32 ? colors[color] : {
+            url: colors[color],
+            scaledSize: new google.maps.Size(size, size)
+        },
+        title: title
+    });
+    markers.push(marker);
+    return marker;
+}
+
+function showCurrentWaypoints() {
+    clearMap();
+    clearLog();
+    log('=== Current Waypoints from JSON ===');
+    
+    const origin = SITES[actualOriginIdx];
+    const dest = SITES[actualDestIdx];
+    
+    addMarker(origin.lat, origin.lon, 'ORIGIN: ' + origin.site_id, 'green');
+    addMarker(dest.lat, dest.lon, 'DEST: ' + dest.site_id, 'red');
+    
+    log('Origin: ' + origin.site_id + ' (' + origin.site_direction + ')');
+    log('  Road: ' + decodeRoadName(origin.road_name));
+    log('');
+    log('Dest: ' + dest.site_id + ' (' + dest.site_direction + ')');
+    log('  Road: ' + decodeRoadName(dest.road_name));
+    log('');
+    
+    log('Current waypoints: [' + CURRENT_WAYPOINTS.join(', ') + ']');
+    CURRENT_WAYPOINTS.forEach((wpIdx, i) => {
+        // Find in our SITES array
+        const targetId = ['RUHSM228', 'RUHSM070', 'RUHSM286'][i]; // Known IDs
+        const siteIdx = SITES.findIndex(s => s.site_id === targetId);
+        if (siteIdx >= 0) {
+            const s = SITES[siteIdx];
+            addMarker(s.lat, s.lon, 'WP ' + (i+1) + ': ' + s.site_id, 'orange');
+            log('  WP ' + (i+1) + ': ' + s.site_id + ' (' + s.site_direction + ')');
+            log('       ' + decodeRoadName(s.road_name));
+        }
+    });
+    
+    // Fit map
+    const bounds = new google.maps.LatLngBounds();
+    markers.forEach(m => bounds.extend(m.getPosition()));
+    map.fitBounds(bounds, 50);
+    
+    // Get route
+    directionsService.route({
+        origin: { lat: origin.lat, lng: origin.lon },
+        destination: { lat: dest.lat, lng: dest.lon },
+        travelMode: 'DRIVING'
+    }, (res, status) => {
+        if (status === 'OK') {
+            const path = res.routes[0].overview_path;
+            const weight = parseInt(document.getElementById('polyWeight').value);
+            const polyline = new google.maps.Polyline({
+                path: path,
+                geodesic: true,
+                strokeColor: '#00d4ff',
+                strokeOpacity: 0.8,
+                strokeWeight: weight,
+                map: map
+            });
+            polylines.push(polyline);
+            log('\nRoute: ' + (res.routes[0].legs[0].distance.value/1000).toFixed(2) + ' km');
+        }
+    });
+}
+
+function showAllSitesInArea() {
+    clearMap();
+    clearLog();
+    
+    const origin = SITES[actualOriginIdx];
+    const dest = SITES[actualDestIdx];
+    
+    // Bounding box
+    const minLat = Math.min(origin.lat, dest.lat) - 0.05;
+    const maxLat = Math.max(origin.lat, dest.lat) + 0.05;
+    const minLon = Math.min(origin.lon, dest.lon) - 0.05;
+    const maxLon = Math.max(origin.lon, dest.lon) + 0.05;
+    
+    let count = 0;
+    SITES.forEach((s, i) => {
+        if (s.lat >= minLat && s.lat <= maxLat && s.lon >= minLon && s.lon <= maxLon) {
+            let color = 'purple';
+            if (s.site_id === origin.site_id) color = 'green';
+            else if (s.site_id === dest.site_id) color = 'red';
+            else if (['RUHSM228', 'RUHSM070', 'RUHSM286'].includes(s.site_id)) color = 'orange';
+            
+            addMarker(s.lat, s.lon, s.site_id + ' (' + s.site_direction + ') - ' + decodeRoadName(s.road_name), color, 20);
+            count++;
+        }
+    });
+    
+    document.getElementById('statTotal').textContent = count;
+    log('Showing ' + count + ' sites in area');
+    
+    // Fit map
+    const bounds = new google.maps.LatLngBounds();
+    markers.forEach(m => bounds.extend(m.getPosition()));
+    map.fitBounds(bounds, 50);
+}
+
+async function runTest() {
+    clearMap();
+    clearLog();
+    
+    const origin = SITES[actualOriginIdx];
+    const dest = SITES[actualDestIdx];
+    const pathThreshold = parseInt(document.getElementById('pathThreshold').value) / 1000; // km
+    const useRoadMatch = document.getElementById('useRoadMatch').checked;
+    const polyWeight = parseInt(document.getElementById('polyWeight').value);
+    
+    log('═══════════════════════════════════════════════════════════');
+    log('ROUTE TEST: ' + origin.site_id + ' → ' + dest.site_id);
+    log('═══════════════════════════════════════════════════════════');
+    log('');
+    log('ORIGIN: ' + origin.site_id + ' (' + origin.site_direction + ')');
+    log('  Road: ' + decodeRoadName(origin.road_name));
+    log('  Coords: ' + origin.lat.toFixed(6) + ', ' + origin.lon.toFixed(6));
+    log('');
+    log('DESTINATION: ' + dest.site_id + ' (' + dest.site_direction + ')');
+    log('  Road: ' + decodeRoadName(dest.road_name));
+    log('  Coords: ' + dest.lat.toFixed(6) + ', ' + dest.lon.toFixed(6));
+    log('');
+    log('SETTINGS:');
+    log('  Path threshold: ' + (pathThreshold * 1000) + 'm');
+    log('  Road matching: ' + (useRoadMatch ? 'ON' : 'OFF'));
+    log('  Polyline weight: ' + polyWeight + 'px');
+    log('');
+    
+    // Add origin/dest markers
+    addMarker(origin.lat, origin.lon, 'ORIGIN: ' + origin.site_id, 'green');
+    addMarker(dest.lat, dest.lon, 'DEST: ' + dest.site_id, 'red');
+    
+    log('Fetching route from Google...');
+    
+    directionsService.route({
+        origin: { lat: origin.lat, lng: origin.lon },
+        destination: { lat: dest.lat, lng: dest.lon },
+        travelMode: 'DRIVING'
+    }, async (res, status) => {
+        if (status !== 'OK') {
+            log('ERROR: ' + status);
+            return;
+        }
+        
+        const path = res.routes[0].overview_path;
+        const directDist = res.routes[0].legs[0].distance.value / 1000;
+        const directTime = res.routes[0].legs[0].duration.value / 60;
+        
+        log('Route fetched!');
+        log('  Path points: ' + path.length);
+        log('  Distance: ' + directDist.toFixed(2) + ' km');
+        log('  Time: ' + Math.round(directTime) + ' min');
+        log('');
+        
+        // Draw THICK polyline
+        const polyline = new google.maps.Polyline({
+            path: path,
+            geodesic: true,
+            strokeColor: '#00d4ff',
+            strokeOpacity: 0.8,
+            strokeWeight: polyWeight,
+            map: map
+        });
+        polylines.push(polyline);
+        
+        // Extract roads from route
+        const routeRoads = new Set();
+        const originRoad = decodeRoadName(origin.road_name);
+        const destRoad = decodeRoadName(dest.road_name);
+        if (originRoad) routeRoads.add(originRoad);
+        if (destRoad) routeRoads.add(destRoad);
+        
+        // Parse steps for road names
+        res.routes[0].legs[0].steps.forEach(step => {
+            const html = step.instructions;
+            // Try to extract road names
+            const matches = html.match(/<b>([^<]+)<\/b>/g);
+            if (matches) {
+                matches.forEach(m => {
+                    const road = m.replace(/<\/?b>/g, '').trim();
+                    if (road && road.length > 2) routeRoads.add(road);
+                });
+            }
+        });
+        
+        log('Roads in route: ' + Array.from(routeRoads).slice(0, 5).join(', '));
+        
+        // ═══════════════════════════════════════════════════════════
+        // FIND ALL CANDIDATES
+        // ═══════════════════════════════════════════════════════════
+        log('');
+        log('═══════════════════════════════════════════════════════════');
+        log('FINDING CANDIDATES...');
+        log('═══════════════════════════════════════════════════════════');
+        
+        let candidates = [];
+        const siteList = document.getElementById('siteList');
+        siteList.innerHTML = '';
+        
+        SITES.forEach((site, idx) => {
+            if (site.site_id === origin.site_id || site.site_id === dest.site_id) return;
+            
+            // Calculate distance to path
+            let minDist = Infinity, pathIdx = 0;
+            for (let i = 0; i < path.length; i++) {
+                const d = haversine(site.lat, site.lon, path[i].lat(), path[i].lng());
+                if (d < minDist) { minDist = d; pathIdx = i; }
+            }
+            
+            const nearPath = minDist < pathThreshold;
+            
+            // Check road match
+            const siteRoad = decodeRoadName(site.road_name);
+            let roadMatch = false;
+            if (useRoadMatch && siteRoad) {
+                roadMatch = routeRoads.has(siteRoad) || 
+                           siteRoad === originRoad || 
+                           siteRoad === destRoad;
+            }
+            
+            // Calculate detour (how much would it add to route)
+            const distToOrigin = haversine(site.lat, site.lon, origin.lat, origin.lon);
+            const distToDest = haversine(site.lat, site.lon, dest.lat, dest.lon);
+            const straightLine = haversine(origin.lat, origin.lon, dest.lat, dest.lon);
+            const detour = distToOrigin + distToDest - straightLine;
+            
+            // Include if near path OR road matches OR low detour
+            if (nearPath || roadMatch || detour < 5) {
+                candidates.push({
+                    idx,
+                    site,
+                    pathIdx,
+                    distToPath: minDist,
+                    nearPath,
+                    roadMatch,
+                    road: siteRoad,
+                    detour,
+                    distToOrigin
+                });
+            }
+        });
+        
+        // Sort by distance from origin along path
+        candidates.sort((a, b) => a.pathIdx - b.pathIdx || a.distToOrigin - b.distToOrigin);
+        
+        document.getElementById('statTotal').textContent = SITES.length;
+        document.getElementById('statCandidates').textContent = candidates.length;
+        
+        log('Found ' + candidates.length + ' candidates');
+        
+        // ═══════════════════════════════════════════════════════════
+        // CHECK DIRECTION AND VERIFY
+        // ═══════════════════════════════════════════════════════════
+        log('');
+        log('═══════════════════════════════════════════════════════════');
+        log('VERIFYING WITH GOOGLE (0.5% threshold)...');
+        log('═══════════════════════════════════════════════════════════');
+        
+        const verified = [];
+        
+        for (const c of candidates) {
+            const routeDir = getRouteDir(path, c.pathIdx);
+            c.routeDir = routeDir;
+            c.dirMatch = c.site.site_direction === routeDir;
+            
+            // Verify with Google
+            const result = await new Promise(resolve => {
+                directionsService.route({
+                    origin: { lat: origin.lat, lng: origin.lon },
+                    destination: { lat: dest.lat, lng: dest.lon },
+                    waypoints: [{ location: { lat: c.site.lat, lng: c.site.lon }, stopover: true }],
+                    travelMode: 'DRIVING'
+                }, (res2, st2) => {
+                    if (st2 === 'OK') {
+                        let totalDist = 0;
+                        res2.routes[0].legs.forEach(leg => totalDist += leg.distance.value);
+                        totalDist /= 1000;
+                        const increase = (totalDist - directDist) / directDist;
+                        resolve({ totalDist, increase, ok: increase < 0.005 }); // 0.5%
+                    } else {
+                        resolve({ ok: false, error: st2 });
+                    }
+                });
+            });
+            
+            c.verified = result.ok;
+            c.totalDist = result.totalDist;
+            c.increase = result.increase;
+            
+            if (result.ok) {
+                verified.push(c);
+                log('✓ ' + c.site.site_id + ' | +' + (result.increase * 100).toFixed(3) + '% | ' + c.road.substring(0, 20));
+                addMarker(c.site.lat, c.site.lon, c.site.site_id + ' (VERIFIED)', 'yellow');
+            } else {
+                // Add smaller marker for rejected
+                addMarker(c.site.lat, c.site.lon, c.site.site_id + ' (+' + ((c.increase || 99) * 100).toFixed(1) + '%)', 'purple', 16);
+            }
+            
+            // Update UI
+            const div = document.createElement('div');
+            div.className = 'site' + (c.verified ? ' verified' : (c.nearPath ? ' candidate' : (c.roadMatch ? ' road-match' : '')));
+            div.innerHTML = `
+                <span class="id">${c.site.site_id}</span> (${c.site.site_direction})
+                ${c.verified ? '<span style="color:#4ecca3;float:right;">✓ ON ROUTE</span>' : ''}
+                <br><span class="road">${c.road || 'N/A'}</span>
+                <br><span class="dist">${(c.distToPath * 1000).toFixed(0)}m from path | +${((c.increase || 0) * 100).toFixed(2)}%</span>
+            `;
+            div.onclick = () => {
+                map.setCenter({ lat: c.site.lat, lng: c.site.lon });
+                map.setZoom(16);
+            };
+            siteList.appendChild(div);
+            
+            await new Promise(r => setTimeout(r, 50));
+        }
+        
+        document.getElementById('statVerified').textContent = verified.length;
+        
+        // ═══════════════════════════════════════════════════════════
+        // RESULTS
+        // ═══════════════════════════════════════════════════════════
+        log('');
+        log('═══════════════════════════════════════════════════════════');
+        log('RESULTS: ' + verified.length + ' sites verified ON ROUTE');
+        log('═══════════════════════════════════════════════════════════');
+        
+        if (verified.length > 0) {
+            log('');
+            log('Verified waypoints:');
+            verified.forEach((c, i) => {
+                log('  ' + (i+1) + '. ' + c.site.site_id + ' (' + c.site.site_direction + ')');
+                log('     ' + c.road);
+                log('     +' + (c.increase * 100).toFixed(3) + '% distance');
+            });
+        }
+        
+        log('');
+        log('Current waypoints in JSON: [121, 37, 164]');
+        log('  = RUHSM228, RUHSM070, RUHSM286');
+        
+        // Fit map to show all
+        const bounds = new google.maps.LatLngBounds();
+        markers.forEach(m => bounds.extend(m.getPosition()));
+        map.fitBounds(bounds, 50);
+    });
+}
+
+function initMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 24.7, lng: 46.65 },
+        zoom: 11,
+        styles: [
+            { elementType: 'geometry', stylers: [{ color: '#212121' }] },
+            { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+            { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
+            { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#38414e' }] },
+            { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#212a37' }] },
+            { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#746855' }] },
+            { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] }
+        ]
+    });
+    directionsService = new google.maps.DirectionsService();
+    
+    log('Map ready. Click Run Full Analysis to test the route.');
+    log('');
+    log('RUHSM095 found at index: ' + actualOriginIdx);
+    log('RUHSM266 found at index: ' + actualDestIdx);
+}
+    </script>
+    <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
+    <script>
+        function waitForMaps() {
+            if (typeof google !== 'undefined' && google.maps) {
+                initMap();
+            } else {
+                setTimeout(waitForMaps, 100);
+            }
+        }
+        waitForMaps();
+    </script>
+</body>
+</html>
