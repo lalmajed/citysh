@@ -349,8 +349,8 @@
         let currentPage = 0;
         const PAGE_SIZE = 50;
         
-        let map, directionsService, directionsRenderer;
-        let markers = [];
+        var map, directionsService, directionsRenderer;
+        var markers = [];
         
         // Drag and drop
         const uploadArea = document.getElementById('uploadArea');
@@ -661,21 +661,13 @@
             document.getElementById('stopsList').innerHTML = html;
         }
         
+    </script>
+    <script>
+        // initMap must be global for the keyless API callback
         function initMap() {
-            if (typeof google === 'undefined' || !google.maps) {
-                console.log('Waiting for Google Maps API...');
-                setTimeout(initMap, 100);
-                return;
-            }
-            
-            console.log('Initializing map...');
             map = new google.maps.Map(document.getElementById('map'), {
                 center: { lat: 24.7136, lng: 46.6753 },
-                zoom: 10,
-                styles: [
-                    { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-                    { featureType: 'transit', stylers: [{ visibility: 'off' }] }
-                ]
+                zoom: 10
             });
             
             directionsService = new google.maps.DirectionsService();
@@ -688,13 +680,7 @@
                     strokeOpacity: 0.8
                 }
             });
-            console.log('Map ready!');
         }
-        
-        // Initialize map when API is loaded
-        window.onload = function() {
-            setTimeout(initMap, 500);
-        };
     </script>
     <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
 </body>
