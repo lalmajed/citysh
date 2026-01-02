@@ -1119,6 +1119,7 @@ async function recheckAllRoutes() {
     
     let completed = 0, updated = 0, errors = 0;
     let idx = 0;
+    let skipLocalStorage = false; // Flag to skip save attempts once storage is full
     
     // Helper to safely update UI
     function updateUI(id, prop, value) {
@@ -1248,14 +1249,24 @@ async function recheckAllRoutes() {
         
         idx += workers;
         
-        // Save periodically (with error handling for quota)
-        if (completed % 100 === 0 && completed > 0) {
+        // Save periodically (with error handling for quota) - less frequently to reduce overhead
+        if (completed % 500 === 0 && completed > 0 && !skipLocalStorage) {
             try {
-                localStorage.setItem('riyadh_gmaps_viewer_cache', JSON.stringify(CACHE));
-                updateUI('topLive', 'text', '💾 Saved progress at ' + completed + ' routes...');
+                const cacheStr = JSON.stringify(CACHE);
+                const sizeMB = (cacheStr.length / 1024 / 1024).toFixed(2);
+                if (cacheStr.length < 4 * 1024 * 1024) { // Only try if under 4MB
+                    localStorage.setItem('riyadh_gmaps_viewer_cache', cacheStr);
+                    updateUI('topLive', 'text', '💾 Saved progress at ' + completed + ' routes (' + sizeMB + 'MB)');
+                } else {
+                    skipLocalStorage = true;
+                    updateUI('topLive', 'text', '⚠️ Progress at ' + completed + ' (' + sizeMB + 'MB - too large to save)');
+                    log('⚠️ Data exceeds 4MB, skipping localStorage saves. Will auto-download when done.');
+                }
             } catch(e) {
-                // Quota exceeded - skip localStorage save, data stays in memory
-                updateUI('topLive', 'text', '⚠️ Progress at ' + completed + ' (too large for localStorage)');
+                // Quota exceeded or other error - skip all future localStorage saves
+                skipLocalStorage = true;
+                updateUI('topLive', 'text', '⚠️ Progress at ' + completed + ' (storage full - data in memory)');
+                log('⚠️ localStorage full, skipping saves. Will auto-download when done.');
             }
         }
         
@@ -1264,12 +1275,21 @@ async function recheckAllRoutes() {
     
     // Final save (with error handling for quota)
     let savedToStorage = false;
-    try {
-        localStorage.setItem('riyadh_gmaps_viewer_cache', JSON.stringify(CACHE));
-        savedToStorage = true;
-        log('✓ Saved to localStorage');
-    } catch(e) {
-        log('⚠️ Data too large for localStorage - use "Full JSON" to download!');
+    if (!skipLocalStorage) {
+        try {
+            const cacheStr = JSON.stringify(CACHE);
+            if (cacheStr.length < 4 * 1024 * 1024) {
+                localStorage.setItem('riyadh_gmaps_viewer_cache', cacheStr);
+                savedToStorage = true;
+                log('✓ Saved to localStorage');
+            } else {
+                log('⚠️ Data too large for localStorage - will auto-download');
+            }
+        } catch(e) {
+            log('⚠️ localStorage save failed - will auto-download');
+        }
+    } else {
+        log('⚠️ localStorage was full - will auto-download');
     }
     
     recheckRunning = false;
