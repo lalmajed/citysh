@@ -357,8 +357,24 @@ function renderCachedList() {
     
     let html = '';
     keys.forEach(key => {
-        const [i, j] = key.split('_').map(Number);
-        if (!SITES[i] || !SITES[j]) return;
+        const parts = key.split('_');
+        if (parts.length !== 2) return;
+        
+        // Try to parse as numbers first, then as site IDs
+        let i = parseInt(parts[0]);
+        let j = parseInt(parts[1]);
+        
+        // If not valid numbers, try looking up by site_id
+        if (isNaN(i) || isNaN(j)) {
+            const siteA = SITES.find(s => s.site_id === parts[0]);
+            const siteB = SITES.find(s => s.site_id === parts[1]);
+            if (siteA) i = SITES.indexOf(siteA);
+            if (siteB) j = SITES.indexOf(siteB);
+        }
+        
+        // Safety check: make sure indices are valid and sites exist
+        if (isNaN(i) || isNaN(j) || i < 0 || j < 0 || i >= SITES.length || j >= SITES.length || !SITES[i] || !SITES[j]) return;
+        
         const wpCount = CACHE.waypoints[key] ? CACHE.waypoints[key].length : 0;
         const wpText = wpCount > 0 ? ' <span style="color:#4caf50">[' + wpCount + ' wp]</span>' : '';
         const partClass = CACHE.source[key] === 1 ? 'part1' : 'part2';
@@ -464,6 +480,8 @@ async function showRoute() {
     
     if (isNaN(iA) || isNaN(iB)) { alert('Select both sites'); return; }
     if (iA === iB) { alert('Select different sites'); return; }
+    if (iA < 0 || iA >= SITES.length || !SITES[iA]) { alert('Invalid origin site index: ' + iA); return; }
+    if (iB < 0 || iB >= SITES.length || !SITES[iB]) { alert('Invalid destination site index: ' + iB); return; }
     
     const details = document.getElementById('routeDetails');
     details.innerHTML = '<div class="loading">Loading route...</div>';
@@ -715,6 +733,8 @@ async function recheckWaypoints() {
     
     if (isNaN(iA) || isNaN(iB)) { alert('Select a route first!'); return; }
     if (iA === iB) { alert('Select different sites'); return; }
+    if (iA < 0 || iA >= SITES.length || !SITES[iA]) { alert('Invalid origin site index: ' + iA); return; }
+    if (iB < 0 || iB >= SITES.length || !SITES[iB]) { alert('Invalid destination site index: ' + iB); return; }
     
     const pathThreshold = parseFloat(document.getElementById('testThreshold').value);
     const distThreshold = parseFloat(document.getElementById('testDistThreshold').value);
@@ -924,9 +944,13 @@ async function recheckAllRoutes() {
     
     // Parse ALL keys from cache
     let routes = [];
+    let skippedKeys = 0;
     for (const key of cacheKeys) {
         const parts = key.split('_');
-        if (parts.length !== 2) continue;
+        if (parts.length !== 2) {
+            skippedKeys++;
+            continue;
+        }
         
         let iA = siteIdToIdx[parts[0]];
         let iB = siteIdToIdx[parts[1]];
@@ -935,9 +959,22 @@ async function recheckAllRoutes() {
         if (iA === undefined) iA = parseInt(parts[0]);
         if (iB === undefined) iB = parseInt(parts[1]);
         
+        // IMPORTANT: Validate that indices are within SITES array bounds
         if (iA !== undefined && iB !== undefined && !isNaN(iA) && !isNaN(iB) && iA !== iB) {
-            routes.push({ origin: iA, dest: iB, key });
+            // Check that both indices are valid (within SITES array)
+            if (iA >= 0 && iA < SITES.length && iB >= 0 && iB < SITES.length && SITES[iA] && SITES[iB]) {
+                routes.push({ origin: iA, dest: iB, key });
+            } else {
+                skippedKeys++;
+                log('⚠️ Skipped invalid key: ' + key + ' (index out of bounds: iA=' + iA + ', iB=' + iB + ', max=' + (SITES.length-1) + ')');
+            }
+        } else {
+            skippedKeys++;
         }
+    }
+    
+    if (skippedKeys > 0) {
+        log('⚠️ Skipped ' + skippedKeys + ' invalid keys');
     }
     
     log('Routes parsed from cache: ' + routes.length + ' / ' + cacheKeys.length);
@@ -1008,6 +1045,18 @@ async function recheckAllRoutes() {
     
     async function processRoute(route) {
         const iA = route.origin, iB = route.dest;
+        
+        // Safety check: make sure sites exist
+        if (!SITES[iA] || !SITES[iB]) {
+            log('⚠️ Skipping invalid route: iA=' + iA + ', iB=' + iB);
+            errors++;
+            completed++;
+            const pct = (completed / routes.length * 100).toFixed(1);
+            updateUI('topBar', 'width', pct + '%');
+            updateUI('topStats', 'text', pct + '%');
+            updateUI('topDetails', 'text', completed + ' / ' + routes.length + ' | ✓ ' + updated + ' updated | ✗ ' + errors + ' errors');
+            return Promise.resolve();
+        }
         
         // Show live update
         updateUI('topLive', 'text', '🔍 Checking: ' + SITES[iA].site_id + ' → ' + SITES[iB].site_id);
