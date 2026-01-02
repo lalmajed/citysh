@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Segmentation Viewer - Vehicle 4723GLR</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 20px; }
+        h1 { color: #1565c0; margin-bottom: 5px; }
+        .subtitle { color: #666; margin-bottom: 20px; }
+        .container { max-width: 1600px; margin: 0 auto; }
+        .stat-row { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .stat { flex: 1; min-width: 120px; background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .stat-value { font-size: 1.5rem; font-weight: bold; color: #1565c0; }
+        .stat-value.green { color: #2e7d32; }
+        .stat-value.orange { color: #f57c00; }
+        .stat-value.red { color: #c62828; }
+        .stat-label { color: #666; font-size: 0.75rem; }
+        .grid { display: grid; grid-template-columns: 380px 1fr; gap: 15px; }
+        .panel { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .panel h2 { color: #1565c0; font-size: 0.9rem; margin-bottom: 10px; border-bottom: 2px solid #1565c0; padding-bottom: 8px; }
+        select, input { width: 100%; padding: 10px; font-size: 0.9rem; border: 2px solid #ddd; border-radius: 6px; margin-bottom: 10px; }
+        .btn { width: 100%; padding: 12px; background: #1565c0; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
+        .btn:hover { background: #0d47a1; }
+        .btn-sm { padding: 8px 15px; font-size: 0.8rem; width: auto; margin: 3px; }
+        .btn-green { background: #2e7d32; }
+        .btn-purple { background: #7b1fa2; }
+        #map { height: 600px; border-radius: 10px; }
+        .trip-item { padding: 10px; margin: 5px 0; border-radius: 6px; cursor: pointer; border-left: 4px solid #1565c0; background: #f9f9f9; }
+        .trip-item:hover { background: #e3f2fd; }
+        .trip-item.selected { background: #bbdefb; }
+        .trip-header { display: flex; justify-content: space-between; font-weight: 500; }
+        .trip-details { font-size: 0.8rem; color: #666; margin-top: 5px; }
+        .trips-list { max-height: 400px; overflow-y: auto; }
+        .no-data { text-align: center; padding: 30px; color: #999; }
+        .legend { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; }
+        .legend-color { width: 16px; height: 16px; border-radius: 3px; }
+        .waypoint-item { padding: 8px 12px; margin: 3px 0; border-radius: 4px; background: #f5f5f5; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center; }
+        .waypoint-item:hover { background: #e3f2fd; cursor: pointer; }
+        .waypoint-idx { font-weight: bold; color: #1565c0; min-width: 30px; }
+        .waypoint-coords { color: #666; font-family: monospace; font-size: 0.75rem; }
+        .waypoint-camera { color: #333; font-size: 0.8rem; margin-left: 10px; }
+        .route-color-picker { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .route-color-picker input[type="color"] { width: 50px; height: 35px; border: none; cursor: pointer; }
+        .info-box { background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .info-box h3 { color: #1565c0; margin-bottom: 10px; font-size: 1rem; }
+        .info-item { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #bbdefb; }
+        .info-item:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Route Segmentation Viewer</h1>
+        <p class="subtitle">Vehicle 4723GLR - Camera Detection Route (July 29 - August 20, 2025)</p>
+        
+        <div class="stat-row">
+            <div class="stat"><div class="stat-value" id="statPoints">0</div><div class="stat-label">Route Points</div></div>
+            <div class="stat"><div class="stat-value" id="statSegments">0</div><div class="stat-label">Segments</div></div>
+            <div class="stat"><div class="stat-value green" id="statDistance">0</div><div class="stat-label">Total Distance (km)</div></div>
+            <div class="stat"><div class="stat-value orange" id="statDuration">0</div><div class="stat-label">Duration (days)</div></div>
+        </div>
+        
+        <div class="grid">
+            <div class="sidebar">
+                <div class="panel info-box">
+                    <h3>Vehicle Information</h3>
+                    <div class="info-item"><span>Vehicle ID:</span><strong>4723GLR</strong></div>
+                    <div class="info-item"><span>First Detection:</span><span id="firstDetection">-</span></div>
+                    <div class="info-item"><span>Last Detection:</span><span id="lastDetection">-</span></div>
+                    <div class="info-item"><span>Unique Cameras:</span><span id="uniqueCameras">-</span></div>
+                </div>
+                
+                <div class="panel">
+                    <h2>Route Display Options</h2>
+                    <div class="route-color-picker">
+                        <label>Route Color:</label>
+                        <input type="color" id="routeColor" value="#1565c0" onchange="updateRouteStyle()">
+                    </div>
+                    <div class="input-group">
+                        <label style="font-size:0.85rem;">Line Width</label>
+                        <input type="range" id="lineWidth" min="2" max="10" value="4" onchange="updateRouteStyle()">
+                    </div>
+                    <label style="font-size:0.85rem;display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                        <input type="checkbox" id="showMarkers" checked onchange="toggleMarkers()"> Show waypoint markers
+                    </label>
+                    <label style="font-size:0.85rem;display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                        <input type="checkbox" id="showStartEnd" checked onchange="toggleStartEnd()"> Highlight start/end
+                    </label>
+                </div>
+                
+                <div class="panel">
+                    <h2>Map Controls</h2>
+                    <button class="btn btn-sm btn-green" onclick="fitMapToRoute()">Fit to Route</button>
+                    <button class="btn btn-sm btn-purple" onclick="exportRouteAsGeoJSON()">Export as GeoJSON</button>
+                </div>
+            </div>
+            
+            <div class="main">
+                <div class="panel">
+                    <div class="legend">
+                        <div class="legend-item"><div class="legend-color" style="background:#4caf50;"></div> Start Point</div>
+                        <div class="legend-item"><div class="legend-color" style="background:#f44336;"></div> End Point</div>
+                        <div class="legend-item"><div class="legend-color" style="background:#1565c0;"></div> Route Path</div>
+                        <div class="legend-item"><div class="legend-color" style="background:#ff9800;border-radius:50%;"></div> Camera Locations</div>
+                    </div>
+                    <div id="map"></div>
+                </div>
+                
+                <div class="panel">
+                    <h2>Trip Segments (Camera Detections)</h2>
+                    <div class="trips-list" id="tripsList">
+                        <div class="no-data">Loading route data...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+// ============================================
+// EMBEDDED ROUTE DATA
+// ============================================
+const EMBEDDED_ROUTE_DATA = [
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHTE317", "camera_next": "RUHSM228", "timestamp_prev": "2025-07-29T08:55:31", "timestamp_next": "2025-07-29T17:31:12"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM228", "camera_next": "RUHSM228", "timestamp_prev": "2025-07-29T17:31:12", "timestamp_next": "2025-07-29T17:31:13"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM228", "camera_next": "RUHSM070", "timestamp_prev": "2025-07-29T17:31:13", "timestamp_next": "2025-07-29T17:36:35"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM070", "camera_next": "RUHSM228", "timestamp_prev": "2025-07-29T17:36:35", "timestamp_next": "2025-07-31T16:49:40"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM228", "camera_next": "RUHSM070", "timestamp_prev": "2025-07-31T16:49:40", "timestamp_next": "2025-07-31T16:54:05"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM070", "camera_next": "RUHTE317", "timestamp_prev": "2025-07-31T16:54:05", "timestamp_next": "2025-08-01T19:16:47"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHTE317", "camera_next": "RUHSM003", "timestamp_prev": "2025-08-01T19:16:47", "timestamp_next": "2025-08-01T19:26:26"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM003", "camera_next": "RUHSM003", "timestamp_prev": "2025-08-01T19:26:26", "timestamp_next": "2025-08-01T19:26:26"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM003", "camera_next": "RUHSM033", "timestamp_prev": "2025-08-01T19:26:26", "timestamp_next": "2025-08-01T19:33:41"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM033", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-01T19:33:41", "timestamp_next": "2025-08-04T17:56:04"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-04T17:56:04", "timestamp_next": "2025-08-04T17:56:04"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-04T17:56:04", "timestamp_next": "2025-08-05T17:17:24"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-05T17:17:24", "timestamp_next": "2025-08-05T17:25:48"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-05T17:25:48", "timestamp_next": "2025-08-05T17:25:48"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-05T17:25:48", "timestamp_next": "2025-08-05T17:25:49"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-05T17:25:49", "timestamp_next": "2025-08-05T17:25:49"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-05T17:25:49", "timestamp_next": "2025-08-05T17:29:10"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-05T17:29:10", "timestamp_next": "2025-08-05T17:29:10"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-05T17:29:10", "timestamp_next": "2025-08-06T17:22:12"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-06T17:22:12", "timestamp_next": "2025-08-06T17:30:55"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-06T17:30:55", "timestamp_next": "2025-08-06T17:30:55"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-06T17:30:55", "timestamp_next": "2025-08-06T17:30:56"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-06T17:30:56", "timestamp_next": "2025-08-06T17:30:56"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-06T17:30:56", "timestamp_next": "2025-08-06T17:34:20"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-06T17:34:20", "timestamp_next": "2025-08-06T17:34:20"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-06T17:34:20", "timestamp_next": "2025-08-06T17:34:20"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-06T17:34:20", "timestamp_next": "2025-08-06T17:34:20"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-06T17:34:20", "timestamp_next": "2025-08-07T16:34:52"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-07T16:34:52", "timestamp_next": "2025-08-07T16:34:52"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-07T16:34:52", "timestamp_next": "2025-08-07T16:34:53"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-07T16:34:53", "timestamp_next": "2025-08-07T16:34:53"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-07T16:34:53", "timestamp_next": "2025-08-07T16:37:29"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-07T16:37:29", "timestamp_next": "2025-08-07T16:37:29"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-07T16:37:29", "timestamp_next": "2025-08-07T16:37:29"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-07T16:37:29", "timestamp_next": "2025-08-07T16:37:29"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-07T16:37:29", "timestamp_next": "2025-08-10T17:38:04"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-10T17:38:04", "timestamp_next": "2025-08-10T17:38:05"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-10T17:38:05", "timestamp_next": "2025-08-11T17:03:20"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-11T17:03:20", "timestamp_next": "2025-08-11T17:03:21"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-11T17:03:21", "timestamp_next": "2025-08-12T17:36:42"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-12T17:36:42", "timestamp_next": "2025-08-12T17:44:30"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-12T17:44:30", "timestamp_next": "2025-08-12T17:44:30"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-12T17:44:30", "timestamp_next": "2025-08-12T17:44:31"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-12T17:44:31", "timestamp_next": "2025-08-12T17:44:31"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-12T17:44:31", "timestamp_next": "2025-08-12T17:44:31"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-12T17:44:31", "timestamp_next": "2025-08-12T17:44:31"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-12T17:44:31", "timestamp_next": "2025-08-12T17:46:15"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-12T17:46:15", "timestamp_next": "2025-08-13T17:10:18"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-13T17:10:18", "timestamp_next": "2025-08-13T17:10:18"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-13T17:10:18", "timestamp_next": "2025-08-13T17:16:43"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-13T17:16:43", "timestamp_next": "2025-08-13T17:18:44"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-13T17:18:44", "timestamp_next": "2025-08-14T17:11:03"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-14T17:11:03", "timestamp_next": "2025-08-14T17:18:21"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-14T17:18:21", "timestamp_next": "2025-08-14T17:20:05"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-14T17:20:05", "timestamp_next": "2025-08-14T17:20:05"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-14T17:20:05", "timestamp_next": "2025-08-15T01:32:40"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM381", "timestamp_prev": "2025-08-15T01:32:40", "timestamp_next": "2025-08-15T13:47:35"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM381", "camera_next": "RUHSM380", "timestamp_prev": "2025-08-15T13:47:35", "timestamp_next": "2025-08-15T16:20:47"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM380", "camera_next": "RUHSM380", "timestamp_prev": "2025-08-15T16:20:47", "timestamp_next": "2025-08-15T16:20:47"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM380", "camera_next": "RUHSM380", "timestamp_prev": "2025-08-15T16:20:47", "timestamp_next": "2025-08-15T16:20:48"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM380", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-15T16:20:48", "timestamp_next": "2025-08-17T17:17:30"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-17T17:17:30", "timestamp_next": "2025-08-17T17:17:30"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-17T17:17:30", "timestamp_next": "2025-08-17T17:26:36"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-17T17:26:36", "timestamp_next": "2025-08-17T17:26:36"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-17T17:26:36", "timestamp_next": "2025-08-17T17:26:36"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-17T17:26:36", "timestamp_next": "2025-08-17T17:26:36"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-17T17:26:36", "timestamp_next": "2025-08-17T17:28:40"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM267", "timestamp_prev": "2025-08-17T17:28:40", "timestamp_next": "2025-08-17T21:21:47"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM267", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-17T21:21:47", "timestamp_next": "2025-08-18T17:43:52"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-18T17:43:52", "timestamp_next": "2025-08-18T17:52:34"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-18T17:52:34", "timestamp_next": "2025-08-18T17:52:34"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-18T17:52:34", "timestamp_next": "2025-08-18T17:52:34"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-18T17:52:34", "timestamp_next": "2025-08-18T17:52:35"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-18T17:52:35", "timestamp_next": "2025-08-18T17:52:35"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-18T17:52:35", "timestamp_next": "2025-08-18T17:52:35"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-18T17:52:35", "timestamp_next": "2025-08-18T17:52:35"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-18T17:52:35", "timestamp_next": "2025-08-18T17:54:34"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-18T17:54:34", "timestamp_next": "2025-08-19T17:33:07"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-19T17:33:07", "timestamp_next": "2025-08-19T17:33:08"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-19T17:33:08", "timestamp_next": "2025-08-19T17:40:44"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-19T17:40:44", "timestamp_next": "2025-08-19T17:40:44"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-19T17:40:44", "timestamp_next": "2025-08-19T17:40:45"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "timestamp_prev": "2025-08-19T17:40:45", "timestamp_next": "2025-08-19T17:40:45"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM191", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-19T17:40:45", "timestamp_next": "2025-08-19T17:42:33"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-19T17:42:33", "timestamp_next": "2025-08-20T17:26:57"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM274", "timestamp_prev": "2025-08-20T17:26:57", "timestamp_next": "2025-08-20T17:26:57"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM274", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-20T17:26:57", "timestamp_next": "2025-08-20T17:43:06"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-20T17:43:06", "timestamp_next": "2025-08-20T17:43:07"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM192", "timestamp_prev": "2025-08-20T17:43:07", "timestamp_next": "2025-08-20T17:43:08"},
+  {"vehicle_id": "4723GLR", "camera_prev": "RUHSM192", "camera_next": "RUHSM276", "timestamp_prev": "2025-08-20T17:43:08", "timestamp_next": "2025-08-20T18:00:46"}
+];
+
+// ============================================
+// SITE COORDINATES (Camera Locations)
+// ============================================
+const SITE_LOOKUP = {
+    "RUHTE317": { lat: 24.6667255799159, lon: 46.5599271655083 },
+    "RUHSM228": { lat: 24.7395185293973, lon: 46.5959626436234 },
+    "RUHSM070": { lat: 24.6942463632656, lon: 46.5634649991989 },
+    "RUHSM003": { lat: 24.7546965432207, lon: 46.6325774788857 },
+    "RUHSM033": { lat: 24.7897540511277, lon: 46.7158091068268 },
+    "RUHSM192": { lat: 24.8127826050202, lon: 46.6761177778244 },
+    "RUHSM274": { lat: 24.8155925940606, lon: 46.6353213787079 },
+    "RUHSM191": { lat: 24.8129651971553, lon: 46.6760292649269 },
+    "RUHSM381": { lat: 24.8413541914201, lon: 46.8061780929566 },
+    "RUHSM380": { lat: 24.841429643951, lon: 46.8063712120056 },
+    "RUHSM267": { lat: 24.8855940582138, lon: 46.7199504375458 },
+    "RUHSM276": { lat: 24.8346966545502, lon: 46.7903396487236 }
+};
+
+// ============================================
+// GLOBAL VARIABLES
+// ============================================
+let map;
+let routePolyline = null;
+let waypointMarkers = [];
+let startMarker = null;
+let endMarker = null;
+let currentRoutePoints = [];
+let currentTrips = [];
+
+// ============================================
+// INITIALIZE MAP
+// ============================================
+function initMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 24.7136, lng: 46.6753 }, // Riyadh
+        zoom: 11,
+        mapTypeControl: true,
+        streetViewControl: false
+    });
+    
+    // Auto-load embedded data
+    loadEmbeddedRoute();
+    
+    console.log('Map initialized with embedded route data');
+}
+
+// ============================================
+// LOAD EMBEDDED ROUTE
+// ============================================
+function loadEmbeddedRoute() {
+    currentTrips = EMBEDDED_ROUTE_DATA;
+    
+    // Build route points from trips using site coordinates
+    const points = [];
+    const seenPoints = new Set();
+    
+    currentTrips.forEach((trip, idx) => {
+        const prevSite = SITE_LOOKUP[trip.camera_prev];
+        const nextSite = SITE_LOOKUP[trip.camera_next];
+        
+        if (idx === 0 && prevSite) {
+            const key = `${prevSite.lat},${prevSite.lon}`;
+            if (!seenPoints.has(key)) {
+                points.push({ 
+                    lat: prevSite.lat, 
+                    lng: prevSite.lon, 
+                    camera: trip.camera_prev,
+                    timestamp: trip.timestamp_prev
+                });
+                seenPoints.add(key);
+            }
+        }
+        
+        if (nextSite) {
+            const key = `${nextSite.lat},${nextSite.lon}`;
+            // Add even if seen before to show the route path
+            points.push({ 
+                lat: nextSite.lat, 
+                lng: nextSite.lon, 
+                camera: trip.camera_next,
+                timestamp: trip.timestamp_next
+            });
+        }
+    });
+    
+    currentRoutePoints = points;
+    
+    // Display route on map
+    displayRoute(points);
+    
+    // Update stats
+    updateStats();
+    
+    // Render trips list
+    renderTripsList();
+    
+    // Update vehicle info
+    updateVehicleInfo();
+}
+
+// ============================================
+// DISPLAY ROUTE
+// ============================================
+function displayRoute(points) {
+    clearRoute();
+    
+    if (points.length === 0) return;
+    
+    const routeColor = document.getElementById('routeColor').value;
+    const lineWidth = parseInt(document.getElementById('lineWidth').value);
+    
+    // Draw polyline
+    routePolyline = new google.maps.Polyline({
+        path: points,
+        strokeColor: routeColor,
+        strokeOpacity: 0.9,
+        strokeWeight: lineWidth,
+        map: map
+    });
+    
+    // Add waypoint markers if enabled
+    if (document.getElementById('showMarkers').checked) {
+        addWaypointMarkers(points);
+    }
+    
+    // Add start/end markers if enabled
+    if (document.getElementById('showStartEnd').checked) {
+        addStartEndMarkers(points);
+    }
+    
+    // Fit map to route
+    fitMapToRoute();
+}
+
+function addWaypointMarkers(points) {
+    waypointMarkers.forEach(m => m.setMap(null));
+    waypointMarkers = [];
+    
+    // Get unique camera locations
+    const uniqueLocations = {};
+    points.forEach((point, idx) => {
+        const key = `${point.lat},${point.lng}`;
+        if (!uniqueLocations[key]) {
+            uniqueLocations[key] = { ...point, count: 1, firstIdx: idx };
+        } else {
+            uniqueLocations[key].count++;
+        }
+    });
+    
+    Object.values(uniqueLocations).forEach((point) => {
+        const marker = new google.maps.Marker({
+            position: { lat: point.lat, lng: point.lng },
+            map: map,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: '#ff9800',
+                fillOpacity: 0.9,
+                strokeColor: '#fff',
+                strokeWeight: 2
+            },
+            title: `${point.camera}\n${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}\nDetections: ${point.count}`,
+            zIndex: 10
+        });
+        
+        marker.addListener('click', () => {
+            highlightTrip(point.firstIdx);
+        });
+        
+        waypointMarkers.push(marker);
+    });
+}
+
+function addStartEndMarkers(points) {
+    if (startMarker) startMarker.setMap(null);
+    if (endMarker) endMarker.setMap(null);
+    
+    if (points.length === 0) return;
+    
+    // Start marker (green)
+    startMarker = new google.maps.Marker({
+        position: { lat: points[0].lat, lng: points[0].lng },
+        map: map,
+        icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+        title: `Start: ${points[0].camera}\n${points[0].timestamp}`,
+        zIndex: 100
+    });
+    
+    // End marker (red)
+    if (points.length > 1) {
+        const lastPoint = points[points.length - 1];
+        endMarker = new google.maps.Marker({
+            position: { lat: lastPoint.lat, lng: lastPoint.lng },
+            map: map,
+            icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+            title: `End: ${lastPoint.camera}\n${lastPoint.timestamp}`,
+            zIndex: 100
+        });
+    }
+}
+
+function clearRoute() {
+    if (routePolyline) {
+        routePolyline.setMap(null);
+        routePolyline = null;
+    }
+    waypointMarkers.forEach(m => m.setMap(null));
+    waypointMarkers = [];
+    if (startMarker) {
+        startMarker.setMap(null);
+        startMarker = null;
+    }
+    if (endMarker) {
+        endMarker.setMap(null);
+        endMarker = null;
+    }
+}
+
+function fitMapToRoute() {
+    if (currentRoutePoints.length === 0) return;
+    
+    const bounds = new google.maps.LatLngBounds();
+    currentRoutePoints.forEach(p => bounds.extend({ lat: p.lat, lng: p.lng }));
+    map.fitBounds(bounds, 50);
+}
+
+// ============================================
+// UI UPDATES
+// ============================================
+function updateStats() {
+    // Count unique route points
+    const uniquePoints = new Set();
+    currentRoutePoints.forEach(p => uniquePoints.add(`${p.lat},${p.lng}`));
+    
+    document.getElementById('statPoints').textContent = uniquePoints.size;
+    document.getElementById('statSegments').textContent = currentTrips.length;
+    
+    // Calculate total distance
+    let totalDistance = 0;
+    for (let i = 1; i < currentRoutePoints.length; i++) {
+        totalDistance += haversine(
+            currentRoutePoints[i-1].lat, currentRoutePoints[i-1].lng, 
+            currentRoutePoints[i].lat, currentRoutePoints[i].lng
+        );
+    }
+    document.getElementById('statDistance').textContent = totalDistance.toFixed(1);
+    
+    // Calculate duration
+    if (currentTrips.length > 0) {
+        const firstTs = new Date(currentTrips[0].timestamp_prev);
+        const lastTs = new Date(currentTrips[currentTrips.length - 1].timestamp_next);
+        const durationDays = (lastTs - firstTs) / (1000 * 60 * 60 * 24);
+        document.getElementById('statDuration').textContent = durationDays.toFixed(1);
+    }
+}
+
+function updateVehicleInfo() {
+    if (currentTrips.length === 0) return;
+    
+    // First and last detection
+    document.getElementById('firstDetection').textContent = 
+        new Date(currentTrips[0].timestamp_prev).toLocaleString();
+    document.getElementById('lastDetection').textContent = 
+        new Date(currentTrips[currentTrips.length - 1].timestamp_next).toLocaleString();
+    
+    // Unique cameras
+    const cameras = new Set();
+    currentTrips.forEach(t => {
+        cameras.add(t.camera_prev);
+        cameras.add(t.camera_next);
+    });
+    document.getElementById('uniqueCameras').textContent = cameras.size;
+}
+
+function renderTripsList() {
+    const list = document.getElementById('tripsList');
+    
+    if (currentTrips.length === 0) {
+        list.innerHTML = '<div class="no-data">No trips to display</div>';
+        return;
+    }
+    
+    // Group similar consecutive trips
+    let html = '';
+    let displayIdx = 0;
+    
+    for (let i = 0; i < currentTrips.length; i++) {
+        const t = currentTrips[i];
+        // Skip if same camera_prev and camera_next (stationary)
+        if (t.camera_prev === t.camera_next && i > 0 && i < currentTrips.length - 1) {
+            continue;
+        }
+        
+        const timeStart = new Date(t.timestamp_prev).toLocaleString();
+        const timeEnd = new Date(t.timestamp_next).toLocaleString();
+        const duration = (new Date(t.timestamp_next) - new Date(t.timestamp_prev)) / (1000 * 60);
+        
+        html += `
+        <div class="trip-item" onclick="highlightTrip(${i})" data-idx="${i}">
+            <div class="trip-header">
+                <span>${t.camera_prev} → ${t.camera_next}</span>
+                <span style="color:#666;font-size:0.8rem;">${duration.toFixed(1)} min</span>
+            </div>
+            <div class="trip-details">
+                ${timeStart}
+            </div>
+        </div>`;
+        displayIdx++;
+    }
+    
+    list.innerHTML = html;
+}
+
+function highlightTrip(idx) {
+    // Unhighlight all
+    document.querySelectorAll('.trip-item').forEach(el => el.classList.remove('selected'));
+    
+    // Highlight selected
+    const el = document.querySelector(`.trip-item[data-idx="${idx}"]`);
+    if (el) {
+        el.classList.add('selected');
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    // Zoom to trip location
+    const trip = currentTrips[idx];
+    if (trip) {
+        const site = SITE_LOOKUP[trip.camera_next] || SITE_LOOKUP[trip.camera_prev];
+        if (site) {
+            map.setCenter({ lat: site.lat, lng: site.lon });
+            map.setZoom(14);
+        }
+    }
+}
+
+// ============================================
+// STYLE UPDATES
+// ============================================
+function updateRouteStyle() {
+    if (routePolyline) {
+        const routeColor = document.getElementById('routeColor').value;
+        const lineWidth = parseInt(document.getElementById('lineWidth').value);
+        routePolyline.setOptions({
+            strokeColor: routeColor,
+            strokeWeight: lineWidth
+        });
+    }
+}
+
+function toggleMarkers() {
+    const show = document.getElementById('showMarkers').checked;
+    if (show && currentRoutePoints.length > 0) {
+        addWaypointMarkers(currentRoutePoints);
+    } else {
+        waypointMarkers.forEach(m => m.setMap(null));
+        waypointMarkers = [];
+    }
+}
+
+function toggleStartEnd() {
+    const show = document.getElementById('showStartEnd').checked;
+    if (show && currentRoutePoints.length > 0) {
+        addStartEndMarkers(currentRoutePoints);
+    } else {
+        if (startMarker) startMarker.setMap(null);
+        if (endMarker) endMarker.setMap(null);
+        startMarker = null;
+        endMarker = null;
+    }
+}
+
+// ============================================
+// UTILITIES
+// ============================================
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function exportRouteAsGeoJSON() {
+    if (currentRoutePoints.length === 0) {
+        alert('No route to export');
+        return;
+    }
+    
+    const geojson = {
+        type: 'Feature',
+        properties: {
+            vehicle_id: '4723GLR',
+            start_time: currentTrips[0]?.timestamp_prev,
+            end_time: currentTrips[currentTrips.length - 1]?.timestamp_next,
+            total_segments: currentTrips.length,
+            unique_cameras: Object.keys(SITE_LOOKUP).length
+        },
+        geometry: {
+            type: 'LineString',
+            coordinates: currentRoutePoints.map(p => [p.lng, p.lat])
+        }
+    };
+    
+    const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'route_4723GLR.geojson';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Initialize when Google Maps loads
+window.initMap = initMap;
+    </script>
+    <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
+</body>
+</html>
