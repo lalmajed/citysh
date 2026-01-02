@@ -276,6 +276,10 @@
                 <div class="stat-value green" id="statAvgDist">0</div>
                 <div class="stat-label">Avg Distance (km)</div>
             </div>
+            <div class="stat-card" style="cursor:pointer; background: #fff3e0;" onclick="toggleAllSites()" id="toggleSitesCard">
+                <div class="stat-value orange" id="statToggle">OFF</div>
+                <div class="stat-label">📍 Show All Sites</div>
+            </div>
         </div>
         
         <div id="uploadSection">
@@ -351,6 +355,8 @@
         
         var map, directionsService, directionsRenderer;
         var markers = [];
+        var siteMarkers = []; // All 247 site markers
+        var sitesVisible = false;
         
         // Drag and drop
         const uploadArea = document.getElementById('uploadArea');
@@ -614,6 +620,65 @@
                 // Show details
                 showRouteDetails(route, origin, dest, wpIndices, totalDist, totalTime, res.routes[0].legs);
             });
+        }
+        
+        function toggleAllSites() {
+            if (!map) {
+                alert('Map not loaded yet. Please wait.');
+                return;
+            }
+            
+            if (SITES.length === 0) {
+                alert('No sites loaded. Please upload a JSON file first.');
+                return;
+            }
+            
+            if (sitesVisible) {
+                // Hide all sites
+                siteMarkers.forEach(m => m.setMap(null));
+                siteMarkers = [];
+                sitesVisible = false;
+                document.getElementById('statToggle').textContent = 'OFF';
+                document.getElementById('toggleSitesCard').style.background = '#fff3e0';
+            } else {
+                // Show all sites
+                SITES.forEach((site, i) => {
+                    const marker = new google.maps.Marker({
+                        position: { lat: site.lat, lng: site.lon },
+                        map: map,
+                        icon: {
+                            url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                            scaledSize: new google.maps.Size(32, 32)
+                        },
+                        title: site.site_id + ' (' + site.site_direction + ')',
+                        zIndex: 10
+                    });
+                    
+                    // Add click listener to show info
+                    marker.addListener('click', () => {
+                        const infoWindow = new google.maps.InfoWindow({
+                            content: `<div style="padding:5px;">
+                                <b>${site.site_id}</b><br>
+                                Direction: ${site.site_direction}<br>
+                                ${site.road_name || ''}<br>
+                                <small>Lat: ${site.lat.toFixed(6)}<br>Lon: ${site.lon.toFixed(6)}</small>
+                            </div>`
+                        });
+                        infoWindow.open(map, marker);
+                    });
+                    
+                    siteMarkers.push(marker);
+                });
+                
+                sitesVisible = true;
+                document.getElementById('statToggle').textContent = 'ON';
+                document.getElementById('toggleSitesCard').style.background = '#e8f5e9';
+                
+                // Fit map to show all sites
+                const bounds = new google.maps.LatLngBounds();
+                SITES.forEach(site => bounds.extend({ lat: site.lat, lng: site.lon }));
+                map.fitBounds(bounds, 50);
+            }
         }
         
         function showRouteDetails(route, origin, dest, wpIndices, totalDist, totalTime, legs) {
