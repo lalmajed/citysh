@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Tester - RUHSM095 → RUHSM266</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 20px; }
+        h1 { color: #1a73e8; margin-bottom: 10px; }
+        .container { max-width: 1600px; margin: 0 auto; }
+        .grid { display: grid; grid-template-columns: 450px 1fr; gap: 20px; }
+        .panel { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .panel h2 { color: #1a73e8; font-size: 1rem; margin-bottom: 10px; border-bottom: 2px solid #1a73e8; padding-bottom: 8px; }
+        #map { height: 600px; border-radius: 10px; }
+        .btn { padding: 12px 20px; background: #1a73e8; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin: 5px; }
+        .btn:hover { background: #1557b0; }
+        .btn-green { background: #34a853; }
+        .btn-orange { background: #ea8600; }
+        .btn-red { background: #ea4335; }
+        select, input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; margin: 5px 0; }
+        select { width: 100%; }
+        .log { background: #1e1e1e; color: #0f0; padding: 15px; font-family: monospace; font-size: 0.8rem; height: 300px; overflow-y: auto; border-radius: 8px; white-space: pre-wrap; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; }
+        .stat { background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-value { font-size: 1.5rem; font-weight: bold; color: #1a73e8; }
+        .stat-label { font-size: 0.75rem; color: #666; }
+        .candidate-list { max-height: 400px; overflow-y: auto; }
+        .candidate { padding: 10px; margin: 5px 0; background: #f5f5f5; border-radius: 6px; border-left: 4px solid #ddd; font-size: 0.85rem; }
+        .candidate.on-route { border-left-color: #34a853; background: #e8f5e9; }
+        .candidate.near-path { border-left-color: #ea8600; background: #fff3e0; }
+        .candidate.same-road { border-left-color: #9c27b0; background: #f3e5f5; }
+        .candidate.rejected { border-left-color: #ea4335; background: #ffebee; }
+        .tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; }
+        .tag-dist { background: #e3f2fd; color: #1565c0; }
+        .tag-dir { background: #e8f5e9; color: #2e7d32; }
+        .tag-road { background: #f3e5f5; color: #7b1fa2; }
+        .tag-verified { background: #34a853; color: white; }
+        .legend { display: flex; gap: 15px; flex-wrap: wrap; margin: 10px 0; font-size: 0.8rem; }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .legend-color { width: 20px; height: 20px; border-radius: 4px; }
+        .settings { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .setting label { font-size: 0.85rem; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Route Tester</h1>
+        <p style="color:#666;margin-bottom:15px;">Test waypoint detection on a specific route with detailed analysis</p>
+        
+        <div class="grid">
+            <div class="sidebar">
+                <div class="panel">
+                    <h2>📍 Select Route</h2>
+                    <select id="originSel"></select>
+                    <select id="destSel"></select>
+                    <div style="margin-top:10px;">
+                        <button class="btn" onclick="analyzeRoute()">🔍 Analyze Route</button>
+                        <button class="btn btn-green" onclick="showAllSites()">📍 Show All Sites</button>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>⚙️ Detection Settings</h2>
+                    <div class="settings">
+                        <div>
+                            <label>Path threshold (m):</label>
+                            <select id="pathThreshold">
+                                <option value="100">100m</option>
+                                <option value="200">200m</option>
+                                <option value="300" selected>300m</option>
+                                <option value="500">500m</option>
+                                <option value="750">750m</option>
+                                <option value="1000">1000m</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Distance increase:</label>
+                            <select id="distThreshold">
+                                <option value="0.001">0.1%</option>
+                                <option value="0.005" selected>0.5%</option>
+                                <option value="0.01">1%</option>
+                                <option value="0.02">2%</option>
+                                <option value="0.05">5%</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-top:10px;">
+                        <label><input type="checkbox" id="useRoadMatch" checked> Use road name matching</label>
+                    </div>
+                    <div style="margin-top:5px;">
+                        <label><input type="checkbox" id="checkDirection" checked> Check direction match</label>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>📊 Results</h2>
+                    <div class="stats">
+                        <div class="stat"><div class="stat-value" id="statCandidates">0</div><div class="stat-label">Candidates</div></div>
+                        <div class="stat"><div class="stat-value" id="statVerified">0</div><div class="stat-label">Verified</div></div>
+                        <div class="stat"><div class="stat-value" id="statDistance">0</div><div class="stat-label">km Direct</div></div>
+                    </div>
+                    <div class="legend">
+                        <div class="legend-item"><div class="legend-color" style="background:#34a853;"></div> On Route</div>
+                        <div class="legend-item"><div class="legend-color" style="background:#ea8600;"></div> Near Path</div>
+                        <div class="legend-item"><div class="legend-color" style="background:#9c27b0;"></div> Same Road</div>
+                        <div class="legend-item"><div class="legend-color" style="background:#ea4335;"></div> Rejected</div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>📋 Candidates</h2>
+                    <div class="candidate-list" id="candidateList">
+                        <div style="color:#999;text-align:center;padding:20px;">Select a route and click Analyze</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="main">
+                <div class="panel">
+                    <div id="map"></div>
+                </div>
+                
+                <div class="panel">
+                    <h2>📝 Analysis Log</h2>
+                    <div class="log" id="log">Ready. Select a route and click Analyze.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+// Load sites from JSON or use embedded
+let SITES = [];
+let map, directionsService, directionsRenderer;
+let markers = [];
+let pathPolyline = null;
+
+// Decode hex Arabic road names
+function decodeRoadName(s) {
+    if (!s || !s.startsWith('0')) return s || '';
+    try {
+        const parts = s.split(' ');
+        const decoded = parts.map(part => {
+            let chars = [];
+            for (let i = 0; i < part.length; i += 4) {
+                chars.push(String.fromCharCode(parseInt(part.substr(i, 4), 16)));
+            }
+            return chars.join('');
+        });
+        return decoded.join(' ');
+    } catch(e) {
+        return s;
+    }
+}
+
+// Haversine distance in km
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Get route direction at path index
+function getRouteDir(path, idx) {
+    const i = Math.min(Math.max(idx, 0), path.length - 2);
+    const dLat = path[i + 1].lat() - path[i].lat();
+    const dLon = path[i + 1].lng() - path[i].lng();
+    if (Math.abs(dLat) > Math.abs(dLon)) return dLat > 0 ? 'N' : 'S';
+    return dLon > 0 ? 'E' : 'W';
+}
+
+function log(msg) {
+    const el = document.getElementById('log');
+    el.textContent += '\n' + msg;
+    el.scrollTop = el.scrollHeight;
+}
+
+function clearLog() {
+    document.getElementById('log').textContent = '';
+}
+
+function clearMarkers() {
+    markers.forEach(m => m.setMap(null));
+    markers = [];
+    if (pathPolyline) {
+        pathPolyline.setMap(null);
+        pathPolyline = null;
+    }
+}
+
+function showAllSites() {
+    clearMarkers();
+    SITES.forEach((s, i) => {
+        const marker = new google.maps.Marker({
+            position: { lat: s.lat, lng: s.lon },
+            map: map,
+            icon: {
+                url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                scaledSize: new google.maps.Size(24, 24)
+            },
+            title: s.site_id + ' (' + s.site_direction + ')'
+        });
+        markers.push(marker);
+    });
+    log('Showing all ' + SITES.length + ' sites');
+}
+
+async function analyzeRoute() {
+    const iA = parseInt(document.getElementById('originSel').value);
+    const iB = parseInt(document.getElementById('destSel').value);
+    
+    if (isNaN(iA) || isNaN(iB)) { alert('Select both origin and destination'); return; }
+    if (iA === iB) { alert('Select different sites'); return; }
+    
+    clearLog();
+    clearMarkers();
+    
+    const origin = SITES[iA];
+    const dest = SITES[iB];
+    const pathThreshold = parseInt(document.getElementById('pathThreshold').value) / 1000; // km
+    const distThreshold = parseFloat(document.getElementById('distThreshold').value);
+    const useRoadMatch = document.getElementById('useRoadMatch').checked;
+    const checkDirection = document.getElementById('checkDirection').checked;
+    
+    log('═══════════════════════════════════════════════════════════');
+    log('ANALYZING ROUTE: ' + origin.site_id + ' → ' + dest.site_id);
+    log('═══════════════════════════════════════════════════════════');
+    log('');
+    log('ORIGIN: ' + origin.site_id);
+    log('  Coords: ' + origin.lat.toFixed(6) + ', ' + origin.lon.toFixed(6));
+    log('  Road: ' + decodeRoadName(origin.road_name));
+    log('  Direction: ' + origin.site_direction);
+    log('');
+    log('DESTINATION: ' + dest.site_id);
+    log('  Coords: ' + dest.lat.toFixed(6) + ', ' + dest.lon.toFixed(6));
+    log('  Road: ' + decodeRoadName(dest.road_name));
+    log('  Direction: ' + dest.site_direction);
+    log('');
+    log('SETTINGS:');
+    log('  Path threshold: ' + (pathThreshold * 1000) + 'm');
+    log('  Distance threshold: ' + (distThreshold * 100) + '%');
+    log('  Road matching: ' + (useRoadMatch ? 'ON' : 'OFF'));
+    log('  Direction check: ' + (checkDirection ? 'ON' : 'OFF'));
+    log('');
+    log('Fetching route from Google...');
+    
+    // Add origin marker (green)
+    markers.push(new google.maps.Marker({
+        position: { lat: origin.lat, lng: origin.lon },
+        map: map,
+        icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+        title: 'ORIGIN: ' + origin.site_id,
+        zIndex: 100
+    }));
+    
+    // Add destination marker (red)
+    markers.push(new google.maps.Marker({
+        position: { lat: dest.lat, lng: dest.lon },
+        map: map,
+        icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+        title: 'DESTINATION: ' + dest.site_id,
+        zIndex: 100
+    }));
+    
+    // Get route from Google
+    directionsService.route({
+        origin: { lat: origin.lat, lng: origin.lon },
+        destination: { lat: dest.lat, lng: dest.lon },
+        travelMode: 'DRIVING'
+    }, async (res, status) => {
+        if (status !== 'OK') {
+            log('ERROR: ' + status);
+            return;
+        }
+        
+        const path = res.routes[0].overview_path;
+        const directDist = res.routes[0].legs[0].distance.value / 1000;
+        const directTime = res.routes[0].legs[0].duration.value / 60;
+        
+        document.getElementById('statDistance').textContent = directDist.toFixed(1);
+        
+        log('Route fetched!');
+        log('  Path points: ' + path.length);
+        log('  Distance: ' + directDist.toFixed(2) + ' km');
+        log('  Time: ' + Math.round(directTime) + ' min');
+        
+        // Draw the path with THICK line
+        pathPolyline = new google.maps.Polyline({
+            path: path,
+            geodesic: true,
+            strokeColor: '#1a73e8',
+            strokeOpacity: 0.8,
+            strokeWeight: 8, // THICK!
+            map: map
+        });
+        
+        // Fit map to route
+        const bounds = new google.maps.LatLngBounds();
+        path.forEach(p => bounds.extend(p));
+        map.fitBounds(bounds, 50);
+        
+        // Extract road names from the route (from directions steps)
+        const routeRoads = new Set();
+        res.routes[0].legs[0].steps.forEach(step => {
+            // Extract road names from instructions
+            const match = step.instructions.match(/على\s+(.+?)(?:<|$)/);
+            if (match) routeRoads.add(match[1].trim());
+            // Also try English patterns
+            const match2 = step.instructions.match(/(?:onto|on)\s+<b>(.+?)<\/b>/i);
+            if (match2) routeRoads.add(match2[1].trim());
+        });
+        
+        log('');
+        log('Roads in route: ' + (routeRoads.size > 0 ? Array.from(routeRoads).join(', ') : 'N/A'));
+        
+        // ═══════════════════════════════════════════════════════════
+        // STEP 1: Find ALL candidates
+        // ═══════════════════════════════════════════════════════════
+        log('');
+        log('═══════════════════════════════════════════════════════════');
+        log('STEP 1: Finding candidates...');
+        log('═══════════════════════════════════════════════════════════');
+        
+        let candidates = [];
+        
+        SITES.forEach((site, idx) => {
+            if (idx === iA || idx === iB) return;
+            
+            // Calculate distance to path
+            let minDist = Infinity, pathIdx = 0;
+            for (let i = 0; i < path.length; i++) {
+                const d = haversine(site.lat, site.lon, path[i].lat(), path[i].lng());
+                if (d < minDist) { minDist = d; pathIdx = i; }
+            }
+            
+            // Check if near path
+            const nearPath = minDist < pathThreshold;
+            
+            // Check road name match
+            const siteRoad = decodeRoadName(site.road_name);
+            const originRoad = decodeRoadName(origin.road_name);
+            const destRoad = decodeRoadName(dest.road_name);
+            let roadMatch = false;
+            if (useRoadMatch && siteRoad) {
+                // Check if site road matches origin, dest, or any route road
+                roadMatch = siteRoad === originRoad || 
+                            siteRoad === destRoad ||
+                            routeRoads.has(siteRoad);
+            }
+            
+            // Include if near path OR road matches
+            if (nearPath || roadMatch) {
+                candidates.push({
+                    idx,
+                    site,
+                    pathIdx,
+                    distToPath: minDist,
+                    nearPath,
+                    roadMatch,
+                    road: siteRoad
+                });
+            }
+        });
+        
+        // Sort by position along path
+        candidates.sort((a, b) => a.pathIdx - b.pathIdx);
+        
+        log('Found ' + candidates.length + ' candidates');
+        document.getElementById('statCandidates').textContent = candidates.length;
+        
+        // ═══════════════════════════════════════════════════════════
+        // STEP 2: Direction filter
+        // ═══════════════════════════════════════════════════════════
+        log('');
+        log('═══════════════════════════════════════════════════════════');
+        log('STEP 2: Checking direction match...');
+        log('═══════════════════════════════════════════════════════════');
+        
+        candidates.forEach(c => {
+            const routeDir = getRouteDir(path, c.pathIdx);
+            c.routeDir = routeDir;
+            c.dirMatch = c.site.site_direction === routeDir;
+            
+            const status = c.dirMatch ? '✓' : '✗';
+            log('  ' + status + ' ' + c.site.site_id + ': site=' + c.site.site_direction + 
+                ', route=' + routeDir + ' | ' + (c.distToPath * 1000).toFixed(0) + 'm from path' +
+                (c.roadMatch ? ' [ROAD MATCH]' : ''));
+        });
+        
+        if (checkDirection) {
+            const before = candidates.length;
+            candidates = candidates.filter(c => c.dirMatch);
+            log('After direction filter: ' + candidates.length + ' (removed ' + (before - candidates.length) + ')');
+        }
+        
+        // ═══════════════════════════════════════════════════════════
+        // STEP 3: Verify with Google
+        // ═══════════════════════════════════════════════════════════
+        log('');
+        log('═══════════════════════════════════════════════════════════');
+        log('STEP 3: Verifying with Google (threshold: ' + (distThreshold * 100) + '%)...');
+        log('═══════════════════════════════════════════════════════════');
+        
+        const verified = [];
+        const rejected = [];
+        
+        for (const c of candidates) {
+            const result = await new Promise(resolve => {
+                directionsService.route({
+                    origin: { lat: origin.lat, lng: origin.lon },
+                    destination: { lat: dest.lat, lng: dest.lon },
+                    waypoints: [{ location: { lat: c.site.lat, lng: c.site.lon }, stopover: true }],
+                    travelMode: 'DRIVING'
+                }, (res2, st2) => {
+                    if (st2 === 'OK') {
+                        let totalDist = 0;
+                        res2.routes[0].legs.forEach(leg => totalDist += leg.distance.value);
+                        totalDist /= 1000;
+                        const increase = (totalDist - directDist) / directDist;
+                        resolve({ totalDist, increase, ok: increase < distThreshold });
+                    } else {
+                        resolve({ ok: false, error: st2 });
+                    }
+                });
+            });
+            
+            c.verified = result.ok;
+            c.totalDist = result.totalDist;
+            c.increase = result.increase;
+            
+            if (result.ok) {
+                verified.push(c);
+                log('  ✓ ' + c.site.site_id + ' ON ROUTE | +' + (result.increase * 100).toFixed(2) + '% | ' + 
+                    result.totalDist.toFixed(2) + 'km' + (c.roadMatch ? ' [ROAD]' : ''));
+            } else if (result.error) {
+                rejected.push(c);
+                log('  ✗ ' + c.site.site_id + ' ERROR: ' + result.error);
+            } else {
+                rejected.push(c);
+                log('  ✗ ' + c.site.site_id + ' OFF ROUTE | +' + (result.increase * 100).toFixed(2) + '% > ' + (distThreshold * 100) + '%');
+            }
+            
+            await new Promise(r => setTimeout(r, 100));
+        }
+        
+        document.getElementById('statVerified').textContent = verified.length;
+        
+        // ═══════════════════════════════════════════════════════════
+        // RESULTS
+        // ═══════════════════════════════════════════════════════════
+        log('');
+        log('═══════════════════════════════════════════════════════════');
+        log('FINAL RESULTS: ' + verified.length + ' waypoints');
+        log('═══════════════════════════════════════════════════════════');
+        if (verified.length > 0) {
+            log('Waypoints: ' + verified.map(c => c.site.site_id).join(' → '));
+        }
+        
+        // Add markers for verified waypoints (orange)
+        verified.forEach((c, i) => {
+            markers.push(new google.maps.Marker({
+                position: { lat: c.site.lat, lng: c.site.lon },
+                map: map,
+                icon: 'http://maps.google.com/mapfiles/ms/icons/orange-dot.png',
+                title: 'WAYPOINT ' + (i+1) + ': ' + c.site.site_id,
+                zIndex: 99
+            }));
+        });
+        
+        // Add markers for rejected candidates (small purple)
+        rejected.forEach(c => {
+            markers.push(new google.maps.Marker({
+                position: { lat: c.site.lat, lng: c.site.lon },
+                map: map,
+                icon: {
+                    url: 'http://maps.google.com/mapfiles/ms/icons/purple-dot.png',
+                    scaledSize: new google.maps.Size(20, 20)
+                },
+                title: 'REJECTED: ' + c.site.site_id + ' (+' + (c.increase * 100).toFixed(1) + '%)',
+                zIndex: 50
+            }));
+        });
+        
+        // Update candidate list
+        updateCandidateList(verified, rejected);
+    });
+}
+
+function updateCandidateList(verified, rejected) {
+    const list = document.getElementById('candidateList');
+    let html = '';
+    
+    verified.forEach(c => {
+        html += `<div class="candidate on-route">
+            <strong>${c.site.site_id}</strong> (${c.site.site_direction})
+            <span class="tag tag-verified">✓ ON ROUTE</span>
+            <br><small>${c.road || 'N/A'}</small>
+            <br><small>${(c.distToPath * 1000).toFixed(0)}m from path | +${(c.increase * 100).toFixed(2)}%</small>
+        </div>`;
+    });
+    
+    rejected.forEach(c => {
+        const cls = c.nearPath ? 'near-path' : (c.roadMatch ? 'same-road' : 'rejected');
+        html += `<div class="candidate ${cls}">
+            <strong>${c.site.site_id}</strong> (${c.site.site_direction})
+            ${c.roadMatch ? '<span class="tag tag-road">ROAD MATCH</span>' : ''}
+            ${!c.dirMatch ? '<span class="tag" style="background:#ffebee;color:#c62828;">DIR MISMATCH</span>' : ''}
+            <br><small>${c.road || 'N/A'}</small>
+            <br><small>${(c.distToPath * 1000).toFixed(0)}m from path | +${(c.increase * 100).toFixed(2)}%</small>
+        </div>`;
+    });
+    
+    list.innerHTML = html || '<div style="color:#999;text-align:center;padding:20px;">No candidates found</div>';
+}
+
+function initMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 24.7136, lng: 46.6753 },
+        zoom: 10
+    });
+    directionsService = new google.maps.DirectionsService();
+    directionsRenderer = new google.maps.DirectionsRenderer({ map, suppressMarkers: true });
+    
+    // Load sites from file upload or use default
+    loadSites();
+}
+
+function loadSites() {
+    // Try to fetch the JSON file
+    fetch('google_matrix_part1 (5).json')
+        .then(r => r.json())
+        .then(data => {
+            SITES = data.sites;
+            populateDropdowns();
+            log('Loaded ' + SITES.length + ' sites from JSON');
+            
+            // Pre-select RUHSM095 and RUHSM266
+            for (let i = 0; i < SITES.length; i++) {
+                if (SITES[i].site_id === 'RUHSM095') {
+                    document.getElementById('originSel').value = i;
+                }
+                if (SITES[i].site_id === 'RUHSM266') {
+                    document.getElementById('destSel').value = i;
+                }
+            }
+        })
+        .catch(e => {
+            log('Could not load JSON. Please upload a file.');
+        });
+}
+
+function populateDropdowns() {
+    const oSel = document.getElementById('originSel');
+    const dSel = document.getElementById('destSel');
+    oSel.innerHTML = '<option value="">-- Select Origin --</option>';
+    dSel.innerHTML = '<option value="">-- Select Destination --</option>';
+    
+    SITES.forEach((s, i) => {
+        const road = decodeRoadName(s.road_name);
+        const label = s.site_id + ' (' + s.site_direction + ') - ' + (road ? road.substring(0, 20) : '');
+        oSel.innerHTML += '<option value="' + i + '">' + label + '</option>';
+        dSel.innerHTML += '<option value="' + i + '">' + label + '</option>';
+    });
+}
+    </script>
+    <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
+    <script>
+        function waitForMaps() {
+            if (typeof google !== 'undefined' && google.maps) {
+                initMap();
+            } else {
+                setTimeout(waitForMaps, 100);
+            }
+        }
+        waitForMaps();
+    </script>
+</body>
+</html>

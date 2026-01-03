@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Route Test: RUHSM095 → RUHSM266</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; }
+        #map { width: 100%; height: 70vh; }
+        .controls { padding: 15px; background: #222; color: white; }
+        .btn { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; }
+        .btn-run { background: #e94560; color: white; }
+        .btn-sites { background: #00d4ff; color: black; }
+        select { padding: 8px; margin: 5px; font-size: 14px; }
+        #log { background: #111; color: #0f0; padding: 10px; height: 25vh; overflow-y: auto; font-family: monospace; font-size: 12px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="controls">
+        <button class="btn btn-run" onclick="runAnalysis()">🚀 RUN ANALYSIS</button>
+        <button class="btn btn-sites" onclick="showAllSites()">📍 SHOW ALL SITES</button>
+        <label>Polyline: <select id="weight">
+            <option value="6">6px</option>
+            <option value="10">10px</option>
+            <option value="16" selected>16px THICK</option>
+            <option value="24">24px ULTRA</option>
+        </select></label>
+        <label>Path threshold: <select id="threshold">
+            <option value="300">300m</option>
+            <option value="500" selected>500m</option>
+            <option value="1000">1000m</option>
+        </select></label>
+    </div>
+    <div id="log">Loading map...</div>
+
+<script>
+var map, directionsService, markers = [], polylines = [];
+
+// All 247 sites embedded
+var SITES = [{"site_id":"RUHSM001","lat":24.7294082283483,"lon":46.7024481296539,"road_name":"طريق الأمير تركي","site_direction":"S"},{"site_id":"RUHSM002","lat":24.7299619686809,"lon":46.7012876868248,"road_name":"طريق الأمير تركي","site_direction":"N"},{"site_id":"RUHSM003","lat":24.8080833424558,"lon":46.7313370108604,"road_name":"الدائري الشمالي","site_direction":"E"},{"site_id":"RUHSM007","lat":24.7136547956893,"lon":46.6755640506744,"road_name":"طريق الملك خالد","site_direction":"S"},{"site_id":"RUHSM009","lat":24.7043714797169,"lon":46.6738779544830,"road_name":"طريق الملك خالد","site_direction":"N"},{"site_id":"RUHSM012","lat":24.7832032313564,"lon":46.7784631252289,"road_name":"الدائري الشرقي","site_direction":"N"},{"site_id":"RUHSM018","lat":24.7680697178116,"lon":46.6384553909302,"road_name":"طريق الملك سلمان","site_direction":"E"},{"site_id":"RUHSM019","lat":24.7521436579296,"lon":46.6291421651840,"road_name":"طريق الملك فهد","site_direction":"S"},{"site_id":"RUHSM022","lat":24.6987037779847,"lon":46.6729527711868,"road_name":"طريق الملك خالد","site_direction":"N"},{"site_id":"RUHSM023","lat":24.7446994181665,"lon":46.7540550231934,"road_name":"","site_direction":"N"},{"site_id":"RUHSM024","lat":24.6906393605104,"lon":46.6717252135277,"road_name":"شارع أم الحمام","site_direction":"S"},{"site_id":"RUHSM025","lat":24.7796065012135,"lon":46.6497108936310,"road_name":"الدائري الشمالي","site_direction":"W"},{"site_id":"RUHSM026","lat":24.7656667330098,"lon":46.7806510925293,"road_name":"الدائري الشرقي","site_direction":"S"},{"site_id":"RUHSM027","lat":24.6863393217936,"lon":46.6731950640678,"road_name":"طريق الملك خالد","site_direction":"E"},{"site_id":"RUHSM032","lat":24.7327287254219,"lon":46.6431766748428,"road_name":"طريق الملك فهد الفرعي","site_direction":"S"},{"site_id":"RUHSM033","lat":24.8030953176450,"lon":46.7526020109653,"road_name":"الدائري الشمالي","site_direction":"E"},{"site_id":"RUHSM034","lat":24.7260019583143,"lon":46.6842074394226,"road_name":"","site_direction":"N"},{"site_id":"RUHSM035","lat":24.6576766700635,"lon":46.5983006358147,"road_name":"طريق مكة المكرمة","site_direction":"E"},{"site_id":"RUHSM038","lat":24.7219949271118,"lon":46.6709327697754,"road_name":"","site_direction":"W"},{"site_id":"RUHSM042","lat":24.7677583285893,"lon":46.6609936952591,"road_name":"الدائري الشمالي","site_direction":"W"},{"site_id":"RUHSM045","lat":24.6525116424774,"lon":46.6961371898651,"road_name":"الدائري الجنوبي","site_direction":"W"},{"site_id":"RUHSM046","lat":24.6427649276556,"lon":46.7377412319183,"road_name":"الدائري الجنوبي","site_direction":"E"},{"site_id":"RUHSM049","lat":24.7842006355883,"lon":46.8104645609856,"road_name":"طريق الدمام","site_direction":"W"},{"site_id":"RUHSM052","lat":24.7327903178178,"lon":46.6464948654175,"road_name":"طريق الملك فهد","site_direction":"N"},{"site_id":"RUHSM053","lat":24.7263802699595,"lon":46.6484895348549,"road_name":"","site_direction":"S"},{"site_id":"RUHSM054","lat":24.7163313805330,"lon":46.6311094164848,"road_name":"طريق الملك فهد","site_direction":"S"},{"site_id":"RUHSM055","lat":24.7112009117285,"lon":46.6296818852425,"road_name":"طريق الملك فهد","site_direction":"N"},{"site_id":"RUHSM057","lat":24.6763905296740,"lon":46.5949678421021,"road_name":"طريق جدة","site_direction":"E"},{"site_id":"RUHSM062","lat":24.7482879008839,"lon":46.7552545666695,"road_name":"","site_direction":"W"},{"site_id":"RUHSM070","lat":24.6525588584555,"lon":46.6097062826157,"road_name":"الدائري الغربي","site_direction":"S"},{"site_id":"RUHSM071","lat":24.6845001685494,"lon":46.5988454222679,"road_name":"طريق عبدالله بن حذافة","site_direction":"N"},{"site_id":"RUHSM072","lat":24.6851336571892,"lon":46.5993800163269,"road_name":"طريق عبدالله بن حذافة","site_direction":"S"},{"site_id":"RUHSM073","lat":24.6786481135521,"lon":46.5997052192688,"road_name":"Flags Roundabout","site_direction":"W"},{"site_id":"RUHSM074","lat":24.6793633618538,"lon":46.6010895371437,"road_name":"شارع عمرو الضمري","site_direction":"E"},{"site_id":"RUHSM077","lat":24.7621755891893,"lon":46.7923538684845,"road_name":"طريق سعيد بن زيد","site_direction":"N"},{"site_id":"RUHSM078","lat":24.7627133266131,"lon":46.7912608385086,"road_name":"طريق سعيد بن زيد","site_direction":"S"},{"site_id":"RUHSM095","lat":24.7800816178938,"lon":46.8530228734016,"road_name":"طريق خريص","site_direction":"E"},{"site_id":"RUHSM097","lat":24.6310946296015,"lon":46.6456491947174,"road_name":"الدائري الجنوبي","site_direction":"S"},{"site_id":"RUHSM102","lat":24.7219313892430,"lon":46.6901606321335,"road_name":"","site_direction":"E"},{"site_id":"RUHSM106","lat":24.7706403133728,"lon":46.8052473068237,"road_name":"الدائري الشرقي","site_direction":"N"},{"site_id":"RUHSM112","lat":24.6558610839741,"lon":46.5760619044304,"road_name":"الإمام أبي حنيفة","site_direction":"W"},{"site_id":"RUHSM113","lat":24.6550970608808,"lon":46.5757614374161,"road_name":"الإمام أبي حنيفة","site_direction":"E"},{"site_id":"RUHSM121","lat":24.6802649451773,"lon":46.7117431759834,"road_name":"الأمير طلال","site_direction":"E"},{"site_id":"RUHSM122","lat":24.7670932823696,"lon":46.8089199066162,"road_name":"طريق الدمام","site_direction":"W"},{"site_id":"RUHSM125","lat":24.7645818698538,"lon":46.7979204654694,"road_name":"الدائري الشرقي","site_direction":"S"},{"site_id":"RUHSM128","lat":24.7307714908078,"lon":46.6527585983276,"road_name":"طريق الملك فهد","site_direction":"S"},{"site_id":"RUHSM129","lat":24.7227823291979,"lon":46.7080390453339,"road_name":"طريق مكة المكرمة","site_direction":"E"},{"site_id":"RUHSM130","lat":24.7216406461063,"lon":46.7155641317368,"road_name":"شارع الجامعة","site_direction":"W"},{"site_id":"RUHSM131","lat":24.7211064178618,"lon":46.7143610119820,"road_name":"شارع الجامعة","site_direction":"E"},{"site_id":"RUHSM136","lat":24.6439761896298,"lon":46.5923637151718,"road_name":"الدائري الغربي","site_direction":"N"},{"site_id":"RUHSM147","lat":24.6526813851689,"lon":46.5651104450226,"road_name":"الإمام أبي حنيفة","site_direction":"E"},{"site_id":"RUHSM148","lat":24.6532584044831,"lon":46.5655131340027,"road_name":"الإمام أبي حنيفة","site_direction":"W"},{"site_id":"RUHSM152","lat":24.6889693217986,"lon":46.6685309410095,"road_name":"شارع أم الحمام","site_direction":"S"},{"site_id":"RUHSM153","lat":24.6884007403192,"lon":46.6696763038635,"road_name":"شارع أم الحمام","site_direction":"N"},{"site_id":"RUHSM156","lat":24.7720361310078,"lon":46.8424608707428,"road_name":"طريق خريص","site_direction":"E"},{"site_id":"RUHSM157","lat":24.6674682591685,"lon":46.7620506882668,"road_name":"الدائري الجنوبي","site_direction":"E"},{"site_id":"RUHSM161","lat":24.6595915715254,"lon":46.7444612979889,"road_name":"الدائري الجنوبي","site_direction":"E"},{"site_id":"RUHSM164","lat":24.5916285636875,"lon":46.5516889095306,"road_name":"بلال بن رباح","site_direction":"E"},{"site_id":"RUHSM165","lat":24.5921588740820,"lon":46.5521702170372,"road_name":"بلال بن رباح","site_direction":"W"},{"site_id":"RUHSM168","lat":24.6225413339631,"lon":46.6227741241455,"road_name":"An-Nasar Road","site_direction":"E"},{"site_id":"RUHSM169","lat":24.6433649127687,"lon":46.5618960857391,"road_name":"حمزة بن عبدالمطلب","site_direction":"N"},{"site_id":"RUHSM170","lat":24.6427885040989,"lon":46.5625159740448,"road_name":"حمزة بن عبدالمطلب","site_direction":"S"},{"site_id":"RUHSM173","lat":24.7221048952078,"lon":46.6560044288635,"road_name":"طريق الملك عبدالعزيز","site_direction":"N"},{"site_id":"RUHSM180","lat":24.7639972920152,"lon":46.8155889511108,"road_name":"أبو عبيدة عامر بن الجراح","site_direction":"W"},{"site_id":"RUHSM181","lat":24.7634538867439,"lon":46.8144273757935,"road_name":"أبو عبيدة عامر بن الجراح","site_direction":"E"},{"site_id":"RUHSM182","lat":24.6750200765266,"lon":46.7765078544617,"road_name":"الدائري الجنوبي","site_direction":"S"},{"site_id":"RUHSM187","lat":24.6306903497025,"lon":46.7497830390930,"road_name":"الخرج","site_direction":"N"},{"site_id":"RUHSM188","lat":24.6612149040543,"lon":46.5620136261,"road_name":"ابن الجوزي","site_direction":"N"},{"site_id":"RUHSM189","lat":24.6606063714282,"lon":46.5626628398895,"road_name":"ابن الجوزي","site_direction":"S"},{"site_id":"RUHSM190","lat":24.6380696073472,"lon":46.5556730628014,"road_name":"طريق نجد","site_direction":"W"},{"site_id":"RUHSM191","lat":24.7193088012207,"lon":46.6953653097153,"road_name":"","site_direction":"S"},{"site_id":"RUHSM195","lat":24.7858117498116,"lon":46.8683862686157,"road_name":"الدائري الثاني","site_direction":"S"},{"site_id":"RUHSM198","lat":24.7200096628152,"lon":46.7026635408401,"road_name":"طريق الملك عبدالعزيز","site_direction":"S"},{"site_id":"RUHSM201","lat":24.7161285629696,"lon":46.6899150609970,"road_name":"","site_direction":"S"},{"site_id":"RUHSM207","lat":24.7717679299611,"lon":46.6717360615730,"road_name":"الدائري الشمالي","site_direction":"E"},{"site_id":"RUHSM208","lat":24.7548037498612,"lon":46.7811191082001,"road_name":"طريق سعيد بن زيد","site_direction":"N"},{"site_id":"RUHSM209","lat":24.7553419168706,"lon":46.7800260782242,"road_name":"طريق سعيد بن زيد","site_direction":"S"},{"site_id":"RUHSM210","lat":24.7723568660693,"lon":46.8326613903046,"road_name":"عبدالرحمن الناصر","site_direction":"S"},{"site_id":"RUHSM211","lat":24.7729287936609,"lon":46.8317499756813,"road_name":"عبدالرحمن الناصر","site_direction":"N"},{"site_id":"RUHSM212","lat":24.7641426813855,"lon":46.7970818281174,"road_name":"شارع ابن ماجة","site_direction":"N"},{"site_id":"RUHSM213","lat":24.7647068024082,"lon":46.7959672212601,"road_name":"شارع ابن ماجة","site_direction":"S"},{"site_id":"RUHSM216","lat":24.6334543330078,"lon":46.5439203977585,"road_name":"خديجة بنت خويلد","site_direction":"W"},{"site_id":"RUHSM217","lat":24.6327973006373,"lon":46.5435039997101,"road_name":"خديجة بنت خويلد","site_direction":"E"},{"site_id":"RUHSM218","lat":24.7609065403285,"lon":46.5926102995872,"road_name":"طريق طلحة بن عبيدالله","site_direction":"W"},{"site_id":"RUHSM221","lat":24.7572119869765,"lon":46.6092920303345,"road_name":"طريق المدينة المنورة","site_direction":"E"},{"site_id":"RUHSM224","lat":24.7806266679364,"lon":46.8439273834229,"road_name":"شارع حسان بن ثابت","site_direction":"N"},{"site_id":"RUHSM225","lat":24.7812120206717,"lon":46.8430051207542,"road_name":"شارع حسان بن ثابت","site_direction":"S"},{"site_id":"RUHSM226","lat":24.7833133996890,"lon":46.8621242046356,"road_name":"شارع ابن الهيثم","site_direction":"N"},{"site_id":"RUHSM227","lat":24.7838954628605,"lon":46.8612150549889,"road_name":"شارع ابن الهيثم","site_direction":"S"},{"site_id":"RUHSM228","lat":24.7718011568091,"lon":46.6557687520981,"road_name":"الدائري الشمالي","site_direction":"W"},{"site_id":"RUHSM235","lat":24.7661179946884,"lon":46.7847895622253,"road_name":"East Ring Road","site_direction":"W"},{"site_id":"RUHSM240","lat":24.7244700169696,"lon":46.6679528355598,"road_name":"الأمير عبدالعزيز بن مساعد","site_direction":"S"},{"site_id":"RUHSM241","lat":24.7250207660181,"lon":46.6668169498444,"road_name":"الأمير عبدالعزيز بن مساعد","site_direction":"N"},{"site_id":"RUHSM244","lat":24.6334206168011,"lon":46.5610463619232,"road_name":"أسماء بنت أبي بكر","site_direction":"N"},{"site_id":"RUHSM245","lat":24.6328450313227,"lon":46.5617022514343,"road_name":"أسماء بنت أبي بكر","site_direction":"S"},{"site_id":"RUHSM250","lat":24.7835073706170,"lon":46.8782954812050,"road_name":"الإمام عبدالله بن سعود","site_direction":"E"},{"site_id":"RUHSM251","lat":24.7840902626695,"lon":46.8774093389511,"road_name":"الإمام عبدالله بن سعود","site_direction":"W"},{"site_id":"RUHSM252","lat":24.7503166766065,"lon":46.6173472404480,"road_name":"طريق المدينة المنورة","site_direction":"W"},{"site_id":"RUHSM253","lat":24.7497390676549,"lon":46.6161446571350,"road_name":"طريق المدينة المنورة","site_direction":"E"},{"site_id":"RUHSM254","lat":24.6784389959693,"lon":46.6328159570694,"road_name":"السويدي العام","site_direction":"E"},{"site_id":"RUHSM255","lat":24.6789913313773,"lon":46.6333088278770,"road_name":"السويدي العام","site_direction":"W"},{"site_id":"RUHSM260","lat":24.6240166598186,"lon":46.5376415848732,"road_name":"طريق نجد","site_direction":"W"},{"site_id":"RUHSM261","lat":24.7871568929050,"lon":46.8851065635681,"road_name":"الإمام عبدالله بن سعود","site_direction":"W"},{"site_id":"RUHSM262","lat":24.7832430553795,"lon":46.8689997196197,"road_name":"شارع سلمان الفارسي","site_direction":"N"},{"site_id":"RUHSM263","lat":24.7838281595161,"lon":46.8680969476700,"road_name":"شارع سلمان الفارسي","site_direction":"S"},{"site_id":"RUHSM265","lat":24.6434756469116,"lon":46.5624105930328,"road_name":"Najran","site_direction":"S"},{"site_id":"RUHSM266","lat":24.6218122148390,"lon":46.5321287512779,"road_name":"طريق نجد","site_direction":"S"},{"site_id":"RUHSM270","lat":24.7261889988891,"lon":46.6614469885826,"road_name":"","site_direction":"S"},{"site_id":"RUHSM271","lat":24.7758052666509,"lon":46.8312693834305,"road_name":"","site_direction":"E"},{"site_id":"RUHSM278","lat":24.7687614481455,"lon":46.8096065521240,"road_name":"شارع شبه الجزيرة","site_direction":"N"},{"site_id":"RUHSM279","lat":24.7693387135088,"lon":46.8087044954300,"road_name":"شارع شبه الجزيرة","site_direction":"S"},{"site_id":"RUHSM280","lat":24.7728440170992,"lon":46.8567631244659,"road_name":"طريق الشيخ جابر الأحمد","site_direction":"N"},{"site_id":"RUHSM281","lat":24.7734148161016,"lon":46.8558445572853,"road_name":"طريق الشيخ جابر الأحمد","site_direction":"S"},{"site_id":"RUHSM286","lat":24.6390096913076,"lon":46.5938715934753,"road_name":"الدائري الغربي","site_direction":"S"},{"site_id":"RUHSM287","lat":24.6264232553254,"lon":46.5615707635879,"road_name":"الطائف","site_direction":"W"},{"site_id":"RUHSM290","lat":24.6990689523422,"lon":46.6541478037834,"road_name":"شارع ال فريان","site_direction":"N"},{"site_id":"RUHSM291","lat":24.6984886929152,"lon":46.6548285484314,"road_name":"شارع ال فريان","site_direction":"S"},{"site_id":"RUHSM292","lat":24.7152046916195,"lon":46.6664049029350,"road_name":"طريق صلاح الدين الأيوبي","site_direction":"N"},{"site_id":"RUHSM296","lat":24.7300698892728,"lon":46.6360169649124,"road_name":"طريق الملك عبدالله","site_direction":"W"},{"site_id":"RUHSM304","lat":24.7219913119118,"lon":46.6621294617653,"road_name":"طريق العروبة","site_direction":"E"},{"site_id":"RUHSM306","lat":24.7226178817635,"lon":46.6595029830933,"road_name":"","site_direction":"W"},{"site_id":"RUHSM308","lat":24.6298295481122,"lon":46.5432308912277,"road_name":"طريق نجد","site_direction":"W"},{"site_id":"RUHSM325","lat":24.6180119393628,"lon":46.6105012893677,"road_name":"An-Nasar Road","site_direction":"E"},{"site_id":"RUHSM326","lat":24.6185786050917,"lon":46.6109851002693,"road_name":"An-Nasar Road","site_direction":"W"},{"site_id":"RUHSM345","lat":24.7736566823095,"lon":46.8484871387482,"road_name":"الدائري الثاني","site_direction":"N"},{"site_id":"RUHSM350","lat":24.7166682313959,"lon":46.6627509891987,"road_name":"طريق أبي بكر الصديق","site_direction":"N"},{"site_id":"RUHSM358","lat":24.7021889090379,"lon":46.6277831494808,"road_name":"طريق الملك فهد","site_direction":"N"},{"site_id":"RUHSM359","lat":24.7163766148252,"lon":46.6379903554916,"road_name":"طريق الملك فهد","site_direction":"N"},{"site_id":"RUHSM360","lat":24.6943127276755,"lon":46.6260915696621,"road_name":"طريق الملك فهد","site_direction":"S"},{"site_id":"RUHSM368","lat":24.6685055765088,"lon":46.5780938863754,"road_name":"الأمير أحمد بن عبدالعزيز","site_direction":"W"},{"site_id":"RUHSM369","lat":24.6679198165689,"lon":46.5776912570000,"road_name":"الأمير أحمد بن عبدالعزيز","site_direction":"E"},{"site_id":"RUHSM451","lat":24.7053377652682,"lon":46.6571497917175,"road_name":"الإمام عبدالعزيز بن محمد","site_direction":"S"},{"site_id":"RUHSM452","lat":24.7058911553099,"lon":46.6563105583191,"road_name":"الإمام عبدالعزيز بن محمد","site_direction":"N"},{"site_id":"RUHSM459","lat":24.6622756948431,"lon":46.5684539079666,"road_name":"عائشة بنت أبي بكر","site_direction":"E"},{"site_id":"RUHSM460","lat":24.6628551591626,"lon":46.5689395368099,"road_name":"عائشة بنت أبي بكر","site_direction":"W"},{"site_id":"RUHSM467","lat":24.5858413498195,"lon":46.5203133821487,"road_name":"الطائف","site_direction":"W"},{"site_id":"RUHSM468","lat":24.5851953847461,"lon":46.5196640491486,"road_name":"Al Taief","site_direction":"E"},{"site_id":"RUHSM530","lat":24.6800155379148,"lon":46.5886579751968,"road_name":"طريق معاوية ابن أبي سفيان","site_direction":"N"},{"site_id":"RUHSM531","lat":24.6794280178411,"lon":46.5893014669418,"road_name":"طريق معاوية ابن أبي سفيان","site_direction":"S"},{"site_id":"RUHSM540","lat":24.6908082660040,"lon":46.6151249408722,"road_name":"الأمير فهد بن فيصل","site_direction":"W"},{"site_id":"RUHSM541","lat":24.6902167282691,"lon":46.6147157549858,"road_name":"الأمير فهد بن فيصل","site_direction":"E"},{"site_id":"RUHSM546","lat":24.7856395282406,"lon":46.8706972599030,"road_name":"طريق السلطان قابوس","site_direction":"W"},{"site_id":"RUHSM547","lat":24.7850460476929,"lon":46.8699869513512,"road_name":"طريق السلطان قابوس","site_direction":"E"},{"site_id":"RUHTE305","lat":24.6193908009766,"lon":46.6241350173950,"road_name":"An-Nasar Road","site_direction":"E"},{"site_id":"RUHTE306","lat":24.6199548178666,"lon":46.6246141195297,"road_name":"An-Nasar Road","site_direction":"W"},{"site_id":"RUHTE312","lat":24.7806102285117,"lon":46.8726884722710,"road_name":"شارع أبي هريرة","site_direction":"S"},{"site_id":"RUHTE313","lat":24.7800281653431,"lon":46.8734025955200,"road_name":"شارع أبي هريرة","site_direction":"N"},{"site_id":"RUHTE315","lat":24.7093671862146,"lon":46.7048233747482,"road_name":"طريق الخرج السريع","site_direction":"S"},{"site_id":"RUHTE316","lat":24.7099358261464,"lon":46.7040025591850,"road_name":"طريق الخرج السريع","site_direction":"N"},{"site_id":"RUHTE317","lat":24.6406761878808,"lon":46.5974380075932,"road_name":"الدائري الغربي","site_direction":"N"},{"site_id":"RUHTE318","lat":24.7810055584192,"lon":46.8789780139923,"road_name":"الصحابة","site_direction":"N"},{"site_id":"RUHTE319","lat":24.7816146411825,"lon":46.8780726194382,"road_name":"الصحابة","site_direction":"S"},{"site_id":"RUHTE320","lat":24.6873587093428,"lon":46.6067433953285,"road_name":"Arfat","site_direction":"E"},{"site_id":"RUHTE321","lat":24.6879341765817,"lon":46.6072235107422,"road_name":"Arfat","site_direction":"W"},{"site_id":"RUHTE332","lat":24.6640649773111,"lon":46.5832611918449,"road_name":"طريق جدة","site_direction":"W"},{"site_id":"RUHTE333","lat":24.6634693939306,"lon":46.5828543901443,"road_name":"طريق جدة","site_direction":"E"},{"site_id":"RUHTE334","lat":24.7494419476448,"lon":46.7586927413940,"road_name":"الدائري الثاني","site_direction":"N"},{"site_id":"RUHTE335","lat":24.7500322687619,"lon":46.7578059434891,"road_name":"الدائري الثاني","site_direction":"S"}];
+
+// Find origin and destination
+var ORIGIN = SITES.find(s => s.site_id === 'RUHSM095');
+var DEST = SITES.find(s => s.site_id === 'RUHSM266');
+
+function log(msg) {
+    var el = document.getElementById('log');
+    el.textContent += msg + '\n';
+    el.scrollTop = el.scrollHeight;
+}
+
+function clearAll() {
+    markers.forEach(m => m.setMap(null));
+    markers = [];
+    polylines.forEach(p => p.setMap(null));
+    polylines = [];
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+    var R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+    var a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function showAllSites() {
+    clearAll();
+    log('\n=== SHOWING ALL ' + SITES.length + ' SITES ===');
+    
+    var bounds = new google.maps.LatLngBounds();
+    
+    SITES.forEach(function(s) {
+        var color = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
+        if (s.site_id === 'RUHSM095') color = 'http://maps.google.com/mapfiles/ms/icons/green-dot.png';
+        else if (s.site_id === 'RUHSM266') color = 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
+        else if (['RUHSM228','RUHSM070','RUHSM286'].includes(s.site_id)) color = 'http://maps.google.com/mapfiles/ms/icons/orange-dot.png';
+        
+        var m = new google.maps.Marker({
+            position: {lat: s.lat, lng: s.lon},
+            map: map,
+            icon: {url: color, scaledSize: new google.maps.Size(20,20)},
+            title: s.site_id + ' (' + s.site_direction + ') - ' + s.road_name
+        });
+        markers.push(m);
+        bounds.extend(m.getPosition());
+    });
+    
+    log('Showing ALL ' + SITES.length + ' sites at their geolocations');
+    log('');
+    log('GREEN = Origin (RUHSM095)');
+    log('BLUE = Destination (RUHSM266)');
+    log('ORANGE = Current waypoints from JSON');
+    log('RED = All other sites');
+    
+    map.fitBounds(bounds);
+}
+
+function runAnalysis() {
+    clearAll();
+    document.getElementById('log').textContent = '';
+    
+    var weight = parseInt(document.getElementById('weight').value);
+    var threshold = parseInt(document.getElementById('threshold').value) / 1000;
+    
+    log('=== ROUTE ANALYSIS: RUHSM095 → RUHSM266 ===');
+    log('Origin: ' + ORIGIN.site_id + ' (' + ORIGIN.site_direction + ') - ' + ORIGIN.road_name);
+    log('Dest: ' + DEST.site_id + ' (' + DEST.site_direction + ') - ' + DEST.road_name);
+    log('Polyline weight: ' + weight + 'px');
+    log('Path threshold: ' + (threshold*1000) + 'm');
+    log('');
+    log('Fetching route from Google...');
+    
+    // Add markers
+    markers.push(new google.maps.Marker({
+        position: {lat: ORIGIN.lat, lng: ORIGIN.lon},
+        map: map,
+        icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+        title: 'ORIGIN: ' + ORIGIN.site_id
+    }));
+    markers.push(new google.maps.Marker({
+        position: {lat: DEST.lat, lng: DEST.lon},
+        map: map,
+        icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+        title: 'DEST: ' + DEST.site_id
+    }));
+    
+    directionsService.route({
+        origin: {lat: ORIGIN.lat, lng: ORIGIN.lon},
+        destination: {lat: DEST.lat, lng: DEST.lon},
+        travelMode: 'DRIVING'
+    }, function(res, status) {
+        if (status !== 'OK') {
+            log('ERROR: ' + status);
+            return;
+        }
+        
+        var path = res.routes[0].overview_path;
+        var dist = res.routes[0].legs[0].distance.value / 1000;
+        
+        log('Route: ' + dist.toFixed(2) + ' km, ' + path.length + ' path points');
+        
+        // Draw THICK polyline
+        var poly = new google.maps.Polyline({
+            path: path,
+            geodesic: true,
+            strokeColor: '#00BFFF',
+            strokeOpacity: 0.9,
+            strokeWeight: weight,
+            map: map
+        });
+        polylines.push(poly);
+        
+        // Find candidates
+        log('');
+        log('=== FINDING CANDIDATES ===');
+        
+        var candidates = [];
+        SITES.forEach(function(s) {
+            if (s.site_id === ORIGIN.site_id || s.site_id === DEST.site_id) return;
+            
+            var minDist = 999;
+            for (var i = 0; i < path.length; i++) {
+                var d = haversine(s.lat, s.lon, path[i].lat(), path[i].lng());
+                if (d < minDist) minDist = d;
+            }
+            
+            if (minDist < threshold) {
+                candidates.push({site: s, distToPath: minDist});
+            }
+        });
+        
+        log('Found ' + candidates.length + ' sites within ' + (threshold*1000) + 'm of path');
+        
+        // Verify each
+        log('');
+        log('=== VERIFYING WITH GOOGLE ===');
+        
+        var verified = [];
+        var idx = 0;
+        
+        function verifyNext() {
+            if (idx >= candidates.length) {
+                showResults();
+                return;
+            }
+            
+            var c = candidates[idx];
+            directionsService.route({
+                origin: {lat: ORIGIN.lat, lng: ORIGIN.lon},
+                destination: {lat: DEST.lat, lng: DEST.lon},
+                waypoints: [{location: {lat: c.site.lat, lng: c.site.lon}, stopover: true}],
+                travelMode: 'DRIVING'
+            }, function(res2, st2) {
+                if (st2 === 'OK') {
+                    var total = 0;
+                    res2.routes[0].legs.forEach(leg => total += leg.distance.value);
+                    total /= 1000;
+                    var increase = (total - dist) / dist;
+                    c.increase = increase;
+                    
+                    if (increase < 0.005) {
+                        verified.push(c);
+                        log('✓ ' + c.site.site_id + ' ON ROUTE (+' + (increase*100).toFixed(2) + '%)');
+                        markers.push(new google.maps.Marker({
+                            position: {lat: c.site.lat, lng: c.site.lon},
+                            map: map,
+                            icon: 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png',
+                            title: 'VERIFIED: ' + c.site.site_id
+                        }));
+                    } else {
+                        log('✗ ' + c.site.site_id + ' off route (+' + (increase*100).toFixed(2) + '%)');
+                        markers.push(new google.maps.Marker({
+                            position: {lat: c.site.lat, lng: c.site.lon},
+                            map: map,
+                            icon: {url: 'http://maps.google.com/mapfiles/ms/icons/purple-dot.png', scaledSize: new google.maps.Size(16,16)},
+                            title: 'REJECTED: ' + c.site.site_id + ' (+' + (increase*100).toFixed(1) + '%)'
+                        }));
+                    }
+                }
+                idx++;
+                setTimeout(verifyNext, 100);
+            });
+        }
+        
+        function showResults() {
+            log('');
+            log('=== RESULTS ===');
+            log('Verified ON ROUTE: ' + verified.length + ' sites');
+            verified.forEach(function(c, i) {
+                log((i+1) + '. ' + c.site.site_id + ' (' + c.site.site_direction + ') - ' + c.site.road_name);
+            });
+            log('');
+            log('=== COMPARE TO JSON ===');
+            log('JSON waypoints[47_151] = [121, 37, 164]');
+            log('  = RUHSM228, RUHSM070, RUHSM286');
+            log('');
+            if (verified.length !== 3) {
+                log('⚠️ DIFFERENCE! JSON has 3, we found ' + verified.length);
+            }
+        }
+        
+        verifyNext();
+        
+        // Fit map
+        var bounds = new google.maps.LatLngBounds();
+        path.forEach(p => bounds.extend(p));
+        map.fitBounds(bounds);
+    });
+}
+
+// Initialize map
+window.initMap = function() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: {lat: 24.7, lng: 46.65},
+        zoom: 11
+    });
+    directionsService = new google.maps.DirectionsService();
+    document.getElementById('log').textContent = 'MAP READY!\n\nClick RUN ANALYSIS to test the route RUHSM095 → RUHSM266\n\nYou can adjust:\n- Polyline thickness (try 24px ULTRA)\n- Path threshold (try 1000m to catch more sites)\n';
+};
+</script>
+<script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js?callback=initMap" async defer></script>
+</body>
+</html>
