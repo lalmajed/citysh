@@ -192,7 +192,8 @@ function loadJSON(input) {
         try {
             loadedData = JSON.parse(e.target.result);
             
-            var routeCount = Object.keys(loadedData.routes || {}).length;
+            // Routes are stored in distance_km, not routes
+            var routeCount = Object.keys(loadedData.distance_km || loadedData.routes || {}).length;
             var wpCount = 0;
             var wpEntries = loadedData.waypoints || {};
             for (var k in wpEntries) {
@@ -397,8 +398,8 @@ async function runRedetect() {
     var sampleSize = parseInt(document.getElementById('sampleSize').value);
     var numWorkers = parseInt(document.getElementById('numWorkers').value);
     
-    // Get all route keys
-    routeKeys = Object.keys(loadedData.routes || {});
+    // Get all route keys (stored in distance_km)
+    routeKeys = Object.keys(loadedData.distance_km || loadedData.routes || {});
     if (sampleSize > 0) {
         routeKeys = routeKeys.slice(0, sampleSize);
     }
@@ -444,8 +445,15 @@ function downloadUpdated() {
     
     // Merge updated waypoints into loaded data
     var output = JSON.parse(JSON.stringify(loadedData));
+    if (!output.waypoints) output.waypoints = {};
     for (var k in updatedWaypoints) {
         output.waypoints[k] = updatedWaypoints[k];
+    }
+    
+    // Count new totals
+    var totalWP = 0;
+    for (var k in output.waypoints) {
+        totalWP += output.waypoints[k].length;
     }
     
     var json = JSON.stringify(output);
@@ -455,7 +463,7 @@ function downloadUpdated() {
     a.href = url;
     a.download = 'updated_waypoints_' + Date.now() + '.json';
     a.click();
-    log('Downloaded updated JSON.');
+    log('Downloaded! Total waypoints: ' + totalWP);
 }
 
 window.initMap = function() {
