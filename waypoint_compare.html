@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Waypoint Re-Detector - Before/After Comparison</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #0d1117; color: #c9d1d9; }
+        .container { display: grid; grid-template-columns: 450px 1fr; height: 100vh; }
+        .sidebar { padding: 12px; overflow-y: auto; background: #161b22; }
+        #map { height: 100%; }
+        h1 { color: #58a6ff; font-size: 16px; margin-bottom: 5px; }
+        h2 { color: #f0883e; font-size: 12px; margin: 12px 0 6px; border-bottom: 1px solid #30363d; padding-bottom: 3px; }
+        .btn { padding: 10px; margin: 4px 0; font-size: 12px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; width: 100%; }
+        .btn-green { background: #238636; color: white; }
+        .btn-orange { background: #f0883e; color: black; }
+        .btn-red { background: #da3633; color: white; }
+        .btn-purple { background: #8957e5; color: white; }
+        .btn-blue { background: #1f6feb; color: white; }
+        select, input { width: 100%; padding: 8px; margin: 3px 0; background: #21262d; color: #c9d1d9; border: 1px solid #30363d; border-radius: 4px; font-size: 12px; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 8px 0; }
+        .stat { background: #21262d; padding: 8px; border-radius: 5px; text-align: center; }
+        .stat b { font-size: 18px; color: #58a6ff; display: block; }
+        .stat span { font-size: 8px; color: #8b949e; }
+        .progress { background: #21262d; height: 20px; border-radius: 10px; margin: 8px 0; overflow: hidden; }
+        .progress-bar { background: linear-gradient(90deg, #238636, #2ea043); height: 100%; width: 0%; text-align: center; font-size: 10px; line-height: 20px; transition: width 0.3s; }
+        .comparison { background: #21262d; border-radius: 6px; margin: 8px 0; overflow: hidden; max-height: 300px; overflow-y: auto; }
+        .comp-row { display: grid; grid-template-columns: 140px 1fr 1fr 60px; padding: 6px 8px; border-bottom: 1px solid #30363d; font-size: 10px; align-items: center; }
+        .comp-row:hover { background: #30363d; }
+        .comp-header { background: #0d1117; font-weight: bold; color: #58a6ff; position: sticky; top: 0; }
+        .old-wp { color: #f85149; }
+        .new-wp { color: #3fb950; }
+        .diff-pos { color: #3fb950; font-weight: bold; }
+        .diff-neg { color: #f85149; font-weight: bold; }
+        .diff-same { color: #8b949e; }
+        .workers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; margin: 5px 0; }
+        .worker { background: #21262d; padding: 4px; border-radius: 3px; text-align: center; font-size: 8px; }
+        .worker.active { background: #238636; color: white; }
+        #log { background: #0d1117; color: #7ee787; padding: 8px; font-family: monospace; font-size: 9px; height: 120px; overflow-y: auto; border-radius: 4px; border: 1px solid #30363d; }
+        .info { background: #21262d; padding: 8px; border-radius: 5px; font-size: 11px; margin: 5px 0; border-left: 3px solid #58a6ff; }
+        .totals { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 10px 0; }
+        .total-box { background: #21262d; padding: 12px; border-radius: 6px; text-align: center; }
+        .total-box b { font-size: 24px; display: block; }
+        .total-box.old b { color: #f85149; }
+        .total-box.new b { color: #3fb950; }
+        .total-box.diff b { color: #58a6ff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>🔄 Waypoint Re-Detector</h1>
+            <p style="font-size:10px;color:#8b949e;">Compare BEFORE and AFTER waypoints</p>
+            
+            <h2>📂 Load JSON</h2>
+            <input type="file" id="fileInput" accept=".json">
+            <div class="info" id="fileInfo">Load your Part 1 or Part 2 JSON</div>
+            
+            <h2>📍 Map</h2>
+            <button class="btn btn-green" onclick="showSites()">Show All 247 Sites</button>
+            
+            <h2>⚙️ Settings</h2>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+                <select id="pathThresh">
+                    <option value="300">300m path</option>
+                    <option value="500">500m path</option>
+                </select>
+                <select id="distThresh">
+                    <option value="0.005">0.5% dist</option>
+                    <option value="0.01">1% dist</option>
+                </select>
+            </div>
+            <select id="sampleSz">
+                <option value="5">Test: 5 routes</option>
+                <option value="10" selected>Test: 10 routes</option>
+                <option value="25">Test: 25 routes</option>
+                <option value="50">Test: 50 routes</option>
+                <option value="0">ALL routes (full run)</option>
+            </select>
+            
+            <h2>🚀 Run</h2>
+            <button class="btn btn-orange" onclick="runDetection()">▶️ Run Sample & Compare</button>
+            <button class="btn btn-red" onclick="stopIt()">⏹️ Stop</button>
+            
+            <div class="progress"><div class="progress-bar" id="pbar">0%</div></div>
+            
+            <div class="workers">
+                <div class="worker" id="w0">W1</div>
+                <div class="worker" id="w1">W2</div>
+                <div class="worker" id="w2">W3</div>
+                <div class="worker" id="w3">W4</div>
+                <div class="worker" id="w4">W5</div>
+            </div>
+            
+            <h2>📊 BEFORE vs AFTER Comparison</h2>
+            <div class="totals">
+                <div class="total-box old"><b id="totalOld">0</b><span>OLD Total</span></div>
+                <div class="total-box new"><b id="totalNew">0</b><span>NEW Total</span></div>
+                <div class="total-box diff"><b id="totalDiff">0</b><span>Difference</span></div>
+            </div>
+            
+            <div class="comparison" id="compTable">
+                <div class="comp-row comp-header">
+                    <div>Route</div>
+                    <div>OLD Waypoints</div>
+                    <div>NEW Waypoints</div>
+                    <div>Diff</div>
+                </div>
+                <div style="padding:20px;text-align:center;color:#8b949e;">Run detection to see comparison</div>
+            </div>
+            
+            <h2>💾 Save Results</h2>
+            <button class="btn btn-purple" onclick="downloadJSON()">Download Updated JSON</button>
+            <button class="btn btn-blue" onclick="downloadComparison()">Download Comparison CSV</button>
+            
+            <h2>📝 Log</h2>
+            <div id="log">Ready. Load JSON file to start.</div>
+        </div>
+        <div id="map"></div>
+    </div>
+
+<script>
+var map, svc, markers = [], polys = [], running = false;
+var loadedData = null, routeKeys = [], done = 0;
+var comparisons = []; // Store before/after for each route
+var updated = {};
+var totalOldWP = 0, totalNewWP = 0;
+
+var SITES = [{"id": "RUHSM001", "lat": 24.7403322023658, "lon": 46.6273981332779, "dir": "S", "road": "طريق الأمير تركي بن عبدالعزيز الأول"}, {"id": "RUHSM002", "lat": 24.740427194217, "lon": 46.6274785995483, "dir": "N", "road": "طريق الأمير تركي بن عبدالعزيز الأول"}, {"id": "RUHSM003", "lat": 24.7546965432207, "lon": 46.6325774788857, "dir": "E", "road": "الدائري الشمالي"}, {"id": "RUHSM007", "lat": 24.6726265911391, "lon": 46.656776368618, "dir": "S", "road": "طريق الملك خالد"}, {"id": "RUHSM009", "lat": 24.7209740445557, "lon": 46.6058734059334, "dir": "N", "road": "طريق الملك خالد"}, {"id": "RUHSM012", "lat": 24.6483701639916, "lon": 46.7946767807007, "dir": "N", "road": "طريق الدائري الشرقي"}, {"id": "RUHSM015", "lat": 24.5439855825558, "lon": 46.872533261776, "dir": "S", "road": "الخرج"}, {"id": "RUHSM018", "lat": 24.8287062928303, "lon": 46.6193702816963, "dir": "E", "road": "طريق الملك سلمان"}, {"id": "RUHSM019", "lat": 24.8178075375809, "lon": 46.6184422373772, "dir": "S", "road": "طريق الملك فهد"}, {"id": "RUHSM022", "lat": 24.670488879256, "lon": 46.6602820158005, "dir": "N", "road": "طريق الملك خالد"}, {"id": "RUHSM023", "lat": 24.780546768419, "lon": 46.7285308241844, "dir": "N", "road": ""}, {"id": "RUHSM024", "lat": 24.6799116099266, "lon": 46.6544723510742, "dir": "S", "road": "شارع أم الحمام"}, {"id": "RUHSM025", "lat": 24.7649189230075, "lon": 46.6561299562454, "dir": "W", "road": "الدائري الشمالي"}, {"id": "RUHSM026", "lat": 24.7731896590511, "lon": 46.7319613695145, "dir": "S", "road": "الدائري الشرقي"}, {"id": "RUHSM027", "lat": 24.6750541016666, "lon": 46.6531071066856, "dir": "E", "road": "طريق الملك خالد"}, {"id": "RUHSM029", "lat": 24.9694129976553, "lon": 46.7820569872856, "dir": "N", "road": ""}, {"id": "RUHSM030", "lat": 25.0012034832327, "lon": 46.7709928750992, "dir": "S", "road": "طريق الجنادرية"}, {"id": "RUHSM032", "lat": 24.7120199687664, "lon": 46.6719147562981, "dir": "S", "road": "طريق الملك فهد الفرعي"}, {"id": "RUHSM033", "lat": 24.7897540511277, "lon": 46.7158091068268, "dir": "E", "road": "الطريق الدائري الشمالي"}, {"id": "RUHSM034", "lat": 24.6755122958506, "lon": 46.6905936598778, "dir": "N", "road": ""}, {"id": "RUHSM035", "lat": 24.6203516108267, "lon": 46.5742367506027, "dir": "E", "road": "طريق مكة المكرمة"}, {"id": "RUHSM038", "lat": 24.6846274081011, "lon": 46.7023712396622, "dir": "W", "road": ""}, {"id": "RUHSM042", "lat": 24.740704875449, "lon": 46.5987414121628, "dir": "W", "road": "الطريق الدائري الشمالي"}, {"id": "RUHSM044", "lat": 24.8400178982926, "lon": 46.6072306036949, "dir": "S", "road": ""}, {"id": "RUHSM045", "lat": 24.6261962301252, "lon": 46.7836314439774, "dir": "W", "road": "طريق الدائري الجنوبي"}, {"id": "RUHSM046", "lat": 24.5856708282881, "lon": 46.6952633857727, "dir": "E", "road": "طريق الدائري الجنوبي"}, {"id": "RUHSM049", "lat": 24.8066959557292, "lon": 46.7554226517677, "dir": "W", "road": "طريق الدمام"}, {"id": "RUHSM051", "lat": 24.5581848394885, "lon": 46.6767024993897, "dir": "E", "road": "طريق ديراب"}, {"id": "RUHSM052", "lat": 24.7243240497979, "lon": 46.6658690571785, "dir": "N", "road": "طريق الملك فهد"}, {"id": "RUHSM053", "lat": 24.6729043824091, "lon": 46.6916853189468, "dir": "S", "road": ""}, {"id": "RUHSM054", "lat": 24.6123632798959, "lon": 46.7067539691925, "dir": "S", "road": "طريق الملك فهد"}, {"id": "RUHSM055", "lat": 24.6110781730948, "lon": 46.707022190094, "dir": "N", "road": "طريق الملك فهد"}, {"id": "RUHSM057", "lat": 24.6656945509571, "lon": 46.6192603111267, "dir": "E", "road": "طريق جدة"}, {"id": "RUHSM059", "lat": 24.831956030886, "lon": 46.8484577536583, "dir": "S", "road": "طريق الجنادرية"}, {"id": "RUHSM060", "lat": 24.8321897210297, "lon": 46.7234346270561, "dir": "S", "road": "Airport Road"}, {"id": "RUHSM062", "lat": 24.7980377711983, "lon": 46.569601893425, "dir": "W", "road": ""}, {"id": "RUHSM069", "lat": 24.56560566558, "lon": 46.6250592470169, "dir": "E", "road": "الطريق الدائري الغربي"}, {"id": "RUHSM070", "lat": 24.6942463632656, "lon": 46.5634649991989, "dir": "S", "road": "الطريق الدائري الغربي"}, {"id": "RUHSM071", "lat": 24.6711544395348, "lon": 46.6223931312561, "dir": "N", "road": "طريق عبد الله بن حذافة السهمي"}, {"id": "RUHSM072", "lat": 24.6707963331305, "lon": 46.6222590208054, "dir": "S", "road": "طريق عبد الله بن حذافة السهمي"}, {"id": "RUHSM073", "lat": 24.6870447823229, "lon": 46.6315904259682, "dir": "W", "road": "Flags Roundabout"}, {"id": "RUHSM074", "lat": 24.6869545710959, "lon": 46.6317647695541, "dir": "E", "road": "شارع عمرو الضمري"}, {"id": "RUHSM077", "lat": 24.8111586340332, "lon": 46.7348715662956, "dir": "N", "road": "طريق سعيد بن زيد"}, {"id": "RUHSM078", "lat": 24.8110612436613, "lon": 46.7346113920212, "dir": "S", "road": "طريق سعيد بن زيد"}, {"id": "RUHSM079", "lat": 24.5588531422709, "lon": 46.6225674748421, "dir": "E", "road": "Al Tawhed"}, {"id": "RUHSM080", "lat": 24.5589824415937, "lon": 46.622556746006, "dir": "W", "road": "Al Tawhed"}, {"id": "RUHSM093", "lat": 24.8325232108086, "lon": 46.8203857541084, "dir": "W", "road": "طريق الدمام"}, {"id": "RUHSM095", "lat": 24.7800816178938, "lon": 46.8530228734016, "dir": "E", "road": "طريق خريص"}, {"id": "RUHSM096", "lat": 24.5348626583046, "lon": 46.6983264684677, "dir": "N", "road": "Al-Khaleefa Al Mamoun"}, {"id": "RUHSM097", "lat": 24.598323749187, "lon": 46.7443531751633, "dir": "S", "road": "طريق الدائري الجنوبي"}, {"id": "RUHSM098", "lat": 24.8195992645787, "lon": 46.8459257483482, "dir": "N", "road": "طريق الجنادرية"}, {"id": "RUHSM100", "lat": 24.5686573528817, "lon": 46.8897798657417, "dir": "S", "road": "طريق الخرج السريع"}, {"id": "RUHSM102", "lat": 24.7352066774981, "lon": 46.6819301247597, "dir": "E", "road": ""}, {"id": "RUHSM106", "lat": 24.7087793016666, "lon": 46.7659583687782, "dir": "N", "road": "الدائري الشرقي"}, {"id": "RUHSM110", "lat": 24.8409306555311, "lon": 46.5533074736595, "dir": "S", "road": "الملك خالد"}, {"id": "RUHSM111", "lat": 24.8410231157739, "lon": 46.5536212921143, "dir": "N", "road": "الملك خالد"}, {"id": "RUHSM112", "lat": 24.5972800762424, "lon": 46.6084000468254, "dir": "W", "road": "الإمام أبي حنيفة"}, {"id": "RUHSM113", "lat": 24.5971435038554, "lon": 46.6084751486778, "dir": "E", "road": "الإمام أبي حنيفة"}, {"id": "RUHSM114", "lat": 24.5475208005664, "lon": 46.7195722460747, "dir": "W", "road": "عرفات"}, {"id": "RUHSM116", "lat": 24.9070265631544, "lon": 46.9199708104134, "dir": "W", "road": ""}, {"id": "RUHSM117", "lat": 24.5381879590055, "lon": 46.6897889971733, "dir": "S", "road": "الإمام مسلم"}, {"id": "RUHSM118", "lat": 24.5382806827733, "lon": 46.6898936033249, "dir": "N", "road": "الإمام مسلم"}, {"id": "RUHSM121", "lat": 24.6462394879027, "lon": 46.6858944296837, "dir": "E", "road": "الأمير طلال بن عبدالعزيز"}, {"id": "RUHSM122", "lat": 24.7958463762615, "lon": 46.7296761274338, "dir": "W", "road": "طريق الدمام"}, {"id": "RUHSM125", "lat": 24.771906272745, "lon": 46.732605099678, "dir": "S", "road": "الدائري الشرقي"}, {"id": "RUHSM128", "lat": 24.6981526522312, "lon": 46.6789072751999, "dir": "S", "road": "طريق الملك فهد"}, {"id": "RUHSM129", "lat": 24.6876372637067, "lon": 46.7106726765633, "dir": "E", "road": "طريق مكة المكرمة"}, {"id": "RUHSM130", "lat": 24.6636397195435, "lon": 46.7306765913963, "dir": "W", "road": "شارع الجامعة"}, {"id": "RUHSM131", "lat": 24.6634934669944, "lon": 46.7308187484741, "dir": "E", "road": "شارع الجامعة"}, {"id": "RUHSM136", "lat": 24.620424801656, "lon": 46.5808054804802, "dir": "N", "road": "الطريق الدائري الغربي"}, {"id": "RUHSM140", "lat": 24.8769760481679, "lon": 46.8059206008911, "dir": "S", "road": "Al Thumama"}, {"id": "RUHSM141", "lat": 24.8769687507318, "lon": 46.8060520291329, "dir": "N", "road": "Al Thumama"}, {"id": "RUHSM142", "lat": 24.5674108328895, "lon": 46.655505001545, "dir": "W", "road": "طريق الدائري الجنوبي"}, {"id": "RUHSM144", "lat": 24.5638614614901, "lon": 46.717287003994, "dir": "E", "road": "Al-Marouj"}, {"id": "RUHSM145", "lat": 24.5687663130558, "lon": 46.8898630142212, "dir": "W", "road": "طريق الخرج السريع"}, {"id": "RUHSM147", "lat": 24.6038597752923, "lon": 46.6194561123848, "dir": "E", "road": "الإمام أبي حنيفة"}, {"id": "RUHSM148", "lat": 24.6040012164286, "lon": 46.6193461418152, "dir": "W", "road": "الإمام أبي حنيفة"}, {"id": "RUHSM152", "lat": 24.6854562001529, "lon": 46.6520261764526, "dir": "S", "road": "شارع أم الحمام"}, {"id": "RUHSM153", "lat": 24.6855219810628, "lon": 46.6522246599197, "dir": "N", "road": "شارع أم الحمام"}, {"id": "RUHSM156", "lat": 24.7259342868167, "lon": 46.7802920937538, "dir": "E", "road": "طريق خريص"}, {"id": "RUHSM157", "lat": 24.6409759484262, "lon": 46.8291538953781, "dir": "E", "road": "طريق الدائري الجنوبي"}, {"id": "RUHSM160", "lat": 24.6086054881289, "lon": 46.7729669809341, "dir": "N", "road": "طريق الخرج"}, {"id": "RUHSM161", "lat": 24.6336106991616, "lon": 46.8119421601295, "dir": "E", "road": "طريق الدائري الجنوبي"}, {"id": "RUHSM164", "lat": 24.5796291806517, "lon": 46.5517866611481, "dir": "E", "road": "بلال بن رباح"}, {"id": "RUHSM165", "lat": 24.5797877232525, "lon": 46.5518108010292, "dir": "W", "road": "بلال بن رباح"}, {"id": "RUHSM168", "lat": 24.5844927893916, "lon": 46.7547172307968, "dir": "E", "road": "An-Nasar Road"}, {"id": "RUHSM169", "lat": 24.5982237727608, "lon": 46.6173076629639, "dir": "N", "road": "حمزة بن عبد المطلب"}, {"id": "RUHSM170", "lat": 24.5981359902433, "lon": 46.6171762347221, "dir": "S", "road": "حمزة بن عبد المطلب"}, {"id": "RUHSM173", "lat": 24.7946969705971, "lon": 46.6560655832291, "dir": "N", "road": "طريق الملك عبدالعزيز"}, {"id": "RUHSM174", "lat": 24.5079388888788, "lon": 46.9285324215889, "dir": "S", "road": "Al Kharj"}, {"id": "RUHSM175", "lat": 24.5081024122122, "lon": 46.9286692142487, "dir": "N", "road": "Al Kharj"}, {"id": "RUHSM178", "lat": 25.0159432570743, "lon": 46.7664411664009, "dir": "N", "road": "طريق الجنادرية"}, {"id": "RUHSM179", "lat": 25.0158897994536, "lon": 46.7662614583969, "dir": "S", "road": "طريق الجنادرية"}, {"id": "RUHSM180", "lat": 24.66748117972, "lon": 46.7952159047127, "dir": "W", "road": "أبو عبيدة عامر بن الجراح"}, {"id": "RUHSM181", "lat": 24.6672764432188, "lon": 46.7952185869217, "dir": "E", "road": "أبو عبيدة عامر بن الجراح"}, {"id": "RUHSM182", "lat": 24.6433261861909, "lon": 46.8339711427689, "dir": "S", "road": "طريق الدائري الجنوبي"}, {"id": "RUHSM187", "lat": 24.642784983054, "lon": 46.7355394363403, "dir": "N", "road": "الخرج"}, {"id": "RUHSM188", "lat": 24.6011674755442, "lon": 46.6398543119431, "dir": "N", "road": "ابن الجوزي"}, {"id": "RUHSM189", "lat": 24.6013016369983, "lon": 46.6397336125374, "dir": "S", "road": "ابن الجوزي"}, {"id": "RUHSM190", "lat": 24.6326745415304, "lon": 46.5654820203781, "dir": "W", "road": "طريق نجد"}, {"id": "RUHSM191", "lat": 24.8129651971553, "lon": 46.6760292649269, "dir": "S", "road": ""}, {"id": "RUHSM192", "lat": 24.8127826050202, "lon": 46.6761177778244, "dir": "N", "road": "الثمامة"}, {"id": "RUHSM195", "lat": 24.7299152397197, "lon": 46.8647655844688, "dir": "S", "road": "الطريق الدائري الثاني"}, {"id": "RUHSM196", "lat": 24.7999978581173, "lon": 46.6526859998703, "dir": "E", "road": "0627064406310628064a0639 - 06270644"}, {"id": "RUHSM198", "lat": 24.7694781484828, "lon": 46.6684493422508, "dir": "S", "road": "طريق الملك عبدالعزيز"}, {"id": "RUHSM201", "lat": 24.615255335399, "lon": 46.7573323845863, "dir": "S", "road": ""}, {"id": "RUHSM207", "lat": 24.7444197548951, "lon": 46.6082498431206, "dir": "E", "road": "الطريق الدائري الشمالي"}, {"id": "RUHSM208", "lat": 24.823774152058, "lon": 46.7285388708115, "dir": "N", "road": "طريق سعيد بن زيد"}, {"id": "RUHSM209", "lat": 24.8236621627272, "lon": 46.7282545566559, "dir": "S", "road": "طريق سعيد بن زيد"}, {"id": "RUHSM210", "lat": 24.7432407032976, "lon": 46.8001833558083, "dir": "S", "road": "عبدالرحمن الناصر"}, {"id": "RUHSM211", "lat": 24.7433162129597, "lon": 46.8002933263779, "dir": "N", "road": "عبدالرحمن الناصر"}, {"id": "RUHSM212", "lat": 24.6725825464765, "lon": 46.8299263715744, "dir": "N", "road": "شارع ابن ماجة"}, {"id": "RUHSM213", "lat": 24.6725337944213, "lon": 46.8298190832138, "dir": "S", "road": "شارع ابن ماجة"}, {"id": "RUHSM216", "lat": 24.5872366876198, "lon": 46.5884765982628, "dir": "W", "road": "خديجة بنت خويلد"}, {"id": "RUHSM217", "lat": 24.5871147808519, "lon": 46.5885651111603, "dir": "E", "road": "خديجة بنت خويلد"}, {"id": "RUHSM218", "lat": 24.7088894173431, "lon": 46.8437933921814, "dir": "W", "road": "طريق طلحة بن عبيدالله"}, {"id": "RUHSM221", "lat": 24.6402519488123, "lon": 46.75511687994, "dir": "E", "road": "طريق المدينة المنورة"}, {"id": "RUHSM224", "lat": 24.7455602489784, "lon": 46.8242803215981, "dir": "N", "road": "شارع حسان بن ثابت"}, {"id": "RUHSM225", "lat": 24.7454847342479, "lon": 46.8241676688194, "dir": "S", "road": "شارع حسان بن ثابت"}, {"id": "RUHSM226", "lat": 24.7641928838335, "lon": 46.8337565660477, "dir": "N", "road": "شارع ابن الهيثم"}, {"id": "RUHSM227", "lat": 24.764122238671, "lon": 46.8336492776871, "dir": "S", "road": "شارع ابن الهيثم"}, {"id": "RUHSM228", "lat": 24.7395185293973, "lon": 46.5959626436234, "dir": "W", "road": "الطريق الدائري الشمالي"}, {"id": "RUHSM232", "lat": 24.4701528666928, "lon": 46.612468957901, "dir": "E", "road": "ديراب"}, {"id": "RUHSM233", "lat": 24.5476209553064, "lon": 46.6873374581337, "dir": "E", "road": "الخليل بن أحمد"}, {"id": "RUHSM234", "lat": 24.5477331800292, "lon": 46.6874313354492, "dir": "W", "road": "الخليل بن أحمد"}, {"id": "RUHSM235", "lat": 24.6672178504822, "lon": 46.7845594882965, "dir": "W", "road": "East Ring Road"}, {"id": "RUHSM238", "lat": 24.4949618404793, "lon": 46.9437834620476, "dir": "S", "road": "الخرج الجديد"}, {"id": "RUHSM239", "lat": 24.4951033915724, "lon": 46.9439175724983, "dir": "N", "road": "الخرج الجديد"}, {"id": "RUHSM240", "lat": 24.6486919902838, "lon": 46.7140683531761, "dir": "S", "road": "الأمير عبدالعزيز بن مساعد بن جلوي"}, {"id": "RUHSM241", "lat": 24.6487358708835, "lon": 46.7141970992088, "dir": "N", "road": "الأمير عبدالعزيز بن مساعد بن جلوي"}, {"id": "RUHSM242", "lat": 24.5620708697593, "lon": 46.5307635068893, "dir": "S", "road": "أحمد بن الخطاب"}, {"id": "RUHSM243", "lat": 24.5622074829673, "lon": 46.5307849645615, "dir": "N", "road": "أحمد بن الخطاب"}, {"id": "RUHSM244", "lat": 24.5925682421353, "lon": 46.5811836719513, "dir": "N", "road": "أسماء بنت أبي بكر"}, {"id": "RUHSM245", "lat": 24.592451165573, "lon": 46.5809771418572, "dir": "S", "road": "أسماء بنت أبي بكر"}, {"id": "RUHSM246", "lat": 24.5606828008027, "lon": 46.5485760569573, "dir": "S", "road": "أحمد بن الخطاب"}, {"id": "RUHSM247", "lat": 24.5608462580163, "lon": 46.5485733747482, "dir": "N", "road": "أحمد بن الخطاب"}, {"id": "RUHSM248", "lat": 24.5591532055241, "lon": 46.5682715177536, "dir": "S", "road": "أحمد بن الخطاب"}, {"id": "RUHSM249", "lat": 24.5593190901152, "lon": 46.5683010220528, "dir": "N", "road": "أحمد بن الخطاب"}, {"id": "RUHSM250", "lat": 24.7962287009035, "lon": 46.7782375216484, "dir": "E", "road": "الإمام عبد الله بن سعود بن عبد العز"}, {"id": "RUHSM251", "lat": 24.7963431075156, "lon": 46.778157055378, "dir": "W", "road": "الإمام عبد الله بن سعود بن عبد العز"}, {"id": "RUHSM252", "lat": 24.6506762784333, "lon": 46.7848706245422, "dir": "W", "road": "طريق المدينة المنورة"}, {"id": "RUHSM253", "lat": 24.6505348901065, "lon": 46.7849349975586, "dir": "E", "road": "طريق المدينة المنورة"}, {"id": "RUHSM254", "lat": 24.6017820953835, "lon": 46.6995683312416, "dir": "E", "road": "السويدي العام"}, {"id": "RUHSM255", "lat": 24.6019428426154, "lon": 46.6995227336884, "dir": "W", "road": "السويدي العام"}, {"id": "RUHSM257", "lat": 24.5417677210066, "lon": 46.6960680484772, "dir": "N", "road": "الخليل بن أحمد"}, {"id": "RUHSM258", "lat": 24.5416505969815, "lon": 46.6959768533707, "dir": "S", "road": "الخليل بن أحمد"}, {"id": "RUHSM260", "lat": 24.6184495728811, "lon": 46.5350738167763, "dir": "W", "road": "طريق نجد"}, {"id": "RUHSM261", "lat": 24.8220580564739, "lon": 46.8324986100197, "dir": "W", "road": "الإمام عبد الله بن سعود بن عبد العز"}, {"id": "RUHSM262", "lat": 24.7625659273025, "lon": 46.8108746409416, "dir": "N", "road": "شارع سلمان الفارسي"}, {"id": "RUHSM263", "lat": 24.7625074578522, "lon": 46.810756623745, "dir": "S", "road": "شارع سلمان الفارسي"}, {"id": "RUHSM265", "lat": 24.6282468000288, "lon": 46.5544849634171, "dir": "S", "road": "Najran"}, {"id": "RUHSM266", "lat": 24.621812214839, "lon": 46.5321287512779, "dir": "S", "road": "طريق نجد"}, {"id": "RUHSM267", "lat": 24.8855940582138, "lon": 46.7199504375458, "dir": "N", "road": ""}, {"id": "RUHSM268", "lat": 24.5686427243791, "lon": 46.5279042720795, "dir": "S", "road": "Suliman Bin Abdulmalek Bin Marvan"}, {"id": "RUHSM269", "lat": 24.56878873, "lon": 46.52792484, "dir": "N", "road": "سليمان بن عبدالملك بن مروان"}, {"id": "RUHSM270", "lat": 24.6423900305582, "lon": 46.7355823516846, "dir": "S", "road": ""}, {"id": "RUHSM271", "lat": 24.7657883617786, "lon": 46.7543041706085, "dir": "E", "road": ""}, {"id": "RUHSM274", "lat": 24.8155925940606, "lon": 46.6353213787079, "dir": "E", "road": "شارع أنس بن مالك"}, {"id": "RUHSM275", "lat": 24.8347697001099, "lon": 46.7905327677727, "dir": "N", "road": "طريق الشيخ جابر الأحمد الصباح"}, {"id": "RUHSM276", "lat": 24.8346966545502, "lon": 46.7903396487236, "dir": "S", "road": "طريق الشيخ جابر الأحمد الصباح"}, {"id": "RUHSM278", "lat": 24.6766160926836, "lon": 46.8499436974526, "dir": "N", "road": "شارع شبه الجزيرة"}, {"id": "RUHSM279", "lat": 24.6765527121673, "lon": 46.8497881293297, "dir": "S", "road": "شارع شبه الجزيرة"}, {"id": "RUHSM280", "lat": 24.8184475122469, "lon": 46.8023881316185, "dir": "N", "road": "طريق الشيخ جابر الأحمد الصباح"}, {"id": "RUHSM281", "lat": 24.8183549901527, "lon": 46.8022164702416, "dir": "S", "road": "طريق الشيخ جابر الأحمد الصباح"}, {"id": "RUHSM286", "lat": 24.6720829180904, "lon": 46.5581783652306, "dir": "S", "road": "الطريق الدائري الغربي"}, {"id": "RUHSM287", "lat": 24.6433213464037, "lon": 46.5461325645447, "dir": "W", "road": "الطائف"}, {"id": "RUHSM290", "lat": 24.6155723237174, "lon": 46.7154604196549, "dir": "N", "road": "شارع ال فريان"}, {"id": "RUHSM291", "lat": 24.6155430622212, "lon": 46.7153263092041, "dir": "S", "road": "شارع ال فريان"}, {"id": "RUHSM292", "lat": 24.6999315543658, "lon": 46.7230913043022, "dir": "N", "road": "طريق صلاح الدين الأيوبي"}, {"id": "RUHSM296", "lat": 24.7779751316449, "lon": 46.7809116840363, "dir": "W", "road": "طريق الملك عبدالله"}, {"id": "RUHSM304", "lat": 24.7020076530006, "lon": 46.6487458348274, "dir": "E", "road": "طريق العروبة"}, {"id": "RUHSM305", "lat": 24.8371752096259, "lon": 46.6561380028725, "dir": "S", "road": "طريق أبي بكر الصديق"}, {"id": "RUHSM306", "lat": 24.7059527461551, "lon": 46.6575327515602, "dir": "W", "road": ""}, {"id": "RUHSM308", "lat": 24.6226168155053, "lon": 46.5494531393051, "dir": "W", "road": "طريق نجد"}, {"id": "RUHSM312", "lat": 25.0212345764591, "lon": 46.6135954856873, "dir": "E", "road": ""}, {"id": "RUHSM313", "lat": 25.0214120108395, "lon": 46.6135391592979, "dir": "W", "road": ""}, {"id": "RUHSM315", "lat": 24.5423701171962, "lon": 46.7042890191078, "dir": "S", "road": "Al-Khaleefa Al Mamoun"}, {"id": "RUHSM316", "lat": 24.5422652060434, "lon": 46.7044472694397, "dir": "N", "road": ""}, {"id": "RUHSM325", "lat": 24.5786754649118, "lon": 46.741595864296, "dir": "E", "road": "An-Nasar Road"}, {"id": "RUHSM326", "lat": 24.5788146164014, "lon": 46.7415341734886, "dir": "W", "road": "An-Nasar Road"}, {"id": "RUHSM336", "lat": 24.9067906009768, "lon": 46.977547109127, "dir": "W", "road": "طريق خريص"}, {"id": "RUHSM337", "lat": 24.9066907889091, "lon": 46.9776409864426, "dir": "E", "road": "طريق خريص"}, {"id": "RUHSM340", "lat": 24.9288681103428, "lon": 46.7166620492935, "dir": "S", "road": "طريق الملك سلمان"}, {"id": "RUHSM345", "lat": 24.6962883540936, "lon": 46.8563032150269, "dir": "S", "road": "الطريق الدائري الثاني"}, {"id": "RUHSM350", "lat": 24.7642247877842, "lon": 46.6931256651878, "dir": "N", "road": "طريق أبي بكر الصديق"}, {"id": "RUHSM358", "lat": 24.7884113106178, "lon": 46.6334706544876, "dir": "N", "road": "طريق الملك فهد"}, {"id": "RUHSM359", "lat": 24.7553980581506, "lon": 46.6502237319946, "dir": "N", "road": "طريق الملك فهد"}, {"id": "RUHSM360", "lat": 24.5945431171705, "lon": 46.7034012079239, "dir": "S", "road": "طريق الملك فهد"}, {"id": "RUHSM368", "lat": 24.6352978544649, "lon": 46.6226264834404, "dir": "W", "road": "الأمير أحمد بن عبدالعزيز"}, {"id": "RUHSM369", "lat": 24.6351466822632, "lon": 46.6227042675018, "dir": "E", "road": "الأمير أحمد بن عبدالعزيز"}, {"id": "RUHSM380", "lat": 24.841429643951, "lon": 46.8063712120056, "dir": "N", "road": "وادي الساحل"}, {"id": "RUHSM381", "lat": 24.8413541914201, "lon": 46.8061780929566, "dir": "S", "road": "وادي الساحل"}, {"id": "RUHSM396", "lat": 24.3294130168959, "lon": 46.8735444545746, "dir": "S", "road": "06370631064a0642 062706440631064a06"}, {"id": "RUHSM397", "lat": 24.3294912044514, "lon": 46.8738126754761, "dir": "N", "road": "06370631064a0642 062d064806370629 0"}, {"id": "RUHSM432", "lat": 24.8907017220214, "lon": 46.8079134821892, "dir": "N", "road": "Al Thumama"}, {"id": "RUHSM433", "lat": 24.8907309072334, "lon": 46.8077713251114, "dir": "S", "road": "Al Thumama"}, {"id": "RUHSM451", "lat": 24.6446348177146, "lon": 46.6930103302002, "dir": "S", "road": "الإمام عبدالعزيز بن محمد بن سعود"}, {"id": "RUHSM452", "lat": 24.6443911519871, "lon": 46.6931363940239, "dir": "N", "road": "الإمام عبدالعزيز بن محمد بن سعود"}, {"id": "RUHSM455", "lat": 24.5519562952254, "lon": 46.6132870316506, "dir": "E", "road": "نجم الدين الأيوبي"}, {"id": "RUHSM456", "lat": 24.5520953694537, "lon": 46.6132897138596, "dir": "W", "road": "نجم الدين الأيوبي"}, {"id": "RUHSM458", "lat": 24.8195554339359, "lon": 46.7520859837532, "dir": "N", "road": "طريق الشيخ حسن بن حسين بن علي"}, {"id": "RUHSM459", "lat": 24.5847343246958, "lon": 46.6552877426148, "dir": "E", "road": "عائشة بنت أبي بكر"}, {"id": "RUHSM460", "lat": 24.5848514020341, "lon": 46.6554942727089, "dir": "W", "road": "عائشة بنت أبي بكر"}, {"id": "RUHSM467", "lat": 24.6270665833972, "lon": 46.5201660990715, "dir": "W", "road": "الطائف"}, {"id": "RUHSM468", "lat": 24.6266960872229, "lon": 46.5199971199036, "dir": "E", "road": "Al Taief"}, {"id": "RUHSM525", "lat": 25.012863802906, "lon": 46.6809833049774, "dir": "S", "road": ""}, {"id": "RUHSM526", "lat": 25.0128613773877, "lon": 46.6811040043831, "dir": "N", "road": ""}, {"id": "RUHSM530", "lat": 24.6072056361663, "lon": 46.660198867321, "dir": "N", "road": "طريق معاوية ابن أبي سفيان"}, {"id": "RUHSM531", "lat": 24.6073153598916, "lon": 46.6601157188416, "dir": "S", "road": "طريق معاوية ابن أبي سفيان"}, {"id": "RUHSM540", "lat": 24.625494022299, "lon": 46.6844916343689, "dir": "W", "road": "الأمير فهد بن فيصل بن فرحان آل سعود"}, {"id": "RUHSM541", "lat": 24.6253794264026, "lon": 46.6844862699509, "dir": "E", "road": "الأمير فهد بن فيصل بن فرحان آل سعود"}, {"id": "RUHSM542", "lat": 24.9065182947864, "lon": 46.6434082388878, "dir": "W", "road": "طريق عثمان بن عفان"}, {"id": "RUHSM543", "lat": 24.9064526219956, "lon": 46.6431882977486, "dir": "E", "road": "طريق عثمان بن عفان"}, {"id": "RUHSM546", "lat": 24.7902436855305, "lon": 46.8545919656754, "dir": "W", "road": "طريق السلطان قابوس بن سعيد"}, {"id": "RUHSM547", "lat": 24.7901097595178, "lon": 46.8544578552246, "dir": "E", "road": "طريق السلطان قابوس بن سعيد"}, {"id": "RUHSM555", "lat": 24.8721018851866, "lon": 46.6604670882225, "dir": "N", "road": "طريق عثمان بن عفان"}, {"id": "RUHSM556", "lat": 24.8720069697679, "lon": 46.6602981090546, "dir": "S", "road": "طريق عثمان بن عفان"}, {"id": "RUHSM559", "lat": 24.5441977464061, "lon": 46.8807810544968, "dir": "E", "road": "محمد أبي نقطة"}, {"id": "RUHSM560", "lat": 24.5442490050968, "lon": 46.8806630373001, "dir": "W", "road": "محمد أبي نقطة"}, {"id": "RUHSM576", "lat": 24.856359089514, "lon": 46.7374357581139, "dir": "N", "road": ""}, {"id": "RUHSM577", "lat": 24.8563639531407, "lon": 46.7373177409172, "dir": "S", "road": ""}, {"id": "RUHTE304", "lat": 24.5842414097686, "lon": 46.7537328600884, "dir": "W", "road": ""}, {"id": "RUHTE305", "lat": 24.5903877908723, "lon": 46.7684072256088, "dir": "E", "road": "An-Nasar Road"}, {"id": "RUHTE306", "lat": 24.5905317003463, "lon": 46.7683106660843, "dir": "W", "road": "An-Nasar Road"}, {"id": "RUHTE309", "lat": 24.6524997358911, "lon": 46.837058365345, "dir": "S", "road": "شارع اسطنبول"}, {"id": "RUHTE311", "lat": 24.6064936135113, "lon": 46.7306846380234, "dir": "N", "road": "البطحاء"}, {"id": "RUHTE312", "lat": 24.7251035336184, "lon": 46.846419274807, "dir": "S", "road": "شارع أبي هريرة"}, {"id": "RUHTE313", "lat": 24.7251863658135, "lon": 46.8465641140938, "dir": "N", "road": "شارع أبي هريرة"}, {"id": "RUHTE315", "lat": 24.6141750770559, "lon": 46.8200236558914, "dir": "S", "road": "طريق الخرج السريع"}, {"id": "RUHTE316", "lat": 24.6142896999613, "lon": 46.8201014399529, "dir": "N", "road": "طريق الخرج السريع"}, {"id": "RUHTE317", "lat": 24.6667255799159, "lon": 46.5599271655083, "dir": "N", "road": "الطريق الدائري الغربي"}, {"id": "RUHTE318", "lat": 24.8014076405187, "lon": 46.7830601334572, "dir": "N", "road": "الصحابة"}, {"id": "RUHTE319", "lat": 24.8013516499019, "lon": 46.7829152941704, "dir": "S", "road": "الصحابة"}, {"id": "RUHTE320", "lat": 24.5822390462004, "lon": 46.800848543644, "dir": "E", "road": "Arfat"}, {"id": "RUHTE321", "lat": 24.5821049042435, "lon": 46.8009102344513, "dir": "W", "road": "Arfat"}, {"id": "RUHTE325", "lat": 24.8405124734256, "lon": 46.6326740384102, "dir": "S", "road": "طريق الملك عبدالعزيز الفرعي"}, {"id": "RUHTE326", "lat": 24.84056807361, "lon": 46.632821559906, "dir": "N", "road": "طريق الملك عبدالعزيز"}, {"id": "RUHTE327", "lat": 25.0019957881179, "lon": 46.5249887108803, "dir": "S", "road": "طريق الملك فهد"}, {"id": "RUHTE329", "lat": 24.7977018282743, "lon": 46.6402861475945, "dir": "E", "road": "طريق الإمام سعود بن فيصل"}, {"id": "RUHTE330", "lat": 24.7980061369433, "lon": 46.6402700543404, "dir": "W", "road": ""}, {"id": "RUHTE331", "lat": 24.5881342040044, "lon": 46.6691654920578, "dir": "W", "road": ""}, {"id": "RUHTE332", "lat": 24.6438528149027, "lon": 46.5914431214333, "dir": "W", "road": "طريق جدة"}, {"id": "RUHTE333", "lat": 24.643733326556, "lon": 46.5916550159454, "dir": "E", "road": "طريق جدة"}, {"id": "RUHTE334", "lat": 24.6315966143575, "lon": 46.8755158782005, "dir": "N", "road": "الطريق الدائري الثاني"}, {"id": "RUHTE335", "lat": 24.6308021511539, "lon": 46.8756607174873, "dir": "S", "road": "الطريق الدائري الثاني"}, {"id": "RUHTE336", "lat": 24.9054087603904, "lon": 46.5742716193199, "dir": "N", "road": "طريق الملك فهد"}, {"id": "RUHTE337", "lat": 24.9053406696483, "lon": 46.5741160511971, "dir": "S", "road": "طريق الملك فهد"}];
+
+function log(m) { var l = document.getElementById('log'); l.textContent += m + '\n'; l.scrollTop = l.scrollHeight; }
+
+function getSiteNames(indices) {
+    if (!indices || indices.length === 0) return '-';
+    return indices.map(i => SITES[i] ? SITES[i].id : '?').join(', ');
+}
+
+function updateComparisonTable() {
+    var html = '<div class="comp-row comp-header"><div>Route</div><div>OLD Waypoints</div><div>NEW Waypoints</div><div>Diff</div></div>';
+    
+    comparisons.forEach(function(c) {
+        var diff = c.newCount - c.oldCount;
+        var diffClass = diff > 0 ? 'diff-pos' : (diff < 0 ? 'diff-neg' : 'diff-same');
+        var diffText = diff > 0 ? '+' + diff : (diff < 0 ? diff : '=');
+        
+        html += '<div class="comp-row">' +
+            '<div><b>' + c.route + '</b></div>' +
+            '<div class="old-wp">' + c.oldCount + ': ' + c.oldNames.substring(0, 30) + '</div>' +
+            '<div class="new-wp">' + c.newCount + ': ' + c.newNames.substring(0, 30) + '</div>' +
+            '<div class="' + diffClass + '">' + diffText + '</div>' +
+        '</div>';
+    });
+    
+    document.getElementById('compTable').innerHTML = html;
+    document.getElementById('totalOld').textContent = totalOldWP;
+    document.getElementById('totalNew').textContent = totalNewWP;
+    document.getElementById('totalDiff').textContent = (totalNewWP - totalOldWP > 0 ? '+' : '') + (totalNewWP - totalOldWP);
+}
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+        try {
+            loadedData = JSON.parse(ev.target.result);
+            
+            var routes = loadedData.distance_km || loadedData.routes || {};
+            var routeCount = Object.keys(routes).length;
+            
+            var wp = loadedData.waypoints || {};
+            var wpCount = 0;
+            for (var k in wp) wpCount += wp[k].length;
+            
+            document.getElementById('fileInfo').innerHTML = 
+                '<b>✓ ' + file.name + '</b><br>' +
+                'Routes: <b>' + routeCount.toLocaleString() + '</b> | ' +
+                'Waypoints: <b>' + wpCount.toLocaleString() + '</b>';
+            
+            log('Loaded: ' + file.name);
+            log('Routes: ' + routeCount + ', Waypoints: ' + wpCount);
+            
+        } catch(err) {
+            log('ERROR: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+});
+
+function showSites() {
+    markers.forEach(m => m.setMap(null)); markers = [];
+    var bounds = new google.maps.LatLngBounds();
+    SITES.forEach(function(s) {
+        var m = new google.maps.Marker({
+            position: {lat: s.lat, lng: s.lon}, map: map,
+            icon: {path: google.maps.SymbolPath.CIRCLE, fillColor: '#ff4444', fillOpacity: 0.8, strokeWeight: 1, scale: 5},
+            title: s.id + ' (' + s.dir + ') - ' + s.road
+        });
+        markers.push(m);
+        bounds.extend({lat: s.lat, lng: s.lon});
+    });
+    map.fitBounds(bounds);
+    log('Showing ' + SITES.length + ' sites');
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+    var R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+    var a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function getDir(path, idx) {
+    var i = Math.min(Math.max(idx, 0), path.length - 2);
+    var dLat = path[i+1].lat() - path[i].lat();
+    var dLon = path[i+1].lng() - path[i].lng();
+    return Math.abs(dLat) > Math.abs(dLon) ? (dLat > 0 ? 'N' : 'S') : (dLon > 0 ? 'E' : 'W');
+}
+
+async function detect(oIdx, dIdx, wid) {
+    var pTh = parseInt(document.getElementById('pathThresh').value) / 1000;
+    var dTh = parseFloat(document.getElementById('distThresh').value);
+    var o = SITES[oIdx], d = SITES[dIdx];
+    
+    document.getElementById('w'+wid).textContent = o.id.slice(-3) + '→' + d.id.slice(-3);
+    document.getElementById('w'+wid).className = 'worker active';
+    
+    return new Promise(function(resolve) {
+        svc.route({
+            origin: {lat: o.lat, lng: o.lon},
+            destination: {lat: d.lat, lng: d.lon},
+            travelMode: 'DRIVING'
+        }, async function(r, st) {
+            if (st !== 'OK') { 
+                document.getElementById('w'+wid).className = 'worker';
+                resolve([]); 
+                return; 
+            }
+            
+            var path = r.routes[0].overview_path;
+            var dist = r.routes[0].legs[0].distance.value / 1000;
+            
+            // Find candidates
+            var cands = [];
+            SITES.forEach(function(s, idx) {
+                if (idx === oIdx || idx === dIdx) return;
+                var minD = 999, pIdx = 0;
+                for (var i = 0; i < path.length; i++) {
+                    var dd = haversine(s.lat, s.lon, path[i].lat(), path[i].lng());
+                    if (dd < minD) { minD = dd; pIdx = i; }
+                }
+                if (minD < pTh && s.dir === getDir(path, pIdx)) {
+                    cands.push({idx: idx, pIdx: pIdx});
+                }
+            });
+            cands.sort((a,b) => a.pIdx - b.pIdx);
+            
+            // Verify with Google
+            var verified = [];
+            for (var c of cands) {
+                var wp = SITES[c.idx];
+                var ok = await new Promise(function(res) {
+                    svc.route({
+                        origin: {lat: o.lat, lng: o.lon},
+                        destination: {lat: d.lat, lng: d.lon},
+                        waypoints: [{location: {lat: wp.lat, lng: wp.lon}, stopover: true}],
+                        travelMode: 'DRIVING'
+                    }, function(r2, s2) {
+                        if (s2 === 'OK') {
+                            var tot = 0; r2.routes[0].legs.forEach(l => tot += l.distance.value);
+                            res((tot/1000 - dist) / dist < dTh);
+                        } else res(false);
+                    });
+                });
+                if (ok) verified.push(c.idx);
+                await new Promise(r => setTimeout(r, 50));
+            }
+            
+            // Filter duplicates within 100m
+            for (var i = 0; i < verified.length; i++) {
+                for (var j = i+1; j < verified.length; j++) {
+                    if (haversine(SITES[verified[i]].lat, SITES[verified[i]].lon, SITES[verified[j]].lat, SITES[verified[j]].lon) < 0.1) {
+                        verified.splice(j--, 1);
+                    }
+                }
+            }
+            
+            document.getElementById('w'+wid).className = 'worker';
+            resolve(verified);
+        });
+    });
+}
+
+async function worker(wid) {
+    while (running && routeKeys.length > 0) {
+        var key = routeKeys.shift();
+        if (!key) continue;
+        
+        var parts = key.split('_');
+        var oIdx = parseInt(parts[0]), dIdx = parseInt(parts[1]);
+        
+        // Get OLD waypoints
+        var oldWP = (loadedData.waypoints && loadedData.waypoints[key]) ? loadedData.waypoints[key] : [];
+        
+        // Detect NEW waypoints
+        var newWP = await detect(oIdx, dIdx, wid);
+        
+        // Store
+        updated[key] = newWP;
+        
+        // Track totals
+        totalOldWP += oldWP.length;
+        totalNewWP += newWP.length;
+        
+        // Add to comparison
+        comparisons.push({
+            route: SITES[oIdx].id + '→' + SITES[dIdx].id,
+            oldCount: oldWP.length,
+            newCount: newWP.length,
+            oldNames: getSiteNames(oldWP),
+            newNames: getSiteNames(newWP),
+            oldIndices: oldWP,
+            newIndices: newWP
+        });
+        
+        done++;
+        
+        // Update UI
+        var pct = Math.round(done / (done + routeKeys.length) * 100);
+        document.getElementById('pbar').style.width = pct + '%';
+        document.getElementById('pbar').textContent = done + ' done';
+        
+        updateComparisonTable();
+        
+        await new Promise(r => setTimeout(r, 100));
+    }
+}
+
+async function runDetection() {
+    if (!loadedData) { alert('Load JSON first!'); return; }
+    if (running) return;
+    
+    document.getElementById('log').textContent = '';
+    done = 0; totalOldWP = 0; totalNewWP = 0;
+    comparisons = [];
+    updated = {};
+    
+    var sz = parseInt(document.getElementById('sampleSz').value);
+    routeKeys = Object.keys(loadedData.distance_km || loadedData.routes || {});
+    
+    log('Total routes in file: ' + routeKeys.length);
+    
+    if (sz > 0) {
+        routeKeys = routeKeys.slice(0, sz);
+        log('Running sample of ' + sz + ' routes...');
+    } else {
+        log('Running ALL ' + routeKeys.length + ' routes...');
+    }
+    
+    running = true;
+    
+    // Start 5 workers
+    await Promise.all([worker(0), worker(1), worker(2), worker(3), worker(4)]);
+    
+    running = false;
+    
+    log('');
+    log('=== COMPLETE ===');
+    log('Routes: ' + done);
+    log('OLD waypoints: ' + totalOldWP);
+    log('NEW waypoints: ' + totalNewWP);
+    log('Difference: ' + (totalNewWP - totalOldWP));
+}
+
+function stopIt() { running = false; routeKeys = []; log('Stopped'); }
+
+function downloadJSON() {
+    if (!loadedData) return;
+    var out = JSON.parse(JSON.stringify(loadedData));
+    if (!out.waypoints) out.waypoints = {};
+    for (var k in updated) out.waypoints[k] = updated[k];
+    var blob = new Blob([JSON.stringify(out)], {type: 'application/json'});
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'updated_' + Date.now() + '.json'; a.click();
+    log('Downloaded updated JSON!');
+}
+
+function downloadComparison() {
+    var csv = 'Route,Old Count,New Count,Diff,Old Waypoints,New Waypoints\n';
+    comparisons.forEach(function(c) {
+        csv += c.route + ',' + c.oldCount + ',' + c.newCount + ',' + (c.newCount - c.oldCount) + ',"' + c.oldNames + '","' + c.newNames + '"\n';
+    });
+    var blob = new Blob([csv], {type: 'text/csv'});
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = 'comparison_' + Date.now() + '.csv'; a.click();
+    log('Downloaded comparison CSV!');
+}
+
+window.initMap = function() {
+    map = new google.maps.Map(document.getElementById('map'), {center: {lat: 24.7, lng: 46.7}, zoom: 10});
+    svc = new google.maps.DirectionsService();
+    log('Map ready!');
+};
+</script>
+<script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js?callback=initMap" async defer></script>
+</body>
+</html>
