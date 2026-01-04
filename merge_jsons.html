@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Merge Part 1 & Part 2 JSON</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #0d1117; color: #c9d1d9; padding: 40px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #58a6ff; margin-bottom: 10px; }
+        p { color: #8b949e; margin-bottom: 20px; }
+        .upload-box { background: #161b22; border: 2px dashed #30363d; border-radius: 10px; padding: 30px; margin: 15px 0; text-align: center; }
+        .upload-box.loaded { border-color: #238636; background: #0d1117; }
+        .upload-box h3 { color: #f0883e; margin-bottom: 10px; }
+        input[type="file"] { margin: 10px 0; }
+        .info { background: #21262d; padding: 15px; border-radius: 8px; margin: 10px 0; font-size: 14px; }
+        .info b { color: #58a6ff; }
+        .info .num { color: #3fb950; font-size: 18px; }
+        .btn { padding: 15px 30px; font-size: 16px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; margin: 10px 5px; }
+        .btn-green { background: #238636; color: white; }
+        .btn-green:hover { background: #2ea043; }
+        .btn-green:disabled { background: #30363d; color: #8b949e; cursor: not-allowed; }
+        .btn-blue { background: #1f6feb; color: white; }
+        .result { background: #0d1117; border: 2px solid #238636; border-radius: 10px; padding: 30px; margin: 20px 0; text-align: center; display: none; }
+        .result h2 { color: #3fb950; margin-bottom: 15px; }
+        .result .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; }
+        .result .stat { background: #21262d; padding: 15px; border-radius: 8px; }
+        .result .stat b { font-size: 24px; color: #58a6ff; display: block; }
+        .result .stat span { font-size: 12px; color: #8b949e; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Merge Updated JSON Files</h1>
+        <p>Upload your updated Part 1 and Part 2 JSON files to merge them into a single google_matrix.json</p>
+        
+        <div class="upload-box" id="box1">
+            <h3>📁 Part 1 (Updated)</h3>
+            <input type="file" id="file1" accept=".json" onchange="loadFile(1)">
+            <div class="info" id="info1">No file loaded</div>
+        </div>
+        
+        <div class="upload-box" id="box2">
+            <h3>📁 Part 2 (Updated)</h3>
+            <input type="file" id="file2" accept=".json" onchange="loadFile(2)">
+            <div class="info" id="info2">No file loaded</div>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <button class="btn btn-green" id="mergeBtn" onclick="mergeFiles()" disabled>🔗 Merge & Download</button>
+        </div>
+        
+        <div class="result" id="result">
+            <h2>✅ Merge Complete!</h2>
+            <div class="stats">
+                <div class="stat"><b id="totalSites">0</b><span>Sites</span></div>
+                <div class="stat"><b id="totalRoutes">0</b><span>Routes</span></div>
+                <div class="stat"><b id="totalWaypoints">0</b><span>Waypoints</span></div>
+                <div class="stat"><b id="fileSize">0</b><span>File Size</span></div>
+            </div>
+            <button class="btn btn-blue" onclick="downloadMerged()">📥 Download google_matrix.json</button>
+        </div>
+    </div>
+
+<script>
+var data1 = null, data2 = null, merged = null;
+
+function loadFile(num) {
+    var file = document.getElementById('file' + num).files[0];
+    if (!file) return;
+    
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            var data = JSON.parse(e.target.result);
+            
+            if (num === 1) data1 = data;
+            else data2 = data;
+            
+            // Count stats
+            var routes = Object.keys(data.distance_km || {}).length;
+            var wp = 0;
+            if (data.waypoints) {
+                for (var k in data.waypoints) wp += data.waypoints[k].length;
+            }
+            var sites = (data.sites || []).length;
+            
+            document.getElementById('info' + num).innerHTML = 
+                '<b>✓ ' + file.name + '</b><br>' +
+                'Sites: <span class="num">' + sites + '</span> | ' +
+                'Routes: <span class="num">' + routes.toLocaleString() + '</span> | ' +
+                'Waypoints: <span class="num">' + wp.toLocaleString() + '</span>';
+            
+            document.getElementById('box' + num).classList.add('loaded');
+            
+            // Enable merge button if both loaded
+            if (data1 && data2) {
+                document.getElementById('mergeBtn').disabled = false;
+            }
+            
+        } catch(err) {
+            alert('Error parsing JSON: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+function mergeFiles() {
+    if (!data1 || !data2) {
+        alert('Please load both files first!');
+        return;
+    }
+    
+    // Start with Part 1 as base (it has all sites)
+    merged = {
+        source: 'merged',
+        merged_date: new Date().toISOString(),
+        sites: data1.sites || data2.sites, // Sites are same in both
+        distance_km: {},
+        time_min: {},
+        waypoints: {}
+    };
+    
+    // Merge Part 1 data
+    if (data1.distance_km) {
+        for (var k in data1.distance_km) merged.distance_km[k] = data1.distance_km[k];
+    }
+    if (data1.time_min) {
+        for (var k in data1.time_min) merged.time_min[k] = data1.time_min[k];
+    }
+    if (data1.waypoints) {
+        for (var k in data1.waypoints) merged.waypoints[k] = data1.waypoints[k];
+    }
+    
+    // Merge Part 2 data
+    if (data2.distance_km) {
+        for (var k in data2.distance_km) merged.distance_km[k] = data2.distance_km[k];
+    }
+    if (data2.time_min) {
+        for (var k in data2.time_min) merged.time_min[k] = data2.time_min[k];
+    }
+    if (data2.waypoints) {
+        for (var k in data2.waypoints) merged.waypoints[k] = data2.waypoints[k];
+    }
+    
+    // Calculate final stats
+    var totalRoutes = Object.keys(merged.distance_km).length;
+    var totalWP = 0;
+    for (var k in merged.waypoints) totalWP += merged.waypoints[k].length;
+    var totalSites = merged.sites.length;
+    
+    var jsonStr = JSON.stringify(merged);
+    var sizeKB = (jsonStr.length / 1024).toFixed(1);
+    var sizeMB = (jsonStr.length / 1024 / 1024).toFixed(2);
+    
+    // Show results
+    document.getElementById('totalSites').textContent = totalSites;
+    document.getElementById('totalRoutes').textContent = totalRoutes.toLocaleString();
+    document.getElementById('totalWaypoints').textContent = totalWP.toLocaleString();
+    document.getElementById('fileSize').textContent = sizeMB + ' MB';
+    document.getElementById('result').style.display = 'block';
+    
+    console.log('Merged stats:');
+    console.log('- Sites:', totalSites);
+    console.log('- Routes:', totalRoutes);
+    console.log('- Waypoints:', totalWP);
+    console.log('- Size:', sizeMB, 'MB');
+}
+
+function downloadMerged() {
+    if (!merged) return;
+    
+    var blob = new Blob([JSON.stringify(merged)], {type: 'application/json'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'google_matrix.json';
+    a.click();
+}
+</script>
+</body>
+</html>

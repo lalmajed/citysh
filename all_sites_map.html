@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>All 247 Riyadh Sites Map</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; }
+        #map { width: 100%; height: 100vh; }
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 1000;
+            max-width: 350px;
+        }
+        h2 { color: #00d4ff; margin-bottom: 10px; }
+        .btn { 
+            padding: 10px 15px; 
+            margin: 5px 2px; 
+            font-size: 14px; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .btn-run { background: #e94560; color: white; }
+        .btn-sites { background: #00d4ff; color: black; }
+        .btn-clear { background: #666; color: white; }
+        select { padding: 8px; margin: 5px; font-size: 14px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; }
+        .stats { margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; }
+        .stat { display: inline-block; margin: 5px 10px; text-align: center; }
+        .stat-val { font-size: 24px; font-weight: bold; color: #00d4ff; }
+        .stat-label { font-size: 11px; color: #aaa; }
+        .legend { font-size: 12px; margin-top: 10px; }
+        .legend div { margin: 3px 0; display: flex; align-items: center; gap: 8px; }
+        .dot { width: 16px; height: 16px; border-radius: 50%; display: inline-block; }
+        #log { 
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.9);
+            color: #0f0;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 150px;
+            overflow-y: auto;
+            border-radius: 5px;
+            z-index: 1000;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <div class="controls">
+        <h2>🗺️ All 247 Riyadh Sites</h2>
+        
+        <div class="stats">
+            <div class="stat"><div class="stat-val" id="totalSites">247</div><div class="stat-label">Total Sites</div></div>
+            <div class="stat"><div class="stat-val" id="visibleSites">0</div><div class="stat-label">Visible</div></div>
+        </div>
+        
+        <button class="btn btn-sites" onclick="showAllSites()">📍 Show All 247 Sites</button>
+        <button class="btn btn-clear" onclick="clearMarkers()">🗑️ Clear</button>
+        
+        <hr style="margin: 10px 0; border-color: #444;">
+        
+        <div>
+            <label>Test Route:</label><br>
+            <select id="originSel" style="width: 100%;"></select>
+            <select id="destSel" style="width: 100%;"></select>
+        </div>
+        
+        <div style="margin-top: 10px;">
+            <label>Polyline: </label>
+            <select id="weight">
+                <option value="8">8px</option>
+                <option value="12">12px</option>
+                <option value="18" selected>18px THICK</option>
+                <option value="28">28px ULTRA</option>
+            </select>
+            <label>Threshold: </label>
+            <select id="threshold">
+                <option value="300">300m</option>
+                <option value="500">500m</option>
+                <option value="1000" selected>1km</option>
+                <option value="2000">2km</option>
+            </select>
+        </div>
+        
+        <button class="btn btn-run" onclick="runAnalysis()" style="width: 100%; margin-top: 10px;">🚀 ANALYZE ROUTE</button>
+        
+        <div class="legend">
+            <div><span class="dot" style="background:#00ff00;"></span> Origin</div>
+            <div><span class="dot" style="background:#ff0000;"></span> Destination</div>
+            <div><span class="dot" style="background:#ffff00;"></span> Verified ON Route</div>
+            <div><span class="dot" style="background:#ff00ff;"></span> Near but OFF Route</div>
+            <div><span class="dot" style="background:#888;"></span> All Other Sites</div>
+        </div>
+    </div>
+    
+    <div id="log">Loading map and sites...</div>
+
+<script>
+// ALL 247 SITES from google_matrix_part1 (5).json
+var ALL_SITES = [{"id":"RUHSM001","lat":24.729408,"lon":46.702448,"dir":"S","road":"طريق الأمير تركي بن عبدالعزيز "},{"id":"RUHSM002","lat":24.729962,"lon":46.701288,"dir":"N","road":"طريق الأمير تركي بن عبدالعزيز "},{"id":"RUHSM003","lat":24.808083,"lon":46.731337,"dir":"E","road":"الدائري الشمالي"},{"id":"RUHSM007","lat":24.713655,"lon":46.675564,"dir":"S","road":"طريق الملك خالد"},{"id":"RUHSM009","lat":24.704371,"lon":46.673878,"dir":"N","road":"طريق الملك خالد"},{"id":"RUHSM012","lat":24.783203,"lon":46.778463,"dir":"N","road":"طريق الدائري الشرقي"},{"id":"RUHSM018","lat":24.76807,"lon":46.638455,"dir":"E","road":"طريق الملك سلمان"},{"id":"RUHSM019","lat":24.752144,"lon":46.629142,"dir":"S","road":"طريق الملك فهد"},{"id":"RUHSM022","lat":24.698704,"lon":46.672953,"dir":"N","road":"طريق الملك خالد"},{"id":"RUHSM023","lat":24.744699,"lon":46.754055,"dir":"N","road":""},{"id":"RUHSM024","lat":24.690639,"lon":46.671725,"dir":"S","road":"شارع أم الحمام"},{"id":"RUHSM025","lat":24.779607,"lon":46.649711,"dir":"W","road":"الدائري الشمالي"},{"id":"RUHSM026","lat":24.765667,"lon":46.780651,"dir":"S","road":"الدائري الشرقي"},{"id":"RUHSM027","lat":24.686339,"lon":46.673195,"dir":"E","road":"طريق الملك خالد"},{"id":"RUHSM032","lat":24.732729,"lon":46.643177,"dir":"S","road":"طريق الملك فهد الفرعي"},{"id":"RUHSM033","lat":24.803095,"lon":46.752602,"dir":"E","road":"الطريق الدائري الشمالي"},{"id":"RUHSM034","lat":24.726002,"lon":46.684207,"dir":"N","road":""},{"id":"RUHSM035","lat":24.657677,"lon":46.598301,"dir":"E","road":"طريق مكة المكرمة"},{"id":"RUHSM038","lat":24.721995,"lon":46.670933,"dir":"W","road":""},{"id":"RUHSM042","lat":24.767758,"lon":46.660994,"dir":"W","road":"الطريق الدائري الشمالي"},{"id":"RUHSM045","lat":24.652512,"lon":46.696137,"dir":"W","road":"طريق الدائري الجنوبي"},{"id":"RUHSM046","lat":24.642765,"lon":46.737741,"dir":"E","road":"طريق الدائري الجنوبي"},{"id":"RUHSM049","lat":24.784201,"lon":46.810465,"dir":"W","road":"طريق الدمام"},{"id":"RUHSM052","lat":24.73279,"lon":46.646495,"dir":"N","road":"طريق الملك فهد"},{"id":"RUHSM053","lat":24.72638,"lon":46.64849,"dir":"S","road":""},{"id":"RUHSM054","lat":24.716331,"lon":46.631109,"dir":"S","road":"طريق الملك فهد"},{"id":"RUHSM055","lat":24.711201,"lon":46.629682,"dir":"N","road":"طريق الملك فهد"},{"id":"RUHSM057","lat":24.676391,"lon":46.594968,"dir":"E","road":"طريق جدة"},{"id":"RUHSM062","lat":24.748288,"lon":46.755255,"dir":"W","road":""},{"id":"RUHSM070","lat":24.652559,"lon":46.609706,"dir":"S","road":"الطريق الدائري الغربي"},{"id":"RUHSM071","lat":24.6845,"lon":46.598845,"dir":"N","road":"طريق عبد الله بن حذافة السهمي"},{"id":"RUHSM072","lat":24.685134,"lon":46.59938,"dir":"S","road":"طريق عبد الله بن حذافة السهمي"},{"id":"RUHSM073","lat":24.678648,"lon":46.599705,"dir":"W","road":"Flags Roundabout"},{"id":"RUHSM074","lat":24.679363,"lon":46.60109,"dir":"E","road":"شارع عمرو الضمري"},{"id":"RUHSM077","lat":24.762176,"lon":46.792354,"dir":"N","road":"طريق سعيد بن زيد"},{"id":"RUHSM078","lat":24.762713,"lon":46.791261,"dir":"S","road":"طريق سعيد بن زيد"},{"id":"RUHSM095","lat":24.780082,"lon":46.853023,"dir":"E","road":"طريق خريص"},{"id":"RUHSM097","lat":24.631095,"lon":46.645649,"dir":"S","road":"طريق الدائري الجنوبي"},{"id":"RUHSM102","lat":24.721931,"lon":46.690161,"dir":"E","road":""},{"id":"RUHSM106","lat":24.77064,"lon":46.805247,"dir":"N","road":"الدائري الشرقي"},{"id":"RUHSM112","lat":24.655861,"lon":46.576062,"dir":"W","road":"الإمام أبي حنيفة"},{"id":"RUHSM113","lat":24.655097,"lon":46.575761,"dir":"E","road":"الإمام أبي حنيفة"},{"id":"RUHSM121","lat":24.680265,"lon":46.711743,"dir":"E","road":"الأمير طلال بن عبدالعزيز"},{"id":"RUHSM122","lat":24.767093,"lon":46.80892,"dir":"W","road":"طريق الدمام"},{"id":"RUHSM125","lat":24.764582,"lon":46.79792,"dir":"S","road":"الدائري الشرقي"},{"id":"RUHSM128","lat":24.730771,"lon":46.652759,"dir":"S","road":"طريق الملك فهد"},{"id":"RUHSM129","lat":24.722782,"lon":46.708039,"dir":"E","road":"طريق مكة المكرمة"},{"id":"RUHSM130","lat":24.721641,"lon":46.715564,"dir":"W","road":"شارع الجامعة"},{"id":"RUHSM131","lat":24.721106,"lon":46.714361,"dir":"E","road":"شارع الجامعة"},{"id":"RUHSM136","lat":24.643976,"lon":46.592364,"dir":"N","road":"الطريق الدائري الغربي"},{"id":"RUHSM147","lat":24.652681,"lon":46.56511,"dir":"E","road":"الإمام أبي حنيفة"},{"id":"RUHSM148","lat":24.653258,"lon":46.565513,"dir":"W","road":"الإمام أبي حنيفة"},{"id":"RUHSM152","lat":24.688969,"lon":46.668531,"dir":"S","road":"شارع أم الحمام"},{"id":"RUHSM153","lat":24.688401,"lon":46.669676,"dir":"N","road":"شارع أم الحمام"},{"id":"RUHSM156","lat":24.772036,"lon":46.842461,"dir":"E","road":"طريق خريص"},{"id":"RUHSM157","lat":24.667468,"lon":46.762051,"dir":"E","road":"طريق الدائري الجنوبي"},{"id":"RUHSM161","lat":24.659592,"lon":46.744461,"dir":"E","road":"طريق الدائري الجنوبي"},{"id":"RUHSM164","lat":24.591629,"lon":46.551689,"dir":"E","road":"بلال بن رباح"},{"id":"RUHSM165","lat":24.592159,"lon":46.55217,"dir":"W","road":"بلال بن رباح"},{"id":"RUHSM168","lat":24.622541,"lon":46.622774,"dir":"E","road":"An-Nasar Road"},{"id":"RUHSM169","lat":24.643365,"lon":46.561896,"dir":"N","road":"حمزة بن عبد المطلب"},{"id":"RUHSM170","lat":24.642789,"lon":46.562516,"dir":"S","road":"حمزة بن عبد المطلب"},{"id":"RUHSM173","lat":24.722105,"lon":46.656004,"dir":"N","road":"طريق الملك عبدالعزيز"},{"id":"RUHSM180","lat":24.763997,"lon":46.815589,"dir":"W","road":"أبو عبيدة عامر بن الجراح"},{"id":"RUHSM181","lat":24.763454,"lon":46.814427,"dir":"E","road":"أبو عبيدة عامر بن الجراح"},{"id":"RUHSM182","lat":24.67502,"lon":46.776508,"dir":"S","road":"طريق الدائري الجنوبي"},{"id":"RUHSM187","lat":24.63069,"lon":46.749783,"dir":"N","road":"الخرج"},{"id":"RUHSM188","lat":24.661215,"lon":46.562014,"dir":"N","road":"ابن الجوزي"},{"id":"RUHSM189","lat":24.660606,"lon":46.562663,"dir":"S","road":"ابن الجوزي"},{"id":"RUHSM190","lat":24.63807,"lon":46.555673,"dir":"W","road":"طريق نجد"},{"id":"RUHSM191","lat":24.719309,"lon":46.695365,"dir":"S","road":""},{"id":"RUHSM195","lat":24.785812,"lon":46.868386,"dir":"S","road":"الطريق الدائري الثاني"},{"id":"RUHSM198","lat":24.72001,"lon":46.702664,"dir":"S","road":"طريق الملك عبدالعزيز"},{"id":"RUHSM201","lat":24.716129,"lon":46.689915,"dir":"S","road":""},{"id":"RUHSM207","lat":24.771768,"lon":46.671736,"dir":"E","road":"الطريق الدائري الشمالي"},{"id":"RUHSM208","lat":24.754804,"lon":46.781119,"dir":"N","road":"طريق سعيد بن زيد"},{"id":"RUHSM209","lat":24.755342,"lon":46.780026,"dir":"S","road":"طريق سعيد بن زيد"},{"id":"RUHSM210","lat":24.772357,"lon":46.832661,"dir":"S","road":"عبدالرحمن الناصر"},{"id":"RUHSM211","lat":24.772929,"lon":46.83175,"dir":"N","road":"عبدالرحمن الناصر"},{"id":"RUHSM212","lat":24.764143,"lon":46.797082,"dir":"N","road":"شارع ابن ماجة"},{"id":"RUHSM213","lat":24.764707,"lon":46.795967,"dir":"S","road":"شارع ابن ماجة"},{"id":"RUHSM216","lat":24.633454,"lon":46.54392,"dir":"W","road":"خديجة بنت خويلد"},{"id":"RUHSM217","lat":24.632797,"lon":46.543504,"dir":"E","road":"خديجة بنت خويلد"},{"id":"RUHSM218","lat":24.760907,"lon":46.59261,"dir":"W","road":"طريق طلحة بن عبيدالله"},{"id":"RUHSM221","lat":24.757212,"lon":46.609292,"dir":"E","road":"طريق المدينة المنورة"},{"id":"RUHSM224","lat":24.780627,"lon":46.843927,"dir":"N","road":"شارع حسان بن ثابت"},{"id":"RUHSM225","lat":24.781212,"lon":46.843005,"dir":"S","road":"شارع حسان بن ثابت"},{"id":"RUHSM226","lat":24.783313,"lon":46.862124,"dir":"N","road":"شارع ابن الهيثم"},{"id":"RUHSM227","lat":24.783895,"lon":46.861215,"dir":"S","road":"شارع ابن الهيثم"},{"id":"RUHSM228","lat":24.771801,"lon":46.655769,"dir":"W","road":"الطريق الدائري الشمالي"},{"id":"RUHSM235","lat":24.766118,"lon":46.78479,"dir":"W","road":"East Ring Road"},{"id":"RUHSM240","lat":24.72447,"lon":46.667953,"dir":"S","road":"الأمير عبدالعزيز بن مساعد بن ج"},{"id":"RUHSM241","lat":24.725021,"lon":46.666817,"dir":"N","road":"الأمير عبدالعزيز بن مساعد بن ج"},{"id":"RUHSM244","lat":24.633421,"lon":46.561046,"dir":"N","road":"أسماء بنت أبي بكر"},{"id":"RUHSM245","lat":24.632845,"lon":46.561702,"dir":"S","road":"أسماء بنت أبي بكر"},{"id":"RUHSM250","lat":24.783507,"lon":46.878295,"dir":"E","road":"الإمام عبد الله بن سعود بن عبد"},{"id":"RUHSM251","lat":24.78409,"lon":46.877409,"dir":"W","road":"الإمام عبد الله بن سعود بن عبد"},{"id":"RUHSM252","lat":24.750317,"lon":46.617347,"dir":"W","road":"طريق المدينة المنورة"},{"id":"RUHSM253","lat":24.749739,"lon":46.616145,"dir":"E","road":"طريق المدينة المنورة"},{"id":"RUHSM254","lat":24.678439,"lon":46.632816,"dir":"E","road":"السويدي العام"},{"id":"RUHSM255","lat":24.678991,"lon":46.633309,"dir":"W","road":"السويدي العام"},{"id":"RUHSM260","lat":24.624017,"lon":46.537642,"dir":"W","road":"طريق نجد"},{"id":"RUHSM261","lat":24.787157,"lon":46.885107,"dir":"W","road":"الإمام عبد الله بن سعود بن عبد"},{"id":"RUHSM262","lat":24.783243,"lon":46.869,"dir":"N","road":"شارع سلمان الفارسي"},{"id":"RUHSM263","lat":24.783828,"lon":46.868097,"dir":"S","road":"شارع سلمان الفارسي"},{"id":"RUHSM265","lat":24.643476,"lon":46.562411,"dir":"S","road":"Najran"},{"id":"RUHSM266","lat":24.621812,"lon":46.532129,"dir":"S","road":"طريق نجد"},{"id":"RUHSM270","lat":24.726189,"lon":46.661447,"dir":"S","road":""},{"id":"RUHSM271","lat":24.775805,"lon":46.831269,"dir":"E","road":""},{"id":"RUHSM278","lat":24.768761,"lon":46.809607,"dir":"N","road":"شارع شبه الجزيرة"},{"id":"RUHSM279","lat":24.769339,"lon":46.808704,"dir":"S","road":"شارع شبه الجزيرة"},{"id":"RUHSM280","lat":24.772844,"lon":46.856763,"dir":"N","road":"طريق الشيخ جابر الأحمد الصباح"},{"id":"RUHSM281","lat":24.773415,"lon":46.855845,"dir":"S","road":"طريق الشيخ جابر الأحمد الصباح"},{"id":"RUHSM286","lat":24.63901,"lon":46.593872,"dir":"S","road":"الطريق الدائري الغربي"},{"id":"RUHSM287","lat":24.626423,"lon":46.561571,"dir":"W","road":"الطائف"},{"id":"RUHSM290","lat":24.699069,"lon":46.654148,"dir":"N","road":"شارع ال فريان"},{"id":"RUHSM291","lat":24.698489,"lon":46.654829,"dir":"S","road":"شارع ال فريان"},{"id":"RUHSM292","lat":24.715205,"lon":46.666405,"dir":"N","road":"طريق صلاح الدين الأيوبي"},{"id":"RUHSM296","lat":24.73007,"lon":46.636017,"dir":"W","road":"طريق الملك عبدالله"},{"id":"RUHSM304","lat":24.721991,"lon":46.662129,"dir":"E","road":"طريق العروبة"},{"id":"RUHSM306","lat":24.722618,"lon":46.659503,"dir":"W","road":""},{"id":"RUHSM308","lat":24.62983,"lon":46.543231,"dir":"W","road":"طريق نجد"},{"id":"RUHSM325","lat":24.618012,"lon":46.610501,"dir":"E","road":"An-Nasar Road"},{"id":"RUHSM326","lat":24.618579,"lon":46.610985,"dir":"W","road":"An-Nasar Road"},{"id":"RUHSM345","lat":24.773657,"lon":46.848487,"dir":"N","road":"الطريق الدائري الثاني"},{"id":"RUHSM350","lat":24.716668,"lon":46.662751,"dir":"N","road":"طريق أبي بكر الصديق"},{"id":"RUHSM358","lat":24.702189,"lon":46.627783,"dir":"N","road":"طريق الملك فهد"},{"id":"RUHSM359","lat":24.716377,"lon":46.63799,"dir":"N","road":"طريق الملك فهد"},{"id":"RUHSM360","lat":24.694313,"lon":46.626092,"dir":"S","road":"طريق الملك فهد"},{"id":"RUHSM368","lat":24.668506,"lon":46.578094,"dir":"W","road":"الأمير أحمد بن عبدالعزيز"},{"id":"RUHSM369","lat":24.66792,"lon":46.577691,"dir":"E","road":"الأمير أحمد بن عبدالعزيز"},{"id":"RUHSM451","lat":24.705338,"lon":46.65715,"dir":"S","road":"الإمام عبدالعزيز بن محمد بن سع"},{"id":"RUHSM452","lat":24.705891,"lon":46.656311,"dir":"N","road":"الإمام عبدالعزيز بن محمد بن سع"},{"id":"RUHSM459","lat":24.662276,"lon":46.568454,"dir":"E","road":"عائشة بنت أبي بكر"},{"id":"RUHSM460","lat":24.662855,"lon":46.56894,"dir":"W","road":"عائشة بنت أبي بكر"},{"id":"RUHSM467","lat":24.585841,"lon":46.520313,"dir":"W","road":"الطائف"},{"id":"RUHSM468","lat":24.585195,"lon":46.519664,"dir":"E","road":"Al Taief"},{"id":"RUHSM530","lat":24.680016,"lon":46.588658,"dir":"N","road":"طريق معاوية ابن أبي سفيان"},{"id":"RUHSM531","lat":24.679428,"lon":46.589301,"dir":"S","road":"طريق معاوية ابن أبي سفيان"},{"id":"RUHSM540","lat":24.690808,"lon":46.615125,"dir":"W","road":"الأمير فهد بن فيصل بن فرحان آل"},{"id":"RUHSM541","lat":24.690217,"lon":46.614716,"dir":"E","road":"الأمير فهد بن فيصل بن فرحان آل"},{"id":"RUHSM546","lat":24.78564,"lon":46.870697,"dir":"W","road":"طريق السلطان قابوس بن سعيد"},{"id":"RUHSM547","lat":24.785046,"lon":46.869987,"dir":"E","road":"طريق السلطان قابوس بن سعيد"},{"id":"RUHTE305","lat":24.619391,"lon":46.624135,"dir":"E","road":"An-Nasar Road"},{"id":"RUHTE306","lat":24.619955,"lon":46.624614,"dir":"W","road":"An-Nasar Road"},{"id":"RUHTE312","lat":24.78061,"lon":46.872688,"dir":"S","road":"شارع أبي هريرة"},{"id":"RUHTE313","lat":24.780028,"lon":46.873403,"dir":"N","road":"شارع أبي هريرة"},{"id":"RUHTE315","lat":24.709367,"lon":46.704823,"dir":"S","road":"طريق الخرج السريع"},{"id":"RUHTE316","lat":24.709936,"lon":46.704003,"dir":"N","road":"طريق الخرج السريع"},{"id":"RUHTE317","lat":24.640676,"lon":46.597438,"dir":"N","road":"الطريق الدائري الغربي"},{"id":"RUHTE318","lat":24.781006,"lon":46.878978,"dir":"N","road":"الصحابة"},{"id":"RUHTE319","lat":24.781615,"lon":46.878073,"dir":"S","road":"الصحابة"},{"id":"RUHTE320","lat":24.687359,"lon":46.606743,"dir":"E","road":"Arfat"},{"id":"RUHTE321","lat":24.687934,"lon":46.607224,"dir":"W","road":"Arfat"},{"id":"RUHTE332","lat":24.664065,"lon":46.583261,"dir":"W","road":"طريق جدة"},{"id":"RUHTE333","lat":24.663469,"lon":46.582854,"dir":"E","road":"طريق جدة"},{"id":"RUHTE334","lat":24.749442,"lon":46.758693,"dir":"N","road":"الطريق الدائري الثاني"},{"id":"RUHTE335","lat":24.750032,"lon":46.757806,"dir":"S","road":"الطريق الدائري الثاني"}];
+
+var map, directionsService, markers = [], polylines = [];
+
+function log(msg) {
+    var el = document.getElementById('log');
+    el.textContent += msg + '\n';
+    el.scrollTop = el.scrollHeight;
+}
+
+function clearMarkers() {
+    markers.forEach(m => m.setMap(null));
+    markers = [];
+    polylines.forEach(p => p.setMap(null));
+    polylines = [];
+    document.getElementById('visibleSites').textContent = '0';
+    document.getElementById('log').textContent = 'Cleared all markers.\n';
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+    var R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+    var a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function showAllSites() {
+    clearMarkers();
+    document.getElementById('log').textContent = '=== SHOWING ALL ' + ALL_SITES.length + ' SITES ===\n';
+    
+    var bounds = new google.maps.LatLngBounds();
+    
+    ALL_SITES.forEach(function(s) {
+        var color = '#888888'; // gray default
+        if (s.id === 'RUHSM095') color = '#00ff00'; // green origin
+        else if (s.id === 'RUHSM266') color = '#ff0000'; // red dest
+        else if (['RUHSM228','RUHSM070','RUHSM286'].includes(s.id)) color = '#ffa500'; // orange waypoints
+        
+        var m = new google.maps.Marker({
+            position: {lat: s.lat, lng: s.lon},
+            map: map,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                fillColor: color,
+                fillOpacity: 0.9,
+                strokeColor: '#000',
+                strokeWeight: 1,
+                scale: 8
+            },
+            title: s.id + ' (' + s.dir + ') - ' + s.road
+        });
+        
+        // Add click listener to show info
+        m.addListener('click', function() {
+            log('Clicked: ' + s.id + ' (' + s.dir + ')');
+            log('  Road: ' + s.road);
+            log('  Coords: ' + s.lat + ', ' + s.lon);
+        });
+        
+        markers.push(m);
+        bounds.extend(m.getPosition());
+    });
+    
+    document.getElementById('visibleSites').textContent = ALL_SITES.length;
+    log('All ' + ALL_SITES.length + ' sites displayed at their geolocations.\n');
+    log('GREEN = RUHSM095 (Origin)');
+    log('RED = RUHSM266 (Destination)');
+    log('ORANGE = Current waypoints (RUHSM228, RUHSM070, RUHSM286)');
+    log('GRAY = All other sites');
+    log('\nClick any marker to see details.');
+    
+    map.fitBounds(bounds);
+}
+
+function runAnalysis() {
+    var originId = document.getElementById('originSel').value;
+    var destId = document.getElementById('destSel').value;
+    
+    if (!originId || !destId) {
+        alert('Select origin and destination!');
+        return;
+    }
+    
+    var origin = ALL_SITES.find(s => s.id === originId);
+    var dest = ALL_SITES.find(s => s.id === destId);
+    
+    if (!origin || !dest) {
+        alert('Sites not found!');
+        return;
+    }
+    
+    clearMarkers();
+    document.getElementById('log').textContent = '';
+    
+    var weight = parseInt(document.getElementById('weight').value);
+    var threshold = parseInt(document.getElementById('threshold').value) / 1000;
+    
+    log('=== ROUTE ANALYSIS ===');
+    log('Origin: ' + origin.id + ' (' + origin.dir + ') - ' + origin.road);
+    log('Dest: ' + dest.id + ' (' + dest.dir + ') - ' + dest.road);
+    log('Polyline: ' + weight + 'px | Threshold: ' + (threshold*1000) + 'm');
+    log('');
+    
+    // Add all sites first (gray)
+    var bounds = new google.maps.LatLngBounds();
+    ALL_SITES.forEach(function(s) {
+        var color = '#555555';
+        if (s.id === origin.id) color = '#00ff00';
+        else if (s.id === dest.id) color = '#ff0000';
+        
+        var m = new google.maps.Marker({
+            position: {lat: s.lat, lng: s.lon},
+            map: map,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                fillColor: color,
+                fillOpacity: 0.7,
+                strokeColor: '#000',
+                strokeWeight: 1,
+                scale: s.id === origin.id || s.id === dest.id ? 12 : 6
+            },
+            title: s.id + ' (' + s.dir + ') - ' + s.road
+        });
+        markers.push(m);
+        bounds.extend(m.getPosition());
+    });
+    
+    document.getElementById('visibleSites').textContent = ALL_SITES.length;
+    
+    log('Fetching route...');
+    
+    directionsService.route({
+        origin: {lat: origin.lat, lng: origin.lon},
+        destination: {lat: dest.lat, lng: dest.lon},
+        travelMode: 'DRIVING'
+    }, function(res, status) {
+        if (status !== 'OK') {
+            log('ERROR: ' + status);
+            return;
+        }
+        
+        var path = res.routes[0].overview_path;
+        var dist = res.routes[0].legs[0].distance.value / 1000;
+        
+        log('Route: ' + dist.toFixed(2) + ' km | ' + path.length + ' points');
+        
+        // Draw THICK polyline
+        var poly = new google.maps.Polyline({
+            path: path,
+            geodesic: true,
+            strokeColor: '#00BFFF',
+            strokeOpacity: 0.85,
+            strokeWeight: weight,
+            map: map
+        });
+        polylines.push(poly);
+        
+        // Find candidates near path
+        var candidates = [];
+        ALL_SITES.forEach(function(s) {
+            if (s.id === origin.id || s.id === dest.id) return;
+            
+            var minDist = 999;
+            for (var i = 0; i < path.length; i++) {
+                var d = haversine(s.lat, s.lon, path[i].lat(), path[i].lng());
+                if (d < minDist) minDist = d;
+            }
+            
+            if (minDist < threshold) {
+                candidates.push({site: s, distToPath: minDist});
+            }
+        });
+        
+        log('\nFound ' + candidates.length + ' sites within ' + (threshold*1000) + 'm of path');
+        log('Verifying each with Google...\n');
+        
+        var verified = [];
+        var idx = 0;
+        
+        function verifyNext() {
+            if (idx >= candidates.length) {
+                showResults();
+                return;
+            }
+            
+            var c = candidates[idx];
+            directionsService.route({
+                origin: {lat: origin.lat, lng: origin.lon},
+                destination: {lat: dest.lat, lng: dest.lon},
+                waypoints: [{location: {lat: c.site.lat, lng: c.site.lon}, stopover: true}],
+                travelMode: 'DRIVING'
+            }, function(res2, st2) {
+                if (st2 === 'OK') {
+                    var total = 0;
+                    res2.routes[0].legs.forEach(leg => total += leg.distance.value);
+                    total /= 1000;
+                    var increase = (total - dist) / dist;
+                    c.increase = increase;
+                    
+                    // Find and update marker
+                    var markerIdx = ALL_SITES.findIndex(s => s.id === c.site.id);
+                    
+                    if (increase < 0.005) { // 0.5%
+                        verified.push(c);
+                        log('✓ ' + c.site.id + ' ON ROUTE (+' + (increase*100).toFixed(2) + '%) - ' + c.site.road);
+                        if (markerIdx >= 0) {
+                            markers[markerIdx].setIcon({
+                                path: google.maps.SymbolPath.CIRCLE,
+                                fillColor: '#ffff00',
+                                fillOpacity: 1,
+                                strokeColor: '#000',
+                                strokeWeight: 2,
+                                scale: 10
+                            });
+                        }
+                    } else {
+                        log('✗ ' + c.site.id + ' off (+' + (increase*100).toFixed(1) + '%)');
+                        if (markerIdx >= 0) {
+                            markers[markerIdx].setIcon({
+                                path: google.maps.SymbolPath.CIRCLE,
+                                fillColor: '#ff00ff',
+                                fillOpacity: 0.8,
+                                strokeColor: '#000',
+                                strokeWeight: 1,
+                                scale: 7
+                            });
+                        }
+                    }
+                }
+                idx++;
+                setTimeout(verifyNext, 80);
+            });
+        }
+        
+        function showResults() {
+            log('\n=== RESULTS ===');
+            log('Verified ON ROUTE: ' + verified.length + ' sites');
+            if (verified.length > 0) {
+                log('\nWaypoints found:');
+                verified.forEach(function(c, i) {
+                    log('  ' + (i+1) + '. ' + c.site.id + ' (' + c.site.dir + ') - ' + c.site.road);
+                });
+            }
+        }
+        
+        verifyNext();
+        map.fitBounds(bounds);
+    });
+}
+
+function populateDropdowns() {
+    var oSel = document.getElementById('originSel');
+    var dSel = document.getElementById('destSel');
+    
+    oSel.innerHTML = '<option value="">-- Select Origin --</option>';
+    dSel.innerHTML = '<option value="">-- Select Destination --</option>';
+    
+    ALL_SITES.forEach(function(s) {
+        var opt = '<option value="' + s.id + '">' + s.id + ' (' + s.dir + ') - ' + s.road.substring(0,20) + '</option>';
+        oSel.innerHTML += opt;
+        dSel.innerHTML += opt;
+    });
+    
+    // Pre-select RUHSM095 and RUHSM266
+    oSel.value = 'RUHSM095';
+    dSel.value = 'RUHSM266';
+}
+
+window.initMap = function() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: {lat: 24.7, lng: 46.65},
+        zoom: 11
+    });
+    directionsService = new google.maps.DirectionsService();
+    
+    populateDropdowns();
+    
+    document.getElementById('log').textContent = 'MAP READY!\n\n';
+    document.getElementById('log').textContent += 'Click "Show All 247 Sites" to display all sites.\n';
+    document.getElementById('log').textContent += 'Or select a route and click "ANALYZE ROUTE".\n\n';
+    document.getElementById('log').textContent += 'Pre-selected: RUHSM095 → RUHSM266\n';
+};
+</script>
+<script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js?callback=initMap" async defer></script>
+</body>
+</html>
