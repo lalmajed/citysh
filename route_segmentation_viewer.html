@@ -65,7 +65,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🚗 Route Segmentation Viewer</h1>
+        <h1>Route Segmentation Viewer</h1>
         <p class="subtitle">Visualize vehicle trips with path segmentation (temporal + spatial checks)</p>
         
         <div class="stat-row">
@@ -78,13 +78,13 @@
         
         <!-- Active Filter Display -->
         <div id="activeFilter" class="panel" style="display:none; background: #e3f2fd; padding: 10px 15px;">
-            <strong>🔍 Active Filter:</strong> <span id="filterInfo">-</span>
+            <strong>Active Filter:</strong> <span id="filterInfo">-</span>
         </div>
         
         <div class="grid">
             <div class="sidebar">
                 <div class="panel">
-                    <h2>🎛️ Controls</h2>
+                    <h2>Controls</h2>
                     <label style="font-size:0.8rem;color:#666;">Vehicle</label>
                     <select id="vehicleSel">
                         <option value="">-- Select Vehicle --</option>
@@ -112,12 +112,12 @@
                         </div>
                     </div>
                     
-                    <button class="btn" onclick="showRoute()">📍 Show Route</button>
-                    <button class="btn" onclick="showAllTrips()" style="background:#34a853;">📋 Show All Trips (No Filter)</button>
+                    <button class="btn" onclick="showRoute()">Show Route</button>
+                    <button class="btn" onclick="showAllTrips()" style="background:#34a853;">Show All Trips (No Filter)</button>
                 </div>
                 
                 <div class="panel">
-                    <h2>⚙️ Normal Band (R thresholds)</h2>
+                    <h2>Normal Band (R thresholds)</h2>
                     <div class="normal-band">
                         <p style="margin-bottom:8px;">R = observed_time / expected_time</p>
                         <div class="normal-band-inputs">
@@ -137,7 +137,7 @@
                 </div>
                 
                 <div class="panel">
-                    <h2>📊 Legend</h2>
+                    <h2>Legend</h2>
                     <div class="legend" style="flex-direction: column; gap: 8px;">
                         <div style="font-weight: 600; margin-bottom: 5px;">Lines (Trips):</div>
                         <div class="legend-item"><div class="legend-color green"></div> Normal (same path)</div>
@@ -145,15 +145,15 @@
                         <div class="legend-item"><div class="legend-color red"></div> Path Break</div>
                         <div style="font-weight: 600; margin: 10px 0 5px 0;">Sites (Markers):</div>
                         <div class="legend-item"><div style="width:12px;height:12px;border-radius:50%;background:#4285f4;border:2px solid #fff;"></div> Normal site</div>
-                        <div class="legend-item"><div style="width:14px;height:14px;border-radius:50%;background:#ff9800;border:2px solid #e65100;"></div> ⏱️ Temporal fail</div>
-                        <div class="legend-item"><div style="width:14px;height:14px;border-radius:50%;background:#9c27b0;border:2px solid #6a1b9a;"></div> 📍 Spatial fail</div>
-                        <div class="legend-item"><div style="width:16px;height:16px;border-radius:50%;background:#ea4335;border:2px solid #b71c1c;"></div> ❌ Both failed</div>
-                        <div class="legend-item"><div style="width:13px;height:13px;border-radius:50%;background:#fbbc05;border:2px solid #f57f17;"></div> 🐢 Slow</div>
+                        <div class="legend-item"><div style="width:14px;height:14px;border-radius:50%;background:#ff9800;border:2px solid #e65100;"></div> TEMPORAL FAIL</div>
+                        <div class="legend-item"><div style="width:14px;height:14px;border-radius:50%;background:#9c27b0;border:2px solid #6a1b9a;"></div> SPATIAL FAIL</div>
+                        <div class="legend-item"><div style="width:16px;height:16px;border-radius:50%;background:#ea4335;border:2px solid #b71c1c;"></div> BOTH FAILED</div>
+                        <div class="legend-item"><div style="width:13px;height:13px;border-radius:50%;background:#fbbc05;border:2px solid #f57f17;"></div> SLOW</div>
                     </div>
                 </div>
                 
                 <div class="panel">
-                    <h2>📋 Trip List (click for details)</h2>
+                    <h2>Trip List (click for details)</h2>
                     <div class="trip-list" id="tripList">
                         <div class="no-data">Select vehicle and click "Show Route"</div>
                     </div>
@@ -166,7 +166,7 @@
                 </div>
                 
                 <div class="panel detail-panel" id="detailPanel">
-                    <h2>🔍 Trip Details</h2>
+                    <h2>Trip Details</h2>
                     <div id="tripDetails"></div>
                 </div>
             </div>
@@ -452,16 +452,16 @@ async function visualizeRoute(trips) {
         if (trip.status === 'break') {
             if (!trip.temporalOk) {
                 siteStatus[trip.camera_next].temporal = false;
-                siteStatus[trip.camera_next].reasons.push('⏱️ Temporal fail: R=' + (trip.R ? trip.R.toFixed(2) : 'N/A'));
+                siteStatus[trip.camera_next].reasons.push('[TEMPORAL] R=' + (trip.R ? trip.R.toFixed(2) : 'N/A'));
             }
             if (!trip.spatialOk) {
                 siteStatus[trip.camera_next].spatial = false;
-                siteStatus[trip.camera_next].reasons.push('📍 Spatial fail: too far');
+                siteStatus[trip.camera_next].reasons.push('[SPATIAL] too far');
             }
         }
         // Flag slow sites too
         if (trip.status === 'slow') {
-            siteStatus[trip.camera_next].reasons.push('🐢 Slow: R=' + (trip.R ? trip.R.toFixed(2) : 'N/A'));
+            siteStatus[trip.camera_next].reasons.push('[SLOW] R=' + (trip.R ? trip.R.toFixed(2) : 'N/A'));
         }
     });
     
@@ -622,10 +622,10 @@ function renderTripList(trips) {
         // Determine flag icons
         let flags = '';
         if (trip.status === 'break') {
-            if (!trip.temporalOk) flags += '<span style="color:#ff9800;margin-left:5px;" title="Temporal failed">⏱️</span>';
-            if (!trip.spatialOk) flags += '<span style="color:#9c27b0;margin-left:5px;" title="Spatial failed">📍</span>';
+            if (!trip.temporalOk) flags += '<span style="color:#ff9800;margin-left:5px;font-weight:bold;" title="Temporal failed">[T]</span>';
+            if (!trip.spatialOk) flags += '<span style="color:#9c27b0;margin-left:5px;font-weight:bold;" title="Spatial failed">[S]</span>';
         } else if (trip.status === 'slow') {
-            flags += '<span style="color:#fbbc05;margin-left:5px;" title="Slow">🐢</span>';
+            flags += '<span style="color:#fbbc05;margin-left:5px;font-weight:bold;" title="Slow">[SLOW]</span>';
         }
         
         html += `
@@ -667,25 +667,25 @@ function showSiteInfo(siteId, status) {
     const details = document.getElementById('tripDetails');
     
     // Determine status
-    let statusText = '✅ Normal';
+    let statusText = 'NORMAL';
     let statusClass = 'green';
     if (!status.temporal && !status.spatial) {
-        statusText = '❌ Both Temporal & Spatial Failed';
+        statusText = 'BOTH TEMPORAL & SPATIAL FAILED';
         statusClass = 'red';
     } else if (!status.temporal) {
-        statusText = '⏱️ Temporal Check Failed';
+        statusText = 'TEMPORAL CHECK FAILED';
         statusClass = 'yellow';
     } else if (!status.spatial) {
-        statusText = '📍 Spatial Check Failed';
+        statusText = 'SPATIAL CHECK FAILED';
         statusClass = 'red';
     } else if (status.reasons.length > 0) {
-        statusText = '🐢 Slow (Warning)';
+        statusText = 'SLOW (Warning)';
         statusClass = 'yellow';
     }
     
     details.innerHTML = `
         <div class="detail-row" style="background:#e3f2fd;margin:-15px -15px 10px -15px;padding:15px;border-radius:8px 8px 0 0;">
-            <span class="detail-label" style="font-size:1.1rem;font-weight:bold;">📍 Site Info</span>
+            <span class="detail-label" style="font-size:1.1rem;font-weight:bold;">SITE INFO</span>
             <span class="detail-value" style="font-size:1.1rem;">${siteId}</span>
         </div>
         <div class="detail-row">
@@ -706,11 +706,11 @@ function showSiteInfo(siteId, status) {
         </div>
         <div class="detail-row">
             <span class="detail-label">Temporal OK</span>
-            <span class="detail-value ${status.temporal ? 'green' : 'red'}">${status.temporal ? '✓ Yes' : '✗ No'}</span>
+            <span class="detail-value ${status.temporal ? 'green' : 'red'}">${status.temporal ? 'YES' : 'NO'}</span>
         </div>
         <div class="detail-row">
             <span class="detail-label">Spatial OK</span>
-            <span class="detail-value ${status.spatial ? 'green' : 'red'}">${status.spatial ? '✓ Yes' : '✗ No'}</span>
+            <span class="detail-value ${status.spatial ? 'green' : 'red'}">${status.spatial ? 'YES' : 'NO'}</span>
         </div>
         ${status.reasons.length > 0 ? `
         <div class="detail-row" style="flex-direction:column;align-items:flex-start;">
@@ -774,11 +774,11 @@ function selectTrip(idx) {
         </div>
         <div class="detail-row">
             <span class="detail-label">Temporal OK</span>
-            <span class="detail-value ${trip.temporalOk ? 'green' : 'red'}">${trip.temporalOk ? '✓ Yes' : '✗ No'}</span>
+            <span class="detail-value ${trip.temporalOk ? 'green' : 'red'}">${trip.temporalOk ? 'YES' : 'NO'}</span>
         </div>
         <div class="detail-row">
             <span class="detail-label">Spatial OK</span>
-            <span class="detail-value ${trip.spatialOk ? 'green' : 'red'}">${trip.spatialOk ? '✓ Yes' : '✗ No'}</span>
+            <span class="detail-value ${trip.spatialOk ? 'green' : 'red'}">${trip.spatialOk ? 'YES' : 'NO'}</span>
         </div>
         ${trip.breakReason ? `
         <div class="detail-row">
