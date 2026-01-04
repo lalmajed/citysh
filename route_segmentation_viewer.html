@@ -423,12 +423,25 @@ function processGoogleMatrix(data, sourceName) {
         }
     }
     
+    // Add self-routes (site to itself = 0 time, 0 distance, 0 waypoints)
+    let selfRouteCount = 0;
+    Object.keys(SITES).forEach(siteId => {
+        const selfKey = siteId + '_' + siteId;
+        if (EXPECTED_TIMES[selfKey] === undefined) {
+            EXPECTED_TIMES[selfKey] = 0;
+            EXPECTED_DISTANCES[selfKey] = 0;
+            // No waypoints needed for self-route
+            selfRouteCount++;
+        }
+    });
+    console.log('Added', selfRouteCount, 'self-routes (site to itself = 0)');
+    
     expectedTimesLoaded = true;
     const count = Object.keys(EXPECTED_TIMES).length;
     const distCount = Object.keys(EXPECTED_DISTANCES).length;
     console.log('Loaded', count, 'expected times,', distCount, 'distances,', wpCount, 'routes with waypoints from', sourceName);
     
-    updateExpectedTimesUI('Loaded', sourceName, count, '#4caf50', wpCount);
+    updateExpectedTimesUI('Loaded', sourceName, count + ' (+' + selfRouteCount + ' self)', '#4caf50', wpCount);
 }
 
 // Check if a specific route exists in the matrix
