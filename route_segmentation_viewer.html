@@ -59,6 +59,22 @@
         .loading { text-align: center; padding: 20px; color: #666; }
         .break-reason { background: #ffebee; color: #c62828; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; margin-top: 5px; display: inline-block; }
         .normal-band { background: #e8f5e9; padding: 10px; border-radius: 6px; margin-bottom: 10px; font-size: 0.8rem; }
+        
+        /* Timeline styles */
+        .timeline-container { max-height: 300px; overflow-y: auto; padding: 10px 5px; }
+        .timeline { position: relative; padding-left: 20px; }
+        .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: #e0e0e0; }
+        .timeline-item { position: relative; padding: 8px 0 8px 15px; font-size: 0.75rem; }
+        .timeline-item::before { content: ''; position: absolute; left: -16px; top: 12px; width: 10px; height: 10px; border-radius: 50%; background: #4285f4; border: 2px solid #fff; box-shadow: 0 0 0 2px #4285f4; }
+        .timeline-item.break::before { background: #ea4335; box-shadow: 0 0 0 2px #ea4335; }
+        .timeline-item.slow::before { background: #fbbc05; box-shadow: 0 0 0 2px #fbbc05; }
+        .timeline-item.path-start::before { background: #1565C0; box-shadow: 0 0 0 3px #1565C0; width: 12px; height: 12px; left: -17px; }
+        .timeline-item.path-end::before { background: #1565C0; box-shadow: 0 0 0 2px #1565C0; border-radius: 2px; }
+        .timeline-time { color: #666; font-size: 0.7rem; }
+        .timeline-site { font-weight: 600; color: #333; }
+        .timeline-info { color: #666; font-size: 0.7rem; margin-top: 2px; }
+        .timeline-break { background: #ffebee; color: #c62828; padding: 3px 6px; border-radius: 3px; font-size: 0.65rem; margin-top: 3px; display: inline-block; }
+        .timeline-path-label { background: #e3f2fd; color: #1565C0; padding: 2px 6px; border-radius: 3px; font-size: 0.65rem; font-weight: bold; margin-left: 5px; }
         .normal-band-inputs { display: flex; gap: 10px; }
         .normal-band-inputs input { width: 70px; padding: 5px; text-align: center; }
     </style>
@@ -232,6 +248,13 @@
                     <h2>Trip List (click for details)</h2>
                     <div class="trip-list" id="tripList">
                         <div class="no-data">Select vehicle and click "Show Route"</div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>Path Timeline</h2>
+                    <div id="pathTimeline" class="timeline-container">
+                        <div class="no-data">Load a route to see timeline</div>
                     </div>
                 </div>
             </div>
@@ -1481,6 +1504,104 @@ function renderTripList(trips) {
     });
     
     list.innerHTML = html;
+    
+    // Also render the timeline
+    renderTimeline(trips);
+}
+
+// Render the path timeline showing journey with timestamps and break reasons
+function renderTimeline(trips) {
+    const container = document.getElementById('pathTimeline');
+    
+    if (!trips || trips.length === 0) {
+        container.innerHTML = '<div class="no-data">No trips to display</div>';
+        return;
+    }
+    
+    let html = '<div class="timeline">';
+    
+    let currentPathId = null;
+    
+    trips.forEach((trip, idx) => {
+        const isNewPath = trip.pathId !== currentPathId;
+        const isLastTrip = idx === trips.length - 1;
+        const prevTrip = idx > 0 ? trips[idx - 1] : null;
+        
+        // Start of new path
+        if (isNewPath) {
+            currentPathId = trip.pathId;
+            const pathStartTime = new Date(trip.t_prev).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            html += `
+                <div class="timeline-item path-start">
+                    <div>
+                        <span class="timeline-site">${trip.camera_prev}</span>
+                        <span class="timeline-path-label">PATH ${trip.pathId} START</span>
+                    </div>
+                    <div class="timeline-time">${pathStartTime}</div>
+                </div>
+            `;
+        }
+        
+        // The trip itself (arrival at camera_next)
+        const arrivalTime = new Date(trip.t_next).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const duration = formatTime(trip.obs_time_seconds);
+        const itemClass = trip.status === 'break' ? 'break' : trip.status === 'slow' ? 'slow' : '';
+        
+        // Check for waypoints
+        const routeKey = trip.camera_prev + '_' + trip.camera_next;
+        const waypoints = EXPECTED_WAYPOINTS[routeKey] || [];
+        const waypointInfo = waypoints.length > 0 ? ` via ${waypoints.length} waypoint(s)` : '';
+        
+        html += `
+            <div class="timeline-item ${itemClass}">
+                <div>
+                    <span class="timeline-site">${trip.camera_next}</span>
+                    ${trip.status === 'break' ? '<span style="color:#ea4335;font-size:0.65rem;margin-left:5px;">[BREAK]</span>' : ''}
+                    ${trip.status === 'slow' ? '<span style="color:#fbbc05;font-size:0.65rem;margin-left:5px;">[SLOW]</span>' : ''}
+                </div>
+                <div class="timeline-time">${arrivalTime}</div>
+                <div class="timeline-info">
+                    from ${trip.camera_prev} | ${duration}${waypointInfo}
+                    ${trip.R !== null ? ' | R=' + trip.R.toFixed(2) : ''}
+                </div>
+                ${trip.breakReason ? `<div class="timeline-break">${trip.breakReason}</div>` : ''}
+            </div>
+        `;
+        
+        // If this is the last trip OR next trip starts a new path, mark path end
+        const nextTrip = idx < trips.length - 1 ? trips[idx + 1] : null;
+        if (isLastTrip || (nextTrip && nextTrip.pathId !== trip.pathId)) {
+            // Path ends here (but only add if not already showing break)
+            if (trip.status !== 'break') {
+                html += `
+                    <div class="timeline-item path-end" style="padding-bottom:15px;">
+                        <div class="timeline-info" style="color:#1565C0;">
+                            Path ${trip.pathId} ends at ${trip.camera_next}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    });
+    
+    html += '</div>';
+    
+    // Add summary at top
+    const pathCount = new Set(trips.map(t => t.pathId)).size;
+    const breakCount = trips.filter(t => t.status === 'break').length;
+    const totalDuration = trips.reduce((sum, t) => sum + t.obs_time_seconds, 0);
+    const startTime = new Date(trips[0].t_prev).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const endTime = new Date(trips[trips.length - 1].t_next).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    
+    const summary = `
+        <div style="background:#f5f5f5;padding:8px;border-radius:4px;margin-bottom:10px;font-size:0.75rem;">
+            <strong>${pathCount} path(s)</strong> | ${trips.length} trips | ${breakCount} break(s) | 
+            ${startTime} → ${endTime} | Total: ${formatTime(totalDuration)}
+        </div>
+    `;
+    
+    container.innerHTML = summary + html;
 }
 
 function formatTime(seconds) {
