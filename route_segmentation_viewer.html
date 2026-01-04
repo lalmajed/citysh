@@ -117,6 +117,16 @@
                     
                     <button class="btn" onclick="showRoute()">Show Route</button>
                     <button class="btn" onclick="showAllTrips()" style="background:#34a853;">Show All Trips (No Filter)</button>
+                    
+                    <div style="margin-top:15px;padding-top:15px;border-top:1px solid #e0e0e0;">
+                        <label style="font-size:0.8rem;color:#666;">Filter by Path</label>
+                        <select id="pathFilter" onchange="filterByPath()">
+                            <option value="all">All Paths</option>
+                        </select>
+                        <p style="font-size:0.7rem;color:#666;margin-top:5px;">
+                            Select a path to view it in isolation on the map
+                        </p>
+                    </div>
                 </div>
                 
                 <div class="panel">
@@ -1047,6 +1057,317 @@ function updateStats(trips) {
         `<span style="color:#ff9800;" title="Temporal failures">[T]${temporalBreaks}</span> ` +
         `<span style="color:#9c27b0;" title="Spatial failures">[S]${spatialBreaks}</span> ` +
         `<span style="color:#c62828;" title="Both failed">[Both]${bothBreaks}</span>`;
+    
+    // Populate path filter dropdown
+    updatePathFilter(trips);
+}
+
+// Update the path filter dropdown with available paths
+function updatePathFilter(trips) {
+    const pathFilter = document.getElementById('pathFilter');
+    const currentValue = pathFilter.value;
+    
+    // Get unique paths with their info
+    const pathInfo = {};
+    trips.forEach(trip => {
+        if (!pathInfo[trip.pathId]) {
+            pathInfo[trip.pathId] = {
+                id: trip.pathId,
+                tripCount: 0,
+                startSite: trip.camera_prev,
+                endSite: trip.camera_next,
+                startTime: trip.t_prev
+            };
+        }
+        pathInfo[trip.pathId].tripCount++;
+        pathInfo[trip.pathId].endSite = trip.camera_next;
+    });
+    
+    // Build options
+    let html = '<option value="all">All Paths (' + Object.keys(pathInfo).length + ')</option>';
+    
+    Object.keys(pathInfo).sort((a, b) => parseInt(a) - parseInt(b)).forEach(pathId => {
+        const info = pathInfo[pathId];
+        const time = new Date(info.startTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        html += `<option value="${pathId}">Path ${pathId}: ${info.startSite} → ${info.endSite} (${info.tripCount} trips, ${time})</option>`;
+    });
+    
+    pathFilter.innerHTML = html;
+    
+    // Restore selection if still valid
+    if (currentValue && pathInfo[currentValue]) {
+        pathFilter.value = currentValue;
+    }
+}
+
+// Filter visualization by selected path
+async function filterByPath() {
+    const pathFilter = document.getElementById('pathFilter');
+    const selectedPath = pathFilter.value;
+    
+    if (!currentRoute || currentRoute.length === 0) {
+        alert('Please load a route first');
+        return;
+    }
+    
+    if (selectedPath === 'all') {
+        // Show all trips
+        await visualizeRoute(currentRoute);
+    } else {
+        // Filter to selected path only
+        const pathTrips = currentRoute.filter(t => t.pathId === parseInt(selectedPath));
+        
+        if (pathTrips.length === 0) {
+            alert('No trips found for Path ' + selectedPath);
+            return;
+        }
+        
+        // Visualize only this path
+        await visualizeSinglePath(pathTrips, parseInt(selectedPath));
+    }
+}
+
+// Visualize a single path with enhanced detail
+async function visualizeSinglePath(trips, pathId) {
+    clearMap();
+    
+    if (trips.length === 0) return;
+    
+    const bounds = new google.maps.LatLngBounds();
+    const colorMap = { normal: '#34a853', slow: '#fbbc05', break: '#ea4335' };
+    
+    // Get path color
+    const pathColors = [
+        '#1565C0', '#2E7D32', '#6A1B9A', '#C62828', '#EF6C00', 
+        '#00838F', '#AD1457', '#4527A0', '#283593', '#00695C'
+    ];
+    const pathColor = pathColors[(pathId - 1) % pathColors.length];
+    
+    // Collect all sites in this path
+    const pathSites = new Set();
+    trips.forEach(trip => {
+        pathSites.add(trip.camera_prev);
+        pathSites.add(trip.camera_next);
+    });
+    
+    // Add site markers
+    pathSites.forEach(siteId => {
+        const site = SITES[siteId];
+        if (!site) return;
+        
+        const marker = new google.maps.Marker({
+            position: { lat: site.lat, lng: site.lon },
+            map: map,
+            title: siteId + ' (' + site.dir + ')',
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 10,
+                fillColor: '#4285f4',
+                fillOpacity: 1,
+                strokeColor: '#fff',
+                strokeWeight: 2
+            },
+            zIndex: 10
+        });
+        
+        marker.addListener('click', () => showSiteInfo(siteId, { temporal: true, spatial: true, reasons: [] }));
+        markers.push(marker);
+        bounds.extend(marker.getPosition());
+    });
+    
+    // Add ORIGIN marker
+    const firstTrip = trips[0];
+    const originSite = SITES[firstTrip.camera_prev];
+    if (originSite) {
+        const originMarker = new google.maps.Marker({
+            position: { lat: originSite.lat, lng: originSite.lon },
+            map: map,
+            icon: {
+                path: 'M 0,0 L 0,-25 L 20,-18 L 0,-11 Z',
+                fillColor: pathColor,
+                fillOpacity: 1,
+                strokeColor: '#FFFFFF',
+                strokeWeight: 2,
+                scale: 1.5,
+                anchor: new google.maps.Point(0, 0)
+            },
+            title: `PATH ${pathId} ORIGIN\nSite: ${firstTrip.camera_prev}\nStart: ${new Date(firstTrip.t_prev).toLocaleString()}`,
+            zIndex: 300,
+            label: {
+                text: 'O' + pathId,
+                color: '#FFFFFF',
+                fontWeight: 'bold',
+                fontSize: '11px'
+            }
+        });
+        markers.push(originMarker);
+    }
+    
+    // Add DESTINATION marker
+    const lastTrip = trips[trips.length - 1];
+    const destSite = SITES[lastTrip.camera_next];
+    if (destSite) {
+        const destMarker = new google.maps.Marker({
+            position: { lat: destSite.lat, lng: destSite.lon },
+            map: map,
+            icon: {
+                path: 'M -10,-10 L 10,-10 L 10,10 L -10,10 Z',
+                fillColor: pathColor,
+                fillOpacity: 1,
+                strokeColor: '#FFFFFF',
+                strokeWeight: 2,
+                scale: 1.2,
+                anchor: new google.maps.Point(0, 0)
+            },
+            title: `PATH ${pathId} DESTINATION\nSite: ${lastTrip.camera_next}\nEnd: ${new Date(lastTrip.t_next).toLocaleString()}`,
+            zIndex: 300,
+            label: {
+                text: 'D' + pathId,
+                color: '#FFFFFF',
+                fontWeight: 'bold',
+                fontSize: '11px'
+            }
+        });
+        markers.push(destMarker);
+    }
+    
+    // Show loading message
+    document.getElementById('tripList').innerHTML = '<div class="loading">Loading Path ' + pathId + ' routes...</div>';
+    
+    // Add trip lines with road snapping
+    for (let i = 0; i < trips.length; i++) {
+        const trip = trips[i];
+        const tripIdx = currentRoute.indexOf(trip);
+        const prevSite = SITES[trip.camera_prev];
+        const nextSite = SITES[trip.camera_next];
+        
+        if (!prevSite || !nextSite || trip.camera_prev === trip.camera_next) continue;
+        
+        const origin = { lat: prevSite.lat, lng: prevSite.lon };
+        const destination = { lat: nextSite.lat, lng: nextSite.lon };
+        
+        // Try to get snapped route
+        const snappedPath = await getSnappedRoute(origin, destination);
+        
+        let path;
+        if (snappedPath && snappedPath.length > 0) {
+            path = snappedPath;
+        } else {
+            path = [origin, destination];
+        }
+        
+        const line = new google.maps.Polyline({
+            path: path,
+            geodesic: true,
+            strokeColor: colorMap[trip.status] || colorMap.normal,
+            strokeOpacity: 0.9,
+            strokeWeight: 6,
+            map: map,
+            zIndex: 50
+        });
+        
+        // Add click listener
+        line.addListener('click', () => selectTrip(tripIdx));
+        polylines.push(line);
+        
+        // Add trip number label at midpoint
+        const midIdx = Math.floor(path.length / 2);
+        const midPoint = path[midIdx];
+        const tripLabel = new google.maps.Marker({
+            position: midPoint,
+            map: map,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 12,
+                fillColor: colorMap[trip.status] || colorMap.normal,
+                fillOpacity: 1,
+                strokeColor: '#fff',
+                strokeWeight: 2
+            },
+            label: {
+                text: String(i + 1),
+                color: '#fff',
+                fontWeight: 'bold',
+                fontSize: '10px'
+            },
+            title: `Trip ${i + 1}: ${trip.camera_prev} → ${trip.camera_next}\nTime: ${formatTime(trip.obs_time_seconds)}`,
+            zIndex: 100
+        });
+        tripLabel.addListener('click', () => selectTrip(tripIdx));
+        markers.push(tripLabel);
+        
+        // Small delay to avoid rate limiting
+        if (i < trips.length - 1) {
+            await new Promise(r => setTimeout(r, 100));
+        }
+    }
+    
+    // Draw the corridor for the entire path (from origin to final destination)
+    drawPathCorridor(trips, pathId, pathColor);
+    
+    map.fitBounds(bounds, 50);
+    
+    // Update trip list to show only this path's trips
+    renderTripList(trips);
+}
+
+// Draw corridor for entire path from matrix
+function drawPathCorridor(trips, pathId, pathColor) {
+    if (trips.length === 0) return;
+    
+    // Get origin and final destination
+    const originSite = trips[0].camera_prev;
+    const destSite = trips[trips.length - 1].camera_next;
+    
+    // Build corridor from matrix
+    const corridor = buildCorridor(originSite, destSite);
+    
+    if (corridor.length < 2) return;
+    
+    // Build path
+    const corridorPath = corridor.map(c => ({ lat: c.lat, lng: c.lon }));
+    
+    // Draw as dashed line
+    corridorPolyline = new google.maps.Polyline({
+        path: corridorPath,
+        geodesic: true,
+        strokeColor: pathColor,
+        strokeOpacity: 0.5,
+        strokeWeight: 8,
+        icons: [{
+            icon: {
+                path: 'M 0,-1 0,1',
+                strokeOpacity: 0.7,
+                strokeWeight: 8,
+                scale: 2
+            },
+            offset: '0',
+            repeat: '20px'
+        }],
+        map: map,
+        zIndex: 1
+    });
+    
+    // Add corridor waypoint markers
+    corridor.forEach((wp, idx) => {
+        if (idx === 0 || idx === corridor.length - 1) return; // Skip origin/dest
+        
+        const wpMarker = new google.maps.Marker({
+            position: { lat: wp.lat, lng: wp.lon },
+            map: map,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 7,
+                fillColor: pathColor,
+                fillOpacity: 0.6,
+                strokeColor: '#fff',
+                strokeWeight: 2
+            },
+            title: `Expected waypoint: ${wp.siteId}`,
+            zIndex: 5
+        });
+        corridorMarkers.push(wpMarker);
+    });
 }
 
 function renderTripList(trips) {
