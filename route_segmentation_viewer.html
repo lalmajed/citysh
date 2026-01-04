@@ -105,9 +105,10 @@
                 <div class="panel">
                     <h2>Controls</h2>
                     <label style="font-size:0.8rem;color:#666;">Vehicle</label>
-                    <select id="vehicleSel">
+                    <select id="vehicleSel" onchange="showVehicleInfo()">
                         <option value="">-- Select Vehicle --</option>
                     </select>
+                    <div id="vehicleInfo" style="display:none;margin-top:8px;padding:8px;background:#e3f2fd;border-radius:4px;font-size:0.75rem;"></div>
                     
                     <div class="time-inputs">
                         <div>
@@ -548,6 +549,97 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
               Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
               Math.sin(dLon/2) * Math.sin(dLon/2);
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Show vehicle info when selected
+function showVehicleInfo() {
+    const vehicle = document.getElementById('vehicleSel').value;
+    const infoDiv = document.getElementById('vehicleInfo');
+    
+    if (!vehicle) {
+        infoDiv.style.display = 'none';
+        return;
+    }
+    
+    // Get all trips for this vehicle
+    const vehicleTrips = TRIPS.filter(t => t.plate === vehicle);
+    
+    if (vehicleTrips.length === 0) {
+        infoDiv.style.display = 'block';
+        infoDiv.innerHTML = '<span style="color:#f44336;">No trips found for this vehicle</span>';
+        return;
+    }
+    
+    // Get unique dates and count trips per date
+    const dateMap = {};
+    vehicleTrips.forEach(t => {
+        const date = t.t_prev.split('T')[0];
+        if (!dateMap[date]) {
+            dateMap[date] = { count: 0, trips: [] };
+        }
+        dateMap[date].count++;
+        dateMap[date].trips.push(t);
+    });
+    
+    const dates = Object.keys(dateMap).sort();
+    const firstDate = dates[0];
+    const lastDate = dates[dates.length - 1];
+    
+    // Build date list with trip counts
+    let dateListHtml = '<div style="max-height:100px;overflow-y:auto;margin-top:5px;">';
+    dates.forEach(date => {
+        const info = dateMap[date];
+        const isSelected = date >= document.getElementById('startDate').value && 
+                          date <= document.getElementById('endDate').value;
+        dateListHtml += `<div style="display:flex;justify-content:space-between;padding:2px 4px;${isSelected ? 'background:#bbdefb;' : ''}">
+            <span>${date}</span>
+            <span style="color:#1565c0;font-weight:bold;">${info.count} trips</span>
+        </div>`;
+    });
+    dateListHtml += '</div>';
+    
+    infoDiv.style.display = 'block';
+    infoDiv.innerHTML = `
+        <div style="margin-bottom:5px;">
+            <strong>${vehicle}</strong>: <span style="color:#4caf50;">${vehicleTrips.length} total trips</span>
+        </div>
+        <div style="margin-bottom:5px;">
+            <strong>Date range:</strong> ${firstDate} to ${lastDate}
+        </div>
+        <div style="font-size:0.7rem;color:#666;">Available dates (click to set):</div>
+        ${dateListHtml}
+        <div style="margin-top:5px;">
+            <button onclick="setDateRange('${firstDate}', '${lastDate}')" style="font-size:0.7rem;padding:3px 8px;cursor:pointer;background:#1565c0;color:#fff;border:none;border-radius:3px;">
+                Set Full Range (${firstDate} to ${lastDate})
+            </button>
+        </div>
+    `;
+    
+    // Make dates clickable
+    setTimeout(() => {
+        const dateItems = infoDiv.querySelectorAll('div[style*="display:flex"]');
+        dateItems.forEach(item => {
+            item.style.cursor = 'pointer';
+            item.addEventListener('click', () => {
+                const date = item.querySelector('span').textContent;
+                setDateRange(date, date);
+            });
+            item.addEventListener('mouseover', () => item.style.background = '#e3f2fd');
+            item.addEventListener('mouseout', () => {
+                const date = item.querySelector('span').textContent;
+                const isSelected = date >= document.getElementById('startDate').value && 
+                                  date <= document.getElementById('endDate').value;
+                item.style.background = isSelected ? '#bbdefb' : '';
+            });
+        });
+    }, 0);
+}
+
+// Set date range from vehicle info
+function setDateRange(startDate, endDate) {
+    document.getElementById('startDate').value = startDate;
+    document.getElementById('endDate').value = endDate;
+    showVehicleInfo(); // Refresh to highlight selected dates
 }
 
 // ============ ROUTE FILTERING ============
