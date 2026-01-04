@@ -76,6 +76,11 @@
             <div class="stat"><div class="stat-value red" id="statBreaks">0</div><div class="stat-label">Path Breaks</div></div>
         </div>
         
+        <!-- Active Filter Display -->
+        <div id="activeFilter" class="panel" style="display:none; background: #e3f2fd; padding: 10px 15px;">
+            <strong>🔍 Active Filter:</strong> <span id="filterInfo">-</span>
+        </div>
+        
         <div class="grid">
             <div class="sidebar">
                 <div class="panel">
@@ -169,6 +174,7 @@ let expectedTimesLoaded = false;
 // ============ MAP VARIABLES ============
 let map, markers = [], polylines = [];
 let currentRoute = [];
+let directionsService = null;
 
 // ============ INITIALIZATION ============
 function initMap() {
@@ -180,6 +186,9 @@ function initMap() {
             { featureType: 'transit', stylers: [{ visibility: 'off' }] }
         ]
     });
+    
+    // Initialize DirectionsService for road-snapped routes
+    directionsService = new google.maps.DirectionsService();
     
     // Populate vehicle dropdown
     const sel = document.getElementById('vehicleSel');
@@ -267,16 +276,26 @@ function filterTrips(vehicle, date, startTime, endTime) {
         // Filter by vehicle
         if (vehicle && trip.plate !== vehicle) return false;
         
-        // Filter by date
+        // Filter by date - check if trip overlaps with selected date
         if (date) {
-            const tripDate = trip.t_prev.split('T')[0];
-            if (tripDate !== date) return false;
+            const tripStartDate = trip.t_prev.split('T')[0];
+            const tripEndDate = trip.t_next.split('T')[0];
+            // Trip must start on or before the date AND end on or after the date
+            if (tripStartDate > date || tripEndDate < date) return false;
         }
         
-        // Filter by time window
-        if (startTime && endTime) {
-            const tripTime = trip.t_prev.split('T')[1].substring(0, 5);
-            if (tripTime < startTime || tripTime > endTime) return false;
+        // Filter by time window - trip must overlap with the time window
+        if (date && startTime && endTime) {
+            const tripStartFull = new Date(trip.t_prev);
+            const tripEndFull = new Date(trip.t_next);
+            
+            // Create window start/end for the selected date
+            const windowStart = new Date(date + 'T' + startTime + ':00');
+            const windowEnd = new Date(date + 'T' + endTime + ':59');
+            
+            // Check if trip overlaps with window
+            // Trip overlaps if: tripStart <= windowEnd AND tripEnd >= windowStart
+            if (tripStartFull > windowEnd || tripEndFull < windowStart) return false;
         }
         
         return true;
@@ -367,7 +386,29 @@ function clearMap() {
     polylines = [];
 }
 
-function visualizeRoute(trips) {
+// Get road-snapped route between two points
+async function getSnappedRoute(origin, destination) {
+    return new Promise((resolve) => {
+        if (!directionsService) {
+            resolve(null);
+            return;
+        }
+        
+        directionsService.route({
+            origin: origin,
+            destination: destination,
+            travelMode: google.maps.TravelMode.DRIVING
+        }, (result, status) => {
+            if (status === 'OK' && result.routes[0]) {
+                resolve(result.routes[0].overview_path);
+            } else {
+                resolve(null);
+            }
+        });
+    });
+}
+
+async function visualizeRoute(trips) {
     clearMap();
     
     if (trips.length === 0) return;
@@ -403,32 +444,62 @@ function visualizeRoute(trips) {
         bounds.extend(marker.getPosition());
     });
     
-    // Add trip lines
-    trips.forEach((trip, idx) => {
+    // Show loading message
+    document.getElementById('tripList').innerHTML = '<div class="loading">Loading road-snapped routes...</div>';
+    
+    // Add trip lines with road snapping
+    const uniqueTrips = trips.filter((trip, idx) => {
+        if (trip.camera_prev === trip.camera_next) return false;
+        const prevSite = SITES[trip.camera_prev];
+        const nextSite = SITES[trip.camera_next];
+        return prevSite && nextSite;
+    });
+    
+    // Process trips - snap to roads
+    for (let i = 0; i < uniqueTrips.length; i++) {
+        const trip = uniqueTrips[i];
+        const tripIdx = trips.indexOf(trip);
         const prevSite = SITES[trip.camera_prev];
         const nextSite = SITES[trip.camera_next];
         
-        if (!prevSite || !nextSite) return;
-        if (trip.camera_prev === trip.camera_next) return; // Skip same-site trips
+        const origin = { lat: prevSite.lat, lng: prevSite.lon };
+        const destination = { lat: nextSite.lat, lng: nextSite.lon };
+        
+        // Try to get snapped route
+        const snappedPath = await getSnappedRoute(origin, destination);
+        
+        let path;
+        if (snappedPath && snappedPath.length > 0) {
+            // Use snapped road path
+            path = snappedPath;
+        } else {
+            // Fallback to straight line
+            path = [origin, destination];
+        }
         
         const line = new google.maps.Polyline({
-            path: [
-                { lat: prevSite.lat, lng: prevSite.lon },
-                { lat: nextSite.lat, lng: nextSite.lon }
-            ],
+            path: path,
             geodesic: true,
             strokeColor: colorMap[trip.status] || colorMap.normal,
-            strokeOpacity: 0.8,
-            strokeWeight: trip.status === 'break' ? 4 : 3,
+            strokeOpacity: 0.85,
+            strokeWeight: trip.status === 'break' ? 5 : 4,
             map: map
         });
         
         // Add click listener
-        line.addListener('click', () => selectTrip(idx));
+        line.addListener('click', () => selectTrip(tripIdx));
         polylines.push(line);
-    });
+        
+        // Small delay to avoid rate limiting
+        if (i < uniqueTrips.length - 1) {
+            await new Promise(r => setTimeout(r, 100));
+        }
+    }
     
     map.fitBounds(bounds, 50);
+    
+    // Update trip list after routes are loaded
+    renderTripList(trips);
 }
 
 // ============ UI UPDATES ============
@@ -559,7 +630,7 @@ function selectTrip(idx) {
 }
 
 // ============ MAIN FUNCTIONS ============
-function showRoute() {
+async function showRoute() {
     const vehicle = document.getElementById('vehicleSel').value;
     const date = document.getElementById('datePicker').value;
     const startTime = document.getElementById('startTime').value;
@@ -570,39 +641,77 @@ function showRoute() {
         return;
     }
     
+    // Show active filter
+    const filterDiv = document.getElementById('activeFilter');
+    const filterInfo = document.getElementById('filterInfo');
+    filterDiv.style.display = 'block';
+    filterInfo.innerHTML = `<strong>${vehicle}</strong> on <strong>${date}</strong> from <strong>${startTime}</strong> to <strong>${endTime}</strong>`;
+    
+    // Show loading state
+    document.getElementById('tripList').innerHTML = '<div class="loading">Filtering trips...</div>';
+    
     // Filter trips
     const filtered = filterTrips(vehicle, date, startTime, endTime);
+    
+    if (filtered.length === 0) {
+        document.getElementById('tripList').innerHTML = '<div class="no-data">No trips found for the selected filters.<br><br>Try adjusting the date or time window.</div>';
+        updateStats([]);
+        clearMap();
+        return;
+    }
     
     // Segment route
     currentRoute = segmentRoute(filtered);
     
     // Update UI
     updateStats(currentRoute);
-    renderTripList(currentRoute);
-    visualizeRoute(currentRoute);
     
     // Hide detail panel
     document.getElementById('detailPanel').classList.remove('visible');
     
-    console.log('Showing route:', currentRoute.length, 'trips');
+    // Visualize (async - will snap to roads)
+    await visualizeRoute(currentRoute);
+    
+    console.log('Showing route:', currentRoute.length, 'trips for', vehicle, 'on', date, 'from', startTime, 'to', endTime);
 }
 
-function showAllTrips() {
+async function showAllTrips() {
     const vehicle = document.getElementById('vehicleSel').value;
+    
+    // Show active filter
+    const filterDiv = document.getElementById('activeFilter');
+    const filterInfo = document.getElementById('filterInfo');
+    filterDiv.style.display = 'block';
+    if (vehicle) {
+        filterInfo.innerHTML = `<strong>${vehicle}</strong> - All dates and times (no filter)`;
+    } else {
+        filterInfo.innerHTML = `<strong>All vehicles</strong> - All dates and times (no filter)`;
+    }
+    
+    // Show loading state
+    document.getElementById('tripList').innerHTML = '<div class="loading">Loading all trips...</div>';
     
     // Filter by vehicle only (no date/time filter)
     const filtered = filterTrips(vehicle, null, null, null);
     
+    if (filtered.length === 0) {
+        document.getElementById('tripList').innerHTML = '<div class="no-data">No trips found for this vehicle.</div>';
+        updateStats([]);
+        clearMap();
+        return;
+    }
+    
     // Segment route
     currentRoute = segmentRoute(filtered);
     
     // Update UI
     updateStats(currentRoute);
-    renderTripList(currentRoute);
-    visualizeRoute(currentRoute);
     
     // Hide detail panel
     document.getElementById('detailPanel').classList.remove('visible');
+    
+    // Visualize (async - will snap to roads)
+    await visualizeRoute(currentRoute);
     
     console.log('Showing all trips:', currentRoute.length, 'trips');
 }
