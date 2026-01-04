@@ -559,7 +559,7 @@ function filterTrips(vehicle, startDate, endDate, startTime, endTime) {
         // Filter by vehicle
         if (vehicle && trip.plate !== vehicle) return false;
         
-        // Get trip start datetime
+        // Get trip start and end datetime
         const tripStart = new Date(trip.t_prev);
         const tripEnd = new Date(trip.t_next);
         
@@ -572,8 +572,13 @@ function filterTrips(vehicle, startDate, endDate, startTime, endTime) {
             const filterEnd = new Date(endDate + 'T' + (endTime || '23:59') + ':59');
             
             // Trip must START within the filter window
-            // i.e., trip.t_prev must be >= filterStart AND <= filterEnd
             if (tripStart < filterStart || tripStart > filterEnd) {
+                return false;
+            }
+            
+            // Trip must also END within the filter window
+            // This ensures we only see trips that complete within the selected timeframe
+            if (tripEnd > filterEnd) {
                 return false;
             }
         }
@@ -2082,7 +2087,7 @@ async function showRoute() {
     const filterEndDT = endDate + ' ' + endTime;
     filterInfo.innerHTML = `
         <strong>${vehicle}</strong><br>
-        <span style="font-size:0.8rem;">Trips starting between: <strong>${filterStartDT}</strong> and <strong>${filterEndDT}</strong></span>
+        <span style="font-size:0.8rem;">Trips that START and END between: <strong>${filterStartDT}</strong> and <strong>${filterEndDT}</strong></span>
     `;
     
     // Show loading state
