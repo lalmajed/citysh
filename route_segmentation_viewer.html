@@ -164,8 +164,8 @@
                         </p>
                     </div>
                     <div class="normal-band" style="margin-top:10px;">
-                        <p style="margin-bottom:8px;font-weight:bold;">Spatial Check</p>
-                        <p style="margin-bottom:8px;font-size:0.75rem;">Distance from site to route corridor</p>
+                        <p style="margin-bottom:8px;font-weight:bold;">Spatial Check (uses Google Matrix)</p>
+                        <p style="margin-bottom:8px;font-size:0.75rem;">Is camera_prev on/near corridor from path_start to camera_next?</p>
                         <div class="normal-band-inputs">
                             <div style="flex:1;">
                                 <label style="font-size:0.75rem;">Epsilon (meters)</label>
@@ -173,7 +173,7 @@
                             </div>
                         </div>
                         <p style="margin-top:5px;font-size:0.7rem;color:#666;">
-                            spatial_ok = site within &epsilon; meters of Google route corridor
+                            Corridor = path_start -> [matrix waypoints] -> destination
                         </p>
                     </div>
                     <div style="background:#ffebee;padding:8px;border-radius:4px;margin-top:10px;font-size:0.7rem;color:#c62828;">
@@ -197,8 +197,8 @@
                         <div class="legend-item"><div style="width:13px;height:13px;border-radius:50%;background:#fbbc05;border:2px solid #f57f17;"></div> SLOW</div>
                     </div>
                     <div style="margin-top:10px;padding:8px;background:#e8f5e9;border-radius:4px;font-size:0.7rem;color:#2e7d32;">
-                        <strong>Spatial Check:</strong> Site must be within epsilon meters of the Google route corridor from path start to current site.<br>
-                        <strong>Note:</strong> Skipping intermediate cameras is allowed.
+                        <strong>Spatial Check:</strong> Intermediate site (camera_prev) must be within epsilon of the Google Matrix corridor (pathStart -> waypoints -> destination).<br>
+                        <strong>Note:</strong> Skipping intermediate cameras is allowed - vehicle need not visit all waypoints.
                     </div>
                 </div>
                 
@@ -484,18 +484,55 @@ function filterTrips(vehicle, startDate, endDate, startTime, endTime) {
 
 // ============ PATH SEGMENTATION ============
 
-// Calculate minimum distance from a point to a polyline path (in meters)
-function distanceToPolyline(point, polyline) {
-    if (!polyline || polyline.length === 0) return Infinity;
+// Build the corridor (list of site coordinates) from pathStart to destination using Google Matrix waypoints
+function buildCorridor(pathStartSite, destSite) {
+    const corridor = [];
+    
+    // Add path start site
+    const startData = SITES[pathStartSite];
+    if (startData) {
+        corridor.push({ siteId: pathStartSite, lat: startData.lat, lon: startData.lon });
+    }
+    
+    // Add waypoints from Google Matrix (if available)
+    const routeKey = pathStartSite + '_' + destSite;
+    const waypoints = EXPECTED_WAYPOINTS[routeKey] || [];
+    
+    for (const wpSite of waypoints) {
+        const wpData = SITES[wpSite];
+        if (wpData) {
+            corridor.push({ siteId: wpSite, lat: wpData.lat, lon: wpData.lon });
+        }
+    }
+    
+    // Add destination site
+    const destData = SITES[destSite];
+    if (destData) {
+        corridor.push({ siteId: destSite, lat: destData.lat, lon: destData.lon });
+    }
+    
+    return corridor;
+}
+
+// Calculate minimum distance from a point to a corridor (polyline of sites) in meters
+function distanceToCorridor(lat, lon, corridor) {
+    if (!corridor || corridor.length === 0) return Infinity;
     
     let minDist = Infinity;
     
-    for (let i = 0; i < polyline.length - 1; i++) {
-        const p1 = polyline[i];
-        const p2 = polyline[i + 1];
+    // Check distance to each segment of the corridor
+    for (let i = 0; i < corridor.length - 1; i++) {
+        const p1 = corridor[i];
+        const p2 = corridor[i + 1];
         
         // Get distance from point to line segment
-        const dist = distanceToSegment(point, p1, p2);
+        const dist = distanceToSegment(lat, lon, p1.lat, p1.lon, p2.lat, p2.lon);
+        if (dist < minDist) minDist = dist;
+    }
+    
+    // Also check distance to each waypoint directly
+    for (const wp of corridor) {
+        const dist = haversineDistance(lat, lon, wp.lat, wp.lon) * 1000; // km to meters
         if (dist < minDist) minDist = dist;
     }
     
@@ -503,96 +540,85 @@ function distanceToPolyline(point, polyline) {
 }
 
 // Distance from point to line segment (in meters)
-function distanceToSegment(point, p1, p2) {
-    const lat = point.lat;
-    const lng = point.lng;
-    const lat1 = typeof p1.lat === 'function' ? p1.lat() : p1.lat;
-    const lng1 = typeof p1.lng === 'function' ? p1.lng() : p1.lng;
-    const lat2 = typeof p2.lat === 'function' ? p2.lat() : p2.lat;
-    const lng2 = typeof p2.lng === 'function' ? p2.lng() : p2.lng;
-    
+function distanceToSegment(lat, lon, lat1, lon1, lat2, lon2) {
     // Vector from p1 to p2
     const dx = lat2 - lat1;
-    const dy = lng2 - lng1;
+    const dy = lon2 - lon1;
     
     // If segment is a point
     if (dx === 0 && dy === 0) {
-        return haversineDistance(lat, lng, lat1, lng1) * 1000; // Convert to meters
+        return haversineDistance(lat, lon, lat1, lon1) * 1000; // Convert to meters
     }
     
     // Calculate projection parameter t
-    const t = Math.max(0, Math.min(1, ((lat - lat1) * dx + (lng - lng1) * dy) / (dx * dx + dy * dy)));
+    const t = Math.max(0, Math.min(1, ((lat - lat1) * dx + (lon - lon1) * dy) / (dx * dx + dy * dy)));
     
     // Find closest point on segment
     const closestLat = lat1 + t * dx;
-    const closestLng = lng1 + t * dy;
+    const closestLon = lon1 + t * dy;
     
     // Return distance in meters
-    return haversineDistance(lat, lng, closestLat, closestLng) * 1000;
+    return haversineDistance(lat, lon, closestLat, closestLon) * 1000;
 }
 
-// Get Google route and check if site is within corridor
-async function checkSpatialContinuity(pathStartSite, currentSite, epsilonMeters) {
-    // If same site, it's on the path
-    if (pathStartSite === currentSite) {
-        return { spatialOk: true, distanceToRoute: 0, routeFound: true };
+// Check spatial continuity using precomputed Google Matrix waypoints
+// Checks if the intermediate site (camera_prev) lies on/near the corridor from pathStart to destination
+function checkSpatialContinuity(pathStartSite, intermediateSite, destSite, epsilonMeters) {
+    // If path just started (intermediate = pathStart), always OK
+    if (pathStartSite === intermediateSite) {
+        return { spatialOk: true, distanceToRoute: 0, corridorSites: [pathStartSite], reason: 'Path start' };
     }
     
-    const startSiteData = SITES[pathStartSite];
-    const currentSiteData = SITES[currentSite];
+    // Build the expected corridor from pathStart to destination
+    const corridor = buildCorridor(pathStartSite, destSite);
     
-    if (!startSiteData || !currentSiteData) {
-        return { spatialOk: false, distanceToRoute: null, routeFound: false, reason: 'Site not found' };
-    }
-    
-    // If DirectionsService not available, fall back to distance check
-    if (!directionsService) {
-        const dist = haversineDistance(startSiteData.lat, startSiteData.lon, currentSiteData.lat, currentSiteData.lon) * 1000;
+    if (corridor.length < 2) {
+        // Can't build corridor - missing site data
         return { 
-            spatialOk: dist < epsilonMeters * 10, // Relaxed check without route
-            distanceToRoute: dist, 
-            routeFound: false,
-            reason: 'DirectionsService not available'
+            spatialOk: false, 
+            distanceToRoute: null, 
+            corridorSites: [], 
+            reason: 'Cannot build corridor (missing site data)' 
         };
     }
     
-    return new Promise((resolve) => {
-        directionsService.route({
-            origin: { lat: startSiteData.lat, lng: startSiteData.lon },
-            destination: { lat: currentSiteData.lat, lng: currentSiteData.lon },
-            travelMode: google.maps.TravelMode.DRIVING
-        }, (result, status) => {
-            if (status !== 'OK' || !result.routes[0]) {
-                // Route not found - use direct distance
-                const directDist = haversineDistance(startSiteData.lat, startSiteData.lon, currentSiteData.lat, currentSiteData.lon) * 1000;
-                resolve({ 
-                    spatialOk: directDist < epsilonMeters * 5, 
-                    distanceToRoute: directDist, 
-                    routeFound: false,
-                    reason: 'No route found: ' + status
-                });
-                return;
-            }
-            
-            // Get the route polyline
-            const path = result.routes[0].overview_path;
-            
-            // Check distance from current site to the route corridor
-            const currentPoint = { lat: currentSiteData.lat, lng: currentSiteData.lon };
-            const distToRoute = distanceToPolyline(currentPoint, path);
-            
-            resolve({
-                spatialOk: distToRoute <= epsilonMeters,
-                distanceToRoute: distToRoute,
-                routeFound: true,
-                pathLength: path.length
-            });
-        });
-    });
+    // Get intermediate site coordinates
+    const intermediateData = SITES[intermediateSite];
+    if (!intermediateData) {
+        return { 
+            spatialOk: false, 
+            distanceToRoute: null, 
+            corridorSites: corridor.map(c => c.siteId), 
+            reason: 'Intermediate site not found' 
+        };
+    }
+    
+    // Check if intermediate site is ON the corridor (i.e., is one of the waypoints)
+    const isOnCorridor = corridor.some(c => c.siteId === intermediateSite);
+    if (isOnCorridor) {
+        return { 
+            spatialOk: true, 
+            distanceToRoute: 0, 
+            corridorSites: corridor.map(c => c.siteId), 
+            reason: 'Site is on expected corridor' 
+        };
+    }
+    
+    // Check distance from intermediate site to the corridor
+    const distToRoute = distanceToCorridor(intermediateData.lat, intermediateData.lon, corridor);
+    
+    return {
+        spatialOk: distToRoute <= epsilonMeters,
+        distanceToRoute: distToRoute,
+        corridorSites: corridor.map(c => c.siteId),
+        reason: distToRoute <= epsilonMeters 
+            ? `Site within ${Math.round(distToRoute)}m of corridor` 
+            : `Site ${Math.round(distToRoute)}m from corridor (exceeds ${epsilonMeters}m)`
+    };
 }
 
-// Async segmentation with proper spatial checks
-async function segmentRoute(trips) {
+// Segmentation using precomputed Google Matrix data (no API calls)
+function segmentRoute(trips) {
     const rMin = parseFloat(document.getElementById('rMin').value) || 0.5;
     const rMax = parseFloat(document.getElementById('rMax').value) || 2.0;
     const epsilonMeters = parseFloat(document.getElementById('epsilonMeters').value) || 500;
@@ -602,14 +628,8 @@ async function segmentRoute(trips) {
     let pathStartSite = null;
     
     const segmented = [];
-    const tripList = document.getElementById('tripList');
     
     for (let idx = 0; idx < trips.length; idx++) {
-        // Update progress
-        if (idx % 5 === 0 || idx === trips.length - 1) {
-            tripList.innerHTML = `<div class="loading">Checking spatial continuity... (${idx + 1}/${trips.length})</div>`;
-        }
-        
         const trip = trips[idx];
         const obsTimeMin = trip.obs_time_seconds / 60;
         const expectedTime = getExpectedTime(trip.camera_prev, trip.camera_next);
@@ -619,6 +639,8 @@ async function segmentRoute(trips) {
         let temporalOk = true;
         let spatialOk = true;
         let spatialDistance = null;
+        let spatialCorridor = [];
+        let spatialReason = '';
         let status = 'normal';
         let breakReason = null;
         
@@ -628,6 +650,7 @@ async function segmentRoute(trips) {
             pathStartSite = trip.camera_prev;
         } else {
             // TEMPORAL CHECK
+            // R = (t_current - t_path_start) / expected_time(path_start → current_site)
             const currentTime = new Date(trip.t_next);
             const elapsedMin = (currentTime - pathStartTime) / 60000;
             const expectedFromStart = getExpectedTime(pathStartSite, trip.camera_next);
@@ -636,30 +659,26 @@ async function segmentRoute(trips) {
                 R = elapsedMin / expectedFromStart;
                 temporalOk = (R >= rMin && R <= rMax);
             } else if (expectedTime && expectedTime > 0) {
-                // Fallback to hop-by-hop
+                // Fallback to hop-by-hop if no matrix entry for full path
                 R = obsTimeMin / expectedTime;
                 temporalOk = (R >= rMin && R <= rMax);
             }
             
-            // SPATIAL CHECK - Check if current site is on/near the Google route corridor
-            // from pathStartSite to current site
-            const spatialResult = await checkSpatialContinuity(pathStartSite, trip.camera_next, epsilonMeters);
+            // SPATIAL CHECK using Google Matrix waypoints
+            // Check if intermediate site (camera_prev) lies on/near the corridor from pathStartSite to camera_next
+            const spatialResult = checkSpatialContinuity(pathStartSite, trip.camera_prev, trip.camera_next, epsilonMeters);
             spatialOk = spatialResult.spatialOk;
             spatialDistance = spatialResult.distanceToRoute;
-            
-            // Rate limit API calls
-            await new Promise(resolve => setTimeout(resolve, 100));
+            spatialCorridor = spatialResult.corridorSites || [];
+            spatialReason = spatialResult.reason || '';
             
             // Build break reason
             if (!spatialOk && !temporalOk) {
                 breakReason = 'BOTH FAILED - Temporal: R=' + (R ? R.toFixed(2) : 'N/A') + 
-                              ' outside [' + rMin + ',' + rMax + '] AND Spatial: ' + 
-                              (spatialDistance !== null ? Math.round(spatialDistance) + 'm' : 'N/A') + 
-                              ' > ' + epsilonMeters + 'm';
+                              ' outside [' + rMin + ',' + rMax + '] | Spatial: ' + spatialReason;
             } else if (!spatialOk) {
-                breakReason = 'SPATIAL FAIL - Site ' + trip.camera_next + ' is ' + 
-                              (spatialDistance !== null ? Math.round(spatialDistance) + 'm' : 'N/A') + 
-                              ' from route corridor (epsilon=' + epsilonMeters + 'm)';
+                breakReason = 'SPATIAL FAIL - ' + spatialReason + 
+                              ' | Expected corridor: ' + spatialCorridor.join(' -> ');
             } else if (!temporalOk) {
                 breakReason = 'TEMPORAL FAIL - R=' + (R ? R.toFixed(2) : 'N/A') + 
                               ' outside [' + rMin + ',' + rMax + ']';
@@ -670,8 +689,9 @@ async function segmentRoute(trips) {
         if (!temporalOk || !spatialOk) {
             status = 'break';
             pathId++;
-            pathStartTime = new Date(trip.t_prev);
-            pathStartSite = trip.camera_prev;
+            // New path starts at camera_next (where vehicle is after this trip)
+            pathStartTime = new Date(trip.t_next);
+            pathStartSite = trip.camera_next;
         } else if (R !== null && R > rMax * 0.8) {
             status = 'slow';
         }
@@ -683,6 +703,7 @@ async function segmentRoute(trips) {
             temporalOk,
             spatialOk,
             spatialDistance,
+            spatialCorridor,
             expectedTimeMin: expectedTime,
             obsTimeMin,
             status,
@@ -1133,13 +1154,21 @@ function selectTrip(idx) {
             <span class="detail-value ${trip.spatialOk ? 'green' : 'red'}">${trip.spatialOk ? 'YES' : 'NO'}</span>
         </div>
         <div class="detail-row">
-            <span class="detail-label">Distance to Route Corridor</span>
-            <span class="detail-value ${trip.spatialOk ? 'green' : 'red'}">${trip.spatialDistance !== null && trip.spatialDistance !== undefined ? Math.round(trip.spatialDistance) + ' m' : 'N/A'}</span>
+            <span class="detail-label">Distance to Corridor</span>
+            <span class="detail-value ${trip.spatialOk ? 'green' : 'red'}">${trip.spatialDistance !== null && trip.spatialDistance !== undefined ? Math.round(trip.spatialDistance) + ' m' : (trip.spatialOk ? 'On corridor' : 'N/A')}</span>
         </div>
         <div class="detail-row">
             <span class="detail-label">Epsilon (threshold)</span>
             <span class="detail-value">${document.getElementById('epsilonMeters').value} m</span>
         </div>
+        ${trip.spatialCorridor && trip.spatialCorridor.length > 0 ? `
+        <div class="detail-row" style="flex-direction:column;align-items:flex-start;">
+            <span class="detail-label" style="margin-bottom:5px;">Expected Corridor (from Matrix):</span>
+            <div style="background:#fff3e0;padding:8px;border-radius:4px;width:100%;font-family:monospace;font-size:0.75rem;word-break:break-all;">
+                ${trip.spatialCorridor.join(' -> ')}
+            </div>
+        </div>
+        ` : ''}
         ${trip.breakReason ? `
         <div class="detail-row" style="flex-direction:column;align-items:flex-start;background:#ffebee;margin:5px -15px;padding:10px 15px;">
             <span class="detail-label" style="margin-bottom:5px;color:#c62828;">Break Reason</span>
@@ -1212,9 +1241,8 @@ async function showRoute() {
         return;
     }
     
-    // Segment route (async - performs spatial checks via Google Maps)
-    document.getElementById('tripList').innerHTML = '<div class="loading">Checking spatial continuity...</div>';
-    currentRoute = await segmentRoute(filtered);
+    // Segment route using precomputed Google Matrix data (instant - no API calls)
+    currentRoute = segmentRoute(filtered);
     
     // Update UI
     updateStats(currentRoute);
@@ -1222,7 +1250,7 @@ async function showRoute() {
     // Hide detail panel
     document.getElementById('detailPanel').classList.remove('visible');
     
-    // Visualize (async - will snap to roads)
+    // Visualize (async - will snap to roads for display)
     await visualizeRoute(currentRoute);
     
     console.log('Showing route:', currentRoute.length, 'trips for', vehicle, 'from', startDate, 'to', endDate, 'time', startTime, '-', endTime);
@@ -1254,9 +1282,8 @@ async function showAllTrips() {
         return;
     }
     
-    // Segment route (async - performs spatial checks via Google Maps)
-    document.getElementById('tripList').innerHTML = '<div class="loading">Checking spatial continuity...</div>';
-    currentRoute = await segmentRoute(filtered);
+    // Segment route using precomputed Google Matrix data (instant - no API calls)
+    currentRoute = segmentRoute(filtered);
     
     // Update UI
     updateStats(currentRoute);
@@ -1264,7 +1291,7 @@ async function showAllTrips() {
     // Hide detail panel
     document.getElementById('detailPanel').classList.remove('visible');
     
-    // Visualize (async - will snap to roads)
+    // Visualize (async - will snap to roads for display)
     await visualizeRoute(currentRoute);
     
     console.log('Showing all trips:', currentRoute.length, 'trips');
