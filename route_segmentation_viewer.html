@@ -749,6 +749,7 @@ function segmentRoute(trips) {
         
         // Calculate ratio R
         let R = null;
+        let R_method = null; // Track how R was calculated
         let temporalOk = true;
         let spatialOk = true;
         let spatialDistance = null;
@@ -761,6 +762,13 @@ function segmentRoute(trips) {
             // First trip starts a new path
             pathStartTime = new Date(trip.t_prev);
             pathStartSite = trip.camera_prev;
+            
+            // Calculate R for first trip using hop-by-hop
+            if (expectedTime && expectedTime > 0) {
+                R = obsTimeMin / expectedTime;
+                R_method = 'hop';
+                temporalOk = (R >= rMin && R <= rMax);
+            }
         } else {
             // TEMPORAL CHECK
             // R = (t_current - t_path_start) / expected_time(path_start → current_site)
@@ -769,12 +777,29 @@ function segmentRoute(trips) {
             const expectedFromStart = getExpectedTime(pathStartSite, trip.camera_next);
             
             if (expectedFromStart && expectedFromStart > 0) {
+                // Use path-based R (from path start to current site)
                 R = elapsedMin / expectedFromStart;
+                R_method = 'path';
                 temporalOk = (R >= rMin && R <= rMax);
             } else if (expectedTime && expectedTime > 0) {
                 // Fallback to hop-by-hop if no matrix entry for full path
                 R = obsTimeMin / expectedTime;
+                R_method = 'hop';
                 temporalOk = (R >= rMin && R <= rMax);
+            } else {
+                // No expected time available - cannot calculate R
+                // Use distance-based fallback estimate
+                const prevSite = SITES[trip.camera_prev];
+                const nextSite = SITES[trip.camera_next];
+                if (prevSite && nextSite) {
+                    const dist = haversineDistance(prevSite.lat, prevSite.lon, nextSite.lat, nextSite.lon);
+                    const estimatedMin = (dist / 40) * 60; // 40 km/h average
+                    if (estimatedMin > 0) {
+                        R = obsTimeMin / estimatedMin;
+                        R_method = 'dist-est';
+                        temporalOk = (R >= rMin && R <= rMax);
+                    }
+                }
             }
             
             // SPATIAL CHECK using Google Matrix waypoints
@@ -789,13 +814,13 @@ function segmentRoute(trips) {
             // Build break reason
             if (!spatialOk && !temporalOk) {
                 breakReason = 'BOTH FAILED - Temporal: R=' + (R ? R.toFixed(2) : 'N/A') + 
-                              ' outside [' + rMin + ',' + rMax + '] | Spatial: ' + spatialReason;
+                              ' (' + (R_method || 'no-calc') + ') outside [' + rMin + ',' + rMax + '] | Spatial: ' + spatialReason;
             } else if (!spatialOk) {
                 breakReason = 'SPATIAL FAIL - Site ' + trip.camera_next + ' not reachable from path start ' + pathStartSite + 
                               ' | ' + spatialReason;
             } else if (!temporalOk) {
                 breakReason = 'TEMPORAL FAIL - R=' + (R ? R.toFixed(2) : 'N/A') + 
-                              ' outside [' + rMin + ',' + rMax + ']';
+                              ' (' + (R_method || 'no-calc') + ') outside [' + rMin + ',' + rMax + ']';
             }
         }
         
@@ -819,6 +844,7 @@ function segmentRoute(trips) {
             pathStartSite: status === 'break' ? trip.camera_next : (idx === 0 ? trip.camera_prev : tripPathStart),
             corridorStart: idx === 0 ? trip.camera_prev : tripPathStart,  // The start site used for spatial check
             R,
+            R_method,  // 'path', 'hop', or 'dist-est'
             temporalOk,
             spatialOk,
             spatialDistance,
@@ -1494,8 +1520,8 @@ function renderTripList(trips) {
                 <div class="trip-time">${time}</div>
                 <div class="trip-meta">
                     <span>Obs: ${formatTime(trip.obs_time_seconds)}</span>
-                    <span>Exp: ${trip.expectedTimeMin ? formatTime(trip.expectedTimeMin * 60) : 'N/A'}</span>
-                    ${trip.R !== null ? `<span>R: ${trip.R.toFixed(2)}</span>` : ''}
+                    <span>Exp: ${trip.expectedTimeMin ? formatTime(trip.expectedTimeMin * 60) : '<span style="color:#f44336;">N/A</span>'}</span>
+                    ${trip.R !== null ? `<span>R: ${trip.R.toFixed(2)} <span style="font-size:0.6rem;color:#999;">${trip.R_method || ''}</span></span>` : '<span style="color:#f44336;">R: N/A</span>'}
                     ${expectedDist ? `<span>${expectedDist.toFixed(1)}km</span>` : ''}
                 </div>
                 ${trip.breakReason ? `<div class="break-reason">${trip.breakReason}</div>` : ''}
@@ -1563,7 +1589,7 @@ function renderTimeline(trips) {
                 <div class="timeline-time">${arrivalTime}</div>
                 <div class="timeline-info">
                     from ${trip.camera_prev} | ${duration}${waypointInfo}
-                    ${trip.R !== null ? ' | R=' + trip.R.toFixed(2) : ''}
+                    ${trip.R !== null ? ' | R=' + trip.R.toFixed(2) + (trip.R_method ? ' <span style="color:#999;">(' + trip.R_method + ')</span>' : '') : ' | <span style="color:#f44336;">R: N/A</span>'}
                 </div>
                 ${trip.breakReason ? `<div class="timeline-break">${trip.breakReason}</div>` : ''}
             </div>
@@ -1594,10 +1620,21 @@ function renderTimeline(trips) {
     const startTime = new Date(trips[0].t_prev).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     const endTime = new Date(trips[trips.length - 1].t_next).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     
+    // Count R calculation methods
+    const rPathCount = trips.filter(t => t.R_method === 'path').length;
+    const rHopCount = trips.filter(t => t.R_method === 'hop').length;
+    const rDistCount = trips.filter(t => t.R_method === 'dist-est').length;
+    const rNullCount = trips.filter(t => t.R === null).length;
+    
     const summary = `
         <div style="background:#f5f5f5;padding:8px;border-radius:4px;margin-bottom:10px;font-size:0.75rem;">
-            <strong>${pathCount} path(s)</strong> | ${trips.length} trips | ${breakCount} break(s) | 
-            ${startTime} → ${endTime} | Total: ${formatTime(totalDuration)}
+            <div><strong>${pathCount} path(s)</strong> | ${trips.length} trips | ${breakCount} break(s) | ${startTime} → ${endTime} | Total: ${formatTime(totalDuration)}</div>
+            <div style="margin-top:4px;color:#666;font-size:0.7rem;">
+                R calc: <span style="color:#4caf50;">${rPathCount} path</span> | 
+                <span style="color:#2196f3;">${rHopCount} hop</span> | 
+                <span style="color:#ff9800;">${rDistCount} dist-est</span>
+                ${rNullCount > 0 ? ' | <span style="color:#f44336;">' + rNullCount + ' N/A</span>' : ''}
+            </div>
         </div>
     `;
     
@@ -1754,7 +1791,10 @@ function selectTrip(idx) {
         </div>
         <div class="detail-row">
             <span class="detail-label">Ratio R (obs/exp)</span>
-            <span class="detail-value ${statusClass}">${trip.R !== null ? trip.R.toFixed(3) : 'N/A'}</span>
+            <span class="detail-value ${statusClass}">
+                ${trip.R !== null ? trip.R.toFixed(3) : 'N/A'}
+                ${trip.R_method ? '<span style="font-size:0.7rem;color:#666;margin-left:5px;">(' + trip.R_method + ')</span>' : ''}
+            </span>
         </div>
         
         ${waypointsHtml}
