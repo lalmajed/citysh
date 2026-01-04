@@ -185,7 +185,7 @@
                 <div class="panel">
                     <h2>Legend</h2>
                     <div class="legend" style="flex-direction: column; gap: 8px;">
-                        <div style="font-weight: 600; margin-bottom: 5px;">Lines (Trips):</div>
+                        <div style="font-weight: 600; margin-bottom: 5px;">Trip Lines:</div>
                         <div class="legend-item"><div class="legend-color green"></div> Normal (same path)</div>
                         <div class="legend-item"><div class="legend-color yellow"></div> Slow (temporal warning)</div>
                         <div class="legend-item"><div class="legend-color red"></div> Path Break</div>
@@ -195,6 +195,10 @@
                         <div class="legend-item"><div style="width:14px;height:14px;border-radius:50%;background:#9c27b0;border:2px solid #6a1b9a;"></div> SPATIAL FAIL ([S])</div>
                         <div class="legend-item"><div style="width:16px;height:16px;border-radius:50%;background:#ea4335;border:2px solid #b71c1c;"></div> BOTH FAILED</div>
                         <div class="legend-item"><div style="width:13px;height:13px;border-radius:50%;background:#fbbc05;border:2px solid #f57f17;"></div> SLOW</div>
+                        <div style="font-weight: 600; margin: 10px 0 5px 0;">Corridor (click trip to see):</div>
+                        <div class="legend-item"><div style="width:20px;height:4px;background:repeating-linear-gradient(90deg,#2196F3 0,#2196F3 5px,transparent 5px,transparent 10px);"></div> Expected corridor (Google Matrix)</div>
+                        <div class="legend-item"><div style="width:12px;height:12px;border-radius:50%;background:#2196F3;border:2px solid #0D47A1;"></div> Corridor waypoint</div>
+                        <div class="legend-item"><div style="width:20px;height:3px;background:#F44336;"></div> Distance to corridor (if failed)</div>
                     </div>
                     <div style="margin-top:10px;padding:8px;background:#e8f5e9;border-radius:4px;font-size:0.7rem;color:#2e7d32;">
                         <strong>Spatial Check:</strong> Current site must be reachable from path start via Google Matrix route.<br>
@@ -242,6 +246,8 @@ let expectedTimesLoaded = false;
 let map, markers = [], polylines = [];
 let currentRoute = [];
 let directionsService = null;
+let corridorPolyline = null;  // For displaying expected corridor from Google Matrix
+let corridorMarkers = [];     // Waypoint markers on the corridor
 
 // ============ INITIALIZATION ============
 function initMap() {
@@ -708,9 +714,14 @@ function segmentRoute(trips) {
             status = 'slow';
         }
         
+        // Store the pathStartSite that was used for this trip's spatial check
+        const tripPathStart = idx === 0 ? trip.camera_prev : (segmented.length > 0 ? segmented[segmented.length - 1].pathStartSite : trip.camera_prev);
+        
         segmented.push({
             ...trip,
             pathId,
+            pathStartSite: status === 'break' ? trip.camera_next : (idx === 0 ? trip.camera_prev : tripPathStart),
+            corridorStart: idx === 0 ? trip.camera_prev : tripPathStart,  // The start site used for spatial check
             R,
             temporalOk,
             spatialOk,
@@ -732,6 +743,7 @@ function clearMap() {
     polylines.forEach(p => p.setMap(null));
     markers = [];
     polylines = [];
+    clearCorridor();
 }
 
 // Get road-snapped route between two points
@@ -1154,6 +1166,10 @@ function selectTrip(idx) {
             <span class="detail-value">${trip.pathId}</span>
         </div>
         <div class="detail-row">
+            <span class="detail-label">Path Start Site</span>
+            <span class="detail-value" style="font-family:monospace;">${trip.corridorStart || trip.camera_prev}</span>
+        </div>
+        <div class="detail-row">
             <span class="detail-label">Status</span>
             <span class="detail-value ${statusClass}">${trip.status.toUpperCase()}</span>
         </div>
@@ -1175,12 +1191,20 @@ function selectTrip(idx) {
         </div>
         ${trip.spatialCorridor && trip.spatialCorridor.length > 0 ? `
         <div class="detail-row" style="flex-direction:column;align-items:flex-start;">
-            <span class="detail-label" style="margin-bottom:5px;">Expected Corridor (from Matrix):</span>
-            <div style="background:#fff3e0;padding:8px;border-radius:4px;width:100%;font-family:monospace;font-size:0.75rem;word-break:break-all;">
+            <span class="detail-label" style="margin-bottom:5px;">Expected Corridor (${trip.corridorStart || trip.camera_prev} to ${trip.camera_next}):</span>
+            <div style="background:#e3f2fd;padding:8px;border-radius:4px;width:100%;font-family:monospace;font-size:0.75rem;word-break:break-all;border-left:4px solid #2196F3;">
                 ${trip.spatialCorridor.join(' -> ')}
             </div>
+            <div style="font-size:0.7rem;color:#666;margin-top:5px;">
+                Blue dashed line on map shows this corridor. ${trip.spatialCorridor.length > 2 ? `(${trip.spatialCorridor.length - 2} intermediate waypoints)` : '(Direct route)'}
+            </div>
         </div>
-        ` : ''}
+        ` : `
+        <div class="detail-row">
+            <span class="detail-label">Expected Corridor</span>
+            <span class="detail-value" style="color:#f44336;">No route in matrix</span>
+        </div>
+        `}
         ${trip.breakReason ? `
         <div class="detail-row" style="flex-direction:column;align-items:flex-start;background:#ffebee;margin:5px -15px;padding:10px 15px;">
             <span class="detail-label" style="margin-bottom:5px;color:#c62828;">Break Reason</span>
@@ -1189,13 +1213,24 @@ function selectTrip(idx) {
         ` : ''}
     `;
     
-    // Zoom to trip on map
+    // Draw the expected corridor on the map
+    drawCorridor(trip);
+    
+    // Zoom to show corridor and trip
     const prevSite = SITES[trip.camera_prev];
     const nextSite = SITES[trip.camera_next];
     if (prevSite && nextSite) {
         const bounds = new google.maps.LatLngBounds();
         bounds.extend({ lat: prevSite.lat, lng: prevSite.lon });
         bounds.extend({ lat: nextSite.lat, lng: nextSite.lon });
+        
+        // Include corridor sites in bounds
+        if (trip.spatialCorridor) {
+            trip.spatialCorridor.forEach(siteId => {
+                const site = SITES[siteId];
+                if (site) bounds.extend({ lat: site.lat, lng: site.lon });
+            });
+        }
         
         // Also include waypoints in bounds
         expectedWaypoints.forEach(wpId => {
@@ -1205,6 +1240,170 @@ function selectTrip(idx) {
         
         map.fitBounds(bounds, 100);
     }
+}
+
+// Draw the expected corridor from Google Matrix on the map
+function drawCorridor(trip) {
+    // Clear previous corridor
+    clearCorridor();
+    
+    if (!trip.spatialCorridor || trip.spatialCorridor.length < 2) {
+        return;
+    }
+    
+    // Build the corridor path
+    const corridorPath = [];
+    trip.spatialCorridor.forEach(siteId => {
+        const site = SITES[siteId];
+        if (site) {
+            corridorPath.push({ lat: site.lat, lng: site.lon });
+        }
+    });
+    
+    if (corridorPath.length < 2) return;
+    
+    // Draw corridor as a dashed line (the expected route from Google Matrix)
+    corridorPolyline = new google.maps.Polyline({
+        path: corridorPath,
+        geodesic: true,
+        strokeColor: '#2196F3',  // Blue for expected corridor
+        strokeOpacity: 0.8,
+        strokeWeight: 4,
+        icons: [{
+            icon: {
+                path: 'M 0,-1 0,1',
+                strokeOpacity: 1,
+                strokeWeight: 4,
+                scale: 3
+            },
+            offset: '0',
+            repeat: '15px'
+        }],
+        map: map,
+        zIndex: 5
+    });
+    
+    // Add markers for corridor waypoints (intermediate sites on expected route)
+    trip.spatialCorridor.forEach((siteId, idx) => {
+        const site = SITES[siteId];
+        if (!site) return;
+        
+        const isStart = idx === 0;
+        const isEnd = idx === trip.spatialCorridor.length - 1;
+        
+        // Only mark intermediate waypoints (not start/end which are already marked)
+        if (!isStart && !isEnd) {
+            const marker = new google.maps.Marker({
+                position: { lat: site.lat, lng: site.lon },
+                map: map,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 6,
+                    fillColor: '#2196F3',
+                    fillOpacity: 0.9,
+                    strokeColor: '#0D47A1',
+                    strokeWeight: 2
+                },
+                title: `Corridor waypoint: ${siteId}`,
+                zIndex: 15
+            });
+            corridorMarkers.push(marker);
+        }
+    });
+    
+    // If spatial check failed, draw a line showing the distance from current site to corridor
+    if (!trip.spatialOk && trip.spatialDistance !== null) {
+        const currentSite = SITES[trip.camera_next];
+        if (currentSite && corridorPath.length > 0) {
+            // Find closest point on corridor to the current site
+            const closestPoint = findClosestPointOnPath(currentSite.lat, currentSite.lon, corridorPath);
+            
+            // Draw a red line showing the distance
+            const distanceLine = new google.maps.Polyline({
+                path: [
+                    { lat: currentSite.lat, lng: currentSite.lon },
+                    closestPoint
+                ],
+                geodesic: true,
+                strokeColor: '#F44336',  // Red for distance/error
+                strokeOpacity: 1,
+                strokeWeight: 3,
+                map: map,
+                zIndex: 20
+            });
+            corridorMarkers.push(distanceLine);
+            
+            // Add a label showing the distance
+            const midLat = (currentSite.lat + closestPoint.lat) / 2;
+            const midLng = (currentSite.lon + closestPoint.lng) / 2;
+            
+            const distLabel = new google.maps.Marker({
+                position: { lat: midLat, lng: midLng },
+                map: map,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 0
+                },
+                label: {
+                    text: Math.round(trip.spatialDistance) + 'm',
+                    color: '#C62828',
+                    fontWeight: 'bold',
+                    fontSize: '12px'
+                },
+                zIndex: 25
+            });
+            corridorMarkers.push(distLabel);
+        }
+    }
+}
+
+// Find closest point on a path to a given point
+function findClosestPointOnPath(lat, lon, path) {
+    let minDist = Infinity;
+    let closestPoint = path[0];
+    
+    for (let i = 0; i < path.length - 1; i++) {
+        const p1 = path[i];
+        const p2 = path[i + 1];
+        
+        // Find closest point on this segment
+        const closest = closestPointOnSegment(lat, lon, p1.lat, p1.lng, p2.lat, p2.lng);
+        const dist = haversineDistance(lat, lon, closest.lat, closest.lng);
+        
+        if (dist < minDist) {
+            minDist = dist;
+            closestPoint = closest;
+        }
+    }
+    
+    return closestPoint;
+}
+
+// Find closest point on a line segment to a given point
+function closestPointOnSegment(lat, lon, lat1, lng1, lat2, lng2) {
+    const dx = lat2 - lat1;
+    const dy = lng2 - lng1;
+    
+    if (dx === 0 && dy === 0) {
+        return { lat: lat1, lng: lng1 };
+    }
+    
+    const t = Math.max(0, Math.min(1, ((lat - lat1) * dx + (lon - lng1) * dy) / (dx * dx + dy * dy)));
+    
+    return {
+        lat: lat1 + t * dx,
+        lng: lng1 + t * dy
+    };
+}
+
+// Clear corridor visualization
+function clearCorridor() {
+    if (corridorPolyline) {
+        corridorPolyline.setMap(null);
+        corridorPolyline = null;
+    }
+    corridorMarkers.forEach(m => m.setMap(null));
+    corridorMarkers = [];
 }
 
 // ============ MAIN FUNCTIONS ============
