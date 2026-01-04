@@ -552,36 +552,39 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 
 // ============ ROUTE FILTERING ============
 function filterTrips(vehicle, startDate, endDate, startTime, endTime) {
-    return TRIPS.filter(trip => {
+    console.log('Filtering trips:', { vehicle, startDate, endDate, startTime, endTime });
+    console.log('Total TRIPS:', TRIPS.length);
+    
+    const filtered = TRIPS.filter(trip => {
         // Filter by vehicle
         if (vehicle && trip.plate !== vehicle) return false;
         
-        // Filter by date range
-        if (startDate && endDate) {
-            const tripStartDate = trip.t_prev.split('T')[0];
-            const tripEndDate = trip.t_next.split('T')[0];
-            
-            // Trip must overlap with the date range
-            // Trip overlaps if: tripStartDate <= endDate AND tripEndDate >= startDate
-            if (tripStartDate > endDate || tripEndDate < startDate) return false;
-        }
+        // Get trip start datetime
+        const tripStart = new Date(trip.t_prev);
+        const tripEnd = new Date(trip.t_next);
         
-        // Filter by time window within the date range
-        if (startDate && endDate && startTime && endTime) {
-            const tripStartFull = new Date(trip.t_prev);
-            const tripEndFull = new Date(trip.t_next);
+        // Filter by date and time range
+        if (startDate && endDate) {
+            // Build the filter window
+            // Window starts at: startDate + startTime (or 00:00 if no startTime)
+            // Window ends at: endDate + endTime (or 23:59 if no endTime)
+            const filterStart = new Date(startDate + 'T' + (startTime || '00:00') + ':00');
+            const filterEnd = new Date(endDate + 'T' + (endTime || '23:59') + ':59');
             
-            // Create window start (startDate + startTime) and end (endDate + endTime)
-            const windowStart = new Date(startDate + 'T' + startTime + ':00');
-            const windowEnd = new Date(endDate + 'T' + endTime + ':59');
-            
-            // Check if trip overlaps with the full window
-            // Trip overlaps if: tripStart <= windowEnd AND tripEnd >= windowStart
-            if (tripStartFull > windowEnd || tripEndFull < windowStart) return false;
+            // Trip must START within the filter window
+            // i.e., trip.t_prev must be >= filterStart AND <= filterEnd
+            if (tripStart < filterStart || tripStart > filterEnd) {
+                return false;
+            }
         }
         
         return true;
-    }).sort((a, b) => new Date(a.t_prev) - new Date(b.t_prev));
+    });
+    
+    console.log('Filtered trips:', filtered.length);
+    
+    // Sort by trip start time
+    return filtered.sort((a, b) => new Date(a.t_prev) - new Date(b.t_prev));
 }
 
 // ============ PATH SEGMENTATION ============
@@ -2074,10 +2077,13 @@ async function showRoute() {
     const filterInfo = document.getElementById('filterInfo');
     filterDiv.style.display = 'block';
     
-    const dateRange = startDate === endDate 
-        ? `<strong>${startDate}</strong>` 
-        : `<strong>${startDate}</strong> to <strong>${endDate}</strong>`;
-    filterInfo.innerHTML = `<strong>${vehicle}</strong> | ${dateRange} | Time: <strong>${startTime}</strong> - <strong>${endTime}</strong>`;
+    // Build clear filter description
+    const filterStartDT = startDate + ' ' + startTime;
+    const filterEndDT = endDate + ' ' + endTime;
+    filterInfo.innerHTML = `
+        <strong>${vehicle}</strong><br>
+        <span style="font-size:0.8rem;">Trips starting between: <strong>${filterStartDT}</strong> and <strong>${filterEndDT}</strong></span>
+    `;
     
     // Show loading state
     document.getElementById('tripList').innerHTML = '<div class="loading">Filtering trips...</div>';
@@ -2086,7 +2092,24 @@ async function showRoute() {
     const filtered = filterTrips(vehicle, startDate, endDate, startTime, endTime);
     
     if (filtered.length === 0) {
-        document.getElementById('tripList').innerHTML = '<div class="no-data">No trips found for the selected filters.<br><br>Try adjusting the date range or time window.</div>';
+        // Get some debug info
+        const vehicleTrips = TRIPS.filter(t => t.plate === vehicle);
+        const dates = vehicleTrips.map(t => t.t_prev.split('T')[0]);
+        const uniqueDates = [...new Set(dates)].sort();
+        
+        let debugInfo = `<div class="no-data">
+            <strong>No trips found for the selected filters.</strong><br><br>
+            Vehicle <strong>${vehicle}</strong> has <strong>${vehicleTrips.length}</strong> total trips.<br>`;
+        
+        if (uniqueDates.length > 0) {
+            debugInfo += `<br>Available dates: <strong>${uniqueDates[0]}</strong> to <strong>${uniqueDates[uniqueDates.length-1]}</strong><br>`;
+        }
+        
+        debugInfo += `<br>Your filter: ${startDate} ${startTime} to ${endDate} ${endTime}<br>`;
+        debugInfo += `<br><em>Adjust the date/time range to match available data.</em></div>`;
+        
+        document.getElementById('tripList').innerHTML = debugInfo;
+        document.getElementById('pathTimeline').innerHTML = '<div class="no-data">No trips</div>';
         updateStats([]);
         clearMap();
         return;
