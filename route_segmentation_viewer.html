@@ -117,6 +117,28 @@
                 </div>
                 
                 <div class="panel">
+                    <h2>Expected Times (Google Matrix)</h2>
+                    <div style="background:#fff3e0;padding:10px;border-radius:6px;margin-bottom:10px;font-size:0.8rem;">
+                        <div style="margin-bottom:8px;">
+                            <strong>Status:</strong> <span id="expectedTimesStatus" style="color:#e65100;">Not loaded</span>
+                        </div>
+                        <div style="margin-bottom:8px;">
+                            <strong>Source:</strong> <span id="expectedTimesSource">-</span>
+                        </div>
+                        <div>
+                            <strong>Entries:</strong> <span id="expectedTimesCount">0</span>
+                        </div>
+                    </div>
+                    <input type="file" id="matrixUpload" accept=".json" onchange="uploadGoogleMatrix(this)" style="display:none;">
+                    <button class="btn" onclick="document.getElementById('matrixUpload').click()" style="background:#ff9800;">
+                        Upload Google Matrix JSON
+                    </button>
+                    <p style="font-size:0.7rem;color:#666;margin-top:5px;">
+                        JSON format: { "time_min": {"0_1": 5.5, ...}, "sites": [...] }
+                    </p>
+                </div>
+                
+                <div class="panel">
                     <h2>Normal Band (R thresholds)</h2>
                     <div class="normal-band">
                         <p style="margin-bottom:8px;">R = observed_time / expected_time</p>
@@ -229,34 +251,99 @@ function initMap() {
 
 // Load expected times from google_matrix file
 async function loadExpectedTimes() {
+    updateExpectedTimesUI('Loading...', 'Auto-loading google_matrix (2).json', 0, '#2196f3');
+    
     try {
         const response = await fetch('google_matrix (2).json');
         const data = await response.json();
         
-        // Build site_id to index mapping
-        const siteIdToIdx = {};
-        data.sites.forEach((s, i) => siteIdToIdx[s.site_id] = i);
+        processGoogleMatrix(data, 'google_matrix (2).json (auto-loaded)');
         
-        // Convert index-based keys to site_id based
-        const timeMin = data.time_min || {};
-        for (const key in timeMin) {
-            const parts = key.split('_');
-            if (parts.length === 2) {
-                const i = parseInt(parts[0]);
-                const j = parseInt(parts[1]);
-                if (i < data.sites.length && j < data.sites.length) {
-                    const siteKey = data.sites[i].site_id + '_' + data.sites[j].site_id;
-                    EXPECTED_TIMES[siteKey] = timeMin[key];
-                }
-            }
-        }
-        
-        expectedTimesLoaded = true;
-        console.log('Loaded', Object.keys(EXPECTED_TIMES).length, 'expected times');
     } catch (e) {
         console.warn('Could not load google_matrix, using distance-based estimates:', e);
         expectedTimesLoaded = false;
+        updateExpectedTimesUI('Not loaded - using distance estimates', 'None (upload a file)', 0, '#e65100');
     }
+}
+
+// Process Google Matrix data
+function processGoogleMatrix(data, sourceName) {
+    EXPECTED_TIMES = {}; // Reset
+    
+    // Build site_id to index mapping
+    const siteIdToIdx = {};
+    const sites = data.sites || [];
+    sites.forEach((s, i) => siteIdToIdx[s.site_id] = i);
+    
+    // Convert index-based keys to site_id based
+    const timeMin = data.time_min || {};
+    for (const key in timeMin) {
+        const parts = key.split('_');
+        if (parts.length === 2) {
+            const i = parseInt(parts[0]);
+            const j = parseInt(parts[1]);
+            if (i < sites.length && j < sites.length) {
+                const siteKey = sites[i].site_id + '_' + sites[j].site_id;
+                EXPECTED_TIMES[siteKey] = timeMin[key];
+            }
+        }
+    }
+    
+    expectedTimesLoaded = true;
+    const count = Object.keys(EXPECTED_TIMES).length;
+    console.log('Loaded', count, 'expected times from', sourceName);
+    
+    updateExpectedTimesUI('Loaded', sourceName, count, '#4caf50');
+}
+
+// Upload Google Matrix JSON
+function uploadGoogleMatrix(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    updateExpectedTimesUI('Reading file...', file.name, 0, '#2196f3');
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            // Validate structure
+            if (!data.time_min) {
+                alert('Invalid file: missing "time_min" field');
+                updateExpectedTimesUI('Error - invalid file', file.name, 0, '#f44336');
+                return;
+            }
+            if (!data.sites || !Array.isArray(data.sites)) {
+                alert('Invalid file: missing or invalid "sites" array');
+                updateExpectedTimesUI('Error - invalid file', file.name, 0, '#f44336');
+                return;
+            }
+            
+            processGoogleMatrix(data, file.name + ' (uploaded)');
+            alert('Loaded ' + Object.keys(EXPECTED_TIMES).length + ' expected times from ' + file.name);
+            
+        } catch (err) {
+            alert('Error parsing JSON: ' + err.message);
+            updateExpectedTimesUI('Error - ' + err.message, file.name, 0, '#f44336');
+        }
+    };
+    reader.readAsText(file);
+    input.value = '';
+}
+
+// Update Expected Times UI
+function updateExpectedTimesUI(status, source, count, color) {
+    const statusEl = document.getElementById('expectedTimesStatus');
+    const sourceEl = document.getElementById('expectedTimesSource');
+    const countEl = document.getElementById('expectedTimesCount');
+    
+    if (statusEl) {
+        statusEl.textContent = status;
+        statusEl.style.color = color;
+    }
+    if (sourceEl) sourceEl.textContent = source;
+    if (countEl) countEl.textContent = count.toLocaleString();
 }
 
 // Get expected time between two sites (minutes)
