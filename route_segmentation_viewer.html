@@ -125,8 +125,11 @@
                         <div style="margin-bottom:8px;">
                             <strong>Source:</strong> <span id="expectedTimesSource">-</span>
                         </div>
+                        <div style="margin-bottom:8px;">
+                            <strong>Time Entries:</strong> <span id="expectedTimesCount">0</span>
+                        </div>
                         <div>
-                            <strong>Entries:</strong> <span id="expectedTimesCount">0</span>
+                            <strong>Routes with Waypoints:</strong> <span id="expectedWaypointsCount">0</span>
                         </div>
                     </div>
                     <input type="file" id="matrixUpload" accept=".json" onchange="uploadGoogleMatrix(this)" style="display:none;">
@@ -134,7 +137,7 @@
                         Upload Google Matrix JSON
                     </button>
                     <p style="font-size:0.7rem;color:#666;margin-top:5px;">
-                        JSON format: { "time_min": {"0_1": 5.5, ...}, "sites": [...] }
+                        JSON: { "time_min": {...}, "distance_km": {...}, "waypoints": {...}, "sites": [...] }
                     </p>
                 </div>
                 
@@ -206,6 +209,8 @@ const SITES = {"RUHSM001":{"lat":24.7403322023658,"lon":46.6273981332779,"dir":"
 
 // Expected times will be loaded from external file or use fallback estimates
 let EXPECTED_TIMES = {};
+let EXPECTED_WAYPOINTS = {}; // Store waypoints: "SITE_A_SITE_B" -> [siteId1, siteId2, ...]
+let EXPECTED_DISTANCES = {}; // Store distances: "SITE_A_SITE_B" -> km
 let expectedTimesLoaded = false;
 
 // ============ MAP VARIABLES ============
@@ -269,13 +274,19 @@ async function loadExpectedTimes() {
 // Process Google Matrix data
 function processGoogleMatrix(data, sourceName) {
     EXPECTED_TIMES = {}; // Reset
+    EXPECTED_WAYPOINTS = {}; // Reset
+    EXPECTED_DISTANCES = {}; // Reset
     
     // Build site_id to index mapping
     const siteIdToIdx = {};
     const sites = data.sites || [];
     sites.forEach((s, i) => siteIdToIdx[s.site_id] = i);
     
-    // Convert index-based keys to site_id based
+    // Also build index to site_id mapping
+    const idxToSiteId = {};
+    sites.forEach((s, i) => idxToSiteId[i] = s.site_id);
+    
+    // Convert index-based keys to site_id based - TIME
     const timeMin = data.time_min || {};
     for (const key in timeMin) {
         const parts = key.split('_');
@@ -289,11 +300,46 @@ function processGoogleMatrix(data, sourceName) {
         }
     }
     
+    // Convert index-based keys to site_id based - DISTANCE
+    const distKm = data.distance_km || {};
+    for (const key in distKm) {
+        const parts = key.split('_');
+        if (parts.length === 2) {
+            const i = parseInt(parts[0]);
+            const j = parseInt(parts[1]);
+            if (i < sites.length && j < sites.length) {
+                const siteKey = sites[i].site_id + '_' + sites[j].site_id;
+                EXPECTED_DISTANCES[siteKey] = distKm[key];
+            }
+        }
+    }
+    
+    // Convert waypoints - they are stored as arrays of site indices
+    const waypoints = data.waypoints || {};
+    let wpCount = 0;
+    for (const key in waypoints) {
+        const parts = key.split('_');
+        if (parts.length === 2) {
+            const i = parseInt(parts[0]);
+            const j = parseInt(parts[1]);
+            if (i < sites.length && j < sites.length) {
+                const siteKey = sites[i].site_id + '_' + sites[j].site_id;
+                // Convert waypoint indices to site IDs
+                const wpIndices = waypoints[key] || [];
+                if (wpIndices.length > 0) {
+                    EXPECTED_WAYPOINTS[siteKey] = wpIndices.map(idx => idxToSiteId[idx]).filter(Boolean);
+                    wpCount++;
+                }
+            }
+        }
+    }
+    
     expectedTimesLoaded = true;
     const count = Object.keys(EXPECTED_TIMES).length;
-    console.log('Loaded', count, 'expected times from', sourceName);
+    const distCount = Object.keys(EXPECTED_DISTANCES).length;
+    console.log('Loaded', count, 'expected times,', distCount, 'distances,', wpCount, 'routes with waypoints from', sourceName);
     
-    updateExpectedTimesUI('Loaded', sourceName, count, '#4caf50');
+    updateExpectedTimesUI('Loaded', sourceName, count, '#4caf50', wpCount);
 }
 
 // Upload Google Matrix JSON
@@ -333,10 +379,11 @@ function uploadGoogleMatrix(input) {
 }
 
 // Update Expected Times UI
-function updateExpectedTimesUI(status, source, count, color) {
+function updateExpectedTimesUI(status, source, count, color, wpCount = 0) {
     const statusEl = document.getElementById('expectedTimesStatus');
     const sourceEl = document.getElementById('expectedTimesSource');
     const countEl = document.getElementById('expectedTimesCount');
+    const wpCountEl = document.getElementById('expectedWaypointsCount');
     
     if (statusEl) {
         statusEl.textContent = status;
@@ -344,6 +391,7 @@ function updateExpectedTimesUI(status, source, count, color) {
     }
     if (sourceEl) sourceEl.textContent = source;
     if (countEl) countEl.textContent = count.toLocaleString();
+    if (wpCountEl) wpCountEl.textContent = wpCount.toLocaleString();
 }
 
 // Get expected time between two sites (minutes)
@@ -706,6 +754,11 @@ function renderTripList(trips) {
         const time = new Date(trip.t_prev).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         const statusClass = trip.status;
         
+        // Check for expected waypoints
+        const routeKey = trip.camera_prev + '_' + trip.camera_next;
+        const expectedWaypoints = EXPECTED_WAYPOINTS[routeKey] || [];
+        const expectedDist = EXPECTED_DISTANCES[routeKey];
+        
         // Determine flag icons
         let flags = '';
         if (trip.status === 'break') {
@@ -715,10 +768,15 @@ function renderTripList(trips) {
             flags += '<span style="color:#fbbc05;margin-left:5px;font-weight:bold;" title="Slow">[SLOW]</span>';
         }
         
+        // Waypoint indicator
+        const wpIndicator = expectedWaypoints.length > 0 
+            ? `<span style="color:#1565c0;font-size:0.7rem;margin-left:5px;" title="Has ${expectedWaypoints.length} waypoint(s)">[${expectedWaypoints.length}WP]</span>` 
+            : '';
+        
         html += `
             <div class="trip-item ${statusClass}" data-idx="${idx}" onclick="selectTrip(${idx})">
                 <div class="trip-header">
-                    <span class="trip-route">${trip.camera_prev} → ${trip.camera_next}${flags}</span>
+                    <span class="trip-route">${trip.camera_prev} → ${trip.camera_next}${flags}${wpIndicator}</span>
                     <span class="path-badge">Path ${trip.pathId}</span>
                 </div>
                 <div class="trip-time">${time}</div>
@@ -726,6 +784,7 @@ function renderTripList(trips) {
                     <span>Obs: ${formatTime(trip.obs_time_seconds)}</span>
                     <span>Exp: ${trip.expectedTimeMin ? formatTime(trip.expectedTimeMin * 60) : 'N/A'}</span>
                     ${trip.R !== null ? `<span>R: ${trip.R.toFixed(2)}</span>` : ''}
+                    ${expectedDist ? `<span>${expectedDist.toFixed(1)}km</span>` : ''}
                 </div>
                 ${trip.breakReason ? `<div class="break-reason">${trip.breakReason}</div>` : ''}
             </div>
@@ -830,27 +889,63 @@ function selectTrip(idx) {
     const details = document.getElementById('tripDetails');
     const statusClass = trip.status === 'normal' ? 'green' : trip.status === 'slow' ? 'yellow' : 'red';
     
-    details.innerHTML = `
+    // Get expected data from Google Matrix
+    const routeKey = trip.camera_prev + '_' + trip.camera_next;
+    const expectedWaypoints = EXPECTED_WAYPOINTS[routeKey] || [];
+    const expectedDistance = EXPECTED_DISTANCES[routeKey];
+    const expectedTime = EXPECTED_TIMES[routeKey];
+    
+    // Build waypoints HTML
+    let waypointsHtml = '';
+    if (expectedWaypoints.length > 0) {
+        waypointsHtml = `
+        <div class="detail-row" style="flex-direction:column;align-items:flex-start;">
+            <span class="detail-label" style="margin-bottom:5px;">Expected Waypoints (from Google Matrix):</span>
+            <div style="background:#e3f2fd;padding:8px;border-radius:4px;width:100%;font-family:monospace;font-size:0.8rem;">
+                ${trip.camera_prev} → ${expectedWaypoints.join(' → ')} → ${trip.camera_next}
+            </div>
+        </div>`;
+    } else {
+        waypointsHtml = `
         <div class="detail-row">
-            <span class="detail-label">Route</span>
-            <span class="detail-value">${trip.camera_prev} → ${trip.camera_next}</span>
+            <span class="detail-label">Expected Waypoints</span>
+            <span class="detail-value" style="color:#999;">None (direct route)</span>
+        </div>`;
+    }
+    
+    details.innerHTML = `
+        <div class="detail-row" style="background:#e3f2fd;margin:-15px -15px 10px -15px;padding:15px;border-radius:8px 8px 0 0;">
+            <span class="detail-label" style="font-size:1.1rem;font-weight:bold;">TRIP DETAILS</span>
+            <span class="detail-value" style="font-size:1.1rem;">${trip.camera_prev} → ${trip.camera_next}</span>
         </div>
         <div class="detail-row">
-            <span class="detail-label">Time</span>
+            <span class="detail-label">Time Window</span>
             <span class="detail-value">${new Date(trip.t_prev).toLocaleString()} → ${new Date(trip.t_next).toLocaleString()}</span>
         </div>
+        
+        <div style="background:#f5f5f5;margin:10px -15px;padding:10px 15px;font-weight:bold;">OBSERVED vs EXPECTED</div>
+        
         <div class="detail-row">
             <span class="detail-label">Observed Time</span>
-            <span class="detail-value">${formatTime(trip.obs_time_seconds)} (${trip.obs_time_seconds}s)</span>
+            <span class="detail-value">${formatTime(trip.obs_time_seconds)} (${(trip.obs_time_seconds/60).toFixed(1)} min)</span>
         </div>
         <div class="detail-row">
-            <span class="detail-label">Expected Time</span>
-            <span class="detail-value">${trip.expectedTimeMin ? formatTime(trip.expectedTimeMin * 60) + ' (' + trip.expectedTimeMin.toFixed(1) + ' min)' : 'N/A'}</span>
+            <span class="detail-label">Expected Time (Google)</span>
+            <span class="detail-value">${expectedTime ? formatTime(expectedTime * 60) + ' (' + expectedTime.toFixed(1) + ' min)' : 'N/A'}</span>
         </div>
         <div class="detail-row">
-            <span class="detail-label">Ratio (R)</span>
+            <span class="detail-label">Expected Distance (Google)</span>
+            <span class="detail-value">${expectedDistance ? expectedDistance.toFixed(2) + ' km' : 'N/A'}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Ratio R (obs/exp)</span>
             <span class="detail-value ${statusClass}">${trip.R !== null ? trip.R.toFixed(3) : 'N/A'}</span>
         </div>
+        
+        ${waypointsHtml}
+        
+        <div style="background:#f5f5f5;margin:10px -15px;padding:10px 15px;font-weight:bold;">SEGMENTATION RESULT</div>
+        
         <div class="detail-row">
             <span class="detail-label">Path ID</span>
             <span class="detail-value">${trip.pathId}</span>
@@ -882,6 +977,13 @@ function selectTrip(idx) {
         const bounds = new google.maps.LatLngBounds();
         bounds.extend({ lat: prevSite.lat, lng: prevSite.lon });
         bounds.extend({ lat: nextSite.lat, lng: nextSite.lon });
+        
+        // Also include waypoints in bounds
+        expectedWaypoints.forEach(wpId => {
+            const wp = SITES[wpId];
+            if (wp) bounds.extend({ lat: wp.lat, lng: wp.lon });
+        });
+        
         map.fitBounds(bounds, 100);
     }
 }
