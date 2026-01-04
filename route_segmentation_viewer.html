@@ -152,6 +152,15 @@
                     <p style="font-size:0.7rem;color:#666;margin-top:5px;">
                         JSON: { "time_min": {...}, "distance_km": {...}, "waypoints": {...}, "sites": [...] }
                     </p>
+                    <div style="margin-top:10px;padding-top:10px;border-top:1px solid #ddd;">
+                        <label style="font-size:0.75rem;color:#666;">Check Route in Matrix:</label>
+                        <div style="display:flex;gap:5px;margin-top:5px;">
+                            <input type="text" id="checkRouteFrom" placeholder="From (e.g. RUHSM001)" style="flex:1;padding:4px;font-size:0.75rem;">
+                            <input type="text" id="checkRouteTo" placeholder="To (e.g. RUHSM002)" style="flex:1;padding:4px;font-size:0.75rem;">
+                            <button onclick="checkRouteInMatrix()" style="padding:4px 8px;font-size:0.75rem;cursor:pointer;">Check</button>
+                        </div>
+                        <div id="checkRouteResult" style="margin-top:5px;font-size:0.75rem;color:#666;"></div>
+                    </div>
                 </div>
                 
                 <div class="panel">
@@ -303,9 +312,14 @@ async function loadExpectedTimes() {
     updateExpectedTimesUI('Loading...', 'Auto-loading google_matrix (2).json', 0, '#2196f3');
     
     try {
-        const response = await fetch('google_matrix (2).json');
+        // URL encode the filename (spaces and parentheses)
+        const response = await fetch(encodeURI('google_matrix (2).json'));
+        if (!response.ok) {
+            throw new Error('HTTP ' + response.status);
+        }
         const data = await response.json();
         
+        console.log('Google Matrix loaded, sites:', data.sites?.length, 'time_min keys:', Object.keys(data.time_min || {}).length);
         processGoogleMatrix(data, 'google_matrix (2).json (auto-loaded)');
         
     } catch (e) {
@@ -332,17 +346,24 @@ function processGoogleMatrix(data, sourceName) {
     
     // Convert index-based keys to site_id based - TIME
     const timeMin = data.time_min || {};
+    let convertedCount = 0;
     for (const key in timeMin) {
         const parts = key.split('_');
         if (parts.length === 2) {
             const i = parseInt(parts[0]);
             const j = parseInt(parts[1]);
-            if (i < sites.length && j < sites.length) {
+            if (i < sites.length && j < sites.length && sites[i] && sites[j]) {
                 const siteKey = sites[i].site_id + '_' + sites[j].site_id;
                 EXPECTED_TIMES[siteKey] = timeMin[key];
+                convertedCount++;
+                // Debug: log first few conversions
+                if (convertedCount <= 3) {
+                    console.log('Converted time:', key, '->', siteKey, '=', timeMin[key], 'min');
+                }
             }
         }
     }
+    console.log('Total time entries converted:', convertedCount);
     
     // Convert index-based keys to site_id based - DISTANCE
     const distKm = data.distance_km || {};
@@ -384,6 +405,45 @@ function processGoogleMatrix(data, sourceName) {
     console.log('Loaded', count, 'expected times,', distCount, 'distances,', wpCount, 'routes with waypoints from', sourceName);
     
     updateExpectedTimesUI('Loaded', sourceName, count, '#4caf50', wpCount);
+}
+
+// Check if a specific route exists in the matrix
+function checkRouteInMatrix() {
+    const from = document.getElementById('checkRouteFrom').value.trim().toUpperCase();
+    const to = document.getElementById('checkRouteTo').value.trim().toUpperCase();
+    const resultDiv = document.getElementById('checkRouteResult');
+    
+    if (!from || !to) {
+        resultDiv.innerHTML = '<span style="color:#f44336;">Enter both From and To site IDs</span>';
+        return;
+    }
+    
+    const key = from + '_' + to;
+    const time = EXPECTED_TIMES[key];
+    const dist = EXPECTED_DISTANCES[key];
+    const waypoints = EXPECTED_WAYPOINTS[key];
+    
+    let html = '';
+    if (time !== undefined) {
+        html += `<div style="color:#4caf50;"><strong>${key}</strong>: ${time.toFixed(2)} min`;
+        if (dist) html += `, ${dist.toFixed(2)} km`;
+        html += '</div>';
+        if (waypoints && waypoints.length > 0) {
+            html += `<div style="color:#1565c0;font-size:0.7rem;">Waypoints: ${waypoints.join(' → ')}</div>`;
+        }
+    } else {
+        html += `<span style="color:#f44336;"><strong>${key}</strong>: NOT FOUND in matrix</span>`;
+        // Check if sites exist
+        const fromExists = SITES[from];
+        const toExists = SITES[to];
+        if (!fromExists) html += `<div style="color:#ff9800;font-size:0.7rem;">Site ${from} not in SITES</div>`;
+        if (!toExists) html += `<div style="color:#ff9800;font-size:0.7rem;">Site ${to} not in SITES</div>`;
+        
+        // Show total entries for debugging
+        html += `<div style="color:#666;font-size:0.7rem;">Total EXPECTED_TIMES entries: ${Object.keys(EXPECTED_TIMES).length}</div>`;
+    }
+    
+    resultDiv.innerHTML = html;
 }
 
 // Upload Google Matrix JSON
@@ -1560,8 +1620,13 @@ function selectTrip(idx) {
         </div>
         <div class="detail-row">
             <span class="detail-label">Expected Time (Google)</span>
-            <span class="detail-value">${expectedTime ? formatTime(expectedTime * 60) + ' (' + expectedTime.toFixed(1) + ' min)' : 'N/A'}</span>
+            <span class="detail-value">${expectedTime ? formatTime(expectedTime * 60) + ' (' + expectedTime.toFixed(1) + ' min)' : '<span style="color:#f44336;">Not in matrix</span>'}</span>
         </div>
+        ${!expectedTime ? `
+        <div class="detail-row" style="background:#fff3e0;margin:0 -15px;padding:5px 15px;font-size:0.75rem;">
+            <span style="color:#e65100;">Matrix key "${routeKey}" not found. Check if route exists in uploaded matrix.</span>
+        </div>
+        ` : ''}
         <div class="detail-row">
             <span class="detail-label">Expected Distance (Google)</span>
             <span class="detail-value">${expectedDistance ? expectedDistance.toFixed(2) + ' km' : 'N/A'}</span>
