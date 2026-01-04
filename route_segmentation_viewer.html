@@ -130,10 +130,17 @@
                 
                 <div class="panel">
                     <h2>📊 Legend</h2>
-                    <div class="legend">
+                    <div class="legend" style="flex-direction: column; gap: 8px;">
+                        <div style="font-weight: 600; margin-bottom: 5px;">Lines (Trips):</div>
                         <div class="legend-item"><div class="legend-color green"></div> Normal (same path)</div>
                         <div class="legend-item"><div class="legend-color yellow"></div> Slow (temporal warning)</div>
                         <div class="legend-item"><div class="legend-color red"></div> Path Break</div>
+                        <div style="font-weight: 600; margin: 10px 0 5px 0;">Sites (Markers):</div>
+                        <div class="legend-item"><div style="width:12px;height:12px;border-radius:50%;background:#4285f4;border:2px solid #fff;"></div> Normal site</div>
+                        <div class="legend-item"><div style="width:14px;height:14px;border-radius:50%;background:#ff9800;border:2px solid #e65100;"></div> ⏱️ Temporal fail</div>
+                        <div class="legend-item"><div style="width:14px;height:14px;border-radius:50%;background:#9c27b0;border:2px solid #6a1b9a;"></div> 📍 Spatial fail</div>
+                        <div class="legend-item"><div style="width:16px;height:16px;border-radius:50%;background:#ea4335;border:2px solid #b71c1c;"></div> ❌ Both failed</div>
+                        <div class="legend-item"><div style="width:13px;height:13px;border-radius:50%;background:#fbbc05;border:2px solid #f57f17;"></div> 🐢 Slow</div>
                     </div>
                 </div>
                 
@@ -416,7 +423,36 @@ async function visualizeRoute(trips) {
     const bounds = new google.maps.LatLngBounds();
     const colorMap = { normal: '#34a853', slow: '#fbbc05', break: '#ea4335' };
     
-    // Add site markers
+    // Build site status map - track which sites have issues
+    const siteStatus = {}; // siteId -> { temporal: bool, spatial: bool, breakReason: string }
+    
+    trips.forEach(trip => {
+        // Initialize sites
+        if (!siteStatus[trip.camera_prev]) {
+            siteStatus[trip.camera_prev] = { temporal: true, spatial: true, reasons: [] };
+        }
+        if (!siteStatus[trip.camera_next]) {
+            siteStatus[trip.camera_next] = { temporal: true, spatial: true, reasons: [] };
+        }
+        
+        // Flag the destination site if there was a break
+        if (trip.status === 'break') {
+            if (!trip.temporalOk) {
+                siteStatus[trip.camera_next].temporal = false;
+                siteStatus[trip.camera_next].reasons.push('⏱️ Temporal fail: R=' + (trip.R ? trip.R.toFixed(2) : 'N/A'));
+            }
+            if (!trip.spatialOk) {
+                siteStatus[trip.camera_next].spatial = false;
+                siteStatus[trip.camera_next].reasons.push('📍 Spatial fail: too far');
+            }
+        }
+        // Flag slow sites too
+        if (trip.status === 'slow') {
+            siteStatus[trip.camera_next].reasons.push('🐢 Slow: R=' + (trip.R ? trip.R.toFixed(2) : 'N/A'));
+        }
+    });
+    
+    // Add site markers with status colors
     const visitedSites = new Set();
     trips.forEach(trip => {
         visitedSites.add(trip.camera_prev);
@@ -427,19 +463,60 @@ async function visualizeRoute(trips) {
         const site = SITES[siteId];
         if (!site) return;
         
+        const status = siteStatus[siteId] || { temporal: true, spatial: true, reasons: [] };
+        
+        // Determine marker color based on status
+        let fillColor = '#4285f4'; // Blue = normal
+        let strokeColor = '#fff';
+        let scale = 8;
+        let zIndex = 1;
+        
+        if (!status.temporal && !status.spatial) {
+            fillColor = '#ea4335'; // Red = both failed
+            strokeColor = '#b71c1c';
+            scale = 12;
+            zIndex = 100;
+        } else if (!status.temporal) {
+            fillColor = '#ff9800'; // Orange = temporal failed
+            strokeColor = '#e65100';
+            scale = 11;
+            zIndex = 90;
+        } else if (!status.spatial) {
+            fillColor = '#9c27b0'; // Purple = spatial failed
+            strokeColor = '#6a1b9a';
+            scale = 11;
+            zIndex = 90;
+        } else if (status.reasons.length > 0 && status.reasons.some(r => r.includes('Slow'))) {
+            fillColor = '#fbbc05'; // Yellow = slow
+            strokeColor = '#f57f17';
+            scale = 9;
+            zIndex = 50;
+        }
+        
+        // Build tooltip
+        let title = siteId + ' (' + site.dir + ')';
+        if (status.reasons.length > 0) {
+            title += '\n' + status.reasons.join('\n');
+        }
+        
         const marker = new google.maps.Marker({
             position: { lat: site.lat, lng: site.lon },
             map: map,
-            title: siteId + ' (' + site.dir + ')',
+            title: title,
+            zIndex: zIndex,
             icon: {
                 path: google.maps.SymbolPath.CIRCLE,
-                scale: 8,
-                fillColor: '#4285f4',
+                scale: scale,
+                fillColor: fillColor,
                 fillOpacity: 1,
-                strokeColor: '#fff',
+                strokeColor: strokeColor,
                 strokeWeight: 2
             }
         });
+        
+        // Add click listener to show site info
+        marker.addListener('click', () => showSiteInfo(siteId, status));
+        
         markers.push(marker);
         bounds.extend(marker.getPosition());
     });
@@ -529,10 +606,19 @@ function renderTripList(trips) {
         const time = new Date(trip.t_prev).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         const statusClass = trip.status;
         
+        // Determine flag icons
+        let flags = '';
+        if (trip.status === 'break') {
+            if (!trip.temporalOk) flags += '<span style="color:#ff9800;margin-left:5px;" title="Temporal failed">⏱️</span>';
+            if (!trip.spatialOk) flags += '<span style="color:#9c27b0;margin-left:5px;" title="Spatial failed">📍</span>';
+        } else if (trip.status === 'slow') {
+            flags += '<span style="color:#fbbc05;margin-left:5px;" title="Slow">🐢</span>';
+        }
+        
         html += `
             <div class="trip-item ${statusClass}" data-idx="${idx}" onclick="selectTrip(${idx})">
                 <div class="trip-header">
-                    <span class="trip-route">${trip.camera_prev} → ${trip.camera_next}</span>
+                    <span class="trip-route">${trip.camera_prev} → ${trip.camera_next}${flags}</span>
                     <span class="path-badge">Path ${trip.pathId}</span>
                 </div>
                 <div class="trip-time">${time}</div>
@@ -555,6 +641,77 @@ function formatTime(seconds) {
     const h = Math.floor(seconds / 3600);
     const m = Math.round((seconds % 3600) / 60);
     return h + 'h ' + m + 'm';
+}
+
+// Show site info when marker is clicked
+function showSiteInfo(siteId, status) {
+    const site = SITES[siteId];
+    if (!site) return;
+    
+    const panel = document.getElementById('detailPanel');
+    panel.classList.add('visible');
+    
+    const details = document.getElementById('tripDetails');
+    
+    // Determine status
+    let statusText = '✅ Normal';
+    let statusClass = 'green';
+    if (!status.temporal && !status.spatial) {
+        statusText = '❌ Both Temporal & Spatial Failed';
+        statusClass = 'red';
+    } else if (!status.temporal) {
+        statusText = '⏱️ Temporal Check Failed';
+        statusClass = 'yellow';
+    } else if (!status.spatial) {
+        statusText = '📍 Spatial Check Failed';
+        statusClass = 'red';
+    } else if (status.reasons.length > 0) {
+        statusText = '🐢 Slow (Warning)';
+        statusClass = 'yellow';
+    }
+    
+    details.innerHTML = `
+        <div class="detail-row" style="background:#e3f2fd;margin:-15px -15px 10px -15px;padding:15px;border-radius:8px 8px 0 0;">
+            <span class="detail-label" style="font-size:1.1rem;font-weight:bold;">📍 Site Info</span>
+            <span class="detail-value" style="font-size:1.1rem;">${siteId}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Direction</span>
+            <span class="detail-value">${site.dir}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Latitude</span>
+            <span class="detail-value">${site.lat.toFixed(6)}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Longitude</span>
+            <span class="detail-value">${site.lon.toFixed(6)}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Status</span>
+            <span class="detail-value ${statusClass}">${statusText}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Temporal OK</span>
+            <span class="detail-value ${status.temporal ? 'green' : 'red'}">${status.temporal ? '✓ Yes' : '✗ No'}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Spatial OK</span>
+            <span class="detail-value ${status.spatial ? 'green' : 'red'}">${status.spatial ? '✓ Yes' : '✗ No'}</span>
+        </div>
+        ${status.reasons.length > 0 ? `
+        <div class="detail-row" style="flex-direction:column;align-items:flex-start;">
+            <span class="detail-label" style="margin-bottom:5px;">Issues/Notes:</span>
+            <div style="background:#fff3e0;padding:8px;border-radius:4px;width:100%;">
+                ${status.reasons.map(r => `<div style="margin:3px 0;color:#e65100;">${r}</div>`).join('')}
+            </div>
+        </div>
+        ` : ''}
+    `;
+    
+    // Zoom to site
+    map.setCenter({ lat: site.lat, lng: site.lon });
+    map.setZoom(15);
 }
 
 function selectTrip(idx) {
