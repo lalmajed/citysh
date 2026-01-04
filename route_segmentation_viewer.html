@@ -165,7 +165,7 @@
                     </div>
                     <div class="normal-band" style="margin-top:10px;">
                         <p style="margin-bottom:8px;font-weight:bold;">Spatial Check (uses Google Matrix)</p>
-                        <p style="margin-bottom:8px;font-size:0.75rem;">Is camera_prev on/near corridor from path_start to camera_next?</p>
+                        <p style="margin-bottom:8px;font-size:0.75rem;">Is current site (camera_next) reachable from path_start?</p>
                         <div class="normal-band-inputs">
                             <div style="flex:1;">
                                 <label style="font-size:0.75rem;">Epsilon (meters)</label>
@@ -173,7 +173,7 @@
                             </div>
                         </div>
                         <p style="margin-top:5px;font-size:0.7rem;color:#666;">
-                            Corridor = path_start -> [matrix waypoints] -> destination
+                            Checks if route exists in matrix: path_start -> current_site
                         </p>
                     </div>
                     <div style="background:#ffebee;padding:8px;border-radius:4px;margin-top:10px;font-size:0.7rem;color:#c62828;">
@@ -197,8 +197,8 @@
                         <div class="legend-item"><div style="width:13px;height:13px;border-radius:50%;background:#fbbc05;border:2px solid #f57f17;"></div> SLOW</div>
                     </div>
                     <div style="margin-top:10px;padding:8px;background:#e8f5e9;border-radius:4px;font-size:0.7rem;color:#2e7d32;">
-                        <strong>Spatial Check:</strong> Intermediate site (camera_prev) must be within epsilon of the Google Matrix corridor (pathStart -> waypoints -> destination).<br>
-                        <strong>Note:</strong> Skipping intermediate cameras is allowed - vehicle need not visit all waypoints.
+                        <strong>Spatial Check:</strong> Current site must be reachable from path start via Google Matrix route.<br>
+                        <strong>Note:</strong> Intermediate observed sites are NOT checked - only reachability of current site matters.
                     </div>
                 </div>
                 
@@ -562,59 +562,70 @@ function distanceToSegment(lat, lon, lat1, lon1, lat2, lon2) {
 }
 
 // Check spatial continuity using precomputed Google Matrix waypoints
-// Checks if the intermediate site (camera_prev) lies on/near the corridor from pathStart to destination
-function checkSpatialContinuity(pathStartSite, intermediateSite, destSite, epsilonMeters) {
-    // If path just started (intermediate = pathStart), always OK
-    if (pathStartSite === intermediateSite) {
-        return { spatialOk: true, distanceToRoute: 0, corridorSites: [pathStartSite], reason: 'Path start' };
+// Checks if the CURRENT site (camera_next) lies on/near the corridor from pathStart to that site
+// NOTE: Intermediate observed sites (camera_prev) are NOT checked - only the current destination matters
+function checkSpatialContinuity(pathStartSite, currentSite, epsilonMeters) {
+    // If current site = path start, always OK (path just started)
+    if (pathStartSite === currentSite) {
+        return { spatialOk: true, distanceToRoute: 0, corridorSites: [pathStartSite], reason: 'Same as path start' };
     }
     
-    // Build the expected corridor from pathStart to destination
-    const corridor = buildCorridor(pathStartSite, destSite);
+    // Get site coordinates
+    const startData = SITES[pathStartSite];
+    const currentData = SITES[currentSite];
     
-    if (corridor.length < 2) {
-        // Can't build corridor - missing site data
+    if (!startData || !currentData) {
         return { 
             spatialOk: false, 
             distanceToRoute: null, 
             corridorSites: [], 
-            reason: 'Cannot build corridor (missing site data)' 
+            reason: 'Site coordinates not found' 
         };
     }
     
-    // Get intermediate site coordinates
-    const intermediateData = SITES[intermediateSite];
-    if (!intermediateData) {
+    // Build the expected corridor from pathStart to currentSite
+    const corridor = buildCorridor(pathStartSite, currentSite);
+    
+    // Check if corridor exists in the matrix
+    const routeKey = pathStartSite + '_' + currentSite;
+    const hasMatrixEntry = EXPECTED_TIMES[routeKey] !== undefined;
+    
+    if (corridor.length < 2) {
+        // Can't build corridor - no matrix data
+        // Fall back to direct distance check
+        const directDist = haversineDistance(startData.lat, startData.lon, currentData.lat, currentData.lon) * 1000;
         return { 
             spatialOk: false, 
-            distanceToRoute: null, 
-            corridorSites: corridor.map(c => c.siteId), 
-            reason: 'Intermediate site not found' 
+            distanceToRoute: directDist, 
+            corridorSites: [pathStartSite, currentSite], 
+            reason: 'No route in matrix from ' + pathStartSite + ' to ' + currentSite
         };
     }
     
-    // Check if intermediate site is ON the corridor (i.e., is one of the waypoints)
-    const isOnCorridor = corridor.some(c => c.siteId === intermediateSite);
-    if (isOnCorridor) {
+    // Corridor exists - current site is reachable from path start via Google routes
+    // The current site IS the destination of the corridor, so it's on the corridor by definition
+    // But we verify the corridor endpoint matches the current site location
+    const corridorEnd = corridor[corridor.length - 1];
+    const distToCorridorEnd = haversineDistance(currentData.lat, currentData.lon, corridorEnd.lat, corridorEnd.lon) * 1000;
+    
+    if (distToCorridorEnd <= epsilonMeters) {
         return { 
             spatialOk: true, 
-            distanceToRoute: 0, 
+            distanceToRoute: distToCorridorEnd, 
             corridorSites: corridor.map(c => c.siteId), 
-            reason: 'Site is on expected corridor' 
+            reason: hasMatrixEntry 
+                ? 'Route exists in matrix (' + corridor.length + ' sites in corridor)'
+                : 'Direct route (no waypoints)'
+        };
+    } else {
+        // This shouldn't normally happen unless there's coordinate mismatch
+        return {
+            spatialOk: false,
+            distanceToRoute: distToCorridorEnd,
+            corridorSites: corridor.map(c => c.siteId),
+            reason: 'Coordinate mismatch: site ' + Math.round(distToCorridorEnd) + 'm from corridor endpoint'
         };
     }
-    
-    // Check distance from intermediate site to the corridor
-    const distToRoute = distanceToCorridor(intermediateData.lat, intermediateData.lon, corridor);
-    
-    return {
-        spatialOk: distToRoute <= epsilonMeters,
-        distanceToRoute: distToRoute,
-        corridorSites: corridor.map(c => c.siteId),
-        reason: distToRoute <= epsilonMeters 
-            ? `Site within ${Math.round(distToRoute)}m of corridor` 
-            : `Site ${Math.round(distToRoute)}m from corridor (exceeds ${epsilonMeters}m)`
-    };
 }
 
 // Segmentation using precomputed Google Matrix data (no API calls)
@@ -665,8 +676,9 @@ function segmentRoute(trips) {
             }
             
             // SPATIAL CHECK using Google Matrix waypoints
-            // Check if intermediate site (camera_prev) lies on/near the corridor from pathStartSite to camera_next
-            const spatialResult = checkSpatialContinuity(pathStartSite, trip.camera_prev, trip.camera_next, epsilonMeters);
+            // Check if CURRENT site (camera_next) is reachable from pathStartSite via plausible road corridor
+            // NOTE: We do NOT check camera_prev - intermediate sites are irrelevant to spatial continuity
+            const spatialResult = checkSpatialContinuity(pathStartSite, trip.camera_next, epsilonMeters);
             spatialOk = spatialResult.spatialOk;
             spatialDistance = spatialResult.distanceToRoute;
             spatialCorridor = spatialResult.corridorSites || [];
@@ -677,8 +689,8 @@ function segmentRoute(trips) {
                 breakReason = 'BOTH FAILED - Temporal: R=' + (R ? R.toFixed(2) : 'N/A') + 
                               ' outside [' + rMin + ',' + rMax + '] | Spatial: ' + spatialReason;
             } else if (!spatialOk) {
-                breakReason = 'SPATIAL FAIL - ' + spatialReason + 
-                              ' | Expected corridor: ' + spatialCorridor.join(' -> ');
+                breakReason = 'SPATIAL FAIL - Site ' + trip.camera_next + ' not reachable from path start ' + pathStartSite + 
+                              ' | ' + spatialReason;
             } else if (!temporalOk) {
                 breakReason = 'TEMPORAL FAIL - R=' + (R ? R.toFixed(2) : 'N/A') + 
                               ' outside [' + rMin + ',' + rMax + ']';
