@@ -195,6 +195,9 @@
                         <div class="legend-item"><div style="width:14px;height:14px;border-radius:50%;background:#9c27b0;border:2px solid #6a1b9a;"></div> SPATIAL FAIL ([S])</div>
                         <div class="legend-item"><div style="width:16px;height:16px;border-radius:50%;background:#ea4335;border:2px solid #b71c1c;"></div> BOTH FAILED</div>
                         <div class="legend-item"><div style="width:13px;height:13px;border-radius:50%;background:#fbbc05;border:2px solid #f57f17;"></div> SLOW</div>
+                        <div style="font-weight: 600; margin: 10px 0 5px 0;">Path Origin/Destination:</div>
+                        <div class="legend-item"><div style="width:0;height:0;border-left:12px solid #1565C0;border-top:6px solid transparent;border-bottom:6px solid transparent;"></div> <span style="background:#1565C0;color:#fff;padding:1px 4px;border-radius:2px;font-size:0.7rem;margin-left:4px;">O#</span> Path Origin</div>
+                        <div class="legend-item"><div style="width:12px;height:12px;background:#1565C0;"></div> <span style="background:#1565C0;color:#fff;padding:1px 4px;border-radius:2px;font-size:0.7rem;margin-left:4px;">D#</span> Path Destination</div>
                         <div style="font-weight: 600; margin: 10px 0 5px 0;">Corridor (click trip to see):</div>
                         <div class="legend-item"><div style="width:20px;height:4px;background:repeating-linear-gradient(90deg,#2196F3 0,#2196F3 5px,transparent 5px,transparent 10px);"></div> Expected corridor (Google Matrix)</div>
                         <div class="legend-item"><div style="width:12px;height:12px;border-radius:50%;background:#2196F3;border:2px solid #0D47A1;"></div> Corridor waypoint</div>
@@ -768,6 +771,93 @@ async function getSnappedRoute(origin, destination) {
     });
 }
 
+// Add origin and destination markers for each path
+function addPathMarkers(trips) {
+    if (trips.length === 0) return;
+    
+    // Group trips by pathId
+    const pathGroups = {};
+    trips.forEach(trip => {
+        if (!pathGroups[trip.pathId]) {
+            pathGroups[trip.pathId] = [];
+        }
+        pathGroups[trip.pathId].push(trip);
+    });
+    
+    // Color palette for different paths
+    const pathColors = [
+        '#1565C0', '#2E7D32', '#6A1B9A', '#C62828', '#EF6C00', 
+        '#00838F', '#AD1457', '#4527A0', '#283593', '#00695C'
+    ];
+    
+    Object.keys(pathGroups).forEach((pathId, pathIndex) => {
+        const pathTrips = pathGroups[pathId];
+        if (pathTrips.length === 0) return;
+        
+        const color = pathColors[pathIndex % pathColors.length];
+        
+        // Origin: first trip's camera_prev
+        const firstTrip = pathTrips[0];
+        const originSite = SITES[firstTrip.camera_prev];
+        
+        // Destination: last trip's camera_next
+        const lastTrip = pathTrips[pathTrips.length - 1];
+        const destSite = SITES[lastTrip.camera_next];
+        
+        // Add ORIGIN marker (flag pointing right)
+        if (originSite) {
+            const originMarker = new google.maps.Marker({
+                position: { lat: originSite.lat, lng: originSite.lon },
+                map: map,
+                icon: {
+                    path: 'M 0,0 L 0,-20 L 15,-15 L 0,-10 Z',  // Flag shape
+                    fillColor: color,
+                    fillOpacity: 1,
+                    strokeColor: '#FFFFFF',
+                    strokeWeight: 2,
+                    scale: 1.2,
+                    anchor: new google.maps.Point(0, 0)
+                },
+                title: `Path ${pathId} ORIGIN: ${firstTrip.camera_prev}\nStart time: ${new Date(firstTrip.t_prev).toLocaleString()}`,
+                zIndex: 200,
+                label: {
+                    text: 'O' + pathId,
+                    color: '#FFFFFF',
+                    fontWeight: 'bold',
+                    fontSize: '10px'
+                }
+            });
+            markers.push(originMarker);
+        }
+        
+        // Add DESTINATION marker (square/diamond)
+        if (destSite) {
+            const destMarker = new google.maps.Marker({
+                position: { lat: destSite.lat, lng: destSite.lon },
+                map: map,
+                icon: {
+                    path: 'M -8,-8 L 8,-8 L 8,8 L -8,8 Z',  // Square shape
+                    fillColor: color,
+                    fillOpacity: 1,
+                    strokeColor: '#FFFFFF',
+                    strokeWeight: 2,
+                    scale: 1,
+                    anchor: new google.maps.Point(0, 0)
+                },
+                title: `Path ${pathId} DESTINATION: ${lastTrip.camera_next}\nEnd time: ${new Date(lastTrip.t_next).toLocaleString()}`,
+                zIndex: 200,
+                label: {
+                    text: 'D' + pathId,
+                    color: '#FFFFFF',
+                    fontWeight: 'bold',
+                    fontSize: '10px'
+                }
+            });
+            markers.push(destMarker);
+        }
+    });
+}
+
 async function visualizeRoute(trips) {
     clearMap();
     
@@ -873,6 +963,9 @@ async function visualizeRoute(trips) {
         markers.push(marker);
         bounds.extend(marker.getPosition());
     });
+    
+    // Add path origin/destination markers
+    addPathMarkers(trips);
     
     // Show loading message
     document.getElementById('tripList').innerHTML = '<div class="loading">Loading road-snapped routes...</div>';
