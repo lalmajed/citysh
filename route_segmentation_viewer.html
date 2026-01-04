@@ -90,8 +90,16 @@
                         <option value="">-- Select Vehicle --</option>
                     </select>
                     
-                    <label style="font-size:0.8rem;color:#666;">Date</label>
-                    <input type="date" id="datePicker">
+                    <div class="time-inputs">
+                        <div>
+                            <label>Start Date</label>
+                            <input type="date" id="startDate">
+                        </div>
+                        <div>
+                            <label>End Date</label>
+                            <input type="date" id="endDate">
+                        </div>
+                    </div>
                     
                     <div class="time-inputs">
                         <div>
@@ -206,9 +214,12 @@ function initMap() {
         sel.appendChild(opt);
     });
     
-    // Set default date (first trip date)
-    const firstDate = TRIPS[0].t_prev.split('T')[0];
-    document.getElementById('datePicker').value = firstDate;
+    // Set default dates (from first to last trip date)
+    const allDates = TRIPS.map(t => t.t_prev.split('T')[0]).sort();
+    const firstDate = allDates[0];
+    const lastDate = allDates[allDates.length - 1];
+    document.getElementById('startDate').value = firstDate;
+    document.getElementById('endDate').value = lastDate;
     
     // Load expected times
     loadExpectedTimes();
@@ -278,29 +289,31 @@ function haversineDistance(lat1, lon1, lat2, lon2) {
 }
 
 // ============ ROUTE FILTERING ============
-function filterTrips(vehicle, date, startTime, endTime) {
+function filterTrips(vehicle, startDate, endDate, startTime, endTime) {
     return TRIPS.filter(trip => {
         // Filter by vehicle
         if (vehicle && trip.plate !== vehicle) return false;
         
-        // Filter by date - check if trip overlaps with selected date
-        if (date) {
+        // Filter by date range
+        if (startDate && endDate) {
             const tripStartDate = trip.t_prev.split('T')[0];
             const tripEndDate = trip.t_next.split('T')[0];
-            // Trip must start on or before the date AND end on or after the date
-            if (tripStartDate > date || tripEndDate < date) return false;
+            
+            // Trip must overlap with the date range
+            // Trip overlaps if: tripStartDate <= endDate AND tripEndDate >= startDate
+            if (tripStartDate > endDate || tripEndDate < startDate) return false;
         }
         
-        // Filter by time window - trip must overlap with the time window
-        if (date && startTime && endTime) {
+        // Filter by time window within the date range
+        if (startDate && endDate && startTime && endTime) {
             const tripStartFull = new Date(trip.t_prev);
             const tripEndFull = new Date(trip.t_next);
             
-            // Create window start/end for the selected date
-            const windowStart = new Date(date + 'T' + startTime + ':00');
-            const windowEnd = new Date(date + 'T' + endTime + ':59');
+            // Create window start (startDate + startTime) and end (endDate + endTime)
+            const windowStart = new Date(startDate + 'T' + startTime + ':00');
+            const windowEnd = new Date(endDate + 'T' + endTime + ':59');
             
-            // Check if trip overlaps with window
+            // Check if trip overlaps with the full window
             // Trip overlaps if: tripStart <= windowEnd AND tripEnd >= windowStart
             if (tripStartFull > windowEnd || tripEndFull < windowStart) return false;
         }
@@ -789,7 +802,8 @@ function selectTrip(idx) {
 // ============ MAIN FUNCTIONS ============
 async function showRoute() {
     const vehicle = document.getElementById('vehicleSel').value;
-    const date = document.getElementById('datePicker').value;
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
     const startTime = document.getElementById('startTime').value;
     const endTime = document.getElementById('endTime').value;
     
@@ -798,20 +812,34 @@ async function showRoute() {
         return;
     }
     
+    if (!startDate || !endDate) {
+        alert('Please select start and end dates');
+        return;
+    }
+    
+    if (startDate > endDate) {
+        alert('Start date must be before or equal to end date');
+        return;
+    }
+    
     // Show active filter
     const filterDiv = document.getElementById('activeFilter');
     const filterInfo = document.getElementById('filterInfo');
     filterDiv.style.display = 'block';
-    filterInfo.innerHTML = `<strong>${vehicle}</strong> on <strong>${date}</strong> from <strong>${startTime}</strong> to <strong>${endTime}</strong>`;
+    
+    const dateRange = startDate === endDate 
+        ? `<strong>${startDate}</strong>` 
+        : `<strong>${startDate}</strong> to <strong>${endDate}</strong>`;
+    filterInfo.innerHTML = `<strong>${vehicle}</strong> | ${dateRange} | Time: <strong>${startTime}</strong> - <strong>${endTime}</strong>`;
     
     // Show loading state
     document.getElementById('tripList').innerHTML = '<div class="loading">Filtering trips...</div>';
     
     // Filter trips
-    const filtered = filterTrips(vehicle, date, startTime, endTime);
+    const filtered = filterTrips(vehicle, startDate, endDate, startTime, endTime);
     
     if (filtered.length === 0) {
-        document.getElementById('tripList').innerHTML = '<div class="no-data">No trips found for the selected filters.<br><br>Try adjusting the date or time window.</div>';
+        document.getElementById('tripList').innerHTML = '<div class="no-data">No trips found for the selected filters.<br><br>Try adjusting the date range or time window.</div>';
         updateStats([]);
         clearMap();
         return;
@@ -829,7 +857,7 @@ async function showRoute() {
     // Visualize (async - will snap to roads)
     await visualizeRoute(currentRoute);
     
-    console.log('Showing route:', currentRoute.length, 'trips for', vehicle, 'on', date, 'from', startTime, 'to', endTime);
+    console.log('Showing route:', currentRoute.length, 'trips for', vehicle, 'from', startDate, 'to', endDate, 'time', startTime, '-', endTime);
 }
 
 async function showAllTrips() {
@@ -849,7 +877,7 @@ async function showAllTrips() {
     document.getElementById('tripList').innerHTML = '<div class="loading">Loading all trips...</div>';
     
     // Filter by vehicle only (no date/time filter)
-    const filtered = filterTrips(vehicle, null, null, null);
+    const filtered = filterTrips(vehicle, null, null, null, null);
     
     if (filtered.length === 0) {
         document.getElementById('tripList').innerHTML = '<div class="no-data">No trips found for this vehicle.</div>';
