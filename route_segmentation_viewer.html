@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Segmentation Viewer</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px; }
+        h1 { color: #4285f4; margin-bottom: 5px; }
+        .subtitle { color: #666; margin-bottom: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .stat-row { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .stat { flex: 1; min-width: 100px; background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .stat-value { font-size: 1.5rem; font-weight: bold; color: #4285f4; }
+        .stat-value.green { color: #34a853; }
+        .stat-value.yellow { color: #fbbc05; }
+        .stat-value.red { color: #ea4335; }
+        .stat-label { color: #666; font-size: 0.75rem; }
+        .grid { display: grid; grid-template-columns: 350px 1fr; gap: 15px; }
+        .panel { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .panel h2 { color: #4285f4; font-size: 0.9rem; margin-bottom: 10px; border-bottom: 2px solid #4285f4; padding-bottom: 8px; }
+        select, input[type="date"], input[type="time"] { width: 100%; padding: 10px; font-size: 0.9rem; border: 2px solid #ddd; border-radius: 6px; margin-bottom: 10px; }
+        .btn { width: 100%; padding: 12px; background: #4285f4; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
+        .btn:hover { background: #3367d6; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        #map { height: 500px; border-radius: 10px; }
+        .trip-list { max-height: 400px; overflow-y: auto; }
+        .trip-item { padding: 10px; margin: 5px 0; border-radius: 6px; cursor: pointer; border-left: 4px solid #4285f4; background: #f8f9fa; transition: all 0.2s; }
+        .trip-item:hover { background: #e3f2fd; }
+        .trip-item.selected { background: #bbdefb; border-left-color: #1565c0; }
+        .trip-item.green { border-left-color: #34a853; }
+        .trip-item.yellow { border-left-color: #fbbc05; }
+        .trip-item.red { border-left-color: #ea4335; }
+        .trip-header { display: flex; justify-content: space-between; font-weight: 600; }
+        .trip-route { color: #333; }
+        .trip-time { color: #666; font-size: 0.85rem; }
+        .trip-meta { display: flex; gap: 10px; font-size: 0.75rem; color: #666; margin-top: 5px; }
+        .path-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; color: white; background: #4285f4; }
+        .detail-panel { background: #e8f5e9; padding: 15px; border-radius: 8px; display: none; }
+        .detail-panel.visible { display: block; }
+        .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #c8e6c9; }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: #666; }
+        .detail-value { font-weight: 600; color: #333; }
+        .detail-value.green { color: #34a853; }
+        .detail-value.yellow { color: #fbbc05; }
+        .detail-value.red { color: #ea4335; }
+        .legend { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.8rem; }
+        .legend-color { width: 20px; height: 4px; border-radius: 2px; }
+        .legend-color.green { background: #34a853; }
+        .legend-color.yellow { background: #fbbc05; }
+        .legend-color.red { background: #ea4335; }
+        .time-inputs { display: flex; gap: 10px; }
+        .time-inputs > div { flex: 1; }
+        .time-inputs label { font-size: 0.75rem; color: #666; display: block; margin-bottom: 4px; }
+        .no-data { text-align: center; padding: 30px; color: #999; }
+        .loading { text-align: center; padding: 20px; color: #666; }
+        .break-reason { background: #ffebee; color: #c62828; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; margin-top: 5px; display: inline-block; }
+        .normal-band { background: #e8f5e9; padding: 10px; border-radius: 6px; margin-bottom: 10px; font-size: 0.8rem; }
+        .normal-band-inputs { display: flex; gap: 10px; }
+        .normal-band-inputs input { width: 70px; padding: 5px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 Route Segmentation Viewer</h1>
+        <p class="subtitle">Visualize vehicle trips with path segmentation (temporal + spatial checks)</p>
+        
+        <div class="stat-row">
+            <div class="stat"><div class="stat-value" id="statVehicles">10</div><div class="stat-label">Vehicles</div></div>
+            <div class="stat"><div class="stat-value" id="statTrips">0</div><div class="stat-label">Trips in Route</div></div>
+            <div class="stat"><div class="stat-value green" id="statPaths">0</div><div class="stat-label">Paths Detected</div></div>
+            <div class="stat"><div class="stat-value yellow" id="statSlow">0</div><div class="stat-label">Slow Segments</div></div>
+            <div class="stat"><div class="stat-value red" id="statBreaks">0</div><div class="stat-label">Path Breaks</div></div>
+        </div>
+        
+        <div class="grid">
+            <div class="sidebar">
+                <div class="panel">
+                    <h2>🎛️ Controls</h2>
+                    <label style="font-size:0.8rem;color:#666;">Vehicle</label>
+                    <select id="vehicleSel">
+                        <option value="">-- Select Vehicle --</option>
+                    </select>
+                    
+                    <label style="font-size:0.8rem;color:#666;">Date</label>
+                    <input type="date" id="datePicker">
+                    
+                    <div class="time-inputs">
+                        <div>
+                            <label>Start Time</label>
+                            <input type="time" id="startTime" value="00:00">
+                        </div>
+                        <div>
+                            <label>End Time</label>
+                            <input type="time" id="endTime" value="23:59">
+                        </div>
+                    </div>
+                    
+                    <button class="btn" onclick="showRoute()">📍 Show Route</button>
+                    <button class="btn" onclick="showAllTrips()" style="background:#34a853;">📋 Show All Trips (No Filter)</button>
+                </div>
+                
+                <div class="panel">
+                    <h2>⚙️ Normal Band (R thresholds)</h2>
+                    <div class="normal-band">
+                        <p style="margin-bottom:8px;">R = observed_time / expected_time</p>
+                        <div class="normal-band-inputs">
+                            <div>
+                                <label style="font-size:0.75rem;">r_min</label>
+                                <input type="number" id="rMin" value="0.5" step="0.1" min="0">
+                            </div>
+                            <div>
+                                <label style="font-size:0.75rem;">r_max</label>
+                                <input type="number" id="rMax" value="2.0" step="0.1" min="0">
+                            </div>
+                        </div>
+                        <p style="margin-top:8px;font-size:0.75rem;color:#666;">
+                            temporal_ok = r_min ≤ R ≤ r_max
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>📊 Legend</h2>
+                    <div class="legend">
+                        <div class="legend-item"><div class="legend-color green"></div> Normal (same path)</div>
+                        <div class="legend-item"><div class="legend-color yellow"></div> Slow (temporal warning)</div>
+                        <div class="legend-item"><div class="legend-color red"></div> Path Break</div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <h2>📋 Trip List (click for details)</h2>
+                    <div class="trip-list" id="tripList">
+                        <div class="no-data">Select vehicle and click "Show Route"</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="main">
+                <div class="panel">
+                    <div id="map"></div>
+                </div>
+                
+                <div class="panel detail-panel" id="detailPanel">
+                    <h2>🔍 Trip Details</h2>
+                    <div id="tripDetails"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+// ============ EMBEDDED DATA ============
+const TRIPS = [{"plate": "640UXS", "camera_prev": "RUHSM033", "camera_next": "RUHSM033", "t_prev": "2025-08-06T09:56:08.789000", "t_next": "2025-08-06T09:56:08.789000", "obs_time_seconds": 0}, {"plate": "7733RZR", "camera_prev": "RUHSM228", "camera_next": "RUHSM228", "t_prev": "2025-07-29T17:29:15.488000", "t_next": "2025-07-30T21:58:10.011000", "obs_time_seconds": 102535}, {"plate": "7733RZR", "camera_prev": "RUHSM228", "camera_next": "RUHSM228", "t_prev": "2025-07-30T21:58:10.011000", "t_next": "2025-07-31T17:59:19.216000", "obs_time_seconds": 72069}, {"plate": "7733RZR", "camera_prev": "RUHSM228", "camera_next": "RUHSM002", "t_prev": "2025-07-31T17:59:19.216000", "t_next": "2025-08-02T20:43:18.215000", "obs_time_seconds": 182639}, {"plate": "7733RZR", "camera_prev": "RUHSM002", "camera_next": "RUHSM001", "t_prev": "2025-08-02T20:43:18.215000", "t_next": "2025-08-02T23:48:23.711000", "obs_time_seconds": 11105}, {"plate": "7733RZR", "camera_prev": "RUHSM001", "camera_next": "RUHSM002", "t_prev": "2025-08-02T23:48:23.711000", "t_next": "2025-08-03T00:07:03.674000", "obs_time_seconds": 1120}, {"plate": "7733RZR", "camera_prev": "RUHSM002", "camera_next": "RUHSM001", "t_prev": "2025-08-03T00:07:03.674000", "t_next": "2025-08-03T18:12:03.458000", "obs_time_seconds": 65100}, {"plate": "7733RZR", "camera_prev": "RUHSM001", "camera_next": "RUHSM002", "t_prev": "2025-08-03T18:12:03.458000", "t_next": "2025-08-04T17:32:02.179000", "obs_time_seconds": 83999}, {"plate": "7733RZR", "camera_prev": "RUHSM002", "camera_next": "RUHSM001", "t_prev": "2025-08-04T17:32:02.179000", "t_next": "2025-08-04T19:54:16.869000", "obs_time_seconds": 8534}, {"plate": "7733RZR", "camera_prev": "RUHSM001", "camera_next": "RUHSM002", "t_prev": "2025-08-04T19:54:16.869000", "t_next": "2025-08-04T20:07:52.142000", "obs_time_seconds": 816}, {"plate": "7733RZR", "camera_prev": "RUHSM002", "camera_next": "RUHSM002", "t_prev": "2025-08-04T20:07:52.142000", "t_next": "2025-08-04T20:07:52.245000", "obs_time_seconds": 0}, {"plate": "7733RZR", "camera_prev": "RUHSM002", "camera_next": "RUHSM002", "t_prev": "2025-08-04T20:07:52.245000", "t_next": "2025-08-05T00:01:58.624000", "obs_time_seconds": 14046}, {"plate": "7733RZR", "camera_prev": "RUHSM002", "camera_next": "RUHSM002", "t_prev": "2025-08-05T00:01:58.624000", "t_next": "2025-08-05T00:01:59.091000", "obs_time_seconds": 1}, {"plate": "7733RZR", "camera_prev": "RUHSM002", "camera_next": "RUHSM274", "t_prev": "2025-08-05T00:01:59.091000", "t_next": "2025-08-05T00:21:04.926000", "obs_time_seconds": 1145}, {"plate": "7733RZR", "camera_prev": "RUHSM274", "camera_next": "RUHSM001", "t_prev": "2025-08-05T00:21:04.926000", "t_next": "2025-08-05T19:38:25.322000", "obs_time_seconds": 69441}, {"plate": "7733RZR", "camera_prev": "RUHSM001", "camera_next": "RUHSM002", "t_prev": "2025-08-05T19:38:25.322000", "t_next": "2025-08-05T19:51:44.305000", "obs_time_seconds": 799}, {"plate": "7733RZR", "camera_prev": "RUHSM002", "camera_next": "RUHSM191", "t_prev": "2025-08-05T19:51:44.305000", "t_next": "2025-08-07T18:16:09.702000", "obs_time_seconds": 167065}, {"plate": "7733RZR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "t_prev": "2025-08-07T18:16:09.702000", "t_next": "2025-08-07T18:16:09.702000", "obs_time_seconds": 0}, {"plate": "7733RZR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "t_prev": "2025-08-07T18:16:09.702000", "t_next": "2025-08-07T18:16:11.903000", "obs_time_seconds": 2}, {"plate": "7733RZR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "t_prev": "2025-08-07T18:16:11.903000", "t_next": "2025-08-07T18:16:11.903000", "obs_time_seconds": 0}, {"plate": "7733RZR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "t_prev": "2025-08-07T18:16:11.903000", "t_next": "2025-08-07T18:16:12.769000", "obs_time_seconds": 1}, {"plate": "7733RZR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "t_prev": "2025-08-07T18:16:12.769000", "t_next": "2025-08-07T18:16:12.769000", "obs_time_seconds": 0}, {"plate": "7733RZR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "t_prev": "2025-08-07T18:16:12.769000", "t_next": "2025-08-07T18:16:14.569000", "obs_time_seconds": 2}, {"plate": "7733RZR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "t_prev": "2025-08-07T18:16:14.569000", "t_next": "2025-08-07T18:16:14.569000", "obs_time_seconds": 0}, {"plate": "7733RZR", "camera_prev": "RUHSM191", "camera_next": "RUHSM192", "t_prev": "2025-08-07T18:16:14.569000", "t_next": "2025-08-07T18:19:23.376000", "obs_time_seconds": 189}, {"plate": "7733RZR", "camera_prev": "RUHSM192", "camera_next": "RUHSM192", "t_prev": "2025-08-07T18:19:23.376000", "t_next": "2025-08-07T18:19:23.376000", "obs_time_seconds": 0}, {"plate": "7733RZR", "camera_prev": "RUHSM192", "camera_next": "RUHSM003", "t_prev": "2025-08-07T18:19:23.376000", "t_next": "2025-08-07T21:51:13.883000", "obs_time_seconds": 12710}, {"plate": "7733RZR", "camera_prev": "RUHSM003", "camera_next": "RUHSM003", "t_prev": "2025-08-07T21:51:13.883000", "t_next": "2025-08-07T21:51:13.883000", "obs_time_seconds": 0}, {"plate": "7733RZR", "camera_prev": "RUHSM003", "camera_next": "RUHSM196", "t_prev": "2025-08-07T21:51:13.883000", "t_next": "2025-08-07T22:11:13.436000", "obs_time_seconds": 1200}, {"plate": "7733RZR", "camera_prev": "RUHSM196", "camera_next": "RUHSM196", "t_prev": "2025-08-07T22:11:13.436000", "t_next": "2025-08-07T22:11:13.436000", "obs_time_seconds": 0}, {"plate": "7733RZR", "camera_prev": "RUHSM196", "camera_next": "RUHSM002", "t_prev": "2025-08-07T22:11:13.436000", "t_next": "2025-08-08T14:09:05.640000", "obs_time_seconds": 57472}, {"plate": "7733RZR", "camera_prev": "RUHSM002", "camera_next": "RUHSM001", "t_prev": "2025-08-08T14:09:05.640000", "t_next": "2025-08-08T21:39:57.942000", "obs_time_seconds": 27052}, {"plate": "7733RZR", "camera_prev": "RUHSM001", "camera_next": "RUHSM002", "t_prev": "2025-08-08T21:39:57.942000", "t_next": "2025-08-09T00:21:16.437000", "obs_time_seconds": 9679}, {"plate": "7733RZR", "camera_prev": "RUHSM002", "camera_next": "RUHSM340", "t_prev": "2025-08-09T00:21:16.437000", "t_next": "2025-08-10T03:16:47.591000", "obs_time_seconds": 96931}, {"plate": "7733RZR", "camera_prev": "RUHSM340", "camera_next": "RUHSM340", "t_prev": "2025-08-10T03:16:47.591000", "t_next": "2025-08-10T03:16:47.591000", "obs_time_seconds": 0}, {"plate": "222VBJ", "camera_prev": "RUHSM002", "camera_next": "RUHSM350", "t_prev": "2025-08-04T17:03:33.465000", "t_next": "2025-08-05T16:41:47.584000", "obs_time_seconds": 85094}, {"plate": "222VBJ", "camera_prev": "RUHSM350", "camera_next": "RUHSM015", "t_prev": "2025-08-05T16:41:47.584000", "t_next": "2025-08-11T08:15:41.456000", "obs_time_seconds": 488034}, {"plate": "7281UEJ", "camera_prev": "RUHTE333", "camera_next": "RUHTE333", "t_prev": "2025-08-07T17:14:32.453000", "t_next": "2025-08-07T17:14:32.453000", "obs_time_seconds": 0}, {"plate": "7281UEJ", "camera_prev": "RUHTE333", "camera_next": "RUHSM281", "t_prev": "2025-08-07T17:14:32.453000", "t_next": "2025-08-16T17:37:42.656000", "obs_time_seconds": 778990}, {"plate": "3981XLJ", "camera_prev": "RUHSM201", "camera_next": "RUHSM201", "t_prev": "2025-08-05T16:30:03.459000", "t_next": "2025-08-05T16:30:03.459000", "obs_time_seconds": 0}, {"plate": "6948XKB", "camera_prev": "RUHSM381", "camera_next": "RUHSM381", "t_prev": "2025-08-10T10:01:01.425000", "t_next": "2025-08-13T10:32:04.814000", "obs_time_seconds": 261063}, {"plate": "6948XKB", "camera_prev": "RUHSM381", "camera_next": "RUHSM381", "t_prev": "2025-08-13T10:32:04.814000", "t_next": "2025-08-19T08:28:47.791000", "obs_time_seconds": 511003}, {"plate": "9258BDA", "camera_prev": "RUHSM241", "camera_next": "RUHSM241", "t_prev": "2025-08-05T12:23:03.208000", "t_next": "2025-08-05T12:23:03.208000", "obs_time_seconds": 0}, {"plate": "9258BDA", "camera_prev": "RUHSM241", "camera_next": "RUHSM054", "t_prev": "2025-08-05T12:23:03.208000", "t_next": "2025-08-13T20:43:18.167000", "obs_time_seconds": 721215}, {"plate": "5614DJB", "camera_prev": "RUHSM033", "camera_next": "RUHSM208", "t_prev": "2025-08-01T15:02:12.127000", "t_next": "2025-08-16T12:07:00.971000", "obs_time_seconds": 1285488}, {"plate": "6800KKR", "camera_prev": "RUHSM359", "camera_next": "RUHSM359", "t_prev": "2025-07-29T16:16:22.402000", "t_next": "2025-07-29T16:16:23.310000", "obs_time_seconds": 1}, {"plate": "6800KKR", "camera_prev": "RUHSM359", "camera_next": "RUHSM025", "t_prev": "2025-07-29T16:16:23.310000", "t_next": "2025-07-31T08:09:43.947000", "obs_time_seconds": 143600}, {"plate": "6800KKR", "camera_prev": "RUHSM025", "camera_next": "RUHSM025", "t_prev": "2025-07-31T08:09:43.947000", "t_next": "2025-07-31T08:09:44.348000", "obs_time_seconds": 1}, {"plate": "6800KKR", "camera_prev": "RUHSM025", "camera_next": "RUHSM102", "t_prev": "2025-07-31T08:09:44.348000", "t_next": "2025-07-31T18:49:13.160000", "obs_time_seconds": 38369}, {"plate": "6800KKR", "camera_prev": "RUHSM102", "camera_next": "RUHSM033", "t_prev": "2025-07-31T18:49:13.160000", "t_next": "2025-07-31T20:28:04.083000", "obs_time_seconds": 5931}, {"plate": "6800KKR", "camera_prev": "RUHSM033", "camera_next": "RUHSM033", "t_prev": "2025-07-31T20:28:04.083000", "t_next": "2025-07-31T20:28:04.945000", "obs_time_seconds": 0}, {"plate": "6800KKR", "camera_prev": "RUHSM033", "camera_next": "RUHSM025", "t_prev": "2025-07-31T20:28:04.945000", "t_next": "2025-08-02T17:40:15.311000", "obs_time_seconds": 162731}, {"plate": "6800KKR", "camera_prev": "RUHSM025", "camera_next": "RUHSM025", "t_prev": "2025-08-02T17:40:15.311000", "t_next": "2025-08-02T17:40:15.311000", "obs_time_seconds": 0}, {"plate": "6800KKR", "camera_prev": "RUHSM025", "camera_next": "RUHSM025", "t_prev": "2025-08-02T17:40:15.311000", "t_next": "2025-08-03T08:06:50.088000", "obs_time_seconds": 51995}, {"plate": "6800KKR", "camera_prev": "RUHSM025", "camera_next": "RUHSM023", "t_prev": "2025-08-03T08:06:50.088000", "t_next": "2025-08-03T16:51:37.206000", "obs_time_seconds": 31487}, {"plate": "6800KKR", "camera_prev": "RUHSM023", "camera_next": "RUHSM025", "t_prev": "2025-08-03T16:51:37.206000", "t_next": "2025-08-04T08:12:32.149000", "obs_time_seconds": 55255}, {"plate": "6800KKR", "camera_prev": "RUHSM025", "camera_next": "RUHSM052", "t_prev": "2025-08-04T08:12:32.149000", "t_next": "2025-08-04T17:00:05.251000", "obs_time_seconds": 31653}, {"plate": "6800KKR", "camera_prev": "RUHSM052", "camera_next": "RUHSM052", "t_prev": "2025-08-04T17:00:05.251000", "t_next": "2025-08-04T17:00:05.918000", "obs_time_seconds": 0}, {"plate": "6800KKR", "camera_prev": "RUHSM052", "camera_next": "RUHSM359", "t_prev": "2025-08-04T17:00:05.918000", "t_next": "2025-08-04T17:18:04.917000", "obs_time_seconds": 1079}, {"plate": "6800KKR", "camera_prev": "RUHSM359", "camera_next": "RUHSM359", "t_prev": "2025-08-04T17:18:04.917000", "t_next": "2025-08-04T17:18:04.917000", "obs_time_seconds": 0}, {"plate": "6800KKR", "camera_prev": "RUHSM359", "camera_next": "RUHSM359", "t_prev": "2025-08-04T17:18:04.917000", "t_next": "2025-08-04T17:18:05.484000", "obs_time_seconds": 1}, {"plate": "6800KKR", "camera_prev": "RUHSM359", "camera_next": "RUHSM359", "t_prev": "2025-08-04T17:18:05.484000", "t_next": "2025-08-04T17:18:05.484000", "obs_time_seconds": 0}, {"plate": "6800KKR", "camera_prev": "RUHSM359", "camera_next": "RUHSM191", "t_prev": "2025-08-04T17:18:05.484000", "t_next": "2025-08-06T16:11:09.963000", "obs_time_seconds": 168784}, {"plate": "6800KKR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "t_prev": "2025-08-06T16:11:09.963000", "t_next": "2025-08-06T16:11:09.963000", "obs_time_seconds": 0}, {"plate": "6800KKR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "t_prev": "2025-08-06T16:11:09.963000", "t_next": "2025-08-06T16:11:11.095000", "obs_time_seconds": 2}, {"plate": "6800KKR", "camera_prev": "RUHSM191", "camera_next": "RUHSM191", "t_prev": "2025-08-06T16:11:11.095000", "t_next": "2025-08-06T16:11:11.095000", "obs_time_seconds": 0}, {"plate": "6800KKR", "camera_prev": "RUHSM191", "camera_next": "RUHSM192", "t_prev": "2025-08-06T16:11:11.095000", "t_next": "2025-08-06T16:13:30.721000", "obs_time_seconds": 139}, {"plate": "6800KKR", "camera_prev": "RUHSM192", "camera_next": "RUHSM192", "t_prev": "2025-08-06T16:13:30.721000", "t_next": "2025-08-06T16:13:30.721000", "obs_time_seconds": 0}, {"plate": "6800KKR", "camera_prev": "RUHSM192", "camera_next": "RUHSM429", "t_prev": "2025-08-06T16:13:30.721000", "t_next": "2025-08-06T16:23:58.770000", "obs_time_seconds": 628}, {"plate": "6800KKR", "camera_prev": "RUHSM429", "camera_next": "RUHSM429", "t_prev": "2025-08-06T16:23:58.770000", "t_next": "2025-08-06T16:23:58.770000", "obs_time_seconds": 0}, {"plate": "6800KKR", "camera_prev": "RUHSM429", "camera_next": "RUHSM025", "t_prev": "2025-08-06T16:23:58.770000", "t_next": "2025-08-07T08:04:33.380000", "obs_time_seconds": 56435}, {"plate": "6800KKR", "camera_prev": "RUHSM025", "camera_next": "RUHSM032", "t_prev": "2025-08-07T08:04:33.380000", "t_next": "2025-08-07T08:10:47.319000", "obs_time_seconds": 374}, {"plate": "6800KKR", "camera_prev": "RUHSM032", "camera_next": "RUHSM052", "t_prev": "2025-08-07T08:10:47.319000", "t_next": "2025-08-07T13:49:28.839000", "obs_time_seconds": 20321}, {"plate": "6800KKR", "camera_prev": "RUHSM052", "camera_next": "RUHSM033", "t_prev": "2025-08-07T13:49:28.839000", "t_next": "2025-08-07T14:43:33.320000", "obs_time_seconds": 3245}, {"plate": "6800KKR", "camera_prev": "RUHSM033", "camera_next": "RUHSM033", "t_prev": "2025-08-07T14:43:33.320000", "t_next": "2025-08-07T14:43:33.320000", "obs_time_seconds": 0}, {"plate": "590EJ", "camera_prev": "RUHTE309", "camera_next": "RUHSM053", "t_prev": "2025-08-06T06:18:49.633000", "t_next": "2025-08-09T03:26:13.988000", "obs_time_seconds": 248844}, {"plate": "590EJ", "camera_prev": "RUHSM053", "camera_next": "RUHSM059", "t_prev": "2025-08-09T03:26:13.988000", "t_next": "2025-08-11T08:46:01.769000", "obs_time_seconds": 191988}, {"plate": "590EJ", "camera_prev": "RUHSM059", "camera_next": "RUHSM456", "t_prev": "2025-08-11T08:46:01.769000", "t_next": "2025-08-19T16:40:39.256000", "obs_time_seconds": 719678}];
+
+const VEHICLES = ["222VBJ", "3981XLJ", "5614DJB", "590EJ", "640UXS", "6800KKR", "6948XKB", "7281UEJ", "7733RZR", "9258BDA"];
+
+// Sites with coordinates (from google_matrix)
+const SITES = {"RUHSM001":{"lat":24.7403322023658,"lon":46.6273981332779,"dir":"S"},"RUHSM002":{"lat":24.740427194217,"lon":46.6274785995483,"dir":"N"},"RUHSM003":{"lat":24.7546965432207,"lon":46.6325774788857,"dir":"E"},"RUHSM007":{"lat":24.6726265911391,"lon":46.656776368618,"dir":"S"},"RUHSM009":{"lat":24.7209740445557,"lon":46.6058734059334,"dir":"N"},"RUHSM012":{"lat":24.6483701639916,"lon":46.7946767807007,"dir":"N"},"RUHSM015":{"lat":24.5439855825558,"lon":46.872533261776,"dir":"S"},"RUHSM018":{"lat":24.8287062928303,"lon":46.6193702816963,"dir":"E"},"RUHSM019":{"lat":24.8178075375809,"lon":46.6184422373772,"dir":"S"},"RUHSM022":{"lat":24.670488879256,"lon":46.6602820158005,"dir":"N"},"RUHSM023":{"lat":24.780546768419,"lon":46.7285308241844,"dir":"N"},"RUHSM024":{"lat":24.6799116099266,"lon":46.6544723510742,"dir":"S"},"RUHSM025":{"lat":24.7649189230075,"lon":46.6561299562454,"dir":"W"},"RUHSM026":{"lat":24.7731896590511,"lon":46.7319613695145,"dir":"S"},"RUHSM027":{"lat":24.6750541016666,"lon":46.6531071066856,"dir":"E"},"RUHSM029":{"lat":24.9694129976553,"lon":46.7820569872856,"dir":"N"},"RUHSM030":{"lat":25.0012034832327,"lon":46.7709928750992,"dir":"S"},"RUHSM032":{"lat":24.7120199687664,"lon":46.6719147562981,"dir":"S"},"RUHSM033":{"lat":24.7897540511277,"lon":46.7158091068268,"dir":"E"},"RUHSM034":{"lat":24.6755122958506,"lon":46.6905936598778,"dir":"N"},"RUHSM035":{"lat":24.6203516108267,"lon":46.5742367506027,"dir":"E"},"RUHSM038":{"lat":24.6846274081011,"lon":46.7023712396622,"dir":"W"},"RUHSM042":{"lat":24.740704875449,"lon":46.5987414121628,"dir":"W"},"RUHSM044":{"lat":24.8400178982926,"lon":46.6072306036949,"dir":"S"},"RUHSM045":{"lat":24.6261962301252,"lon":46.7836314439774,"dir":"W"},"RUHSM046":{"lat":24.5856708282881,"lon":46.6952633857727,"dir":"E"},"RUHSM049":{"lat":24.8066959557292,"lon":46.7554226517677,"dir":"W"},"RUHSM051":{"lat":24.5581848394885,"lon":46.6767024993897,"dir":"E"},"RUHSM052":{"lat":24.7243240497979,"lon":46.6658690571785,"dir":"N"},"RUHSM053":{"lat":24.6729043824091,"lon":46.6916853189468,"dir":"S"},"RUHSM054":{"lat":24.6123632798959,"lon":46.7067539691925,"dir":"S"},"RUHSM055":{"lat":24.6110781730948,"lon":46.707022190094,"dir":"N"},"RUHSM057":{"lat":24.6656945509571,"lon":46.6192603111267,"dir":"E"},"RUHSM059":{"lat":24.831956030886,"lon":46.8484577536583,"dir":"S"},"RUHSM060":{"lat":24.8321897210297,"lon":46.7234346270561,"dir":"S"},"RUHSM062":{"lat":24.7980377711983,"lon":46.569601893425,"dir":"W"},"RUHSM069":{"lat":24.56560566558,"lon":46.6250592470169,"dir":"E"},"RUHSM070":{"lat":24.6942463632656,"lon":46.5634649991989,"dir":"S"},"RUHSM071":{"lat":24.6711544395348,"lon":46.6223931312561,"dir":"N"},"RUHSM072":{"lat":24.6707963331305,"lon":46.6222590208054,"dir":"S"},"RUHSM073":{"lat":24.6870447823229,"lon":46.6315904259682,"dir":"W"},"RUHSM074":{"lat":24.6869545710959,"lon":46.6317647695541,"dir":"E"},"RUHSM077":{"lat":24.8111586340332,"lon":46.7348715662956,"dir":"N"},"RUHSM078":{"lat":24.8110612436613,"lon":46.7346113920212,"dir":"S"},"RUHSM079":{"lat":24.5588531422709,"lon":46.6225674748421,"dir":"E"},"RUHSM080":{"lat":24.5589824415937,"lon":46.622556746006,"dir":"W"},"RUHSM093":{"lat":24.8325232108086,"lon":46.8203857541084,"dir":"W"},"RUHSM095":{"lat":24.7800816178938,"lon":46.8530228734016,"dir":"E"},"RUHSM096":{"lat":24.5348626583046,"lon":46.6983264684677,"dir":"N"},"RUHSM097":{"lat":24.598323749187,"lon":46.7443531751633,"dir":"S"},"RUHSM098":{"lat":24.8195992645787,"lon":46.8459257483482,"dir":"N"},"RUHSM100":{"lat":24.5686573528817,"lon":46.8897798657417,"dir":"S"},"RUHSM102":{"lat":24.7352066774981,"lon":46.6819301247597,"dir":"E"},"RUHSM106":{"lat":24.7087793016666,"lon":46.7659583687782,"dir":"N"},"RUHSM110":{"lat":24.8409306555311,"lon":46.5533074736595,"dir":"S"},"RUHSM111":{"lat":24.8410231157739,"lon":46.5536212921143,"dir":"N"},"RUHSM112":{"lat":24.5972800762424,"lon":46.6084000468254,"dir":"W"},"RUHSM113":{"lat":24.5971435038554,"lon":46.6084751486778,"dir":"E"},"RUHSM114":{"lat":24.5475208005664,"lon":46.7195722460747,"dir":"W"},"RUHSM116":{"lat":24.9070265631544,"lon":46.9199708104134,"dir":"W"},"RUHSM117":{"lat":24.5381879590055,"lon":46.6897889971733,"dir":"S"},"RUHSM118":{"lat":24.5382806827733,"lon":46.6898936033249,"dir":"N"},"RUHSM121":{"lat":24.6462394879027,"lon":46.6858944296837,"dir":"E"},"RUHSM122":{"lat":24.7958463762615,"lon":46.7296761274338,"dir":"W"},"RUHSM125":{"lat":24.771906272745,"lon":46.732605099678,"dir":"S"},"RUHSM128":{"lat":24.6981526522312,"lon":46.6789072751999,"dir":"S"},"RUHSM129":{"lat":24.6876372637067,"lon":46.7106726765633,"dir":"E"},"RUHSM130":{"lat":24.6636397195435,"lon":46.7306765913963,"dir":"W"},"RUHSM131":{"lat":24.6634934669944,"lon":46.7308187484741,"dir":"E"},"RUHSM136":{"lat":24.620424801656,"lon":46.5808054804802,"dir":"N"},"RUHSM140":{"lat":24.8769760481679,"lon":46.8059206008911,"dir":"S"},"RUHSM141":{"lat":24.8769687507318,"lon":46.8060520291329,"dir":"N"},"RUHSM142":{"lat":24.5674108328895,"lon":46.655505001545,"dir":"W"},"RUHSM144":{"lat":24.5638614614901,"lon":46.717287003994,"dir":"E"},"RUHSM145":{"lat":24.5687663130558,"lon":46.8898630142212,"dir":"W"},"RUHSM147":{"lat":24.6038597752923,"lon":46.6194561123848,"dir":"E"},"RUHSM148":{"lat":24.6040012164286,"lon":46.6193461418152,"dir":"W"},"RUHSM152":{"lat":24.6854562001529,"lon":46.6520261764526,"dir":"S"},"RUHSM153":{"lat":24.6855219810628,"lon":46.6522246599197,"dir":"N"},"RUHSM156":{"lat":24.7259342868167,"lon":46.7802920937538,"dir":"E"},"RUHSM157":{"lat":24.6409759484262,"lon":46.8291538953781,"dir":"E"},"RUHSM160":{"lat":24.6086054881289,"lon":46.7729669809341,"dir":"N"},"RUHSM161":{"lat":24.6336106991616,"lon":46.8119421601295,"dir":"E"},"RUHSM164":{"lat":24.5796291806517,"lon":46.5517866611481,"dir":"E"},"RUHSM165":{"lat":24.5797877232525,"lon":46.5518108010292,"dir":"W"},"RUHSM168":{"lat":24.5844927893916,"lon":46.7547172307968,"dir":"E"},"RUHSM169":{"lat":24.5982237727608,"lon":46.6173076629639,"dir":"N"},"RUHSM170":{"lat":24.5981359902433,"lon":46.6171762347221,"dir":"S"},"RUHSM173":{"lat":24.7946969705971,"lon":46.6560655832291,"dir":"N"},"RUHSM174":{"lat":24.5079388888788,"lon":46.9285324215889,"dir":"S"},"RUHSM175":{"lat":24.5081024122122,"lon":46.9286692142487,"dir":"N"},"RUHSM178":{"lat":25.0159432570743,"lon":46.7664411664009,"dir":"N"},"RUHSM179":{"lat":25.0158897994536,"lon":46.7662614583969,"dir":"S"},"RUHSM180":{"lat":24.66748117972,"lon":46.7952159047127,"dir":"W"},"RUHSM181":{"lat":24.6672764432188,"lon":46.7952185869217,"dir":"E"},"RUHSM182":{"lat":24.6433261861909,"lon":46.8339711427689,"dir":"S"},"RUHSM187":{"lat":24.642784983054,"lon":46.7355394363403,"dir":"N"},"RUHSM188":{"lat":24.6011674755442,"lon":46.6398543119431,"dir":"N"},"RUHSM189":{"lat":24.6013016369983,"lon":46.6397336125374,"dir":"S"},"RUHSM190":{"lat":24.6326745415304,"lon":46.5654820203781,"dir":"W"},"RUHSM191":{"lat":24.8129651971553,"lon":46.6760292649269,"dir":"S"},"RUHSM192":{"lat":24.8127826050202,"lon":46.6761177778244,"dir":"N"},"RUHSM195":{"lat":24.7299152397197,"lon":46.8647655844688,"dir":"S"},"RUHSM196":{"lat":24.7999978581173,"lon":46.6526859998703,"dir":"E"},"RUHSM198":{"lat":24.7694781484828,"lon":46.6684493422508,"dir":"S"},"RUHSM201":{"lat":24.615255335399,"lon":46.7573323845863,"dir":"S"},"RUHSM207":{"lat":24.7444197548951,"lon":46.6082498431206,"dir":"E"},"RUHSM208":{"lat":24.823774152058,"lon":46.7285388708115,"dir":"N"},"RUHSM209":{"lat":24.8236621627272,"lon":46.7282545566559,"dir":"S"},"RUHSM210":{"lat":24.7432407032976,"lon":46.8001833558083,"dir":"S"},"RUHSM211":{"lat":24.7433162129597,"lon":46.8002933263779,"dir":"N"},"RUHSM212":{"lat":24.6725825464765,"lon":46.8299263715744,"dir":"N"},"RUHSM213":{"lat":24.6725337944213,"lon":46.8298190832138,"dir":"S"},"RUHSM216":{"lat":24.5872366876198,"lon":46.5884765982628,"dir":"W"},"RUHSM217":{"lat":24.5871147808519,"lon":46.5885651111603,"dir":"E"},"RUHSM218":{"lat":24.7088894173431,"lon":46.8437933921814,"dir":"W"},"RUHSM221":{"lat":24.6402519488123,"lon":46.75511687994,"dir":"E"},"RUHSM224":{"lat":24.7455602489784,"lon":46.8242803215981,"dir":"N"},"RUHSM225":{"lat":24.7454847342479,"lon":46.8241676688194,"dir":"S"},"RUHSM226":{"lat":24.7641928838335,"lon":46.8337565660477,"dir":"N"},"RUHSM227":{"lat":24.764122238671,"lon":46.8336492776871,"dir":"S"},"RUHSM228":{"lat":24.7395185293973,"lon":46.5959626436234,"dir":"W"},"RUHSM232":{"lat":24.4701528666928,"lon":46.612468957901,"dir":"E"},"RUHSM233":{"lat":24.5476209553064,"lon":46.6873374581337,"dir":"E"},"RUHSM234":{"lat":24.5477331800292,"lon":46.6874313354492,"dir":"W"},"RUHSM235":{"lat":24.6672178504822,"lon":46.7845594882965,"dir":"W"},"RUHSM238":{"lat":24.4949618404793,"lon":46.9437834620476,"dir":"S"},"RUHSM239":{"lat":24.4951033915724,"lon":46.9439175724983,"dir":"N"},"RUHSM240":{"lat":24.6486919902838,"lon":46.7140683531761,"dir":"S"},"RUHSM241":{"lat":24.6487358708835,"lon":46.7141970992088,"dir":"N"},"RUHSM242":{"lat":24.5620708697593,"lon":46.5307635068893,"dir":"S"},"RUHSM243":{"lat":24.5622074829673,"lon":46.5307849645615,"dir":"N"},"RUHSM244":{"lat":24.5925682421353,"lon":46.5811836719513,"dir":"N"},"RUHSM245":{"lat":24.592451165573,"lon":46.5809771418572,"dir":"S"},"RUHSM246":{"lat":24.5606828008027,"lon":46.5485760569573,"dir":"S"},"RUHSM247":{"lat":24.5608462580163,"lon":46.5485733747482,"dir":"N"},"RUHSM248":{"lat":24.5591532055241,"lon":46.5682715177536,"dir":"S"},"RUHSM249":{"lat":24.5593190901152,"lon":46.5683010220528,"dir":"N"},"RUHSM250":{"lat":24.7962287009035,"lon":46.7782375216484,"dir":"E"},"RUHSM251":{"lat":24.7963431075156,"lon":46.778157055378,"dir":"W"},"RUHSM252":{"lat":24.6506762784333,"lon":46.7848706245422,"dir":"W"},"RUHSM253":{"lat":24.6505348901065,"lon":46.7849349975586,"dir":"E"},"RUHSM254":{"lat":24.6017820953835,"lon":46.6995683312416,"dir":"E"},"RUHSM255":{"lat":24.6019428426154,"lon":46.6995227336884,"dir":"W"},"RUHSM257":{"lat":24.5417677210066,"lon":46.6960680484772,"dir":"N"},"RUHSM258":{"lat":24.5416505969815,"lon":46.6959768533707,"dir":"S"},"RUHSM260":{"lat":24.6184495728811,"lon":46.5350738167763,"dir":"W"},"RUHSM261":{"lat":24.8220580564739,"lon":46.8324986100197,"dir":"W"},"RUHSM262":{"lat":24.7625659273025,"lon":46.8108746409416,"dir":"N"},"RUHSM263":{"lat":24.7625074578522,"lon":46.810756623745,"dir":"S"},"RUHSM265":{"lat":24.6282468000288,"lon":46.5544849634171,"dir":"S"},"RUHSM266":{"lat":24.621812214839,"lon":46.5321287512779,"dir":"S"},"RUHSM267":{"lat":24.8855940582138,"lon":46.7199504375458,"dir":"N"},"RUHSM268":{"lat":24.5686427243791,"lon":46.5279042720795,"dir":"S"},"RUHSM269":{"lat":24.56878873,"lon":46.52792484,"dir":"N"},"RUHSM270":{"lat":24.6423900305582,"lon":46.7355823516846,"dir":"S"},"RUHSM271":{"lat":24.7657883617786,"lon":46.7543041706085,"dir":"E"},"RUHSM274":{"lat":24.8155925940606,"lon":46.6353213787079,"dir":"E"},"RUHSM275":{"lat":24.8347697001099,"lon":46.7905327677727,"dir":"N"},"RUHSM276":{"lat":24.8346966545502,"lon":46.7903396487236,"dir":"S"},"RUHSM278":{"lat":24.6766160926836,"lon":46.8499436974526,"dir":"N"},"RUHSM279":{"lat":24.6765527121673,"lon":46.8497881293297,"dir":"S"},"RUHSM280":{"lat":24.8184475122469,"lon":46.8023881316185,"dir":"N"},"RUHSM281":{"lat":24.8183549901527,"lon":46.8022164702416,"dir":"S"},"RUHSM286":{"lat":24.6720829180904,"lon":46.5581783652306,"dir":"S"},"RUHSM287":{"lat":24.6433213464037,"lon":46.5461325645447,"dir":"W"},"RUHSM290":{"lat":24.6155723237174,"lon":46.7154604196549,"dir":"N"},"RUHSM291":{"lat":24.6155430622212,"lon":46.7153263092041,"dir":"S"},"RUHSM292":{"lat":24.6999315543658,"lon":46.7230913043022,"dir":"N"},"RUHSM296":{"lat":24.7779751316449,"lon":46.7809116840363,"dir":"W"},"RUHSM304":{"lat":24.7020076530006,"lon":46.6487458348274,"dir":"E"},"RUHSM305":{"lat":24.8371752096259,"lon":46.6561380028725,"dir":"S"},"RUHSM306":{"lat":24.7059527461551,"lon":46.6575327515602,"dir":"W"},"RUHSM308":{"lat":24.6226168155053,"lon":46.5494531393051,"dir":"W"},"RUHSM312":{"lat":25.0212345764591,"lon":46.6135954856873,"dir":"E"},"RUHSM313":{"lat":25.0214120108395,"lon":46.6135391592979,"dir":"W"},"RUHSM315":{"lat":24.5423701171962,"lon":46.7042890191078,"dir":"S"},"RUHSM316":{"lat":24.5422652060434,"lon":46.7044472694397,"dir":"N"},"RUHSM325":{"lat":24.5786754649118,"lon":46.741595864296,"dir":"E"},"RUHSM326":{"lat":24.5788146164014,"lon":46.7415341734886,"dir":"W"},"RUHSM336":{"lat":24.9067906009768,"lon":46.977547109127,"dir":"W"},"RUHSM337":{"lat":24.9066907889091,"lon":46.9776409864426,"dir":"E"},"RUHSM340":{"lat":24.9288681103428,"lon":46.7166620492935,"dir":"S"},"RUHSM345":{"lat":24.6962883540936,"lon":46.8563032150269,"dir":"S"},"RUHSM350":{"lat":24.7642247877842,"lon":46.6931256651878,"dir":"N"},"RUHSM358":{"lat":24.7884113106178,"lon":46.6334706544876,"dir":"N"},"RUHSM359":{"lat":24.7553980581506,"lon":46.6502237319946,"dir":"N"},"RUHSM360":{"lat":24.5945431171705,"lon":46.7034012079239,"dir":"S"},"RUHSM368":{"lat":24.6352978544649,"lon":46.6226264834404,"dir":"W"},"RUHSM369":{"lat":24.6351466822632,"lon":46.6227042675018,"dir":"E"},"RUHSM380":{"lat":24.841429643951,"lon":46.8063712120056,"dir":"N"},"RUHSM381":{"lat":24.8413541914201,"lon":46.8061780929566,"dir":"S"},"RUHSM396":{"lat":24.3294130168959,"lon":46.8735444545746,"dir":"S"},"RUHSM397":{"lat":24.3294912044514,"lon":46.8738126754761,"dir":"N"},"RUHSM432":{"lat":24.8907017220214,"lon":46.8079134821892,"dir":"N"},"RUHSM433":{"lat":24.8907309072334,"lon":46.8077713251114,"dir":"S"},"RUHSM451":{"lat":24.6446348177146,"lon":46.6930103302002,"dir":"S"},"RUHSM452":{"lat":24.6443911519871,"lon":46.6931363940239,"dir":"N"},"RUHSM455":{"lat":24.5519562952254,"lon":46.6132870316506,"dir":"E"},"RUHSM456":{"lat":24.5520953694537,"lon":46.6132897138596,"dir":"W"},"RUHSM458":{"lat":24.8195554339359,"lon":46.7520859837532,"dir":"N"},"RUHSM459":{"lat":24.5847343246958,"lon":46.6552877426148,"dir":"E"},"RUHSM460":{"lat":24.5848514020341,"lon":46.6554942727089,"dir":"W"},"RUHSM467":{"lat":24.6270665833972,"lon":46.5201660990715,"dir":"W"},"RUHSM468":{"lat":24.6266960872229,"lon":46.5199971199036,"dir":"E"},"RUHSM525":{"lat":25.012863802906,"lon":46.6809833049774,"dir":"S"},"RUHSM526":{"lat":25.0128613773877,"lon":46.6811040043831,"dir":"N"},"RUHSM530":{"lat":24.6072056361663,"lon":46.660198867321,"dir":"N"},"RUHSM531":{"lat":24.6073153598916,"lon":46.6601157188416,"dir":"S"},"RUHSM540":{"lat":24.625494022299,"lon":46.6844916343689,"dir":"W"},"RUHSM541":{"lat":24.6253794264026,"lon":46.6844862699509,"dir":"E"},"RUHSM542":{"lat":24.9065182947864,"lon":46.6434082388878,"dir":"W"},"RUHSM543":{"lat":24.9064526219956,"lon":46.6431882977486,"dir":"E"},"RUHSM546":{"lat":24.7902436855305,"lon":46.8545919656754,"dir":"W"},"RUHSM547":{"lat":24.7901097595178,"lon":46.8544578552246,"dir":"E"},"RUHSM555":{"lat":24.8721018851866,"lon":46.6604670882225,"dir":"N"},"RUHSM556":{"lat":24.8720069697679,"lon":46.6602981090546,"dir":"S"},"RUHSM559":{"lat":24.5441977464061,"lon":46.8807810544968,"dir":"E"},"RUHSM560":{"lat":24.5442490050968,"lon":46.8806630373001,"dir":"W"},"RUHSM576":{"lat":24.856359089514,"lon":46.7374357581139,"dir":"N"},"RUHSM577":{"lat":24.8563639531407,"lon":46.7373177409172,"dir":"S"},"RUHTE304":{"lat":24.5842414097686,"lon":46.7537328600884,"dir":"W"},"RUHTE305":{"lat":24.5903877908723,"lon":46.7684072256088,"dir":"E"},"RUHTE306":{"lat":24.5905317003463,"lon":46.7683106660843,"dir":"W"},"RUHTE309":{"lat":24.6524997358911,"lon":46.837058365345,"dir":"S"},"RUHTE311":{"lat":24.6064936135113,"lon":46.7306846380234,"dir":"N"},"RUHTE312":{"lat":24.7251035336184,"lon":46.846419274807,"dir":"S"},"RUHTE313":{"lat":24.7251863658135,"lon":46.8465641140938,"dir":"N"},"RUHTE315":{"lat":24.6141750770559,"lon":46.8200236558914,"dir":"S"},"RUHTE316":{"lat":24.6142896999613,"lon":46.8201014399529,"dir":"N"},"RUHTE317":{"lat":24.6667255799159,"lon":46.5599271655083,"dir":"N"},"RUHTE318":{"lat":24.8014076405187,"lon":46.7830601334572,"dir":"N"},"RUHTE319":{"lat":24.8013516499019,"lon":46.7829152941704,"dir":"S"},"RUHTE320":{"lat":24.5822390462004,"lon":46.800848543644,"dir":"E"},"RUHTE321":{"lat":24.5821049042435,"lon":46.8009102344513,"dir":"W"},"RUHTE325":{"lat":24.8405124734256,"lon":46.6326740384102,"dir":"S"},"RUHTE326":{"lat":24.84056807361,"lon":46.632821559906,"dir":"N"},"RUHTE327":{"lat":25.0019957881179,"lon":46.5249887108803,"dir":"S"},"RUHTE329":{"lat":24.7977018282743,"lon":46.6402861475945,"dir":"E"},"RUHTE330":{"lat":24.7980061369433,"lon":46.6402700543404,"dir":"W"},"RUHTE331":{"lat":24.5881342040044,"lon":46.6691654920578,"dir":"W"},"RUHTE332":{"lat":24.6438528149027,"lon":46.5914431214333,"dir":"W"},"RUHTE333":{"lat":24.643733326556,"lon":46.5916550159454,"dir":"E"},"RUHTE334":{"lat":24.6315966143575,"lon":46.8755158782005,"dir":"N"},"RUHTE335":{"lat":24.6308021511539,"lon":46.8756607174873,"dir":"S"},"RUHTE336":{"lat":24.9054087603904,"lon":46.5742716193199,"dir":"N"},"RUHTE337":{"lat":24.9053406696483,"lon":46.5741160511971,"dir":"S"},"RUHSM429":{"lat":24.7897,"lon":46.6761,"dir":"E"}};
+
+// Expected times will be loaded from external file or use fallback estimates
+let EXPECTED_TIMES = {};
+let expectedTimesLoaded = false;
+
+// ============ MAP VARIABLES ============
+let map, markers = [], polylines = [];
+let currentRoute = [];
+
+// ============ INITIALIZATION ============
+function initMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 24.7136, lng: 46.6753 },
+        zoom: 10,
+        styles: [
+            { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+            { featureType: 'transit', stylers: [{ visibility: 'off' }] }
+        ]
+    });
+    
+    // Populate vehicle dropdown
+    const sel = document.getElementById('vehicleSel');
+    VEHICLES.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.textContent = v;
+        sel.appendChild(opt);
+    });
+    
+    // Set default date (first trip date)
+    const firstDate = TRIPS[0].t_prev.split('T')[0];
+    document.getElementById('datePicker').value = firstDate;
+    
+    // Load expected times
+    loadExpectedTimes();
+    
+    console.log('Map initialized with', TRIPS.length, 'trips and', Object.keys(SITES).length, 'sites');
+}
+
+// Load expected times from google_matrix file
+async function loadExpectedTimes() {
+    try {
+        const response = await fetch('google_matrix (2).json');
+        const data = await response.json();
+        
+        // Build site_id to index mapping
+        const siteIdToIdx = {};
+        data.sites.forEach((s, i) => siteIdToIdx[s.site_id] = i);
+        
+        // Convert index-based keys to site_id based
+        const timeMin = data.time_min || {};
+        for (const key in timeMin) {
+            const parts = key.split('_');
+            if (parts.length === 2) {
+                const i = parseInt(parts[0]);
+                const j = parseInt(parts[1]);
+                if (i < data.sites.length && j < data.sites.length) {
+                    const siteKey = data.sites[i].site_id + '_' + data.sites[j].site_id;
+                    EXPECTED_TIMES[siteKey] = timeMin[key];
+                }
+            }
+        }
+        
+        expectedTimesLoaded = true;
+        console.log('Loaded', Object.keys(EXPECTED_TIMES).length, 'expected times');
+    } catch (e) {
+        console.warn('Could not load google_matrix, using distance-based estimates:', e);
+        expectedTimesLoaded = false;
+    }
+}
+
+// Get expected time between two sites (minutes)
+function getExpectedTime(siteA, siteB) {
+    if (siteA === siteB) return 0;
+    
+    const key = siteA + '_' + siteB;
+    if (EXPECTED_TIMES[key] !== undefined) {
+        return EXPECTED_TIMES[key];
+    }
+    
+    // Fallback: estimate based on distance (avg 40 km/h in city)
+    const a = SITES[siteA];
+    const b = SITES[siteB];
+    if (!a || !b) return null;
+    
+    const dist = haversineDistance(a.lat, a.lon, b.lat, b.lon);
+    return (dist / 40) * 60; // minutes assuming 40 km/h
+}
+
+// Haversine distance in km
+function haversineDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ============ ROUTE FILTERING ============
+function filterTrips(vehicle, date, startTime, endTime) {
+    return TRIPS.filter(trip => {
+        // Filter by vehicle
+        if (vehicle && trip.plate !== vehicle) return false;
+        
+        // Filter by date
+        if (date) {
+            const tripDate = trip.t_prev.split('T')[0];
+            if (tripDate !== date) return false;
+        }
+        
+        // Filter by time window
+        if (startTime && endTime) {
+            const tripTime = trip.t_prev.split('T')[1].substring(0, 5);
+            if (tripTime < startTime || tripTime > endTime) return false;
+        }
+        
+        return true;
+    }).sort((a, b) => new Date(a.t_prev) - new Date(b.t_prev));
+}
+
+// ============ PATH SEGMENTATION ============
+function segmentRoute(trips) {
+    const rMin = parseFloat(document.getElementById('rMin').value) || 0.5;
+    const rMax = parseFloat(document.getElementById('rMax').value) || 2.0;
+    
+    let pathId = 1;
+    let pathStartTime = null;
+    let pathStartSite = null;
+    
+    const segmented = trips.map((trip, idx) => {
+        const obsTimeMin = trip.obs_time_seconds / 60;
+        const expectedTime = getExpectedTime(trip.camera_prev, trip.camera_next);
+        
+        // Calculate ratio R
+        let R = null;
+        let temporalOk = true;
+        let spatialOk = true; // Mocked as true for now
+        let status = 'normal';
+        let breakReason = null;
+        
+        if (idx === 0) {
+            // First trip starts a new path
+            pathStartTime = new Date(trip.t_prev);
+            pathStartSite = trip.camera_prev;
+        } else {
+            // For subsequent trips, check if we're still on same path
+            const currentTime = new Date(trip.t_next);
+            const elapsedMin = (currentTime - pathStartTime) / 60000;
+            const expectedFromStart = getExpectedTime(pathStartSite, trip.camera_next);
+            
+            if (expectedFromStart && expectedFromStart > 0) {
+                R = elapsedMin / expectedFromStart;
+                temporalOk = (R >= rMin && R <= rMax);
+            } else if (expectedTime && expectedTime > 0) {
+                // Fallback to hop-by-hop
+                R = obsTimeMin / expectedTime;
+                temporalOk = (R >= rMin && R <= rMax);
+            }
+            
+            // Mock spatial check (could be enhanced with actual spatial data)
+            // For now, we consider spatial OK if sites are within reasonable distance
+            const prevSite = SITES[trip.camera_prev];
+            const nextSite = SITES[trip.camera_next];
+            if (prevSite && nextSite) {
+                const dist = haversineDistance(prevSite.lat, prevSite.lon, nextSite.lat, nextSite.lon);
+                spatialOk = dist < 50; // 50km threshold
+            }
+        }
+        
+        // Determine status
+        if (!temporalOk || !spatialOk) {
+            status = 'break';
+            breakReason = !temporalOk ? 'Temporal: R=' + (R ? R.toFixed(2) : 'N/A') + ' outside [' + rMin + ',' + rMax + ']' : 'Spatial: Distance too far';
+            pathId++;
+            pathStartTime = new Date(trip.t_prev);
+            pathStartSite = trip.camera_prev;
+        } else if (R !== null && R > rMax * 0.8) {
+            status = 'slow';
+        }
+        
+        return {
+            ...trip,
+            pathId,
+            R,
+            temporalOk,
+            spatialOk,
+            expectedTimeMin: expectedTime,
+            obsTimeMin,
+            status,
+            breakReason
+        };
+    });
+    
+    return segmented;
+}
+
+// ============ VISUALIZATION ============
+function clearMap() {
+    markers.forEach(m => m.setMap(null));
+    polylines.forEach(p => p.setMap(null));
+    markers = [];
+    polylines = [];
+}
+
+function visualizeRoute(trips) {
+    clearMap();
+    
+    if (trips.length === 0) return;
+    
+    const bounds = new google.maps.LatLngBounds();
+    const colorMap = { normal: '#34a853', slow: '#fbbc05', break: '#ea4335' };
+    
+    // Add site markers
+    const visitedSites = new Set();
+    trips.forEach(trip => {
+        visitedSites.add(trip.camera_prev);
+        visitedSites.add(trip.camera_next);
+    });
+    
+    visitedSites.forEach(siteId => {
+        const site = SITES[siteId];
+        if (!site) return;
+        
+        const marker = new google.maps.Marker({
+            position: { lat: site.lat, lng: site.lon },
+            map: map,
+            title: siteId + ' (' + site.dir + ')',
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: '#4285f4',
+                fillOpacity: 1,
+                strokeColor: '#fff',
+                strokeWeight: 2
+            }
+        });
+        markers.push(marker);
+        bounds.extend(marker.getPosition());
+    });
+    
+    // Add trip lines
+    trips.forEach((trip, idx) => {
+        const prevSite = SITES[trip.camera_prev];
+        const nextSite = SITES[trip.camera_next];
+        
+        if (!prevSite || !nextSite) return;
+        if (trip.camera_prev === trip.camera_next) return; // Skip same-site trips
+        
+        const line = new google.maps.Polyline({
+            path: [
+                { lat: prevSite.lat, lng: prevSite.lon },
+                { lat: nextSite.lat, lng: nextSite.lon }
+            ],
+            geodesic: true,
+            strokeColor: colorMap[trip.status] || colorMap.normal,
+            strokeOpacity: 0.8,
+            strokeWeight: trip.status === 'break' ? 4 : 3,
+            map: map
+        });
+        
+        // Add click listener
+        line.addListener('click', () => selectTrip(idx));
+        polylines.push(line);
+    });
+    
+    map.fitBounds(bounds, 50);
+}
+
+// ============ UI UPDATES ============
+function updateStats(trips) {
+    document.getElementById('statTrips').textContent = trips.length;
+    
+    const paths = new Set(trips.map(t => t.pathId));
+    document.getElementById('statPaths').textContent = paths.size;
+    
+    const slow = trips.filter(t => t.status === 'slow').length;
+    document.getElementById('statSlow').textContent = slow;
+    
+    const breaks = trips.filter(t => t.status === 'break').length;
+    document.getElementById('statBreaks').textContent = breaks;
+}
+
+function renderTripList(trips) {
+    const list = document.getElementById('tripList');
+    
+    if (trips.length === 0) {
+        list.innerHTML = '<div class="no-data">No trips found for selection</div>';
+        return;
+    }
+    
+    let html = '';
+    trips.forEach((trip, idx) => {
+        const time = new Date(trip.t_prev).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const statusClass = trip.status;
+        
+        html += `
+            <div class="trip-item ${statusClass}" data-idx="${idx}" onclick="selectTrip(${idx})">
+                <div class="trip-header">
+                    <span class="trip-route">${trip.camera_prev} → ${trip.camera_next}</span>
+                    <span class="path-badge">Path ${trip.pathId}</span>
+                </div>
+                <div class="trip-time">${time}</div>
+                <div class="trip-meta">
+                    <span>Obs: ${formatTime(trip.obs_time_seconds)}</span>
+                    <span>Exp: ${trip.expectedTimeMin ? formatTime(trip.expectedTimeMin * 60) : 'N/A'}</span>
+                    ${trip.R !== null ? `<span>R: ${trip.R.toFixed(2)}</span>` : ''}
+                </div>
+                ${trip.breakReason ? `<div class="break-reason">${trip.breakReason}</div>` : ''}
+            </div>
+        `;
+    });
+    
+    list.innerHTML = html;
+}
+
+function formatTime(seconds) {
+    if (seconds < 60) return Math.round(seconds) + 's';
+    if (seconds < 3600) return Math.round(seconds / 60) + 'm';
+    const h = Math.floor(seconds / 3600);
+    const m = Math.round((seconds % 3600) / 60);
+    return h + 'h ' + m + 'm';
+}
+
+function selectTrip(idx) {
+    const trip = currentRoute[idx];
+    if (!trip) return;
+    
+    // Update selection UI
+    document.querySelectorAll('.trip-item').forEach(el => el.classList.remove('selected'));
+    const item = document.querySelector(`.trip-item[data-idx="${idx}"]`);
+    if (item) item.classList.add('selected');
+    
+    // Show details panel
+    const panel = document.getElementById('detailPanel');
+    panel.classList.add('visible');
+    
+    const details = document.getElementById('tripDetails');
+    const statusClass = trip.status === 'normal' ? 'green' : trip.status === 'slow' ? 'yellow' : 'red';
+    
+    details.innerHTML = `
+        <div class="detail-row">
+            <span class="detail-label">Route</span>
+            <span class="detail-value">${trip.camera_prev} → ${trip.camera_next}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Time</span>
+            <span class="detail-value">${new Date(trip.t_prev).toLocaleString()} → ${new Date(trip.t_next).toLocaleString()}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Observed Time</span>
+            <span class="detail-value">${formatTime(trip.obs_time_seconds)} (${trip.obs_time_seconds}s)</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Expected Time</span>
+            <span class="detail-value">${trip.expectedTimeMin ? formatTime(trip.expectedTimeMin * 60) + ' (' + trip.expectedTimeMin.toFixed(1) + ' min)' : 'N/A'}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Ratio (R)</span>
+            <span class="detail-value ${statusClass}">${trip.R !== null ? trip.R.toFixed(3) : 'N/A'}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Path ID</span>
+            <span class="detail-value">${trip.pathId}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Status</span>
+            <span class="detail-value ${statusClass}">${trip.status.toUpperCase()}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Temporal OK</span>
+            <span class="detail-value ${trip.temporalOk ? 'green' : 'red'}">${trip.temporalOk ? '✓ Yes' : '✗ No'}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">Spatial OK</span>
+            <span class="detail-value ${trip.spatialOk ? 'green' : 'red'}">${trip.spatialOk ? '✓ Yes' : '✗ No'}</span>
+        </div>
+        ${trip.breakReason ? `
+        <div class="detail-row">
+            <span class="detail-label">Break Reason</span>
+            <span class="detail-value red">${trip.breakReason}</span>
+        </div>
+        ` : ''}
+    `;
+    
+    // Zoom to trip on map
+    const prevSite = SITES[trip.camera_prev];
+    const nextSite = SITES[trip.camera_next];
+    if (prevSite && nextSite) {
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend({ lat: prevSite.lat, lng: prevSite.lon });
+        bounds.extend({ lat: nextSite.lat, lng: nextSite.lon });
+        map.fitBounds(bounds, 100);
+    }
+}
+
+// ============ MAIN FUNCTIONS ============
+function showRoute() {
+    const vehicle = document.getElementById('vehicleSel').value;
+    const date = document.getElementById('datePicker').value;
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+    
+    if (!vehicle) {
+        alert('Please select a vehicle');
+        return;
+    }
+    
+    // Filter trips
+    const filtered = filterTrips(vehicle, date, startTime, endTime);
+    
+    // Segment route
+    currentRoute = segmentRoute(filtered);
+    
+    // Update UI
+    updateStats(currentRoute);
+    renderTripList(currentRoute);
+    visualizeRoute(currentRoute);
+    
+    // Hide detail panel
+    document.getElementById('detailPanel').classList.remove('visible');
+    
+    console.log('Showing route:', currentRoute.length, 'trips');
+}
+
+function showAllTrips() {
+    const vehicle = document.getElementById('vehicleSel').value;
+    
+    // Filter by vehicle only (no date/time filter)
+    const filtered = filterTrips(vehicle, null, null, null);
+    
+    // Segment route
+    currentRoute = segmentRoute(filtered);
+    
+    // Update UI
+    updateStats(currentRoute);
+    renderTripList(currentRoute);
+    visualizeRoute(currentRoute);
+    
+    // Hide detail panel
+    document.getElementById('detailPanel').classList.remove('visible');
+    
+    console.log('Showing all trips:', currentRoute.length, 'trips');
+}
+
+// Initialize
+document.getElementById('statVehicles').textContent = VEHICLES.length;
+    </script>
+    <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
+</body>
+</html>
