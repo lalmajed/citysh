@@ -472,12 +472,14 @@ function checkRouteInMatrix() {
     const waypoints = EXPECTED_WAYPOINTS[key];
     
     let html = '';
-    if (time !== undefined) {
+    if (time !== undefined && time !== null) {
         html += `<div style="color:#4caf50;"><strong>${key}</strong>: ${time.toFixed(2)} min`;
-        if (dist) html += `, ${dist.toFixed(2)} km`;
+        if (dist !== undefined && dist !== null) html += `, ${dist.toFixed(2)} km`;
         html += '</div>';
         if (waypoints && waypoints.length > 0) {
             html += `<div style="color:#1565c0;font-size:0.7rem;">Waypoints: ${waypoints.join(' → ')}</div>`;
+        } else if (from === to) {
+            html += `<div style="color:#666;font-size:0.7rem;">(Self-route: same site)</div>`;
         }
     } else {
         html += `<span style="color:#f44336;"><strong>${key}</strong>: NOT FOUND in matrix</span>`;
@@ -882,13 +884,29 @@ function segmentRoute(trips) {
         let status = 'normal';
         let breakReason = null;
         
+        // Handle self-routes (same site) specially
+        const isSelfRoute = trip.camera_prev === trip.camera_next;
+        
         if (idx === 0) {
             // First trip starts a new path
             pathStartTime = new Date(trip.t_prev);
             pathStartSite = trip.camera_prev;
             
-            // Calculate R for first trip using hop-by-hop
-            if (expectedTime && expectedTime > 0) {
+            // Calculate R for first trip
+            if (isSelfRoute) {
+                // Self-route: expected time is 0
+                // If observed time is also 0 (or very small), R = 1
+                // Otherwise, R = infinity (treat as very large)
+                if (obsTimeMin <= 1) { // Less than 1 minute
+                    R = 1;
+                    R_method = 'self';
+                    temporalOk = true;
+                } else {
+                    R = obsTimeMin; // Use observed time as R (since expected is 0)
+                    R_method = 'self';
+                    temporalOk = (obsTimeMin <= 5); // Only OK if under 5 minutes
+                }
+            } else if (expectedTime && expectedTime > 0) {
                 R = obsTimeMin / expectedTime;
                 R_method = 'hop';
                 temporalOk = (R >= rMin && R <= rMax);
@@ -900,12 +918,23 @@ function segmentRoute(trips) {
             const elapsedMin = (currentTime - pathStartTime) / 60000;
             const expectedFromStart = getExpectedTime(pathStartSite, trip.camera_next);
             
-            if (expectedFromStart && expectedFromStart > 0) {
+            if (isSelfRoute) {
+                // Self-route (same site): expected time is 0
+                if (obsTimeMin <= 1) { // Less than 1 minute
+                    R = 1;
+                    R_method = 'self';
+                    temporalOk = true;
+                } else {
+                    R = obsTimeMin; // Use observed time as pseudo-R
+                    R_method = 'self';
+                    temporalOk = (obsTimeMin <= 5); // Only OK if under 5 minutes
+                }
+            } else if (expectedFromStart !== undefined && expectedFromStart !== null && expectedFromStart > 0) {
                 // Use path-based R (from path start to current site)
                 R = elapsedMin / expectedFromStart;
                 R_method = 'path';
                 temporalOk = (R >= rMin && R <= rMax);
-            } else if (expectedTime && expectedTime > 0) {
+            } else if (expectedTime !== undefined && expectedTime !== null && expectedTime > 0) {
                 // Fallback to hop-by-hop if no matrix entry for full path
                 R = obsTimeMin / expectedTime;
                 R_method = 'hop';
@@ -1644,7 +1673,7 @@ function renderTripList(trips) {
                 <div class="trip-time">${time}</div>
                 <div class="trip-meta">
                     <span>Obs: ${formatTime(trip.obs_time_seconds)}</span>
-                    <span>Exp: ${trip.expectedTimeMin ? formatTime(trip.expectedTimeMin * 60) : '<span style="color:#f44336;">N/A</span>'}</span>
+                    <span>Exp: ${trip.expectedTimeMin !== undefined && trip.expectedTimeMin !== null ? formatTime(trip.expectedTimeMin * 60) : '<span style="color:#f44336;">N/A</span>'}</span>
                     ${trip.R !== null ? `<span>R: ${trip.R.toFixed(2)} <span style="font-size:0.6rem;color:#999;">${trip.R_method || ''}</span></span>` : '<span style="color:#f44336;">R: N/A</span>'}
                     ${expectedDist ? `<span>${expectedDist.toFixed(1)}km</span>` : ''}
                 </div>
@@ -1902,16 +1931,16 @@ function selectTrip(idx) {
         </div>
         <div class="detail-row">
             <span class="detail-label">Expected Time (Google)</span>
-            <span class="detail-value">${expectedTime ? formatTime(expectedTime * 60) + ' (' + expectedTime.toFixed(1) + ' min)' : '<span style="color:#f44336;">Not in matrix</span>'}</span>
+            <span class="detail-value">${expectedTime !== undefined && expectedTime !== null ? formatTime(expectedTime * 60) + ' (' + expectedTime.toFixed(1) + ' min)' : '<span style="color:#f44336;">Not in matrix</span>'}</span>
         </div>
-        ${!expectedTime ? `
+        ${expectedTime === undefined || expectedTime === null ? `
         <div class="detail-row" style="background:#fff3e0;margin:0 -15px;padding:5px 15px;font-size:0.75rem;">
             <span style="color:#e65100;">Matrix key "${routeKey}" not found. Check if route exists in uploaded matrix.</span>
         </div>
         ` : ''}
         <div class="detail-row">
             <span class="detail-label">Expected Distance (Google)</span>
-            <span class="detail-value">${expectedDistance ? expectedDistance.toFixed(2) + ' km' : 'N/A'}</span>
+            <span class="detail-value">${expectedDistance !== undefined && expectedDistance !== null ? expectedDistance.toFixed(2) + ' km' : 'N/A'}</span>
         </div>
         <div class="detail-row">
             <span class="detail-label">Ratio R (obs/exp)</span>
