@@ -288,6 +288,17 @@ let EXPECTED_WAYPOINTS = {}; // Store waypoints: "SITE_A_SITE_B" -> [siteId1, si
 let EXPECTED_DISTANCES = {}; // Store distances: "SITE_A_SITE_B" -> km
 let expectedTimesLoaded = false;
 
+// Initialize self-routes (site to itself = 0 time, 0 distance) - embedded in HTML
+(function initSelfRoutes() {
+    Object.keys(SITES).forEach(siteId => {
+        const selfKey = siteId + '_' + siteId;
+        EXPECTED_TIMES[selfKey] = 0;
+        EXPECTED_DISTANCES[selfKey] = 0;
+        // No waypoints for self-route
+    });
+    console.log('Initialized', Object.keys(SITES).length, 'self-routes (site to itself = 0)');
+})();
+
 // ============ MAP VARIABLES ============
 let map, markers = [], polylines = [];
 let currentRoute = [];
