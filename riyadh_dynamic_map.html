@@ -4,7 +4,6 @@
     <title>Riyadh Map - Dynamic Counts</title>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1.0, width=device-width">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; }
@@ -35,7 +34,6 @@
         .stat-box.apt { background: #2196F3; }
         .stat-box.villa { background: #4CAF50; }
         .stat-box.other { background: #FF9800; }
-        .stat-box.poi { background: #9C27B0; }
         
         .dynamic-stats { background: #e8f5e9; border: 2px solid #4caf50; border-radius: 8px; padding: 10px; margin: 8px 0; }
         .dynamic-stats h3 { color: #2e7d32; font-size: 13px; margin-bottom: 8px; }
@@ -55,9 +53,21 @@
         .layer-control .count { font-size: 10px; color: #666; }
         .layer-control input[type="range"] { width: 100%; margin: 2px 0; }
         
+        #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 450; }
+        
         .btn { padding: 8px 12px; margin: 3px 0; cursor: pointer; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; width: 100%; }
         .btn-primary { background: #1a73e8; color: white; border: none; }
         .btn-success { background: #28a745; color: white; border: none; }
+        
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8); z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 18px; flex-direction: column; gap: 20px;
+        }
+        .loading-overlay.hidden { display: none; }
+        .progress-bar { width: 300px; height: 20px; background: #333; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #4CAF50; transition: width 0.3s; }
         
         .file-input { margin: 5px 0; }
         .file-input label { display: block; font-weight: 600; font-size: 10px; margin-bottom: 2px; }
@@ -80,7 +90,14 @@
     </style>
 </head>
 <body>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div id="loadingTitle">Loading Google Maps...</div>
+        <div class="progress-bar"><div id="progressFill" class="progress-fill" style="width: 0%"></div></div>
+        <div id="loadingStatus">Please wait...</div>
+    </div>
+    
     <div id="map"></div>
+    <canvas id="canvas"></canvas>
     
     <div id="infoPopup" class="info-popup">
         <span class="close" onclick="closeInfoPopup()">&times;</span>
@@ -98,78 +115,73 @@
             <div class="stat-box other"><div class="num" id="totalOther">0</div><div class="lbl">Other</div></div>
         </div>
         <div style="text-align:center; font-size:11px; color:#666; margin-bottom:8px;">
-            Total Parcels: <b id="totalParcels">0</b> | POIs: <b id="totalPoi">0</b> | Roads: <b id="totalRoads">0</b>
+            Total Parcels: <b id="totalParcels">0</b> | Roads: <b id="totalRoads">0</b>
         </div>
         
         <div class="district-stats" id="districtStats">
             <h3 id="districtStatsTitle">DISTRICT: None</h3>
-            <div class="row" style="color:#9c27b0;"><span>Buildings:</span><span id="distBldg">0</span></div>
             <div class="row" style="color:#2196F3;"><span>Apartments:</span><span id="distApt">0</span></div>
             <div class="row" style="color:#4CAF50;"><span>Villas:</span><span id="distVilla">0</span></div>
             <div class="row" style="color:#FF9800;"><span>Other:</span><span id="distOther">0</span></div>
             <div class="row total"><span>Total Parcels:</span><span id="distTotal">0</span></div>
-            <div class="row"><span>POIs:</span><span id="distPoi">0</span></div>
-            <div class="row total" style="color:#4CAF50;"><span>Villa %:</span><span id="distVillaPct">0%</span></div>
-            <div class="row total" style="color:#2196F3;"><span>Apt %:</span><span id="distAptPct">0%</span></div>
             <div style="border-top:2px solid #2196F3;margin-top:8px;padding-top:8px;">
                 <div class="row" style="color:#2196F3;font-weight:bold;"><span>ROADS</span><span></span></div>
                 <div class="row"><span>Total Roads:</span><span id="distRoads">0</span></div>
                 <div class="row"><span>Total Length:</span><span id="distRoadLength">0 km</span></div>
-                <div class="row"><span>Major (20m+):</span><span id="distMajorRoads">0</span></div>
                 <div class="row"><span>Entry/Exit Points:</span><span id="distEntryExit">~0</span></div>
             </div>
         </div>
         
         <div class="dynamic-stats">
             <h3>IN CURRENT VIEW</h3>
-            <div class="row" style="color:#9c27b0;"><span>Buildings:</span><span id="viewBldg">0</span></div>
             <div class="row" style="color:#2196F3;"><span>Apartments:</span><span id="viewApt">0</span></div>
             <div class="row" style="color:#4CAF50;"><span>Villas:</span><span id="viewVilla">0</span></div>
             <div class="row" style="color:#FF9800;"><span>Other:</span><span id="viewOther">0</span></div>
             <div class="row total"><span>Total Parcels:</span><span id="viewTotal">0</span></div>
-            <div class="row"><span>POIs:</span><span id="viewPoi">0</span></div>
             <div class="row total" style="color:#4CAF50;"><span>Villa %:</span><span id="viewVillaPct">0%</span></div>
         </div>
         
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                LAYERS <span>[+]</span>
+                LAYERS <span>[-]</span>
             </div>
             <div class="section-content open">
                 <div class="layer-control">
                     <div class="header">
-                        <input type="checkbox" id="showApt" checked onchange="updateLayers()">
+                        <input type="checkbox" id="showApt" checked onchange="render()">
                         <div class="dot" style="background:#2196F3;"></div>
                         <span class="name">Apartments</span>
                     </div>
-                </div>
-                <div class="layer-control">
-                    <div class="header">
-                        <input type="checkbox" id="showVilla" checked onchange="updateLayers()">
-                        <div class="dot" style="background:#4CAF50;"></div>
-                        <span class="name">Villas</span>
+                    <div style="font-size:10px;">
+                        Size: <input type="range" id="aptSize" min="1" max="10" value="4" oninput="render()">
                     </div>
                 </div>
                 <div class="layer-control">
                     <div class="header">
-                        <input type="checkbox" id="showOther" checked onchange="updateLayers()">
+                        <input type="checkbox" id="showVilla" checked onchange="render()">
+                        <div class="dot" style="background:#4CAF50;"></div>
+                        <span class="name">Villas</span>
+                    </div>
+                    <div style="font-size:10px;">
+                        Size: <input type="range" id="villaSize" min="1" max="10" value="4" oninput="render()">
+                    </div>
+                </div>
+                <div class="layer-control">
+                    <div class="header">
+                        <input type="checkbox" id="showOther" checked onchange="render()">
                         <div class="dot" style="background:#FF9800;"></div>
                         <span class="name">Other Parcels</span>
                     </div>
                 </div>
                 <div class="layer-control" style="background:#e3f2fd;">
                     <div class="header">
-                        <input type="checkbox" id="showRoads" checked onchange="updateLayers()">
+                        <input type="checkbox" id="showRoads" checked onchange="render()">
                         <div class="dot" style="background:#d32f2f;"></div>
                         <span class="name">Roads</span>
                         <span class="count" id="roadCount">0</span>
                     </div>
-                </div>
-                <div class="layer-control">
-                    <div class="header">
-                        <input type="checkbox" id="showDistricts" checked onchange="updateLayers()">
-                        <div class="dot" style="background:#607D8B;"></div>
-                        <span class="name">Districts</span>
+                    <div style="font-size:10px;">
+                        Width: <input type="range" id="roadWidth" min="0.5" max="3" value="1" step="0.25" oninput="render()">
                     </div>
                 </div>
             </div>
@@ -177,7 +189,7 @@
         
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                DATA FILES <span>[+]</span>
+                DATA FILES <span>[-]</span>
             </div>
             <div class="section-content open">
                 <div class="file-input">
@@ -185,43 +197,25 @@
                     <input type="file" id="parcelsFile" accept=".csv">
                     <div id="parcelsStatus" class="file-status">Upload parcels CSV</div>
                 </div>
-                <div class="file-input">
-                    <label>POI CSV:</label>
-                    <input type="file" id="poiFile" accept=".csv">
-                    <div id="poiStatus" class="file-status">Upload POI CSV</div>
+                <div class="file-input" style="background:#e3f2fd;padding:8px;border-radius:6px;margin-top:8px;">
+                    <label>Roads GeoJSON:</label>
+                    <input type="file" id="roadsFile" accept=".json,.geojson">
+                    <div id="roadsStatus" class="file-status">Upload roads GeoJSON</div>
                 </div>
                 <div class="file-input">
                     <label>Districts GeoJSON:</label>
                     <input type="file" id="distFile" accept=".json,.geojson">
                     <div id="distStatus" class="file-status">Upload districts GeoJSON</div>
                 </div>
-                <div class="file-input" style="background:#e3f2fd;padding:8px;border-radius:6px;margin-top:8px;">
-                    <label>Roads GeoJSON:</label>
-                    <input type="file" id="roadsFile" accept=".json,.geojson">
-                    <div id="roadsStatus" class="file-status">Upload roads GeoJSON</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="section">
-            <div class="section-header" onclick="toggleSection(this)">
-                DISTRICTS <span>[+]</span>
-            </div>
-            <div class="section-content">
-                <input type="text" style="width:100%;padding:5px;margin-bottom:5px;border:1px solid #ddd;border-radius:4px;font-size:11px;" id="districtSearch" placeholder="Search districts..." oninput="filterDistricts()">
-                <button class="btn" onclick="clearDistrictSelection()">Clear Selection</button>
-                <div id="districtList" style="max-height:120px;overflow-y:auto;margin-top:5px;"></div>
             </div>
         </div>
         
         <div id="roadLegend" style="display:none;margin-top:10px;padding:8px;background:#e3f2fd;border-radius:6px;">
             <div style="font-weight:600;font-size:11px;margin-bottom:5px;">Road Width Legend</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:9px;">
-                <div><span style="display:inline-block;width:20px;height:4px;background:#d32f2f;border-radius:2px;"></span> 36m+</div>
-                <div><span style="display:inline-block;width:20px;height:4px;background:#ff5722;border-radius:2px;"></span> 30m</div>
-                <div><span style="display:inline-block;width:20px;height:4px;background:#ff9800;border-radius:2px;"></span> 25m</div>
-                <div><span style="display:inline-block;width:20px;height:4px;background:#ffc107;border-radius:2px;"></span> 20m</div>
-                <div><span style="display:inline-block;width:20px;height:4px;background:#8bc34a;border-radius:2px;"></span> 15m</div>
+                <div><span style="display:inline-block;width:20px;height:4px;background:#d32f2f;border-radius:2px;"></span> 30m+</div>
+                <div><span style="display:inline-block;width:20px;height:4px;background:#ff9800;border-radius:2px;"></span> 20m</div>
+                <div><span style="display:inline-block;width:20px;height:4px;background:#ffc107;border-radius:2px;"></span> 15m</div>
                 <div><span style="display:inline-block;width:20px;height:4px;background:#4caf50;border-radius:2px;"></span> 12m</div>
                 <div><span style="display:inline-block;width:20px;height:4px;background:#009688;border-radius:2px;"></span> 10m</div>
                 <div><span style="display:inline-block;width:20px;height:4px;background:#607d8b;border-radius:2px;"></span> 8m</div>
@@ -229,53 +223,49 @@
         </div>
         
         <div style="margin-top:8px;font-size:9px;color:#888;text-align:center;">
-            Zoom: <span id="zoomLevel">11</span> | <a href="#" onclick="resetView();return false;">Reset View</a>
+            Zoom: <span id="zoomLevel">11</span> | <a href="#" onclick="map.setCenter({lat:24.7136,lng:46.6753});map.setZoom(11);return false;">Reset</a>
         </div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Initialize map
-        const map = L.map('map').setView([24.7136, 46.6753], 11);
-        
-        // Add OpenStreetMap tiles
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 19
-        }).addTo(map);
-        
-        // Data arrays
+        let map;
         let parcels = [];
-        let poiData = [];
-        let districts = [];
         let roads = [];
-        
-        // Layer groups
-        let parcelLayers = { apt: L.layerGroup(), villa: L.layerGroup(), other: L.layerGroup() };
-        let roadsLayer = L.layerGroup().addTo(map);
-        let districtsLayer = L.layerGroup().addTo(map);
-        let poiLayer = L.layerGroup().addTo(map);
-        
+        let districts = [];
         let selectedDistrict = null;
-        let selectedDistrictLayer = null;
+        let mapsLoadAttempts = 0;
         
-        // Road color by width
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
         function getRoadColor(width) {
-            if (width >= 36) return '#d32f2f';
-            if (width >= 30) return '#ff5722';
-            if (width >= 25) return '#ff9800';
-            if (width >= 20) return '#ffc107';
-            if (width >= 15) return '#8bc34a';
+            if (width >= 30) return '#d32f2f';
+            if (width >= 20) return '#ff9800';
+            if (width >= 15) return '#ffc107';
             if (width >= 12) return '#4caf50';
             if (width >= 10) return '#009688';
             return '#607d8b';
         }
         
-        function getRoadWeight(width) {
-            if (width >= 30) return 6;
-            if (width >= 20) return 5;
-            if (width >= 15) return 4;
-            return 3;
+        function waitForGoogleMaps() {
+            mapsLoadAttempts++;
+            const progress = Math.min(90, mapsLoadAttempts * 3);
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('loadingStatus').textContent = 'Loading... attempt ' + mapsLoadAttempts;
+            
+            if (typeof google !== 'undefined' && google.maps && google.maps.Map) {
+                document.getElementById('progressFill').style.width = '100%';
+                document.getElementById('loadingStatus').textContent = 'Map loaded!';
+                setTimeout(() => {
+                    document.getElementById('loadingOverlay').classList.add('hidden');
+                    initMap();
+                }, 200);
+            } else if (mapsLoadAttempts < 100) {
+                setTimeout(waitForGoogleMaps, 150);
+            } else {
+                document.getElementById('loadingTitle').textContent = 'Failed to load Google Maps';
+                document.getElementById('loadingStatus').innerHTML = '<button onclick="location.reload()" style="padding:10px 20px;cursor:pointer;">Retry</button>';
+            }
         }
         
         function toggleSection(header) {
@@ -284,32 +274,123 @@
             header.querySelector('span').textContent = content.classList.contains('open') ? '[-]' : '[+]';
         }
         
-        function resetView() {
-            map.setView([24.7136, 46.6753], 11);
+        let renderPending = false;
+        function render() {
+            if (renderPending || !map) return;
+            renderPending = true;
+            requestAnimationFrame(doRender);
         }
         
-        // Update zoom display
-        map.on('zoomend moveend', function() {
-            document.getElementById('zoomLevel').textContent = map.getZoom().toFixed(1);
-            updateViewStats();
-        });
-        
-        function updateViewStats() {
+        function doRender() {
+            renderPending = false;
+            if (!map) return;
+            
             const bounds = map.getBounds();
-            let viewApt = 0, viewVilla = 0, viewOther = 0, viewPoi = 0;
+            if (!bounds) return;
+            
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const proj = map.getProjection();
+            if (!proj) return;
+            
+            const zoom = map.getZoom();
+            document.getElementById('zoomLevel').textContent = zoom.toFixed(1);
+            
+            const ne = bounds.getNorthEast();
+            const sw = bounds.getSouthWest();
+            const tr = proj.fromLatLngToPoint(ne);
+            const bl = proj.fromLatLngToPoint(sw);
+            const scale = Math.pow(2, zoom);
+            
+            const swLat = sw.lat(), neLat = ne.lat(), swLng = sw.lng(), neLng = ne.lng();
+            
+            const showApt = document.getElementById('showApt').checked;
+            const showVilla = document.getElementById('showVilla').checked;
+            const showOther = document.getElementById('showOther').checked;
+            const showRoads = document.getElementById('showRoads').checked;
+            
+            const aptSize = parseFloat(document.getElementById('aptSize').value);
+            const villaSize = parseFloat(document.getElementById('villaSize').value);
+            const roadWidthScale = parseFloat(document.getElementById('roadWidth').value);
+            
+            let viewApt = 0, viewVilla = 0, viewOther = 0;
+            
+            // Draw roads
+            if (showRoads && roads.length) {
+                roads.forEach(road => {
+                    const geom = road.geometry;
+                    if (!geom) return;
+                    
+                    const props = road.properties || {};
+                    const width = parseFloat(props.width_m || props.WIDTH || 10);
+                    const color = getRoadColor(width);
+                    const lineWidth = Math.max(2, (zoom - 10) * roadWidthScale * (width / 10));
+                    
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = lineWidth;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    
+                    const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
+                    
+                    lines.forEach(coords => {
+                        if (!coords || coords.length < 2) return;
+                        
+                        let inView = false;
+                        for (const [lon, lat] of coords) {
+                            if (lat >= swLat - 0.01 && lat <= neLat + 0.01 && lon >= swLng - 0.01 && lon <= neLng + 0.01) {
+                                inView = true;
+                                break;
+                            }
+                        }
+                        if (!inView) return;
+                        
+                        ctx.beginPath();
+                        coords.forEach(([lon, lat], i) => {
+                            const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                            const x = (w.x - bl.x) * scale;
+                            const y = (w.y - tr.y) * scale;
+                            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                        });
+                        ctx.stroke();
+                    });
+                });
+            }
+            
+            // Draw parcels
+            const pi2 = Math.PI * 2;
             
             parcels.forEach(p => {
-                if (bounds.contains([p.lat, p.lng])) {
-                    if (p.type === 'apt') viewApt++;
-                    else if (p.type === 'villa') viewVilla++;
-                    else viewOther++;
+                if (p.lat < swLat || p.lat > neLat || p.lng < swLng || p.lng > neLng) return;
+                
+                const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
+                const x = (w.x - bl.x) * scale;
+                const y = (w.y - tr.y) * scale;
+                
+                if (p.type === 'apt' && showApt) {
+                    ctx.fillStyle = 'rgba(33, 150, 243, 0.6)';
+                    ctx.beginPath();
+                    ctx.arc(x, y, aptSize, 0, pi2);
+                    ctx.fill();
+                    viewApt++;
+                } else if (p.type === 'villa' && showVilla) {
+                    ctx.fillStyle = 'rgba(76, 175, 80, 0.6)';
+                    ctx.beginPath();
+                    ctx.arc(x, y, villaSize, 0, pi2);
+                    ctx.fill();
+                    viewVilla++;
+                } else if (p.type === 'other' && showOther) {
+                    ctx.fillStyle = 'rgba(255, 152, 0, 0.4)';
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, pi2);
+                    ctx.fill();
+                    viewOther++;
                 }
             });
             
-            poiData.forEach(p => {
-                if (bounds.contains([p.lat, p.lng])) viewPoi++;
-            });
-            
+            // Update stats
             const viewTotal = viewApt + viewVilla + viewOther;
             const villaPct = viewTotal > 0 ? (viewVilla / viewTotal * 100).toFixed(1) : 0;
             
@@ -317,36 +398,7 @@
             document.getElementById('viewVilla').textContent = viewVilla.toLocaleString();
             document.getElementById('viewOther').textContent = viewOther.toLocaleString();
             document.getElementById('viewTotal').textContent = viewTotal.toLocaleString();
-            document.getElementById('viewPoi').textContent = viewPoi.toLocaleString();
             document.getElementById('viewVillaPct').textContent = villaPct + '%';
-        }
-        
-        function updateLayers() {
-            if (document.getElementById('showApt').checked) {
-                map.addLayer(parcelLayers.apt);
-            } else {
-                map.removeLayer(parcelLayers.apt);
-            }
-            if (document.getElementById('showVilla').checked) {
-                map.addLayer(parcelLayers.villa);
-            } else {
-                map.removeLayer(parcelLayers.villa);
-            }
-            if (document.getElementById('showOther').checked) {
-                map.addLayer(parcelLayers.other);
-            } else {
-                map.removeLayer(parcelLayers.other);
-            }
-            if (document.getElementById('showRoads').checked) {
-                map.addLayer(roadsLayer);
-            } else {
-                map.removeLayer(roadsLayer);
-            }
-            if (document.getElementById('showDistricts').checked) {
-                map.addLayer(districtsLayer);
-            } else {
-                map.removeLayer(districtsLayer);
-            }
         }
         
         // File handlers
@@ -366,11 +418,6 @@
                 parcels = [];
                 let aptCount = 0, villaCount = 0, otherCount = 0;
                 
-                // Clear existing layers
-                parcelLayers.apt.clearLayers();
-                parcelLayers.villa.clearLayers();
-                parcelLayers.other.clearLayers();
-                
                 for (let i = 1; i < lines.length; i++) {
                     const values = lines[i].split(',');
                     const lat = parseFloat(values[latIdx]);
@@ -385,37 +432,18 @@
                     }
                     
                     parcels.push({ lat, lng, type });
-                    
-                    const color = type === 'apt' ? '#2196F3' : type === 'villa' ? '#4CAF50' : '#FF9800';
-                    const marker = L.circleMarker([lat, lng], {
-                        radius: 4,
-                        fillColor: color,
-                        color: color,
-                        weight: 1,
-                        fillOpacity: 0.6
-                    });
-                    
-                    marker.bindPopup(`<b>${type.charAt(0).toUpperCase() + type.slice(1)}</b><br>Location: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
-                    parcelLayers[type].addLayer(marker);
-                    
                     if (type === 'apt') aptCount++;
                     else if (type === 'villa') villaCount++;
                     else otherCount++;
                 }
                 
-                // Add layers to map
-                map.addLayer(parcelLayers.apt);
-                map.addLayer(parcelLayers.villa);
-                map.addLayer(parcelLayers.other);
-                
-                document.getElementById('parcelsStatus').innerHTML = `OK: ${parcels.length.toLocaleString()} parcels`;
+                document.getElementById('parcelsStatus').innerHTML = 'Loaded: ' + parcels.length.toLocaleString() + ' parcels';
                 document.getElementById('parcelsStatus').classList.add('loaded');
                 document.getElementById('totalParcels').textContent = parcels.length.toLocaleString();
                 document.getElementById('totalApt').textContent = aptCount.toLocaleString();
                 document.getElementById('totalVilla').textContent = villaCount.toLocaleString();
                 document.getElementById('totalOther').textContent = otherCount.toLocaleString();
-                
-                updateViewStats();
+                render();
             };
             reader.readAsText(file);
         });
@@ -430,60 +458,30 @@
                     const data = JSON.parse(evt.target.result);
                     roads = data.features || [];
                     
-                    roadsLayer.clearLayers();
                     let totalLength = 0;
-                    
-                    roads.forEach(road => {
-                        const props = road.properties || {};
-                        const width = parseFloat(props.width_m || props.WIDTH || 10);
-                        const length = parseFloat(props.length_m || props.LENGTH || 0);
-                        totalLength += length;
-                        
-                        const color = getRoadColor(width);
-                        const weight = getRoadWeight(width);
-                        
-                        const layer = L.geoJSON(road, {
-                            style: {
-                                color: color,
-                                weight: weight,
-                                opacity: 0.8
-                            }
-                        });
-                        
-                        const nameAr = props.name_ar || props.ROADCENTERLINENAME_AR || 'Unknown';
-                        const nameEn = props.name_en || props.ROADCENTERLINENAME_EN || '';
-                        
-                        layer.bindPopup(`
-                            <div style="direction:rtl;text-align:right;font-weight:bold;font-size:14px;">${nameAr}</div>
-                            <div style="color:#666;margin-bottom:8px;">${nameEn}</div>
-                            <table style="width:100%;font-size:11px;">
-                                <tr><td><b>Width:</b></td><td>${width}m</td></tr>
-                                <tr><td><b>Length:</b></td><td>${length.toFixed(0)}m</td></tr>
-                                <tr><td><b>Lanes:</b></td><td>${props.num_lanes || props.NOOFLANES || '-'}</td></tr>
-                                <tr><td><b>Paved:</b></td><td>${props.paved || props.PAVED || '-'}</td></tr>
-                                <tr><td><b>Category:</b></td><td>${props.category || '-'}</td></tr>
-                                <tr><td><b>Source:</b></td><td>${props.source || 'Balady'}</td></tr>
-                            </table>
-                        `);
-                        
-                        roadsLayer.addLayer(layer);
+                    roads.forEach(r => {
+                        totalLength += parseFloat(r.properties?.length_m || r.properties?.LENGTH || 0);
                     });
                     
-                    document.getElementById('roadsStatus').innerHTML = `OK: ${roads.length} roads (${(totalLength/1000).toFixed(2)} km)`;
+                    document.getElementById('roadsStatus').innerHTML = 'Loaded: ' + roads.length + ' roads (' + (totalLength/1000).toFixed(2) + ' km)';
                     document.getElementById('roadsStatus').classList.add('loaded');
                     document.getElementById('roadCount').textContent = roads.length;
                     document.getElementById('totalRoads').textContent = roads.length;
                     document.getElementById('roadLegend').style.display = 'block';
                     
                     // Zoom to roads
-                    if (roads.length > 0) {
-                        const bounds = roadsLayer.getBounds();
-                        if (bounds.isValid()) {
-                            map.fitBounds(bounds, { padding: [50, 50] });
+                    if (roads.length > 0 && roads[0].geometry) {
+                        const coords = roads[0].geometry.coordinates;
+                        const c = coords[0] || coords;
+                        if (c && c.length >= 2) {
+                            map.setCenter({ lat: c[1], lng: c[0] });
+                            map.setZoom(14);
                         }
                     }
+                    
+                    render();
                 } catch (err) {
-                    document.getElementById('roadsStatus').innerHTML = `Error: ${err.message}`;
+                    document.getElementById('roadsStatus').innerHTML = 'Error: ' + err.message;
                 }
             };
             reader.readAsText(file);
@@ -498,198 +496,21 @@
                 try {
                     const data = JSON.parse(evt.target.result);
                     districts = data.features || data;
-                    
-                    districtsLayer.clearLayers();
-                    
-                    districts.forEach((d, idx) => {
-                        const name = d.properties?.name || d.properties?.NAME || d.properties?.name_en || `District ${idx + 1}`;
-                        
-                        const layer = L.geoJSON(d, {
-                            style: {
-                                color: '#607D8B',
-                                weight: 2,
-                                fillColor: '#607D8B',
-                                fillOpacity: 0.1
-                            }
-                        });
-                        
-                        layer.on('click', function() {
-                            selectDistrict(name, d);
-                        });
-                        
-                        layer.bindTooltip(name, { permanent: false, direction: 'center' });
-                        districtsLayer.addLayer(layer);
-                    });
-                    
-                    document.getElementById('distStatus').innerHTML = `OK: ${districts.length} districts`;
+                    document.getElementById('distStatus').innerHTML = 'Loaded: ' + districts.length + ' districts';
                     document.getElementById('distStatus').classList.add('loaded');
-                    updateDistrictList();
                 } catch (err) {
-                    document.getElementById('distStatus').innerHTML = `Error: ${err.message}`;
+                    document.getElementById('distStatus').innerHTML = 'Error: ' + err.message;
                 }
             };
             reader.readAsText(file);
         });
         
-        function getDistrictName(d) {
-            if (d.properties) {
-                return d.properties.name || d.properties.NAME || d.properties.name_en || d.properties.name_ar || 'Unknown';
-            }
-            return 'Unknown';
-        }
-        
-        function updateDistrictList() {
-            const search = document.getElementById('districtSearch').value.toLowerCase();
-            const container = document.getElementById('districtList');
-            container.innerHTML = '';
-            
-            districts.forEach((d, idx) => {
-                const name = getDistrictName(d);
-                if (search && !name.toLowerCase().includes(search)) return;
-                
-                const div = document.createElement('div');
-                div.style.cssText = 'padding:4px 8px;margin:2px 0;background:#f5f5f5;border-radius:4px;cursor:pointer;font-size:10px;';
-                if (selectedDistrict === name) div.style.background = '#1a73e8';
-                if (selectedDistrict === name) div.style.color = 'white';
-                div.textContent = name;
-                div.onclick = () => selectDistrict(name, d);
-                container.appendChild(div);
-            });
-        }
-        
-        function filterDistricts() {
-            updateDistrictList();
-        }
-        
-        function selectDistrict(name, districtData) {
-            selectedDistrict = name;
-            updateDistrictList();
-            
-            // Highlight district
-            if (selectedDistrictLayer) {
-                map.removeLayer(selectedDistrictLayer);
-            }
-            
-            selectedDistrictLayer = L.geoJSON(districtData, {
-                style: {
-                    color: '#FF5722',
-                    weight: 4,
-                    fillColor: '#FF5722',
-                    fillOpacity: 0.2
-                }
-            }).addTo(map);
-            
-            // Zoom to district
-            const bounds = selectedDistrictLayer.getBounds();
-            if (bounds.isValid()) {
-                map.fitBounds(bounds, { padding: [50, 50] });
-            }
-            
-            // Calculate stats
-            calculateDistrictStats(districtData);
-        }
-        
-        function clearDistrictSelection() {
-            selectedDistrict = null;
-            if (selectedDistrictLayer) {
-                map.removeLayer(selectedDistrictLayer);
-                selectedDistrictLayer = null;
-            }
-            document.getElementById('districtStats').classList.remove('active');
-            updateDistrictList();
-            resetView();
-        }
-        
-        function pointInPolygon(lat, lng, polygon) {
-            let inside = false;
-            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-                const [xi, yi] = polygon[i];
-                const [xj, yj] = polygon[j];
-                if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
-                    inside = !inside;
-                }
-            }
-            return inside;
-        }
-        
-        function calculateDistrictStats(districtData) {
-            const geom = districtData.geometry;
-            if (!geom) return;
-            
-            const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
-                           geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
-            if (!coords) return;
-            
-            const poly = coords.map(([lon, lat]) => [lon, lat]);
-            
-            let apt = 0, villa = 0, other = 0, poi = 0;
-            
-            parcels.forEach(p => {
-                if (pointInPolygon(p.lat, p.lng, poly)) {
-                    if (p.type === 'apt') apt++;
-                    else if (p.type === 'villa') villa++;
-                    else other++;
-                }
-            });
-            
-            poiData.forEach(p => {
-                if (pointInPolygon(p.lat, p.lng, poly)) poi++;
-            });
-            
-            // Road stats
-            let roadCount = 0, totalLength = 0, majorRoads = 0;
-            const uniqueRoads = new Set();
-            
-            roads.forEach(road => {
-                const roadGeom = road.geometry;
-                if (!roadGeom) return;
-                
-                const props = road.properties || {};
-                const width = parseFloat(props.width_m || props.WIDTH || 0);
-                const length = parseFloat(props.length_m || props.LENGTH || 0);
-                const nameAr = props.name_ar || props.ROADCENTERLINENAME_AR || '';
-                
-                const lines = roadGeom.type === 'LineString' ? [roadGeom.coordinates] : roadGeom.coordinates;
-                
-                for (const lineCoords of lines) {
-                    for (const [lon, lat] of lineCoords) {
-                        if (pointInPolygon(lat, lon, poly)) {
-                            roadCount++;
-                            totalLength += length;
-                            if (width >= 20) majorRoads++;
-                            if (nameAr) uniqueRoads.add(nameAr);
-                            break;
-                        }
-                    }
-                }
-            });
-            
-            const total = apt + villa + other;
-            const villaPct = total > 0 ? (villa / total * 100).toFixed(1) : 0;
-            const aptPct = total > 0 ? (apt / total * 100).toFixed(1) : 0;
-            
-            document.getElementById('districtStatsTitle').textContent = 'DISTRICT: ' + selectedDistrict;
-            document.getElementById('distApt').textContent = apt.toLocaleString();
-            document.getElementById('distVilla').textContent = villa.toLocaleString();
-            document.getElementById('distOther').textContent = other.toLocaleString();
-            document.getElementById('distTotal').textContent = total.toLocaleString();
-            document.getElementById('distPoi').textContent = poi.toLocaleString();
-            document.getElementById('distVillaPct').textContent = villaPct + '%';
-            document.getElementById('distAptPct').textContent = aptPct + '%';
-            document.getElementById('distRoads').textContent = roadCount.toLocaleString();
-            document.getElementById('distRoadLength').textContent = (totalLength / 1000).toFixed(2) + ' km';
-            document.getElementById('distMajorRoads').textContent = majorRoads.toLocaleString();
-            document.getElementById('distEntryExit').textContent = '~' + (uniqueRoads.size * 2);
-            
-            document.getElementById('districtStats').classList.add('active');
-        }
-        
         function showInfoPopup(x, y, title, content) {
             const popup = document.getElementById('infoPopup');
             document.getElementById('popupTitle').innerHTML = title;
             document.getElementById('popupContent').innerHTML = content;
-            popup.style.left = x + 'px';
-            popup.style.top = y + 'px';
+            popup.style.left = Math.min(x + 15, window.innerWidth - 300) + 'px';
+            popup.style.top = Math.min(y + 15, window.innerHeight - 200) + 'px';
             popup.classList.add('show');
         }
         
@@ -697,7 +518,99 @@
             document.getElementById('infoPopup').classList.remove('show');
         }
         
-        console.log('Map ready. Upload your data files.');
+        function handleMapClick(e) {
+            closeInfoPopup();
+            
+            const lat = e.latLng.lat();
+            const lng = e.latLng.lng();
+            const proj = map.getProjection();
+            const zoom = map.getZoom();
+            const scale = Math.pow(2, zoom);
+            const clickPt = proj.fromLatLngToPoint(e.latLng);
+            const tolerance = 15 / scale;
+            
+            // Check roads
+            for (const road of roads) {
+                const geom = road.geometry;
+                if (!geom) continue;
+                
+                const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
+                
+                for (const coords of lines) {
+                    if (!coords || coords.length < 2) continue;
+                    
+                    for (let i = 0; i < coords.length - 1; i++) {
+                        const [lon1, lat1] = coords[i];
+                        const [lon2, lat2] = coords[i + 1];
+                        
+                        const pt1 = proj.fromLatLngToPoint(new google.maps.LatLng(lat1, lon1));
+                        const pt2 = proj.fromLatLngToPoint(new google.maps.LatLng(lat2, lon2));
+                        
+                        // Point to line distance
+                        const A = clickPt.x - pt1.x, B = clickPt.y - pt1.y;
+                        const C = pt2.x - pt1.x, D = pt2.y - pt1.y;
+                        const dot = A * C + B * D;
+                        const lenSq = C * C + D * D;
+                        let param = lenSq !== 0 ? dot / lenSq : -1;
+                        
+                        let xx, yy;
+                        if (param < 0) { xx = pt1.x; yy = pt1.y; }
+                        else if (param > 1) { xx = pt2.x; yy = pt2.y; }
+                        else { xx = pt1.x + param * C; yy = pt1.y + param * D; }
+                        
+                        const dist = Math.sqrt((clickPt.x - xx) ** 2 + (clickPt.y - yy) ** 2);
+                        
+                        if (dist < tolerance * 2) {
+                            const props = road.properties || {};
+                            const width = props.width_m || props.WIDTH || '-';
+                            const nameAr = props.name_ar || props.ROADCENTERLINENAME_AR || '-';
+                            const nameEn = props.name_en || props.ROADCENTERLINENAME_EN || '';
+                            const length = props.length_m || props.LENGTH || '-';
+                            const hwType = props.highway_type || props.category || '-';
+                            const source = props.source || 'Balady';
+                            
+                            showInfoPopup(e.pixel.x, e.pixel.y,
+                                '<span class="type-badge" style="background:' + getRoadColor(parseFloat(width) || 10) + ';">Road</span> ' + width + 'm',
+                                '<div style="direction:rtl;text-align:right;font-size:14px;font-weight:bold;margin-bottom:5px;">' + nameAr + '</div>' +
+                                '<div style="color:#666;margin-bottom:8px;">' + nameEn + '</div>' +
+                                '<table>' +
+                                '<tr><td>Width</td><td><b>' + width + 'm</b></td></tr>' +
+                                '<tr><td>Length</td><td>' + (typeof length === 'number' ? length.toFixed(0) + 'm' : length) + '</td></tr>' +
+                                '<tr><td>Type</td><td>' + hwType + '</td></tr>' +
+                                '<tr><td>Source</td><td>' + source + '</td></tr>' +
+                                '</table>'
+                            );
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+        
+        function initMap() {
+            if (map) return;
+            
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 24.7136, lng: 46.6753 },
+                zoom: 11,
+                mapTypeControl: true,
+                gestureHandling: 'greedy'
+            });
+            
+            map.addListener('idle', render);
+            map.addListener('click', handleMapClick);
+            window.addEventListener('resize', render);
+            
+            console.log('Map ready. Upload your data files.');
+        }
+        
+        // Start loading
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', waitForGoogleMaps);
+        } else {
+            waitForGoogleMaps();
+        }
     </script>
+    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
 </body>
 </html>
