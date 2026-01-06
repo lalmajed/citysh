@@ -280,7 +280,7 @@
                         Size: <span id="entryExitSizeVal">12</span> <input type="range" id="entryExitSize" min="6" max="24" value="12" step="1" oninput="document.getElementById('entryExitSizeVal').textContent=this.value;render()">
                     </div>
                     <div style="font-size:9px;color:#c2185b;margin-top:3px;">
-                        Select a district to see entry/exit points at boundaries
+                        Load points from file (use Dashboard to create)
                     </div>
                 </div>
                 <div class="click-toggle">
@@ -1655,17 +1655,16 @@
             if (selectedDistrict === name) {
                 selectedDistrict = null;
                 selectedDistrictObj = null;
-                entryExitPoints = []; // Clear entry/exit points
             } else {
                 selectedDistrict = name;
                 selectedDistrictObj = districtObj || districts.find(d => getDistrictName(d) === name);
                 
-                // Zoom to district and calculate entry/exit points
+                // Zoom to district
                 if (selectedDistrictObj) {
                     zoomToDistrict(selectedDistrictObj);
-                    // Entry/exit points loaded from file, not calculated
                 }
             }
+            // Entry/exit points only come from file upload - never auto-generated
             updateDistrictList();
             calculateDistrictStats();
             render();
