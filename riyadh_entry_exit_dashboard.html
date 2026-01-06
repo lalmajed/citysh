@@ -25,8 +25,12 @@
         
         .slider-row { margin: 8px 0; }
         .slider-row label { font-size: 11px; display: block; margin-bottom: 4px; }
-        .slider-row input { width: 100%; }
+        .slider-row input[type="range"] { width: 100%; }
         .slider-row .val { float: right; color: #e94560; font-weight: bold; }
+        
+        .color-row { margin: 8px 0; display: flex; align-items: center; gap: 8px; }
+        .color-row label { font-size: 11px; flex: 1; }
+        .color-row input[type="color"] { width: 50px; height: 28px; border: none; cursor: pointer; border-radius: 4px; }
         
         .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
         .stat { background: #0f3460; padding: 8px; border-radius: 4px; text-align: center; }
@@ -66,6 +70,24 @@
             <div class="status wait" id="statusDistrict">No district loaded</div>
         </div>
         
+        <h3>DISTRICT BOUNDARY</h3>
+        <div class="box">
+            <div class="slider-row">
+                <label>Boundary Shrink <span class="val" id="valShrink">0m</span></label>
+                <input type="range" id="sliderShrink" min="0" max="500" value="0" step="10">
+            </div>
+            <div style="font-size:9px;color:#888;">Shrink boundary inward (tighter)</div>
+            
+            <div class="color-row">
+                <label>District Color</label>
+                <input type="color" id="colorDistrict" value="#e94560">
+            </div>
+            <div class="slider-row">
+                <label>Fill Opacity <span class="val" id="valOpacity">20%</span></label>
+                <input type="range" id="sliderOpacity" min="0" max="80" value="20" step="5">
+            </div>
+        </div>
+        
         <h3>EXTEND ROADS</h3>
         <div class="box">
             <div class="slider-row">
@@ -103,14 +125,14 @@
     <div id="map"></div>
 
     <script>
-        // Initialize Leaflet map - LOADS INSTANTLY
+        // Initialize Leaflet map
         const map = L.map('map', {
             center: [24.73, 46.65],
             zoom: 14,
             zoomControl: true
         });
         
-        // Add OpenStreetMap tiles - FREE, NO API KEY
+        // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: 'OpenStreetMap',
             maxZoom: 19
@@ -118,13 +140,44 @@
         
         // Data
         let roads = [];
-        let boundary = [];
+        let originalBoundary = []; // Original boundary coordinates
+        let boundary = []; // Current (possibly shrunk) boundary
         let entryExits = [];
         
         // Layers
         let roadsLayer = L.layerGroup().addTo(map);
         let boundaryLayer = L.layerGroup().addTo(map);
         let pointsLayer = L.layerGroup().addTo(map);
+        
+        // Get centroid of polygon
+        function getCentroid(coords) {
+            let sumLat = 0, sumLng = 0;
+            coords.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
+            return [sumLng / coords.length, sumLat / coords.length];
+        }
+        
+        // Shrink boundary toward centroid by meters
+        function shrinkBoundary(coords, meters) {
+            if (meters <= 0) return coords.slice();
+            
+            const center = getCentroid(coords);
+            const shrinkDeg = meters / 111000; // meters to degrees approx
+            
+            return coords.map(c => {
+                const dx = c[0] - center[0];
+                const dy = c[1] - center[1];
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if (dist < 1e-8) return c.slice();
+                
+                // Move point toward center
+                const shrinkRatio = Math.max(0, dist - shrinkDeg) / dist;
+                return [
+                    center[0] + dx * shrinkRatio,
+                    center[1] + dy * shrinkRatio
+                ];
+            });
+        }
         
         // Line intersection
         function lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {
@@ -153,10 +206,17 @@
             };
         }
         
+        // Update shrunk boundary
+        function updateBoundary() {
+            const shrink = parseInt(document.getElementById('sliderShrink').value);
+            boundary = shrinkBoundary(originalBoundary, shrink);
+            findCrossings();
+        }
+        
         // Find crossings
         function findCrossings() {
             entryExits = [];
-            if (!boundary.length || !roads.length) { updateUI(); return; }
+            if (!boundary.length || !roads.length) { updateUI(); render(); return; }
             
             const ext = parseInt(document.getElementById('sliderExt').value);
             const minW = parseInt(document.getElementById('sliderWidth').value);
@@ -252,6 +312,8 @@
             const ext = parseInt(document.getElementById('sliderExt').value);
             const minW = parseInt(document.getElementById('sliderWidth').value);
             const dotSize = parseInt(document.getElementById('sliderDot').value);
+            const districtColor = document.getElementById('colorDistrict').value;
+            const fillOpacity = parseInt(document.getElementById('sliderOpacity').value) / 100;
             
             // Draw extended roads
             roads.forEach(road => {
@@ -280,14 +342,14 @@
                 });
             });
             
-            // Draw boundary
+            // Draw boundary (current shrunk version)
             if (boundary.length) {
                 const latlngs = boundary.map(c => [c[1], c[0]]);
                 L.polygon(latlngs, {
-                    color: '#e94560',
+                    color: districtColor,
                     weight: 3,
-                    fillColor: '#e94560',
-                    fillOpacity: 0.1,
+                    fillColor: districtColor,
+                    fillOpacity: fillOpacity,
                     dashArray: '10, 5'
                 }).addTo(boundaryLayer);
             }
@@ -365,16 +427,20 @@
                 const feat = data.features ? data.features[0] : data;
                 const geom = feat.geometry;
                 
-                boundary = geom.type === 'Polygon' ? geom.coordinates[0] : geom.coordinates[0][0];
+                originalBoundary = geom.type === 'Polygon' ? geom.coordinates[0] : geom.coordinates[0][0];
+                boundary = originalBoundary.slice();
                 
-                document.getElementById('statusDistrict').textContent = 'Loaded (' + boundary.length + ' points)';
+                document.getElementById('statusDistrict').textContent = 'Loaded (' + originalBoundary.length + ' points)';
                 document.getElementById('statusDistrict').className = 'status';
                 
+                // Reset shrink slider
+                document.getElementById('sliderShrink').value = 0;
+                document.getElementById('valShrink').textContent = '0m';
+                
                 // Center on district
-                if (boundary.length > 0) {
-                    let sumLat = 0, sumLng = 0;
-                    boundary.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
-                    map.setView([sumLat / boundary.length, sumLng / boundary.length], 14);
+                if (originalBoundary.length > 0) {
+                    const center = getCentroid(originalBoundary);
+                    map.setView([center[1], center[0]], 14);
                 }
                 
                 findCrossings();
@@ -384,6 +450,10 @@
         });
         
         // Sliders
+        document.getElementById('sliderShrink').addEventListener('input', function() {
+            document.getElementById('valShrink').textContent = this.value + 'm';
+            updateBoundary();
+        });
         document.getElementById('sliderExt').addEventListener('input', function() {
             document.getElementById('valExt').textContent = this.value + 'm';
             findCrossings();
@@ -394,6 +464,13 @@
         });
         document.getElementById('sliderDot').addEventListener('input', function() {
             document.getElementById('valDot').textContent = this.value;
+            render();
+        });
+        document.getElementById('sliderOpacity').addEventListener('input', function() {
+            document.getElementById('valOpacity').textContent = this.value + '%';
+            render();
+        });
+        document.getElementById('colorDistrict').addEventListener('input', function() {
             render();
         });
         
