@@ -103,6 +103,20 @@
         <div class="grid">
             <div class="sidebar">
                 <div class="panel">
+                    <h2>Trip Data</h2>
+                    <div id="tripDataStatus" style="font-size:0.8rem;margin-bottom:8px;">
+                        <span style="color:#4caf50;">Embedded: <span id="embeddedTripCount">0</span> trips, <span id="embeddedVehicleCount">0</span> vehicles</span>
+                    </div>
+                    <input type="file" id="tripsUpload" accept=".parquet,.json,.csv" onchange="uploadTripsData(this)" style="display:none;">
+                    <button onclick="document.getElementById('tripsUpload').click()" style="font-size:0.75rem;padding:6px 10px;cursor:pointer;background:#00897b;color:#fff;border:none;border-radius:3px;width:100%;">
+                        Upload Trips (Parquet/JSON/CSV)
+                    </button>
+                    <p style="font-size:0.65rem;color:#888;margin-top:5px;">
+                        Required columns: plate, camera_prev, camera_next, t_prev, t_next, obs_time_seconds
+                    </p>
+                </div>
+                
+                <div class="panel">
                     <h2>Controls</h2>
                     <label style="font-size:0.8rem;color:#666;">Vehicle</label>
                     <select id="vehicleSel" onchange="showVehicleInfo()">
@@ -1036,6 +1050,259 @@ function displayAllLoadedPaths(vehicle) {
         <div>Paths: ${data.pathCount || new Set(data.trips.map(t => t.pathId)).size}</div>
         <div>Trips: ${data.trips.length}</div>
     `;
+}
+
+// ============ TRIP DATA UPLOAD ============
+
+// Upload trips data (Parquet, JSON, or CSV)
+async function uploadTripsData(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const statusDiv = document.getElementById('tripDataStatus');
+    statusDiv.innerHTML = '<span style="color:#2196f3;">Reading file...</span>';
+    
+    try {
+        let trips = [];
+        
+        if (file.name.endsWith('.parquet')) {
+            trips = await readParquetFile(file);
+        } else if (file.name.endsWith('.json')) {
+            trips = await readJSONTripsFile(file);
+        } else if (file.name.endsWith('.csv')) {
+            trips = await readCSVTripsFile(file);
+        } else {
+            throw new Error('Unsupported file format. Use .parquet, .json, or .csv');
+        }
+        
+        if (trips.length === 0) {
+            throw new Error('No trips found in file');
+        }
+        
+        // Validate required columns
+        const required = ['plate', 'camera_prev', 'camera_next', 't_prev', 't_next', 'obs_time_seconds'];
+        const firstTrip = trips[0];
+        const missing = required.filter(col => !(col in firstTrip));
+        if (missing.length > 0) {
+            throw new Error('Missing columns: ' + missing.join(', '));
+        }
+        
+        // Update global TRIPS and VEHICLES
+        TRIPS = trips;
+        VEHICLES = [...new Set(trips.map(t => t.plate))].sort();
+        
+        // Update UI
+        updateTripsUI(trips.length, VEHICLES.length, file.name);
+        updateVehicleDropdown();
+        
+        // Reset batch processing data
+        ALL_SEGMENTED_PATHS = {};
+        document.getElementById('loadedPathsSection').style.display = 'none';
+        document.getElementById('batchStatus').innerHTML = '';
+        
+        console.log('Loaded trips:', trips.length, 'Vehicles:', VEHICLES.length);
+        
+    } catch (err) {
+        statusDiv.innerHTML = `<span style="color:#f44336;">Error: ${err.message}</span>`;
+        console.error('Error loading trips:', err);
+    }
+}
+
+// Read Parquet file using parquet-wasm
+async function readParquetFile(file) {
+    const statusDiv = document.getElementById('tripDataStatus');
+    statusDiv.innerHTML = '<span style="color:#2196f3;">Loading parquet library...</span>';
+    
+    // Try to use parquet-wasm if available
+    try {
+        // Dynamic import for parquet-wasm
+        const parquet = await import('https://cdn.jsdelivr.net/npm/parquet-wasm@0.6.0/esm/parquet_wasm.js');
+        await parquet.default();
+        
+        statusDiv.innerHTML = '<span style="color:#2196f3;">Reading parquet file...</span>';
+        
+        const arrayBuffer = await file.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        
+        // Read parquet file
+        const arrowTable = parquet.readParquet(uint8Array);
+        
+        // Convert Arrow table to JSON
+        const trips = [];
+        const schema = arrowTable.schema;
+        const numRows = arrowTable.numRows;
+        
+        // Get column names
+        const columns = {};
+        for (let i = 0; i < schema.fields.length; i++) {
+            const field = schema.fields[i];
+            columns[field.name] = arrowTable.getChildAt(i);
+        }
+        
+        // Convert to array of objects
+        for (let row = 0; row < numRows; row++) {
+            const trip = {};
+            for (const [name, column] of Object.entries(columns)) {
+                let value = column.get(row);
+                // Convert BigInt to Number if needed
+                if (typeof value === 'bigint') {
+                    value = Number(value);
+                }
+                // Handle plate_numbers -> plate renaming
+                if (name === 'plate_numbers') {
+                    trip['plate'] = value;
+                } else {
+                    trip[name] = value;
+                }
+            }
+            
+            // Ensure obs_time_seconds exists
+            if (!trip.obs_time_seconds && trip.t_prev && trip.t_next) {
+                const tPrev = new Date(trip.t_prev);
+                const tNext = new Date(trip.t_next);
+                trip.obs_time_seconds = (tNext - tPrev) / 1000;
+            }
+            
+            trips.push(trip);
+        }
+        
+        return trips;
+        
+    } catch (err) {
+        console.error('Parquet-wasm failed:', err);
+        throw new Error('Could not read parquet file. Try converting to JSON or CSV first. Error: ' + err.message);
+    }
+}
+
+// Read JSON trips file
+async function readJSONTripsFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                let data = JSON.parse(e.target.result);
+                
+                // Handle different JSON structures
+                if (Array.isArray(data)) {
+                    resolve(data);
+                } else if (data.trips && Array.isArray(data.trips)) {
+                    resolve(data.trips);
+                } else if (data.data && Array.isArray(data.data)) {
+                    resolve(data.data);
+                } else {
+                    reject(new Error('Invalid JSON structure. Expected array of trips.'));
+                }
+            } catch (err) {
+                reject(new Error('Invalid JSON: ' + err.message));
+            }
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsText(file);
+    });
+}
+
+// Read CSV trips file
+async function readCSVTripsFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const lines = e.target.result.trim().split('\n');
+                if (lines.length < 2) {
+                    reject(new Error('CSV file is empty or has no data rows'));
+                    return;
+                }
+                
+                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, '').toLowerCase());
+                const trips = [];
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const values = parseCSVLine(lines[i]);
+                    const trip = {};
+                    
+                    headers.forEach((h, idx) => {
+                        let value = values[idx];
+                        
+                        // Type conversion
+                        if (h === 'obs_time_seconds') {
+                            value = parseFloat(value) || 0;
+                        }
+                        
+                        // Handle plate_numbers -> plate
+                        if (h === 'plate_numbers') {
+                            trip['plate'] = value;
+                        } else {
+                            trip[h] = value;
+                        }
+                    });
+                    
+                    // Calculate obs_time_seconds if missing
+                    if (!trip.obs_time_seconds && trip.t_prev && trip.t_next) {
+                        const tPrev = new Date(trip.t_prev);
+                        const tNext = new Date(trip.t_next);
+                        trip.obs_time_seconds = (tNext - tPrev) / 1000;
+                    }
+                    
+                    trips.push(trip);
+                }
+                
+                resolve(trips);
+            } catch (err) {
+                reject(new Error('Failed to parse CSV: ' + err.message));
+            }
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsText(file);
+    });
+}
+
+// Parse CSV line handling quoted values
+function parseCSVLine(line) {
+    const values = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            values.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    values.push(current.trim());
+    
+    return values;
+}
+
+// Update trips UI
+function updateTripsUI(tripCount, vehicleCount, source) {
+    const statusDiv = document.getElementById('tripDataStatus');
+    statusDiv.innerHTML = `<span style="color:#4caf50;">Loaded: ${tripCount} trips, ${vehicleCount} vehicles</span>
+        <div style="font-size:0.7rem;color:#666;margin-top:3px;">Source: ${source}</div>`;
+    
+    document.getElementById('embeddedTripCount').textContent = tripCount;
+    document.getElementById('embeddedVehicleCount').textContent = vehicleCount;
+}
+
+// Update vehicle dropdown after loading new trips
+function updateVehicleDropdown() {
+    const select = document.getElementById('vehicleSel');
+    let html = '<option value="">-- Select Vehicle (' + VEHICLES.length + ') --</option>';
+    
+    VEHICLES.forEach(v => {
+        const tripCount = TRIPS.filter(t => t.plate === v).length;
+        html += `<option value="${v}">${v} (${tripCount} trips)</option>`;
+    });
+    
+    select.innerHTML = html;
+    
+    // Update stats
+    document.getElementById('statVehicles').textContent = VEHICLES.length;
 }
 
 // Upload Google Matrix JSON
@@ -2877,7 +3144,13 @@ async function showAllTrips() {
 
 // Initialize
 document.getElementById('statVehicles').textContent = VEHICLES.length;
+document.getElementById('embeddedTripCount').textContent = TRIPS.length;
+document.getElementById('embeddedVehicleCount').textContent = VEHICLES.length;
     </script>
     <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
+    <!-- Apache Arrow for Parquet support -->
+    <script src="https://cdn.jsdelivr.net/npm/apache-arrow@14.0.2/Arrow.dom.min.js"></script>
+    <!-- Parquet WASM -->
+    <script src="https://cdn.jsdelivr.net/npm/parquet-wasm@0.6.0/esm/parquet_wasm.js" type="module"></script>
 </body>
 </html>
