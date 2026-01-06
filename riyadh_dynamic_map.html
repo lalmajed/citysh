@@ -548,7 +548,7 @@
             return null;
         }
         
-        // Calculate SMART entry/exit points - one per road per side
+        // Calculate ALL entry/exit points where roads cross district boundary
         function calculateEntryExitPoints(districtObj) {
             entryExitPoints = [];
             if (!districtObj || roads.length === 0) return { total: 0, major: 0, secondary: 0, local: 0 };
@@ -560,21 +560,15 @@
                             geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
             if (!boundary || boundary.length < 3) return { total: 0, major: 0, secondary: 0, local: 0 };
             
-            // Calculate district center for determining side
-            let centerLng = 0, centerLat = 0;
-            boundary.forEach(([lng, lat]) => { centerLng += lng; centerLat += lat; });
-            centerLng /= boundary.length;
-            centerLat /= boundary.length;
-            
-            // Group entries by road name + side (smart grouping)
-            const entryRoads = {};
+            let major = 0, secondary = 0, local = 0;
+            const seen = new Set(); // Avoid duplicates
             
             roads.forEach(road => {
                 const props = road.properties || {};
                 const width = parseFloat(props.width_m || props.WIDTH || props.width || 10);
-                const name = props.name_ar || props.name_en || props.ROADCENTERLINENAME_AR || '';
+                const name = props.name_ar || props.name_en || props.ROADCENTERLINENAME_AR || 'Unnamed';
                 
-                if (!name || width < 12) return; // Only named roads 12m+
+                if (width < 10) return; // Only roads 10m+
                 
                 const roadGeom = road.geometry;
                 if (!roadGeom) return;
@@ -594,44 +588,35 @@
                             
                             const intersection = lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4);
                             if (intersection) {
-                                // Determine side (N/S/E/W)
-                                let side;
-                                if (intersection.x > centerLng + 0.004) side = 'E';
-                                else if (intersection.x < centerLng - 0.004) side = 'W';
-                                else if (intersection.y > centerLat) side = 'N';
-                                else side = 'S';
+                                // Create unique key to avoid duplicate points
+                                const key = `${intersection.x.toFixed(5)}_${intersection.y.toFixed(5)}`;
+                                if (seen.has(key)) continue;
+                                seen.add(key);
                                 
-                                // Calculate angle for arrow direction
+                                // Calculate road angle at crossing
                                 const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
                                 
-                                const key = `${name}_${side}`;
-                                if (!entryRoads[key] || width > entryRoads[key].width) {
-                                    entryRoads[key] = {
-                                        lat: intersection.y,
-                                        lng: intersection.x,
-                                        name: name,
-                                        nameEn: props.name_en || props.ROADCENTERLINENAME_EN || '',
-                                        width: width,
-                                        side: side,
-                                        angle: angle,
-                                        roadProps: props
-                                    };
-                                }
+                                entryExitPoints.push({
+                                    lat: intersection.y,
+                                    lng: intersection.x,
+                                    name: name,
+                                    nameEn: props.name_en || props.ROADCENTERLINENAME_EN || '',
+                                    width: width,
+                                    angle: angle,
+                                    roadProps: props
+                                });
+                                
+                                if (width >= 20) major++;
+                                else if (width >= 15) secondary++;
+                                else local++;
                             }
                         }
                     }
                 });
             });
             
-            // Convert to array and sort by width
-            entryExitPoints = Object.values(entryRoads).sort((a, b) => b.width - a.width);
-            
-            let major = 0, secondary = 0, local = 0;
-            entryExitPoints.forEach(p => {
-                if (p.width >= 20) major++;
-                else if (p.width >= 15) secondary++;
-                else local++;
-            });
+            // Sort by width (largest first)
+            entryExitPoints.sort((a, b) => b.width - a.width);
             
             document.getElementById('entryExitCount').textContent = entryExitPoints.length;
             return { total: entryExitPoints.length, major, secondary, local };
@@ -866,106 +851,70 @@
                 });
             }
             
-            // Draw SMART Entry/Exit points (clean markers with arrows)
+            // Draw Entry/Exit points at boundary crossings
             const showEntryExit = document.getElementById('showEntryExit').checked;
             const entryExitSize = parseFloat(document.getElementById('entryExitSize').value);
             
             if (showEntryExit && entryExitPoints.length) {
                 entryExitPoints.forEach((point, idx) => {
-                    if (point.lat < swLat - 0.02 || point.lat > neLat + 0.02 || 
-                        point.lng < swLng - 0.02 || point.lng > neLng + 0.02) return;
+                    if (point.lat < swLat - 0.01 || point.lat > neLat + 0.01 || 
+                        point.lng < swLng - 0.01 || point.lng > neLng + 0.01) return;
                     
                     const w = proj.fromLatLngToPoint(new google.maps.LatLng(point.lat, point.lng));
                     const x = (w.x - bl.x) * scale;
                     const y = (w.y - tr.y) * scale;
                     
                     // Size based on road width
-                    const baseSize = entryExitSize;
-                    const size = point.width >= 40 ? baseSize * 2 : 
-                                 point.width >= 30 ? baseSize * 1.6 : 
-                                 point.width >= 20 ? baseSize * 1.3 : baseSize;
+                    const size = point.width >= 60 ? entryExitSize * 2.0 :
+                                 point.width >= 40 ? entryExitSize * 1.7 : 
+                                 point.width >= 30 ? entryExitSize * 1.4 : 
+                                 point.width >= 20 ? entryExitSize * 1.2 : entryExitSize * 0.9;
                     
-                    // Color by road width (traffic light style)
-                    const color = point.width >= 40 ? '#c62828' :  // Dark red for highways
-                                  point.width >= 30 ? '#d32f2f' :  // Red for major
-                                  point.width >= 20 ? '#f57c00' :  // Orange for arterial
-                                  '#7b1fa2';                        // Purple for secondary
+                    // Color by road width
+                    const color = point.width >= 60 ? '#b71c1c' :  // Dark red for highways 60m+
+                                  point.width >= 40 ? '#c62828' :  // Red for major 40m+
+                                  point.width >= 30 ? '#d32f2f' :  // Red for 30m+
+                                  point.width >= 20 ? '#e65100' :  // Orange for 20m+
+                                  point.width >= 15 ? '#f57c00' :  // Light orange for 15m+
+                                  '#7b1fa2';                        // Purple for others
                     
-                    // Draw arrow shape pointing into district
-                    ctx.save();
-                    ctx.translate(x, y);
+                    // Outer glow
+                    ctx.beginPath();
+                    ctx.arc(x, y, size + 5, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(233, 30, 99, 0.3)';
+                    ctx.fill();
                     
-                    // Arrow direction based on side
-                    let rotation = 0;
-                    if (point.side === 'N') rotation = Math.PI / 2;      // Down
-                    else if (point.side === 'S') rotation = -Math.PI / 2; // Up
-                    else if (point.side === 'E') rotation = Math.PI;      // Left
-                    else rotation = 0;                                     // Right (W)
-                    
-                    ctx.rotate(rotation);
-                    
-                    // Glow
-                    ctx.shadowColor = color;
-                    ctx.shadowBlur = 10;
-                    
-                    // Arrow body (rectangle)
-                    const arrowWidth = size * 1.2;
-                    const arrowLength = size * 2;
-                    
+                    // Main circle
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
                     ctx.fillStyle = color;
-                    ctx.beginPath();
-                    ctx.roundRect(-arrowWidth/2, -arrowLength/2, arrowWidth, arrowLength, 4);
                     ctx.fill();
-                    
-                    // Arrow head (triangle)
-                    ctx.beginPath();
-                    ctx.moveTo(arrowLength/2, 0);
-                    ctx.lineTo(0, -arrowWidth);
-                    ctx.lineTo(0, arrowWidth);
-                    ctx.closePath();
-                    ctx.fill();
-                    
-                    // White border
-                    ctx.shadowBlur = 0;
                     ctx.strokeStyle = 'white';
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.roundRect(-arrowWidth/2, -arrowLength/2, arrowWidth, arrowLength, 4);
+                    ctx.lineWidth = 3;
                     ctx.stroke();
                     
-                    // Width text inside arrow
-                    ctx.rotate(-rotation);
-                    ctx.font = 'bold ' + Math.max(9, size * 0.7) + 'px Arial';
+                    // Width number inside circle
+                    ctx.font = 'bold ' + Math.max(10, size * 0.8) + 'px Arial';
                     ctx.fillStyle = 'white';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(point.width + '', 0, 0);
+                    ctx.fillText(Math.round(point.width), x, y);
                     
-                    ctx.restore();
-                    
-                    // Road name label (always show for major roads)
-                    if (zoom >= 12 && point.width >= 20) {
-                        const labelY = y + size * 2 + 12;
-                        ctx.font = 'bold 11px Arial';
+                    // Road name label below
+                    if (zoom >= 13 && point.width >= 15) {
+                        ctx.font = 'bold 10px Arial';
                         ctx.fillStyle = '#333';
                         ctx.strokeStyle = 'white';
                         ctx.lineWidth = 3;
                         ctx.textAlign = 'center';
                         
-                        // Shorten name if needed
                         let displayName = point.name;
-                        if (displayName.length > 20) {
-                            displayName = displayName.substring(0, 18) + '...';
+                        if (displayName.length > 18) {
+                            displayName = displayName.substring(0, 16) + '...';
                         }
                         
-                        ctx.strokeText(displayName, x, labelY);
-                        ctx.fillText(displayName, x, labelY);
-                        
-                        // Width label
-                        ctx.font = '10px Arial';
-                        ctx.fillStyle = color;
-                        ctx.strokeText(point.width + 'm', x, labelY + 13);
-                        ctx.fillText(point.width + 'm', x, labelY + 13);
+                        ctx.strokeText(displayName, x, y + size + 12);
+                        ctx.fillText(displayName, x, y + size + 12);
                     }
                 });
             }
