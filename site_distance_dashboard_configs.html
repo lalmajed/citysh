@@ -220,8 +220,12 @@ function loadConfigFile(input) {
             // Enable start button
             document.getElementById('startBtn').disabled = false;
             
-            // Add markers to map
-            updateMapMarkers();
+            // Add markers to map (safely - don't fail if maps not loaded)
+            try {
+                updateMapMarkers();
+            } catch(mapErr) {
+                log('Map not ready - markers skipped');
+            }
             
             log('═══════════════════════════════════');
             log('LOADED: ' + file.name);
@@ -242,35 +246,41 @@ function loadConfigFile(input) {
     input.value = '';
 }
 
+let mapsReady = false;
+
 function updateMapMarkers() {
-    // Check if Google Maps is loaded
-    if (typeof google === 'undefined' || !google.maps || !map) {
+    // Check if Google Maps is loaded using a flag
+    if (!mapsReady || !map) {
         log('Map not ready yet - markers will be added when map loads');
         return;
     }
     
-    // Clear existing markers
-    Object.values(markers).forEach(m => m.setMap(null));
-    markers = {};
-    
-    // Add markers for unique sites
-    const bounds = new google.maps.LatLngBounds();
-    
-    Object.entries(SITES_MAP).forEach(([siteId, site]) => {
-        const marker = new google.maps.Marker({
-            position: { lat: site.lat, lng: site.lon },
-            map: map,
-            title: siteId + ' (' + (site.site_direction || '?') + ')'
+    try {
+        // Clear existing markers
+        Object.values(markers).forEach(m => m.setMap(null));
+        markers = {};
+        
+        // Add markers for unique sites
+        const bounds = new google.maps.LatLngBounds();
+        
+        Object.entries(SITES_MAP).forEach(([siteId, site]) => {
+            const marker = new google.maps.Marker({
+                position: { lat: site.lat, lng: site.lon },
+                map: map,
+                title: siteId + ' (' + (site.site_direction || '?') + ')'
+            });
+            markers[siteId] = marker;
+            bounds.extend({ lat: site.lat, lng: site.lon });
         });
-        markers[siteId] = marker;
-        bounds.extend({ lat: site.lat, lng: site.lon });
-    });
-    
-    if (Object.keys(markers).length > 0) {
-        map.fitBounds(bounds);
+        
+        if (Object.keys(markers).length > 0) {
+            map.fitBounds(bounds);
+        }
+        
+        log('Added ' + Object.keys(markers).length + ' markers to map');
+    } catch(e) {
+        log('Error updating markers: ' + e.message);
     }
-    
-    log('Added ' + Object.keys(markers).length + ' markers to map');
 }
 
 // ============================================================
@@ -471,8 +481,8 @@ async function startParallelExtraction() {
         alert('Load a config file first!');
         return;
     }
-    if (!directionsService) {
-        alert('Google Maps is still loading. Please wait a moment and try again.');
+    if (!mapsReady || !directionsService) {
+        alert('Google Maps is still loading. Please wait for the green "✓ Google Maps Ready" indicator and try again.');
         return;
     }
     
@@ -595,10 +605,10 @@ function loadCache() {
             CACHE.results = loaded.results || {};
         }
         log('Loaded ' + Object.keys(CACHE.results).length + ' cached results');
+        updateCacheStats();
     } catch(e) { 
-        log('Cache load error: ' + e); 
+        console.log('Cache load error: ' + e); 
     }
-    updateCacheStats();
 }
 
 function saveCache() {
@@ -616,10 +626,16 @@ function saveCache() {
 }
 
 function updateCacheStats() {
-    const n = Object.keys(CACHE.results).length;
-    const wp = Object.values(CACHE.results).filter(r => r.waypoints && r.waypoints.length > 0).length;
-    document.getElementById('statCached').textContent = n;
-    document.getElementById('statWaypoints').textContent = wp;
+    try {
+        const n = Object.keys(CACHE.results).length;
+        const wp = Object.values(CACHE.results).filter(r => r.waypoints && r.waypoints.length > 0).length;
+        const cachedEl = document.getElementById('statCached');
+        const wpEl = document.getElementById('statWaypoints');
+        if (cachedEl) cachedEl.textContent = n;
+        if (wpEl) wpEl.textContent = wp;
+    } catch(e) {
+        // Ignore if DOM not ready
+    }
 }
 
 function clearCache() {
@@ -768,34 +784,55 @@ function download(content, filename, type) {
 // ============================================================
 
 function log(msg) {
-    const el = document.getElementById('log');
-    el.innerHTML += '[' + new Date().toLocaleTimeString() + '] ' + msg + '\n';
-    el.scrollTop = el.scrollHeight;
-    console.log(msg);
+    console.log('[LOG] ' + msg);
+    try {
+        const el = document.getElementById('log');
+        if (el) {
+            el.innerHTML += '[' + new Date().toLocaleTimeString() + '] ' + msg + '\n';
+            el.scrollTop = el.scrollHeight;
+        }
+    } catch(e) {
+        // Ignore DOM errors
+    }
 }
 
 function initMap() {
-    loadCache();
-    map = new google.maps.Map(document.getElementById('map'), { 
-        center: { lat: 24.7, lng: 46.7 }, 
-        zoom: 10 
-    });
-    directionsService = new google.maps.DirectionsService();
-    
-    // Update map status indicator
-    const mapStatus = document.getElementById('mapStatus');
-    mapStatus.style.background = '#e8f5e9';
-    mapStatus.style.color = '#2e7d32';
-    mapStatus.innerHTML = '✓ Google Maps Ready';
-    
-    // If configs were loaded before map, add markers now
-    if (Object.keys(SITES_MAP).length > 0) {
-        updateMapMarkers();
+    try {
+        map = new google.maps.Map(document.getElementById('map'), { 
+            center: { lat: 24.7, lng: 46.7 }, 
+            zoom: 10 
+        });
+        directionsService = new google.maps.DirectionsService();
+        
+        // Set flag that maps is ready
+        mapsReady = true;
+        
+        // Update map status indicator
+        const mapStatus = document.getElementById('mapStatus');
+        if (mapStatus) {
+            mapStatus.style.background = '#e8f5e9';
+            mapStatus.style.color = '#2e7d32';
+            mapStatus.innerHTML = '✓ Google Maps Ready';
+        }
+        
+        // If configs were loaded before map, add markers now
+        if (Object.keys(SITES_MAP).length > 0) {
+            updateMapMarkers();
+        }
+        
+        log('✓ Map ready!');
+        log('Upload od_configs_44k_with_geo.jsonl to begin');
+        log('Expected format: {"config_id": "...", "origin": {...}, "destination": {...}}');
+    } catch(e) {
+        log('Error initializing map: ' + e.message);
     }
-    
-    log('✓ Map ready!');
-    log('Upload od_configs_44k_with_geo.jsonl to begin');
-    log('Expected format: {"config_id": "...", "origin": {...}, "destination": {...}}');
+}
+
+// Load cache immediately (doesn't need Google Maps)
+try {
+    loadCache();
+} catch(e) {
+    console.log('Cache load skipped: ' + e.message);
 }
 
 // Wait for Google Maps to load
