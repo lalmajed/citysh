@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Riyadh District Entry/Exit Dashboard</title>
+    <meta charset="utf-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #1a1a2e; color: white; }
+        
+        .container { display: flex; height: 100vh; }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: #16213e;
+            padding: 15px;
+            overflow-y: auto;
+            border-right: 2px solid #e94560;
+        }
+        
+        .sidebar h1 {
+            font-size: 18px;
+            color: #e94560;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .section {
+            background: #1a1a2e;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .section h3 {
+            font-size: 12px;
+            color: #0f3460;
+            background: #e94560;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin: -12px -12px 10px -12px;
+        }
+        
+        .file-input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 8px;
+            background: #0f3460;
+            border: 1px solid #e94560;
+            border-radius: 4px;
+            color: white;
+            font-size: 11px;
+        }
+        
+        .file-input::-webkit-file-upload-button {
+            background: #e94560;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            color: white;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .stat-box {
+            background: #0f3460;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        .stat-box .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e94560;
+        }
+        
+        .stat-box .label {
+            font-size: 10px;
+            color: #aaa;
+            margin-top: 3px;
+        }
+        
+        .stat-box.highlight {
+            background: #e94560;
+            grid-column: span 2;
+        }
+        
+        .stat-box.highlight .value {
+            color: white;
+            font-size: 32px;
+        }
+        
+        .stat-box.highlight .label {
+            color: #ffccd5;
+        }
+        
+        /* Entry/Exit List */
+        .entry-list {
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 11px;
+        }
+        
+        .entry-item {
+            display: flex;
+            align-items: center;
+            padding: 6px;
+            background: #0f3460;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .entry-item:hover {
+            background: #1a4a7a;
+        }
+        
+        .entry-item .dot {
+            width: 24px;
+            height: 24px;
+            background: #e94560;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            margin-right: 8px;
+            flex-shrink: 0;
+        }
+        
+        .entry-item .info {
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .entry-item .name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            direction: rtl;
+        }
+        
+        .entry-item .width {
+            font-size: 10px;
+            color: #e94560;
+        }
+        
+        /* Controls */
+        .control-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+        
+        .control-row label {
+            flex: 1;
+        }
+        
+        .control-row input[type="range"] {
+            width: 100px;
+        }
+        
+        .control-row input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        
+        /* Map */
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+            background: #0f3460;
+        }
+        
+        canvas {
+            display: block;
+        }
+        
+        /* Legend */
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(22, 33, 62, 0.95);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            border: 1px solid #e94560;
+        }
+        
+        .legend-title {
+            font-weight: bold;
+            color: #e94560;
+            margin-bottom: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        
+        .legend-item .color {
+            width: 20px;
+            height: 4px;
+            border-radius: 2px;
+            margin-right: 8px;
+        }
+        
+        .legend-item .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            margin-right: 8px;
+            border: 2px solid white;
+        }
+        
+        /* Info popup */
+        .popup {
+            position: absolute;
+            background: rgba(22, 33, 62, 0.98);
+            border: 2px solid #e94560;
+            border-radius: 8px;
+            padding: 12px;
+            max-width: 280px;
+            display: none;
+            z-index: 1000;
+            font-size: 12px;
+        }
+        
+        .popup h4 {
+            color: #e94560;
+            margin-bottom: 8px;
+            direction: rtl;
+        }
+        
+        .popup table {
+            width: 100%;
+        }
+        
+        .popup td {
+            padding: 3px 0;
+        }
+        
+        .popup td:first-child {
+            color: #888;
+        }
+        
+        .popup td:last-child {
+            text-align: right;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h1>District Entry/Exit Dashboard</h1>
+            
+            <div class="section">
+                <h3>Upload Data</h3>
+                <input type="file" class="file-input" id="districtFile" accept=".geojson,.json">
+                <div style="font-size:10px;color:#888;margin-bottom:8px;">District Boundary (GeoJSON)</div>
+                
+                <input type="file" class="file-input" id="roadsFile" accept=".geojson,.json">
+                <div style="font-size:10px;color:#888;">Roads Network (GeoJSON)</div>
+            </div>
+            
+            <div class="section">
+                <h3>Entry/Exit Statistics</h3>
+                <div class="stat-grid">
+                    <div class="stat-box highlight">
+                        <div class="value" id="totalEntryExit">0</div>
+                        <div class="label">TOTAL ENTRY/EXIT POINTS</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value" id="majorCount">0</div>
+                        <div class="label">Major (30m+)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value" id="arterialCount">0</div>
+                        <div class="label">Arterial (15-30m)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value" id="localCount">0</div>
+                        <div class="label">Local (&lt;15m)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value" id="totalRoads">0</div>
+                        <div class="label">Total Roads</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>Display Controls</h3>
+                <div class="control-row">
+                    <input type="checkbox" id="showRoads" checked>
+                    <label>Show Roads</label>
+                </div>
+                <div class="control-row">
+                    <input type="checkbox" id="showOutsideRoads" checked>
+                    <label>Show Roads Outside District</label>
+                </div>
+                <div class="control-row">
+                    <input type="checkbox" id="showEntryPoints" checked>
+                    <label>Show Entry/Exit Points</label>
+                </div>
+                <div class="control-row">
+                    <input type="checkbox" id="showBoundary" checked>
+                    <label>Show District Boundary</label>
+                </div>
+                <div class="control-row">
+                    <label>Min Road Width:</label>
+                    <input type="range" id="minWidth" min="0" max="30" value="8">
+                    <span id="minWidthVal">8m</span>
+                </div>
+                <div class="control-row">
+                    <label>Entry Point Size:</label>
+                    <input type="range" id="pointSize" min="5" max="25" value="12">
+                    <span id="pointSizeVal">12</span>
+                </div>
+                <div class="control-row">
+                    <label>Road Extension:</label>
+                    <input type="range" id="roadBuffer" min="0" max="20" value="5">
+                    <span id="roadBufferVal">500m</span>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>Entry/Exit Points List</h3>
+                <div class="entry-list" id="entryList">
+                    <div style="color:#888;text-align:center;padding:20px;">
+                        Upload district and roads to see entry/exit points
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="map-container">
+            <canvas id="map"></canvas>
+            
+            <div class="legend">
+                <div class="legend-title">Legend</div>
+                <div class="legend-item"><div class="color" style="background:#e94560;height:3px;"></div> Major Road (30m+)</div>
+                <div class="legend-item"><div class="color" style="background:#ff9800;"></div> Arterial (15-30m)</div>
+                <div class="legend-item"><div class="color" style="background:#4caf50;"></div> Local (&lt;15m)</div>
+                <div class="legend-item"><div class="color" style="background:#444;height:2px;"></div> Outside District</div>
+                <div class="legend-item"><div class="dot" style="background:#e94560;"></div> Entry/Exit Point</div>
+                <div class="legend-item"><div class="color" style="background:transparent;border:2px dashed #e94560;height:10px;width:20px;"></div> District Boundary</div>
+            </div>
+            
+            <div class="popup" id="popup"></div>
+        </div>
+    </div>
+
+    <script>
+        // Data
+        let district = null;  // GeoJSON polygon
+        let roads = [];       // Array of road features
+        let entryExitPoints = [];  // Calculated crossing points
+        let boundary = [];    // District boundary coordinates
+        
+        // View state
+        let viewBox = { minLng: 46.63, maxLng: 46.67, minLat: 24.72, maxLat: 24.75 };
+        let isDragging = false;
+        let lastMouse = { x: 0, y: 0 };
+        
+        // Canvas
+        const canvas = document.getElementById('map');
+        const ctx = canvas.getContext('2d');
+        
+        // Resize canvas
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            render();
+        }
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Coordinate conversion
+        function lngToX(lng) {
+            return (lng - viewBox.minLng) / (viewBox.maxLng - viewBox.minLng) * canvas.width;
+        }
+        function latToY(lat) {
+            return canvas.height - (lat - viewBox.minLat) / (viewBox.maxLat - viewBox.minLat) * canvas.height;
+        }
+        function xToLng(x) {
+            return viewBox.minLng + x / canvas.width * (viewBox.maxLng - viewBox.minLng);
+        }
+        function yToLat(y) {
+            return viewBox.minLat + (canvas.height - y) / canvas.height * (viewBox.maxLat - viewBox.minLat);
+        }
+        
+        // Line intersection
+        function lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {
+            const denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+            if (Math.abs(denom) < 1e-12) return null;
+            const ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom;
+            const ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denom;
+            if (ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1) {
+                return { x: x1 + ua * (x2 - x1), y: y1 + ua * (y2 - y1) };
+            }
+            return null;
+        }
+        
+        // Point in polygon
+        function pointInPolygon(x, y, poly) {
+            let inside = false;
+            for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+                const [xi, yi] = poly[i];
+                const [xj, yj] = poly[j];
+                if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+                    inside = !inside;
+                }
+            }
+            return inside;
+        }
+        
+        // Calculate entry/exit points
+        function calculateEntryExits() {
+            entryExitPoints = [];
+            if (!boundary.length || !roads.length) return;
+            
+            const minWidth = parseFloat(document.getElementById('minWidth').value);
+            const seen = new Set();
+            
+            roads.forEach(road => {
+                const props = road.properties || {};
+                const width = parseFloat(props.width_m || props.WIDTH || props.width || 10);
+                const name = props.name_ar || props.name_en || props.ROADCENTERLINENAME_AR || 'Unnamed';
+                
+                if (width < minWidth) return;
+                
+                const geom = road.geometry;
+                if (!geom) return;
+                
+                const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
+                
+                lines.forEach(coords => {
+                    if (!coords || coords.length < 2) return;
+                    
+                    // Check each segment for boundary crossing
+                    for (let i = 0; i < coords.length - 1; i++) {
+                        const [x1, y1] = coords[i];
+                        const [x2, y2] = coords[i + 1];
+                        
+                        // Check intersection with each boundary edge
+                        for (let j = 0; j < boundary.length - 1; j++) {
+                            const [x3, y3] = boundary[j];
+                            const [x4, y4] = boundary[j + 1];
+                            
+                            const inter = lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4);
+                            if (inter) {
+                                const key = `${inter.x.toFixed(5)}_${inter.y.toFixed(5)}`;
+                                if (!seen.has(key)) {
+                                    seen.add(key);
+                                    entryExitPoints.push({
+                                        lng: inter.x,
+                                        lat: inter.y,
+                                        name: name,
+                                        width: width,
+                                        props: props
+                                    });
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+            
+            // Sort by width
+            entryExitPoints.sort((a, b) => b.width - a.width);
+            
+            // Update stats
+            updateStats();
+            updateEntryList();
+        }
+        
+        // Update statistics
+        function updateStats() {
+            const major = entryExitPoints.filter(p => p.width >= 30).length;
+            const arterial = entryExitPoints.filter(p => p.width >= 15 && p.width < 30).length;
+            const local = entryExitPoints.filter(p => p.width < 15).length;
+            
+            document.getElementById('totalEntryExit').textContent = entryExitPoints.length;
+            document.getElementById('majorCount').textContent = major;
+            document.getElementById('arterialCount').textContent = arterial;
+            document.getElementById('localCount').textContent = local;
+            document.getElementById('totalRoads').textContent = roads.length;
+        }
+        
+        // Update entry list
+        function updateEntryList() {
+            const list = document.getElementById('entryList');
+            if (!entryExitPoints.length) {
+                list.innerHTML = '<div style="color:#888;text-align:center;padding:20px;">No entry/exit points found</div>';
+                return;
+            }
+            
+            list.innerHTML = entryExitPoints.slice(0, 50).map((p, i) => `
+                <div class="entry-item" onclick="focusPoint(${i})">
+                    <div class="dot">${Math.round(p.width)}</div>
+                    <div class="info">
+                        <div class="name">${p.name}</div>
+                        <div class="width">${p.width}m road</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            if (entryExitPoints.length > 50) {
+                list.innerHTML += `<div style="color:#888;text-align:center;padding:10px;">...and ${entryExitPoints.length - 50} more</div>`;
+            }
+        }
+        
+        // Focus on point
+        function focusPoint(index) {
+            const p = entryExitPoints[index];
+            if (!p) return;
+            
+            const range = 0.005;
+            viewBox = {
+                minLng: p.lng - range,
+                maxLng: p.lng + range,
+                minLat: p.lat - range,
+                maxLat: p.lat + range
+            };
+            render();
+        }
+        
+        // Get road color
+        function getRoadColor(width, inside) {
+            if (!inside) return '#555';
+            if (width >= 30) return '#e94560';
+            if (width >= 20) return '#ff5722';
+            if (width >= 15) return '#ff9800';
+            if (width >= 10) return '#4caf50';
+            return '#2196f3';
+        }
+        
+        // Get road line width
+        function getRoadLineWidth(width) {
+            if (width >= 40) return 6;
+            if (width >= 30) return 5;
+            if (width >= 20) return 4;
+            if (width >= 15) return 3;
+            if (width >= 10) return 2;
+            return 1.5;
+        }
+        
+        // Render
+        function render() {
+            ctx.fillStyle = '#0f3460';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (!boundary.length) return;
+            
+            const showRoads = document.getElementById('showRoads').checked;
+            const showOutside = document.getElementById('showOutsideRoads').checked;
+            const showPoints = document.getElementById('showEntryPoints').checked;
+            const showBoundary = document.getElementById('showBoundary').checked;
+            const minWidth = parseFloat(document.getElementById('minWidth').value);
+            const pointSize = parseFloat(document.getElementById('pointSize').value);
+            
+            // Draw district fill
+            ctx.beginPath();
+            boundary.forEach(([lng, lat], i) => {
+                const x = lngToX(lng);
+                const y = latToY(lat);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(233, 69, 96, 0.1)';
+            ctx.fill();
+            
+            // Draw roads
+            if (showRoads) {
+                // Sort roads by width (draw wider roads on top)
+                const sortedRoads = [...roads].sort((a, b) => {
+                    const wa = parseFloat(a.properties?.width_m || a.properties?.WIDTH || 10);
+                    const wb = parseFloat(b.properties?.width_m || b.properties?.WIDTH || 10);
+                    return wa - wb;
+                });
+                
+                sortedRoads.forEach(road => {
+                    const props = road.properties || {};
+                    const width = parseFloat(props.width_m || props.WIDTH || props.width || 10);
+                    
+                    if (width < minWidth) return;
+                    
+                    const geom = road.geometry;
+                    if (!geom) return;
+                    
+                    const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
+                    
+                    lines.forEach(coords => {
+                        if (!coords || coords.length < 2) return;
+                        
+                        // Draw each segment
+                        for (let i = 0; i < coords.length - 1; i++) {
+                            const [lng1, lat1] = coords[i];
+                            const [lng2, lat2] = coords[i + 1];
+                            
+                            // Check if segment is inside or outside
+                            const mid = [(lng1 + lng2) / 2, (lat1 + lat2) / 2];
+                            const inside = pointInPolygon(mid[0], mid[1], boundary);
+                            
+                            if (!inside && !showOutside) return;
+                            
+                            const x1 = lngToX(lng1);
+                            const y1 = latToY(lat1);
+                            const x2 = lngToX(lng2);
+                            const y2 = latToY(lat2);
+                            
+                            ctx.beginPath();
+                            ctx.moveTo(x1, y1);
+                            ctx.lineTo(x2, y2);
+                            ctx.strokeStyle = getRoadColor(width, inside);
+                            ctx.lineWidth = getRoadLineWidth(width);
+                            ctx.lineCap = 'round';
+                            ctx.stroke();
+                        }
+                    });
+                });
+            }
+            
+            // Draw boundary
+            if (showBoundary) {
+                ctx.beginPath();
+                boundary.forEach(([lng, lat], i) => {
+                    const x = lngToX(lng);
+                    const y = latToY(lat);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                });
+                ctx.closePath();
+                ctx.strokeStyle = '#e94560';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([10, 5]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            
+            // Draw entry/exit points
+            if (showPoints) {
+                entryExitPoints.forEach(p => {
+                    if (p.width < minWidth) return;
+                    
+                    const x = lngToX(p.lng);
+                    const y = latToY(p.lat);
+                    
+                    // Size based on road width
+                    const size = p.width >= 60 ? pointSize * 1.8 :
+                                 p.width >= 40 ? pointSize * 1.5 :
+                                 p.width >= 30 ? pointSize * 1.3 :
+                                 p.width >= 20 ? pointSize * 1.1 : pointSize * 0.9;
+                    
+                    // Glow
+                    ctx.beginPath();
+                    ctx.arc(x, y, size + 5, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(233, 69, 96, 0.4)';
+                    ctx.fill();
+                    
+                    // Red dot
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fillStyle = '#e94560';
+                    ctx.fill();
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    // Width label
+                    if (size >= 8) {
+                        ctx.font = `bold ${Math.max(9, size * 0.7)}px Arial`;
+                        ctx.fillStyle = 'white';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(Math.round(p.width), x, y);
+                    }
+                });
+            }
+        }
+        
+        // File handlers
+        document.getElementById('districtFile').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const text = await file.text();
+            const data = JSON.parse(text);
+            
+            district = data;
+            
+            // Extract boundary
+            const feature = data.features ? data.features[0] : data;
+            const geom = feature.geometry;
+            
+            if (geom.type === 'Polygon') {
+                boundary = geom.coordinates[0];
+            } else if (geom.type === 'MultiPolygon') {
+                boundary = geom.coordinates[0][0];
+            }
+            
+            // Set view to district bounds
+            const lngs = boundary.map(c => c[0]);
+            const lats = boundary.map(c => c[1]);
+            const buffer = parseFloat(document.getElementById('roadBuffer').value) / 1000;
+            
+            viewBox = {
+                minLng: Math.min(...lngs) - buffer,
+                maxLng: Math.max(...lngs) + buffer,
+                minLat: Math.min(...lats) - buffer,
+                maxLat: Math.max(...lats) + buffer
+            };
+            
+            calculateEntryExits();
+            render();
+        });
+        
+        document.getElementById('roadsFile').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const text = await file.text();
+            const data = JSON.parse(text);
+            
+            roads = data.features || [data];
+            
+            calculateEntryExits();
+            render();
+        });
+        
+        // Control handlers
+        ['showRoads', 'showOutsideRoads', 'showEntryPoints', 'showBoundary'].forEach(id => {
+            document.getElementById(id).addEventListener('change', render);
+        });
+        
+        document.getElementById('minWidth').addEventListener('input', (e) => {
+            document.getElementById('minWidthVal').textContent = e.target.value + 'm';
+            calculateEntryExits();
+            render();
+        });
+        
+        document.getElementById('pointSize').addEventListener('input', (e) => {
+            document.getElementById('pointSizeVal').textContent = e.target.value;
+            render();
+        });
+        
+        document.getElementById('roadBuffer').addEventListener('input', (e) => {
+            document.getElementById('roadBufferVal').textContent = (e.target.value * 100) + 'm';
+            if (boundary.length) {
+                const lngs = boundary.map(c => c[0]);
+                const lats = boundary.map(c => c[1]);
+                const buffer = parseFloat(e.target.value) / 1000;
+                viewBox = {
+                    minLng: Math.min(...lngs) - buffer,
+                    maxLng: Math.max(...lngs) + buffer,
+                    minLat: Math.min(...lats) - buffer,
+                    maxLat: Math.max(...lats) + buffer
+                };
+                render();
+            }
+        });
+        
+        // Mouse interactions
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastMouse = { x: e.clientX, y: e.clientY };
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const dx = (e.clientX - lastMouse.x) / canvas.width * (viewBox.maxLng - viewBox.minLng);
+                const dy = (e.clientY - lastMouse.y) / canvas.height * (viewBox.maxLat - viewBox.minLat);
+                
+                viewBox.minLng -= dx;
+                viewBox.maxLng -= dx;
+                viewBox.minLat += dy;
+                viewBox.maxLat += dy;
+                
+                lastMouse = { x: e.clientX, y: e.clientY };
+                render();
+            }
+        });
+        
+        canvas.addEventListener('mouseup', () => isDragging = false);
+        canvas.addEventListener('mouseleave', () => isDragging = false);
+        
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoom = e.deltaY > 0 ? 1.1 : 0.9;
+            
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            const lng = xToLng(mouseX);
+            const lat = yToLat(mouseY);
+            
+            const newWidth = (viewBox.maxLng - viewBox.minLng) * zoom;
+            const newHeight = (viewBox.maxLat - viewBox.minLat) * zoom;
+            
+            const ratioX = (lng - viewBox.minLng) / (viewBox.maxLng - viewBox.minLng);
+            const ratioY = (lat - viewBox.minLat) / (viewBox.maxLat - viewBox.minLat);
+            
+            viewBox.minLng = lng - newWidth * ratioX;
+            viewBox.maxLng = lng + newWidth * (1 - ratioX);
+            viewBox.minLat = lat - newHeight * ratioY;
+            viewBox.maxLat = lat + newHeight * (1 - ratioY);
+            
+            render();
+        });
+        
+        // Click handler for popup
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            // Find clicked entry/exit point
+            for (const p of entryExitPoints) {
+                const x = lngToX(p.lng);
+                const y = latToY(p.lat);
+                const dist = Math.sqrt((mouseX - x) ** 2 + (mouseY - y) ** 2);
+                
+                if (dist < 20) {
+                    const popup = document.getElementById('popup');
+                    popup.innerHTML = `
+                        <h4>${p.name}</h4>
+                        <table>
+                            <tr><td>Road Width</td><td>${p.width}m</td></tr>
+                            <tr><td>Class</td><td>${p.width >= 30 ? 'Major' : p.width >= 15 ? 'Arterial' : 'Local'}</td></tr>
+                            <tr><td>Location</td><td>${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</td></tr>
+                        </table>
+                    `;
+                    popup.style.left = (e.clientX + 10) + 'px';
+                    popup.style.top = (e.clientY - 50) + 'px';
+                    popup.style.display = 'block';
+                    return;
+                }
+            }
+            
+            document.getElementById('popup').style.display = 'none';
+        });
+        
+        // Initialize
+        resizeCanvas();
+    </script>
+</body>
+</html>
