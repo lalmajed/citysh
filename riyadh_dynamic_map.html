@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Riyadh Map - Dynamic Counts</title>
+    <title>Al Muhammadiyah - Roads & Entry/Exit</title>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1.0, width=device-width">
     <style>
@@ -27,15 +27,11 @@
         .section-content { padding: 8px; display: none; }
         .section-content.open { display: block; }
         
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin: 8px 0; }
-        .stat-box { padding: 8px; border-radius: 6px; text-align: center; color: white; }
-        .stat-box .num { font-size: 1.2em; font-weight: bold; }
-        .stat-box .lbl { font-size: 9px; opacity: 0.9; }
-        
         .entry-exit-stats { background: #fce4ec; border: 2px solid #e91e63; border-radius: 8px; padding: 10px; margin: 8px 0; }
         .entry-exit-stats h3 { color: #c2185b; font-size: 13px; margin-bottom: 8px; }
         .entry-exit-stats .row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; }
         .entry-exit-stats .row.total { font-weight: bold; border-top: 1px solid #f48fb1; padding-top: 5px; margin-top: 5px; }
+        .entry-exit-stats .sub { padding-left: 10px; color: #666; }
         
         .road-stats { background: #e3f2fd; border: 2px solid #2196f3; border-radius: 8px; padding: 10px; margin: 8px 0; }
         .road-stats h3 { color: #1565c0; font-size: 13px; margin-bottom: 8px; }
@@ -82,7 +78,7 @@
         .info-popup td { padding: 4px 5px; border-bottom: 1px solid #eee; font-size: 11px; }
         .type-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; color: white; font-size: 10px; }
         
-        .legend { background: #fff; padding: 8px; border-radius: 6px; margin-top: 10px; font-size: 10px; }
+        .legend { background: #fff; padding: 8px; border-radius: 6px; margin-top: 10px; font-size: 10px; border: 1px solid #ddd; }
         .legend-item { display: flex; align-items: center; gap: 5px; margin: 3px 0; }
         .legend-color { width: 20px; height: 4px; border-radius: 2px; }
         .legend-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
@@ -105,31 +101,32 @@
     </div>
     
     <div class="panel">
-        <h2>Riyadh Map - Roads & Entry/Exit</h2>
+        <h2>Al Muhammadiyah - المحمدية</h2>
         
         <!-- Entry/Exit Stats -->
         <div class="entry-exit-stats">
-            <h3>ENTRY/EXIT POINTS</h3>
-            <div class="row"><span>Total Entry Points:</span><span id="totalEntries">0</span></div>
-            <div class="row"><span>Total Exit Points:</span><span id="totalExits">0</span></div>
-            <div class="row total"><span>Total Entry/Exit:</span><span id="totalEntryExit">0</span></div>
-            <div class="row"><span>Major (20m+):</span><span id="majorEntryExit">0</span></div>
-            <div class="row"><span>Secondary (15m):</span><span id="secondaryEntryExit">0</span></div>
-            <div class="row"><span>Local (<15m):</span><span id="localEntryExit">0</span></div>
+            <h3>ENTRY/EXIT POINTS (Boundary Crossings)</h3>
+            <div class="row total"><span>Total Entry Points:</span><span id="totalEntries">0</span></div>
+            <div class="row total"><span>Total Exit Points:</span><span id="totalExits">0</span></div>
+            <div class="row" style="background:#f8bbd0;margin:5px -10px;padding:5px 10px;"><span><b>Combined Total:</b></span><span id="totalEntryExit"><b>0</b></span></div>
+            <div class="row"><span class="sub">Major Roads (20m+):</span><span id="majorEntryExit">0</span></div>
+            <div class="row"><span class="sub">Secondary (15-20m):</span><span id="secondaryEntryExit">0</span></div>
+            <div class="row"><span class="sub">Local Roads (<15m):</span><span id="localEntryExit">0</span></div>
+            <div class="row" style="margin-top:8px;"><span>Unique Roads Crossing:</span><span id="uniqueCrossing">0</span></div>
         </div>
         
         <!-- Road Stats -->
         <div class="road-stats">
             <h3>ROAD STATISTICS</h3>
-            <div class="row"><span>Total Roads:</span><span id="totalRoads">0</span></div>
+            <div class="row"><span>Total Road Segments:</span><span id="totalRoads">0</span></div>
             <div class="row"><span>Total Length:</span><span id="totalLength">0 km</span></div>
             <div class="row"><span>Unique Road Names:</span><span id="uniqueRoads">0</span></div>
             <div class="row total"><span>By Width:</span><span></span></div>
-            <div class="row"><span>  Major (20m+):</span><span id="roads20plus">0</span></div>
-            <div class="row"><span>  15m:</span><span id="roads15">0</span></div>
-            <div class="row"><span>  12m:</span><span id="roads12">0</span></div>
-            <div class="row"><span>  10m:</span><span id="roads10">0</span></div>
-            <div class="row"><span>  Service (<10m):</span><span id="roadsService">0</span></div>
+            <div class="row"><span class="sub">Major (20m+):</span><span id="roads20plus">0</span></div>
+            <div class="row"><span class="sub">15-20m:</span><span id="roads15">0</span></div>
+            <div class="row"><span class="sub">12-15m:</span><span id="roads12">0</span></div>
+            <div class="row"><span class="sub">10-12m:</span><span id="roads10">0</span></div>
+            <div class="row"><span class="sub">Service (<10m):</span><span id="roadsService">0</span></div>
         </div>
         
         <!-- Layers -->
@@ -138,6 +135,14 @@
                 LAYERS <span>[-]</span>
             </div>
             <div class="section-content open">
+                <div class="layer-control" style="background:#fff3e0;">
+                    <div class="header">
+                        <input type="checkbox" id="showDistrict" checked onchange="render()">
+                        <div class="dot" style="background:#ff9800;"></div>
+                        <span class="name">District Boundary</span>
+                    </div>
+                </div>
+                
                 <div class="layer-control" style="background:#e3f2fd;">
                     <div class="header">
                         <input type="checkbox" id="showRoads" checked onchange="render()">
@@ -146,7 +151,7 @@
                         <span class="count" id="roadCount">0</span>
                     </div>
                     <div style="font-size:10px;">
-                        Width: <input type="range" id="roadWidth" min="0.5" max="3" value="1" step="0.25" oninput="render()">
+                        Width Scale: <input type="range" id="roadWidth" min="0.5" max="3" value="1" step="0.25" oninput="render()">
                     </div>
                 </div>
                 
@@ -158,7 +163,7 @@
                         <span class="count" id="entryExitCount">0</span>
                     </div>
                     <div style="font-size:10px;">
-                        Size: <input type="range" id="entryExitSize" min="4" max="20" value="10" oninput="render()">
+                        Size: <input type="range" id="entryExitSize" min="6" max="25" value="12" oninput="render()">
                     </div>
                     <div style="font-size:10px; margin-top:5px;">
                         <label><input type="checkbox" id="showEntryOnly" onchange="render()"> Entries only</label>
@@ -166,7 +171,7 @@
                     </div>
                     <div style="font-size:10px; margin-top:5px;">
                         Min Width: <select id="minEntryWidth" onchange="calculateEntryExit(); render()">
-                            <option value="0">All</option>
+                            <option value="0">All Roads</option>
                             <option value="10">10m+</option>
                             <option value="15">15m+</option>
                             <option value="20" selected>20m+ (Major)</option>
@@ -192,6 +197,11 @@
                 DATA FILES <span>[-]</span>
             </div>
             <div class="section-content open">
+                <div class="file-input" style="background:#fff3e0;padding:8px;border-radius:6px;margin-bottom:5px;">
+                    <label>District Boundary GeoJSON:</label>
+                    <input type="file" id="districtFile" accept=".json,.geojson">
+                    <div id="districtStatus" class="file-status">Upload almuhammadiyah_district.geojson</div>
+                </div>
                 <div class="file-input" style="background:#e3f2fd;padding:8px;border-radius:6px;">
                     <label>Roads GeoJSON:</label>
                     <input type="file" id="roadsFile" accept=".json,.geojson">
@@ -203,30 +213,40 @@
         <!-- Legend -->
         <div class="legend">
             <div style="font-weight:600; margin-bottom:5px;">Legend</div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+            <div style="font-size:9px;color:#666;margin-bottom:5px;">Road Width Colors:</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:3px;">
                 <div class="legend-item"><div class="legend-color" style="background:#d32f2f;"></div> 30m+</div>
-                <div class="legend-item"><div class="legend-color" style="background:#ff9800;"></div> 20m</div>
-                <div class="legend-item"><div class="legend-color" style="background:#ffc107;"></div> 15m</div>
-                <div class="legend-item"><div class="legend-color" style="background:#4caf50;"></div> 12m</div>
-                <div class="legend-item"><div class="legend-color" style="background:#009688;"></div> 10m</div>
+                <div class="legend-item"><div class="legend-color" style="background:#ff9800;"></div> 20-30m</div>
+                <div class="legend-item"><div class="legend-color" style="background:#ffc107;"></div> 15-20m</div>
+                <div class="legend-item"><div class="legend-color" style="background:#4caf50;"></div> 12-15m</div>
+                <div class="legend-item"><div class="legend-color" style="background:#009688;"></div> 10-12m</div>
                 <div class="legend-item"><div class="legend-color" style="background:#607d8b;"></div> <10m</div>
             </div>
             <div style="margin-top:8px; border-top:1px solid #ddd; padding-top:8px;">
-                <div class="legend-item"><div class="legend-dot" style="background:#4CAF50;"></div> Entry Point</div>
-                <div class="legend-item"><div class="legend-dot" style="background:#f44336;"></div> Exit Point</div>
+                <div style="font-size:9px;color:#666;margin-bottom:5px;">Entry/Exit Points:</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#4CAF50;"></div> Entry (INTO district)</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#f44336;"></div> Exit (OUT OF district)</div>
             </div>
         </div>
         
         <div style="margin-top:8px;font-size:9px;color:#888;text-align:center;">
-            Zoom: <span id="zoomLevel">11</span> | <a href="#" onclick="map.setCenter({lat:24.7136,lng:46.6753});map.setZoom(14);return false;">Reset</a>
+            Zoom: <span id="zoomLevel">14</span> | <a href="#" onclick="centerOnDistrict();return false;">Center on District</a>
         </div>
     </div>
 
     <script>
         let map;
         let roads = [];
+        let districtBoundary = null;
         let entryExitPoints = [];
         let mapsLoadAttempts = 0;
+        
+        // Al Muhammadiyah bounds
+        const DISTRICT_CENTER = { lat: 24.7325, lng: 46.6488 };
+        const DISTRICT_BOUNDS = {
+            minLng: 46.6337, maxLng: 46.6640,
+            minLat: 24.7205, maxLat: 24.7445
+        };
         
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -238,6 +258,11 @@
             if (width >= 12) return '#4caf50';
             if (width >= 10) return '#009688';
             return '#607d8b';
+        }
+        
+        function centerOnDistrict() {
+            map.setCenter(DISTRICT_CENTER);
+            map.setZoom(14);
         }
         
         function waitForGoogleMaps() {
@@ -267,81 +292,105 @@
             header.querySelector('span').textContent = content.classList.contains('open') ? '[-]' : '[+]';
         }
         
+        // Line intersection check
+        function lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {
+            const denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+            if (Math.abs(denom) < 1e-10) return null;
+            
+            const ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom;
+            const ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denom;
+            
+            if (ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1) {
+                return {
+                    x: x1 + ua * (x2 - x1),
+                    y: y1 + ua * (y2 - y1)
+                };
+            }
+            return null;
+        }
+        
+        // Check if point is inside polygon
+        function pointInPolygon(lng, lat, polygon) {
+            let inside = false;
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                const xi = polygon[i][0], yi = polygon[i][1];
+                const xj = polygon[j][0], yj = polygon[j][1];
+                
+                if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
+                    inside = !inside;
+                }
+            }
+            return inside;
+        }
+        
         function calculateEntryExit() {
-            if (!roads.length) return;
+            if (!roads.length || !districtBoundary) {
+                console.log('Need both roads and district boundary');
+                return;
+            }
             
             const minWidth = parseInt(document.getElementById('minEntryWidth').value) || 0;
             entryExitPoints = [];
+            const uniqueRoadsCrossing = new Set();
             
-            // Group roads by name to find unique roads
-            const roadsByName = {};
+            const boundary = districtBoundary.geometry.coordinates[0];
+            
             roads.forEach(road => {
                 const props = road.properties || {};
-                const name = props.name_ar || props.name_en || props.ROADCENTERLINENAME_AR || '';
                 const width = parseFloat(props.width_m || props.WIDTH || 10);
+                const name = props.name_ar || props.name_en || props.ROADCENTERLINENAME_AR || 'Unknown';
                 
                 if (width < minWidth) return;
-                if (!name) return;
                 
-                if (!roadsByName[name]) {
-                    roadsByName[name] = { segments: [], width: width };
-                }
-                roadsByName[name].segments.push(road);
-                roadsByName[name].width = Math.max(roadsByName[name].width, width);
-            });
-            
-            // For each unique road, find endpoints (entry/exit)
-            Object.entries(roadsByName).forEach(([name, data]) => {
-                const allCoords = [];
+                const geom = road.geometry;
+                if (!geom) return;
                 
-                data.segments.forEach(road => {
-                    const geom = road.geometry;
-                    if (!geom) return;
+                const lines = geom.type === 'LineString' ? [geom.coordinates] : 
+                             (geom.type === 'MultiLineString' ? geom.coordinates : []);
+                
+                lines.forEach(coords => {
+                    if (!coords || coords.length < 2) return;
                     
-                    const coords = geom.type === 'LineString' ? geom.coordinates : 
-                                   geom.type === 'MultiLineString' ? geom.coordinates.flat() : [];
-                    
-                    if (coords.length >= 2) {
-                        // Start point (Entry)
-                        allCoords.push({
-                            coord: coords[0],
-                            type: 'entry',
-                            name: name,
-                            width: data.width
-                        });
-                        // End point (Exit)
-                        allCoords.push({
-                            coord: coords[coords.length - 1],
-                            type: 'exit',
-                            name: name,
-                            width: data.width
-                        });
+                    // Check each segment of the road against each edge of the boundary
+                    for (let i = 0; i < coords.length - 1; i++) {
+                        const [x1, y1] = coords[i];     // lng, lat
+                        const [x2, y2] = coords[i + 1];
+                        
+                        for (let j = 0; j < boundary.length - 1; j++) {
+                            const [x3, y3] = boundary[j];
+                            const [x4, y4] = boundary[j + 1];
+                            
+                            const intersection = lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4);
+                            
+                            if (intersection) {
+                                // Determine if entry or exit based on direction
+                                const startInside = pointInPolygon(x1, y1, boundary);
+                                const endInside = pointInPolygon(x2, y2, boundary);
+                                
+                                let type;
+                                if (!startInside && endInside) {
+                                    type = 'entry';
+                                } else if (startInside && !endInside) {
+                                    type = 'exit';
+                                } else {
+                                    // Both inside or both outside - use direction
+                                    type = x2 > x1 ? 'entry' : 'exit';
+                                }
+                                
+                                entryExitPoints.push({
+                                    lat: intersection.y,
+                                    lng: intersection.x,
+                                    type: type,
+                                    name: name,
+                                    width: width,
+                                    roadProps: props
+                                });
+                                
+                                uniqueRoadsCrossing.add(name);
+                            }
+                        }
                     }
                 });
-                
-                // Find the extreme points (actual entry/exit to district)
-                if (allCoords.length >= 2) {
-                    // Sort by longitude to find westmost (entry) and eastmost (exit)
-                    const sortedByLon = [...allCoords].sort((a, b) => a.coord[0] - b.coord[0]);
-                    
-                    // Add westmost as entry
-                    entryExitPoints.push({
-                        lat: sortedByLon[0].coord[1],
-                        lng: sortedByLon[0].coord[0],
-                        type: 'entry',
-                        name: name,
-                        width: data.width
-                    });
-                    
-                    // Add eastmost as exit
-                    entryExitPoints.push({
-                        lat: sortedByLon[sortedByLon.length - 1].coord[1],
-                        lng: sortedByLon[sortedByLon.length - 1].coord[0],
-                        type: 'exit',
-                        name: name,
-                        width: data.width
-                    });
-                }
             });
             
             // Update stats
@@ -358,8 +407,9 @@
             document.getElementById('secondaryEntryExit').textContent = secondary.length;
             document.getElementById('localEntryExit').textContent = local.length;
             document.getElementById('entryExitCount').textContent = entryExitPoints.length;
+            document.getElementById('uniqueCrossing').textContent = uniqueRoadsCrossing.size;
             
-            console.log(`Entry/Exit calculated: ${entryExitPoints.length} points from ${Object.keys(roadsByName).length} unique roads`);
+            console.log(`Entry/Exit: ${entryExitPoints.length} crossing points from ${uniqueRoadsCrossing.size} unique roads`);
         }
         
         let renderPending = false;
@@ -394,6 +444,7 @@
             
             const swLat = sw.lat(), neLat = ne.lat(), swLng = sw.lng(), neLng = ne.lng();
             
+            const showDistrict = document.getElementById('showDistrict').checked;
             const showRoads = document.getElementById('showRoads').checked;
             const showEntryExit = document.getElementById('showEntryExit').checked;
             const showLabels = document.getElementById('showLabels').checked;
@@ -401,6 +452,27 @@
             const showExitOnly = document.getElementById('showExitOnly').checked;
             const roadWidthScale = parseFloat(document.getElementById('roadWidth').value);
             const entryExitSize = parseFloat(document.getElementById('entryExitSize').value);
+            
+            // Draw district boundary
+            if (showDistrict && districtBoundary) {
+                const coords = districtBoundary.geometry.coordinates[0];
+                
+                ctx.beginPath();
+                coords.forEach(([lon, lat], i) => {
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                    const x = (w.x - bl.x) * scale;
+                    const y = (w.y - tr.y) * scale;
+                    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                });
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(255, 152, 0, 0.1)';
+                ctx.fill();
+                ctx.strokeStyle = '#ff9800';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([10, 5]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
             
             // Draw roads
             if (showRoads && roads.length) {
@@ -468,7 +540,8 @@
             // Draw Entry/Exit points
             if (showEntryExit && entryExitPoints.length) {
                 entryExitPoints.forEach(point => {
-                    if (point.lat < swLat || point.lat > neLat || point.lng < swLng || point.lng > neLng) return;
+                    if (point.lat < swLat - 0.01 || point.lat > neLat + 0.01 || 
+                        point.lng < swLng - 0.01 || point.lng > neLng + 0.01) return;
                     
                     // Filter by entry/exit
                     if (showEntryOnly && point.type !== 'entry') return;
@@ -478,8 +551,14 @@
                     const x = (w.x - bl.x) * scale;
                     const y = (w.y - tr.y) * scale;
                     
-                    const size = entryExitSize * (point.width / 20);
+                    const size = entryExitSize * Math.min(1.5, point.width / 15);
                     const color = point.type === 'entry' ? '#4CAF50' : '#f44336';
+                    
+                    // Draw glow
+                    ctx.beginPath();
+                    ctx.arc(x, y, size + 4, 0, Math.PI * 2);
+                    ctx.fillStyle = point.type === 'entry' ? 'rgba(76,175,80,0.3)' : 'rgba(244,67,54,0.3)';
+                    ctx.fill();
                     
                     // Draw marker
                     ctx.beginPath();
@@ -492,26 +571,55 @@
                     
                     // Draw arrow indicator
                     ctx.fillStyle = 'white';
-                    ctx.font = 'bold ' + (size * 1.2) + 'px Arial';
+                    ctx.font = 'bold ' + (size * 1.1) + 'px Arial';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(point.type === 'entry' ? '>' : '<', x, y);
+                    ctx.fillText(point.type === 'entry' ? 'IN' : 'OUT', x, y);
                     
-                    // Draw label on hover zoom
-                    if (zoom >= 15 && point.width >= 20) {
-                        ctx.font = '9px Arial';
+                    // Draw label
+                    if (zoom >= 14) {
+                        ctx.font = 'bold 10px Arial';
                         ctx.fillStyle = '#333';
                         ctx.strokeStyle = 'white';
-                        ctx.lineWidth = 2;
+                        ctx.lineWidth = 3;
                         ctx.textAlign = 'center';
-                        ctx.strokeText(point.name, x, y - size - 5);
-                        ctx.fillText(point.name, x, y - size - 5);
+                        const label = point.name.substring(0, 20);
+                        ctx.strokeText(label, x, y - size - 8);
+                        ctx.fillText(label, x, y - size - 8);
+                        ctx.font = '9px Arial';
+                        ctx.fillStyle = color;
+                        ctx.fillText(point.width + 'm', x, y + size + 12);
                     }
                 });
             }
         }
         
-        // File handler
+        // File handlers
+        document.getElementById('districtFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = JSON.parse(evt.target.result);
+                    const features = data.features || [data];
+                    districtBoundary = features[0];
+                    
+                    document.getElementById('districtStatus').innerHTML = 'Loaded: ' + (districtBoundary.properties?.name_ar || districtBoundary.properties?.name_en || 'District');
+                    document.getElementById('districtStatus').classList.add('loaded');
+                    
+                    // Recalculate entry/exit
+                    if (roads.length) calculateEntryExit();
+                    render();
+                    
+                } catch (err) {
+                    document.getElementById('districtStatus').innerHTML = 'Error: ' + err.message;
+                }
+            };
+            reader.readAsText(file);
+        });
+        
         document.getElementById('roadsFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -556,19 +664,12 @@
                     document.getElementById('roadsService').textContent = roadsService;
                     
                     // Calculate entry/exit points
-                    calculateEntryExit();
+                    if (districtBoundary) calculateEntryExit();
                     
                     // Zoom to roads
-                    if (roads.length > 0 && roads[0].geometry) {
-                        const coords = roads[0].geometry.coordinates;
-                        const c = coords[0] || coords;
-                        if (c && c.length >= 2) {
-                            map.setCenter({ lat: c[1], lng: c[0] });
-                            map.setZoom(14);
-                        }
-                    }
-                    
+                    centerOnDistrict();
                     render();
+                    
                 } catch (err) {
                     document.getElementById('roadsStatus').innerHTML = 'Error: ' + err.message;
                 }
@@ -580,8 +681,8 @@
             const popup = document.getElementById('infoPopup');
             document.getElementById('popupTitle').innerHTML = title;
             document.getElementById('popupContent').innerHTML = content;
-            popup.style.left = Math.min(x + 15, window.innerWidth - 300) + 'px';
-            popup.style.top = Math.min(y + 15, window.innerHeight - 200) + 'px';
+            popup.style.left = Math.min(x + 15, window.innerWidth - 320) + 'px';
+            popup.style.top = Math.min(y + 15, window.innerHeight - 250) + 'px';
             popup.classList.add('show');
         }
         
@@ -592,28 +693,28 @@
         function handleMapClick(e) {
             closeInfoPopup();
             
-            const lat = e.latLng.lat();
-            const lng = e.latLng.lng();
             const proj = map.getProjection();
             const zoom = map.getZoom();
             const scale = Math.pow(2, zoom);
             const clickPt = proj.fromLatLngToPoint(e.latLng);
-            const tolerance = 15 / scale;
+            const tolerance = 20 / scale;
             
             // Check entry/exit points first
             for (const point of entryExitPoints) {
                 const pt = proj.fromLatLngToPoint(new google.maps.LatLng(point.lat, point.lng));
                 const dist = Math.sqrt((pt.x - clickPt.x) ** 2 + (pt.y - clickPt.y) ** 2);
                 
-                if (dist < tolerance * 2) {
+                if (dist < tolerance) {
                     const color = point.type === 'entry' ? '#4CAF50' : '#f44336';
                     const typeLabel = point.type === 'entry' ? 'ENTRY' : 'EXIT';
+                    const direction = point.type === 'entry' ? 'INTO Al Muhammadiyah' : 'OUT OF Al Muhammadiyah';
                     
                     showInfoPopup(e.pixel.x, e.pixel.y,
                         '<span class="type-badge" style="background:' + color + ';">' + typeLabel + '</span> Point',
                         '<div style="direction:rtl;text-align:right;font-size:14px;font-weight:bold;margin-bottom:8px;">' + point.name + '</div>' +
                         '<table>' +
                         '<tr><td>Type</td><td><b>' + typeLabel + '</b></td></tr>' +
+                        '<tr><td>Direction</td><td>' + direction + '</td></tr>' +
                         '<tr><td>Road Width</td><td>' + point.width + 'm</td></tr>' +
                         '<tr><td>Location</td><td>' + point.lat.toFixed(5) + ', ' + point.lng.toFixed(5) + '</td></tr>' +
                         '</table>'
@@ -652,7 +753,7 @@
                         
                         const dist = Math.sqrt((clickPt.x - xx) ** 2 + (clickPt.y - yy) ** 2);
                         
-                        if (dist < tolerance * 2) {
+                        if (dist < tolerance * 1.5) {
                             const props = road.properties || {};
                             const width = props.width_m || props.WIDTH || '-';
                             const nameAr = props.name_ar || props.ROADCENTERLINENAME_AR || '-';
@@ -667,7 +768,7 @@
                                 '<tr><td>Width</td><td><b>' + width + 'm</b></td></tr>' +
                                 '<tr><td>Length</td><td>' + (typeof length === 'number' ? length.toFixed(0) + 'm' : length) + '</td></tr>' +
                                 '<tr><td>Type</td><td>' + (props.highway_type || props.category || '-') + '</td></tr>' +
-                                '<tr><td>Source</td><td>' + (props.source || 'Unknown') + '</td></tr>' +
+                                '<tr><td>Source</td><td>' + (props.source || 'Balady') + '</td></tr>' +
                                 '</table>'
                             );
                             return;
@@ -681,7 +782,7 @@
             if (map) return;
             
             map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: 24.7136, lng: 46.6753 },
+                center: DISTRICT_CENTER,
                 zoom: 14,
                 mapTypeControl: true,
                 gestureHandling: 'greedy'
@@ -691,7 +792,7 @@
             map.addListener('click', handleMapClick);
             window.addEventListener('resize', render);
             
-            console.log('Map ready. Upload roads GeoJSON.');
+            console.log('Map ready for Al Muhammadiyah. Upload district boundary and roads.');
         }
         
         if (document.readyState === 'loading') {
