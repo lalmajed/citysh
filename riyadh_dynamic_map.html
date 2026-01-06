@@ -111,12 +111,12 @@
     </style>
 </head>
 <body>
-    <div id="loadingOverlay" class="loading-overlay hidden">
-        <div id="loadingTitle">Processing...</div>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div id="loadingTitle">🗺️ Loading Google Maps...</div>
         <div class="progress-bar"><div id="progressFill" class="progress-fill" style="width: 0%"></div></div>
-        <div id="loadingStatus">Please wait...</div>
+        <div id="loadingStatus">Please wait while the map loads...</div>
         <div style="font-size: 12px; color: #aaa; max-width: 400px; text-align: center; margin-top: 10px;">
-            💡 Large files with 900K+ rows may take 5-15 seconds to load
+            💡 Using keyless Google Maps API
         </div>
     </div>
     
@@ -375,7 +375,7 @@
         let infoPopup = null;
         let buildingsFileName = '';
         let mapsLoadAttempts = 0;
-        const MAX_LOAD_ATTEMPTS = 100;
+        const MAX_LOAD_ATTEMPTS = 200; // Increased for slower connections
         
         // Road colors by width
         function getRoadColor(width) {
@@ -404,17 +404,46 @@
         // Wait for Google Maps API to be available
         function waitForGoogleMaps() {
             mapsLoadAttempts++;
+            
+            // Update progress
+            const progress = Math.min(95, (mapsLoadAttempts / MAX_LOAD_ATTEMPTS) * 100);
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('loadingStatus').textContent = `Loading... (attempt ${mapsLoadAttempts}/${MAX_LOAD_ATTEMPTS})`;
+            
             if (typeof google !== 'undefined' && google.maps && google.maps.Map) {
                 console.log('Google Maps API loaded successfully after', mapsLoadAttempts, 'attempts');
-                initMap();
+                document.getElementById('progressFill').style.width = '100%';
+                document.getElementById('loadingStatus').textContent = 'Map loaded!';
+                setTimeout(() => {
+                    document.getElementById('loadingOverlay').classList.add('hidden');
+                    initMap();
+                }, 300);
             } else if (mapsLoadAttempts < MAX_LOAD_ATTEMPTS) {
                 setTimeout(waitForGoogleMaps, 100);
             } else {
                 console.error('Google Maps API failed to load after', MAX_LOAD_ATTEMPTS, 'attempts');
                 document.getElementById('loadingTitle').textContent = 'Error loading Google Maps';
-                document.getElementById('loadingStatus').textContent = 'Please refresh the page and try again';
+                document.getElementById('loadingStatus').innerHTML = 'The keyless API may be temporarily unavailable.<br><br><button onclick="retryLoadMaps()" style="padding:10px 20px;font-size:14px;cursor:pointer;background:#4CAF50;color:white;border:none;border-radius:5px;">🔄 Retry</button><br><br><small>Or try refreshing the page</small>';
                 document.getElementById('loadingOverlay').classList.remove('hidden');
             }
+        }
+        
+        function retryLoadMaps() {
+            mapsLoadAttempts = 0;
+            document.getElementById('loadingTitle').textContent = 'Retrying...';
+            document.getElementById('loadingStatus').textContent = 'Loading Google Maps API...';
+            
+            // Remove old script and add new one
+            const oldScript = document.querySelector('script[src*="mapsJavaScriptAPI"]');
+            if (oldScript) oldScript.remove();
+            
+            const script = document.createElement('script');
+            script.src = 'https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js';
+            script.async = true;
+            script.defer = true;
+            document.body.appendChild(script);
+            
+            waitForGoogleMaps();
         }
         
         // Start checking for Google Maps when DOM is ready
