@@ -4,6 +4,9 @@
     <title>Riyadh Map - Dynamic Counts</title>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1.0, width=device-width">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; }
@@ -427,46 +430,109 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
-        // Wait for Google Maps API to be available
-        function waitForGoogleMaps() {
-            mapsLoadAttempts++;
-            document.getElementById('loadingStatus').textContent = 'Loading Google Maps... Attempt ' + mapsLoadAttempts;
+        // Use Leaflet first (always works), then try Google Maps as enhancement
+        let useLeaflet = true;
+        let leafletMap = null;
+        
+        function initLeafletMap() {
+            document.getElementById('loadingStatus').textContent = 'Initializing map...';
             
-            if (typeof google !== 'undefined' && google.maps && google.maps.Map) {
-                console.log('Google Maps API loaded successfully after', mapsLoadAttempts, 'attempts');
-                initMap();
-            } else if (mapsLoadAttempts < MAX_LOAD_ATTEMPTS) {
-                setTimeout(waitForGoogleMaps, 100);
-            } else {
-                console.error('Google Maps API failed to load after', MAX_LOAD_ATTEMPTS, 'attempts');
-                document.getElementById('loadingTitle').textContent = 'Google Maps loading slow...';
-                document.getElementById('loadingStatus').innerHTML = 'Still trying... <button onclick="retryGoogleMaps()" style="padding:10px 20px;font-size:14px;cursor:pointer;background:#e94560;color:white;border:none;border-radius:5px;margin-top:10px;">Retry Now</button>';
-                // Keep trying in background
-                setTimeout(waitForGoogleMaps, 500);
-            }
+            leafletMap = L.map('map', {
+                center: [24.7136, 46.6753],
+                zoom: 11,
+                zoomControl: true
+            });
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: 'OpenStreetMap',
+                maxZoom: 19
+            }).addTo(leafletMap);
+            
+            // Create Google Maps compatible shim
+            window.google = window.google || {};
+            window.google.maps = window.google.maps || {};
+            window.google.maps.LatLng = function(lat, lng) { 
+                return { 
+                    lat: () => lat, 
+                    lng: () => lng,
+                    _lat: lat,
+                    _lng: lng
+                }; 
+            };
+            window.google.maps.LatLngBounds = function(sw, ne) { 
+                return { 
+                    getNorthEast: () => ne, 
+                    getSouthWest: () => sw 
+                }; 
+            };
+            window.google.maps.Map = function() { return map; };
+            
+            // Shim for map object
+            map = {
+                _leaflet: leafletMap,
+                getCenter: () => {
+                    const c = leafletMap.getCenter();
+                    return { lat: () => c.lat, lng: () => c.lng };
+                },
+                getBounds: () => {
+                    const b = leafletMap.getBounds();
+                    return {
+                        getNorthEast: () => ({ lat: () => b.getNorth(), lng: () => b.getEast() }),
+                        getSouthWest: () => ({ lat: () => b.getSouth(), lng: () => b.getWest() })
+                    };
+                },
+                getZoom: () => leafletMap.getZoom(),
+                setCenter: (c) => leafletMap.setView([c.lat, c.lng], leafletMap.getZoom()),
+                setZoom: (z) => leafletMap.setZoom(z),
+                fitBounds: (b) => {
+                    const sw = b.getSouthWest();
+                    const ne = b.getNorthEast();
+                    leafletMap.fitBounds([[sw.lat(), sw.lng()], [ne.lat(), ne.lng()]]);
+                },
+                getProjection: () => ({
+                    fromLatLngToPoint: (ll) => {
+                        let lat, lng;
+                        if (typeof ll.lat === 'function') {
+                            lat = ll.lat();
+                            lng = ll.lng();
+                        } else if (ll._lat !== undefined) {
+                            lat = ll._lat;
+                            lng = ll._lng;
+                        } else {
+                            lat = ll.lat;
+                            lng = ll.lng;
+                        }
+                        // Use Leaflet's projection (returns point at current zoom)
+                        const zoom = leafletMap.getZoom();
+                        const p = leafletMap.project([lat, lng], zoom);
+                        // Scale to world coordinates like Google Maps does
+                        const scale = Math.pow(2, zoom);
+                        return { x: p.x / scale, y: p.y / scale };
+                    }
+                }),
+                addListener: (event, fn) => {
+                    if (event === 'idle') leafletMap.on('moveend', fn);
+                    else if (event === 'click') leafletMap.on('click', (e) => fn({ latLng: { lat: () => e.latlng.lat, lng: () => e.latlng.lng }}));
+                    else if (event === 'bounds_changed') leafletMap.on('move', fn);
+                    else if (event === 'zoom_changed') leafletMap.on('zoom', fn);
+                }
+            };
+            
+            leafletMap.on('moveend', render);
+            leafletMap.on('click', (e) => handleMapClick({ latLng: { lat: () => e.latlng.lat, lng: () => e.latlng.lng }}));
+            
+            window.addEventListener('resize', render);
+            
+            // Hide loading
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            console.log('Leaflet map ready!');
         }
         
-        function retryGoogleMaps() {
-            // Remove old script and add new one
-            const oldScript = document.querySelector('script[src*="mapsJavaScriptAPI"]');
-            if (oldScript) oldScript.remove();
-            
-            const script = document.createElement('script');
-            script.src = 'https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js';
-            script.async = true;
-            script.defer = true;
-            document.body.appendChild(script);
-            
-            mapsLoadAttempts = 0;
-            document.getElementById('loadingTitle').textContent = 'Riyadh Interactive Map';
-            waitForGoogleMaps();
-        }
-        
-        // Start checking for Google Maps when DOM is ready
+        // Start immediately with Leaflet
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', waitForGoogleMaps);
+            document.addEventListener('DOMContentLoaded', initLeafletMap);
         } else {
-            waitForGoogleMaps();
+            initLeafletMap();
         }
         
         // POI Colors by layer
@@ -2171,10 +2237,8 @@
             }
         }
         
-        // Also expose as window.initMap for compatibility with callback parameter
-        window.initMap = initMap;
+        // initMap is now handled by Leaflet shim
+        window.initMap = function() { console.log('Using Leaflet instead'); };
     </script>
-    <!-- Keyless Google Maps API - no API key required -->
-    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
 </body>
 </html>
