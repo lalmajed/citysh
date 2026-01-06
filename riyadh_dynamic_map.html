@@ -274,7 +274,10 @@
                         <span class="count" id="entryExitCount">0</span>
                     </div>
                     <div style="font-size:10px;">
-                        Size: <span id="entryExitSizeVal">8</span> <input type="range" id="entryExitSize" min="4" max="16" value="8" step="1" oninput="document.getElementById('entryExitSizeVal').textContent=this.value;render()">
+                        Size: <span id="entryExitSizeVal">12</span> <input type="range" id="entryExitSize" min="6" max="24" value="12" step="1" oninput="document.getElementById('entryExitSizeVal').textContent=this.value;render()">
+                    </div>
+                    <div style="font-size:9px;color:#c2185b;margin-top:3px;">
+                        Select a district to see entry/exit points at boundaries
                     </div>
                 </div>
                 <div class="click-toggle">
@@ -833,45 +836,71 @@
                 });
             }
             
-            // Draw Entry/Exit points
+            // Draw Entry/Exit points (boundary crossings)
             const showEntryExit = document.getElementById('showEntryExit').checked;
             const entryExitSize = parseFloat(document.getElementById('entryExitSize').value);
             
             if (showEntryExit && entryExitPoints.length) {
                 entryExitPoints.forEach(point => {
-                    if (point.lat < swLat - 0.01 || point.lat > neLat + 0.01 || 
-                        point.lng < swLng - 0.01 || point.lng > neLng + 0.01) return;
+                    if (point.lat < swLat - 0.02 || point.lat > neLat + 0.02 || 
+                        point.lng < swLng - 0.02 || point.lng > neLng + 0.02) return;
                     
                     const w = proj.fromLatLngToPoint(new google.maps.LatLng(point.lat, point.lng));
                     const x = (w.x - bl.x) * scale;
                     const y = (w.y - tr.y) * scale;
                     
-                    const size = entryExitSize * Math.min(1.5, point.width / 15);
+                    // Size based on road width - bigger for major roads
+                    const baseSize = entryExitSize;
+                    const size = point.width >= 30 ? baseSize * 1.8 : 
+                                 point.width >= 20 ? baseSize * 1.4 : 
+                                 point.width >= 15 ? baseSize * 1.1 : baseSize * 0.8;
                     
-                    // Glow effect
+                    // Color by road width
+                    const color = point.width >= 30 ? '#d32f2f' :  // Red for major
+                                  point.width >= 20 ? '#e91e63' :  // Pink for arterial
+                                  point.width >= 15 ? '#9c27b0' :  // Purple for secondary
+                                  '#607d8b';                        // Grey for local
+                    
+                    // Outer glow
                     ctx.beginPath();
-                    ctx.arc(x, y, size + 4, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(233, 30, 99, 0.3)';
+                    ctx.arc(x, y, size + 6, 0, Math.PI * 2);
+                    ctx.fillStyle = color.replace(')', ', 0.2)').replace('rgb', 'rgba').replace('#', 'rgba(');
+                    ctx.fillStyle = 'rgba(233, 30, 99, 0.25)';
                     ctx.fill();
                     
                     // Main marker
                     ctx.beginPath();
                     ctx.arc(x, y, size, 0, Math.PI * 2);
-                    ctx.fillStyle = '#e91e63';
+                    ctx.fillStyle = color;
                     ctx.fill();
                     ctx.strokeStyle = 'white';
-                    ctx.lineWidth = 2;
+                    ctx.lineWidth = 3;
                     ctx.stroke();
                     
-                    // Label at higher zoom
-                    if (zoom >= 14) {
-                        ctx.font = 'bold 9px Arial';
+                    // Inner dot
+                    ctx.beginPath();
+                    ctx.arc(x, y, size * 0.4, 0, Math.PI * 2);
+                    ctx.fillStyle = 'white';
+                    ctx.fill();
+                    
+                    // Label - show road name and width
+                    if (zoom >= 13) {
+                        const label = point.width + 'm';
+                        ctx.font = 'bold 10px Arial';
                         ctx.fillStyle = '#333';
                         ctx.strokeStyle = 'white';
-                        ctx.lineWidth = 2;
+                        ctx.lineWidth = 3;
                         ctx.textAlign = 'center';
-                        ctx.strokeText(point.width + 'm', x, y + size + 12);
-                        ctx.fillText(point.width + 'm', x, y + size + 12);
+                        ctx.strokeText(label, x, y + size + 14);
+                        ctx.fillText(label, x, y + size + 14);
+                        
+                        // Show road name at higher zoom
+                        if (zoom >= 15 && point.name) {
+                            const shortName = point.name.length > 15 ? point.name.substring(0, 15) + '...' : point.name;
+                            ctx.font = '9px Arial';
+                            ctx.strokeText(shortName, x, y - size - 8);
+                            ctx.fillText(shortName, x, y - size - 8);
+                        }
                     }
                 });
             }
@@ -1456,6 +1485,11 @@
                         document.getElementById('totalRoads').textContent = roads.length;
                         document.getElementById('roadLegend').style.display = 'block';
                         
+                        // Recalculate entry/exit if district is selected
+                        if (selectedDistrictObj) {
+                            calculateEntryExitPoints(selectedDistrictObj);
+                        }
+                        
                         // Zoom to roads if they exist
                         if (roads.length > 0) {
                             const firstRoad = roads[0];
@@ -1534,13 +1568,16 @@
             if (selectedDistrict === name) {
                 selectedDistrict = null;
                 selectedDistrictObj = null;
+                entryExitPoints = []; // Clear entry/exit points
             } else {
                 selectedDistrict = name;
                 selectedDistrictObj = districtObj || districts.find(d => getDistrictName(d) === name);
                 
-                // Zoom to district
+                // Zoom to district and calculate entry/exit points
                 if (selectedDistrictObj) {
                     zoomToDistrict(selectedDistrictObj);
+                    // Calculate entry/exit points for this district
+                    calculateEntryExitPoints(selectedDistrictObj);
                 }
             }
             updateDistrictList();
@@ -1985,7 +2022,7 @@
                         <tr><td>Local (<15m)</td><td>${distStats.localCrossings || 0}</td></tr>
                     </table>
                     <div style="margin-top:10px;text-align:center;">
-                        <button onclick="selectDistrict('${name.replace(/'/g, "\\'")}');closeInfoPopup();" style="padding:5px 15px;background:#1a73e8;color:white;border:none;border-radius:4px;cursor:pointer;">Select District</button>
+                        <button onclick="selectDistrict('${name.replace(/'/g, "\\'")}');closeInfoPopup();" style="padding:5px 15px;background:#1a73e8;color:white;border:none;border-radius:4px;cursor:pointer;">Select District & Show Entry/Exit</button>
                     </div>`
                 );
             }
