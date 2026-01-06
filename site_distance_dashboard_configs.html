@@ -55,6 +55,9 @@
             
             <div class="panel">
                 <h2>2. RUN EXTRACTION</h2>
+                <div id="mapStatus" style="background:#fff3e0;color:#e65100;padding:8px;border-radius:4px;margin-bottom:10px;font-size:0.85rem;text-align:center;">
+                    ⏳ Loading Google Maps...
+                </div>
                 <div style="margin-bottom:10px;">
                     <label>Workers: </label>
                     <select id="workerCount" style="width:100px;padding:5px;">
@@ -240,6 +243,12 @@ function loadConfigFile(input) {
 }
 
 function updateMapMarkers() {
+    // Check if Google Maps is loaded
+    if (typeof google === 'undefined' || !google.maps || !map) {
+        log('Map not ready yet - markers will be added when map loads');
+        return;
+    }
+    
     // Clear existing markers
     Object.values(markers).forEach(m => m.setMap(null));
     markers = {};
@@ -460,6 +469,10 @@ async function startParallelExtraction() {
     if (running) return;
     if (CONFIGS.length === 0) {
         alert('Load a config file first!');
+        return;
+    }
+    if (!directionsService) {
+        alert('Google Maps is still loading. Please wait a moment and try again.');
         return;
     }
     
@@ -769,7 +782,19 @@ function initMap() {
     });
     directionsService = new google.maps.DirectionsService();
     
-    log('Ready! Upload od_configs_44k_with_geo.jsonl to begin');
+    // Update map status indicator
+    const mapStatus = document.getElementById('mapStatus');
+    mapStatus.style.background = '#e8f5e9';
+    mapStatus.style.color = '#2e7d32';
+    mapStatus.innerHTML = '✓ Google Maps Ready';
+    
+    // If configs were loaded before map, add markers now
+    if (Object.keys(SITES_MAP).length > 0) {
+        updateMapMarkers();
+    }
+    
+    log('✓ Map ready!');
+    log('Upload od_configs_44k_with_geo.jsonl to begin');
     log('Expected format: {"config_id": "...", "origin": {...}, "destination": {...}}');
 }
 
