@@ -144,6 +144,32 @@
                             Select a path to view it in isolation on the map
                         </p>
                     </div>
+                    
+                    <div style="margin-top:15px;padding-top:15px;border-top:1px solid #e0e0e0;">
+                        <label style="font-size:0.8rem;color:#666;display:block;margin-bottom:8px;">Batch Processing & Export</label>
+                        <button onclick="processAllVehicles()" style="font-size:0.75rem;padding:6px 10px;cursor:pointer;background:#1565c0;color:#fff;border:none;border-radius:3px;width:100%;margin-bottom:5px;">
+                            Process All Vehicles
+                        </button>
+                        <button onclick="downloadSegmentedPaths()" style="font-size:0.75rem;padding:6px 10px;cursor:pointer;background:#2e7d32;color:#fff;border:none;border-radius:3px;width:100%;margin-bottom:5px;">
+                            Download Segmented Paths (JSON)
+                        </button>
+                        <button onclick="showNetworkAnalysis()" style="font-size:0.75rem;padding:6px 10px;cursor:pointer;background:#ff6f00;color:#fff;border:none;border-radius:3px;width:100%;margin-bottom:5px;">
+                            Network Analysis
+                        </button>
+                        <button onclick="uploadProcessedPaths()" style="font-size:0.75rem;padding:6px 10px;cursor:pointer;background:#673ab7;color:#fff;border:none;border-radius:3px;width:100%;">
+                            Load Saved Paths (JSON)
+                        </button>
+                        <input type="file" id="pathsUpload" accept=".json" onchange="handlePathsUpload(this)" style="display:none;">
+                        <div id="batchStatus" style="font-size:0.7rem;color:#666;margin-top:5px;"></div>
+                    </div>
+                    
+                    <div id="loadedPathsSection" style="margin-top:15px;padding-top:15px;border-top:1px solid #e0e0e0;display:none;">
+                        <label style="font-size:0.8rem;color:#666;display:block;margin-bottom:8px;">Loaded Vehicle Paths</label>
+                        <select id="loadedVehicleSel" onchange="showLoadedVehiclePaths()" style="width:100%;padding:8px;margin-bottom:5px;">
+                            <option value="">-- Select Vehicle --</option>
+                        </select>
+                        <div id="loadedPathsInfo" style="font-size:0.75rem;color:#666;"></div>
+                    </div>
                 </div>
                 
                 <div class="panel">
@@ -191,13 +217,27 @@
                                 <input type="number" id="rMin" value="0.5" step="0.1" min="0">
                             </div>
                             <div>
-                                <label style="font-size:0.75rem;">r_max</label>
+                                <label style="font-size:0.75rem;">r_max (default)</label>
                                 <input type="number" id="rMax" value="2.0" step="0.1" min="0">
                             </div>
                         </div>
                         <p style="margin-top:5px;font-size:0.7rem;color:#666;">
                             temporal_ok = r_min &le; R &le; r_max
                         </p>
+                        
+                        <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #ccc;">
+                            <p style="margin-bottom:5px;font-weight:bold;font-size:0.8rem;">Dynamic r_max (per route/day)</p>
+                            <div id="dynamicRmaxStatus" style="font-size:0.75rem;color:#666;margin-bottom:5px;">
+                                Not loaded - using fixed r_max
+                            </div>
+                            <input type="file" id="rmaxUpload" accept=".json,.csv" onchange="uploadDynamicRmax(this)" style="display:none;">
+                            <button onclick="document.getElementById('rmaxUpload').click()" style="font-size:0.7rem;padding:4px 8px;cursor:pointer;background:#9c27b0;color:#fff;border:none;border-radius:3px;">
+                                Upload r_max Table
+                            </button>
+                            <p style="font-size:0.65rem;color:#888;margin-top:3px;">
+                                JSON: [{camera_prev, camera_next, weekday, r_max}, ...]
+                            </p>
+                        </div>
                     </div>
                     <div class="normal-band" style="margin-top:10px;">
                         <p style="margin-bottom:8px;font-weight:bold;">Spatial Check (uses Google Matrix)</p>
@@ -287,6 +327,13 @@ let EXPECTED_TIMES = {};
 let EXPECTED_WAYPOINTS = {}; // Store waypoints: "SITE_A_SITE_B" -> [siteId1, siteId2, ...]
 let EXPECTED_DISTANCES = {}; // Store distances: "SITE_A_SITE_B" -> km
 let expectedTimesLoaded = false;
+
+// Dynamic r_max table: "camera_prev_camera_next_weekday" -> r_max
+let DYNAMIC_RMAX = {};
+let dynamicRmaxLoaded = false;
+
+// Batch processing results: vehicle -> segmented paths
+let ALL_SEGMENTED_PATHS = {};
 
 // Initialize self-routes (site to itself = 0 time, 0 distance) - embedded in HTML
 (function initSelfRoutes() {
@@ -494,6 +541,501 @@ function checkRouteInMatrix() {
     }
     
     resultDiv.innerHTML = html;
+}
+
+// ============ DYNAMIC R_MAX ============
+
+// Upload dynamic r_max table (JSON or CSV)
+function uploadDynamicRmax(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const statusDiv = document.getElementById('dynamicRmaxStatus');
+    statusDiv.innerHTML = '<span style="color:#2196f3;">Reading file...</span>';
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            let data;
+            if (file.name.endsWith('.json')) {
+                data = JSON.parse(e.target.result);
+            } else if (file.name.endsWith('.csv')) {
+                data = parseCSVtoRmax(e.target.result);
+            } else {
+                throw new Error('Unsupported file format. Use .json or .csv');
+            }
+            
+            // Process the r_max data
+            DYNAMIC_RMAX = {};
+            let count = 0;
+            
+            data.forEach(row => {
+                const prev = row.camera_prev || row.from;
+                const next = row.camera_next || row.to;
+                const weekday = row.weekday || row.day;
+                const rmax = parseFloat(row.r_max || row.rmax);
+                
+                if (prev && next && weekday && !isNaN(rmax)) {
+                    const key = prev + '_' + next + '_' + weekday;
+                    DYNAMIC_RMAX[key] = rmax;
+                    count++;
+                }
+            });
+            
+            dynamicRmaxLoaded = true;
+            statusDiv.innerHTML = `<span style="color:#4caf50;">Loaded ${count} r_max entries from ${file.name}</span>`;
+            console.log('Loaded dynamic r_max:', count, 'entries');
+            
+        } catch (err) {
+            statusDiv.innerHTML = `<span style="color:#f44336;">Error: ${err.message}</span>`;
+            console.error('Error loading r_max:', err);
+        }
+    };
+    reader.readAsText(file);
+}
+
+// Parse CSV to r_max format
+function parseCSVtoRmax(csvText) {
+    const lines = csvText.trim().split('\n');
+    if (lines.length < 2) return [];
+    
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+    const data = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+        const row = {};
+        headers.forEach((h, idx) => {
+            row[h] = values[idx];
+        });
+        data.push(row);
+    }
+    
+    return data;
+}
+
+// Get r_max for a specific route and day
+function getRmax(cameraPrev, cameraNext, tripDate) {
+    if (!dynamicRmaxLoaded) {
+        return parseFloat(document.getElementById('rMax').value) || 2.0;
+    }
+    
+    // Get weekday from trip date
+    const date = new Date(tripDate);
+    const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const weekday = weekdays[date.getDay()];
+    
+    // Try to find dynamic r_max
+    const key = cameraPrev + '_' + cameraNext + '_' + weekday;
+    if (DYNAMIC_RMAX[key] !== undefined) {
+        return DYNAMIC_RMAX[key];
+    }
+    
+    // Fallback to default
+    return parseFloat(document.getElementById('rMax').value) || 2.0;
+}
+
+// ============ BATCH PROCESSING ============
+
+// Process all vehicles and store segmented paths
+async function processAllVehicles() {
+    const statusDiv = document.getElementById('batchStatus');
+    statusDiv.innerHTML = '<span style="color:#2196f3;">Processing all vehicles...</span>';
+    
+    ALL_SEGMENTED_PATHS = {};
+    let totalPaths = 0;
+    let totalTrips = 0;
+    
+    for (let i = 0; i < VEHICLES.length; i++) {
+        const vehicle = VEHICLES[i];
+        statusDiv.innerHTML = `<span style="color:#2196f3;">Processing ${i+1}/${VEHICLES.length}: ${vehicle}...</span>`;
+        
+        // Get all trips for this vehicle
+        const vehicleTrips = TRIPS.filter(t => t.plate === vehicle)
+            .sort((a, b) => new Date(a.t_prev) - new Date(b.t_prev));
+        
+        if (vehicleTrips.length > 0) {
+            // Segment the route
+            const segmented = segmentRoute(vehicleTrips);
+            
+            // Store results
+            ALL_SEGMENTED_PATHS[vehicle] = {
+                trips: segmented,
+                pathCount: new Set(segmented.map(t => t.pathId)).size,
+                tripCount: segmented.length,
+                dateRange: {
+                    start: vehicleTrips[0].t_prev,
+                    end: vehicleTrips[vehicleTrips.length - 1].t_next
+                }
+            };
+            
+            totalPaths += ALL_SEGMENTED_PATHS[vehicle].pathCount;
+            totalTrips += segmented.length;
+        }
+        
+        // Small delay to prevent UI freezing
+        await new Promise(r => setTimeout(r, 10));
+    }
+    
+    statusDiv.innerHTML = `<span style="color:#4caf50;">Processed ${VEHICLES.length} vehicles: ${totalTrips} trips, ${totalPaths} paths</span>`;
+    console.log('Batch processing complete:', ALL_SEGMENTED_PATHS);
+    
+    // Show loaded paths section
+    updateLoadedVehiclesDropdown();
+}
+
+// Download segmented paths as JSON
+function downloadSegmentedPaths() {
+    if (Object.keys(ALL_SEGMENTED_PATHS).length === 0) {
+        alert('No segmented paths to download. Click "Process All Vehicles" first.');
+        return;
+    }
+    
+    // Build export data
+    const exportData = {
+        metadata: {
+            exportDate: new Date().toISOString(),
+            vehicleCount: Object.keys(ALL_SEGMENTED_PATHS).length,
+            totalTrips: Object.values(ALL_SEGMENTED_PATHS).reduce((sum, v) => sum + v.tripCount, 0),
+            totalPaths: Object.values(ALL_SEGMENTED_PATHS).reduce((sum, v) => sum + v.pathCount, 0),
+            parameters: {
+                rMin: parseFloat(document.getElementById('rMin').value),
+                rMaxDefault: parseFloat(document.getElementById('rMax').value),
+                epsilon: parseFloat(document.getElementById('epsilonMeters').value),
+                dynamicRmaxLoaded: dynamicRmaxLoaded
+            }
+        },
+        vehicles: ALL_SEGMENTED_PATHS
+    };
+    
+    // Create download
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'segmented_paths_' + new Date().toISOString().split('T')[0] + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// ============ NETWORK ANALYSIS ============
+
+// Show network analysis modal
+function showNetworkAnalysis() {
+    if (Object.keys(ALL_SEGMENTED_PATHS).length === 0) {
+        alert('No data for network analysis. Click "Process All Vehicles" first.');
+        return;
+    }
+    
+    // Build network data: route -> weekday -> count
+    const networkData = {};
+    const routeStats = {};
+    
+    Object.keys(ALL_SEGMENTED_PATHS).forEach(vehicle => {
+        const trips = ALL_SEGMENTED_PATHS[vehicle].trips;
+        
+        trips.forEach(trip => {
+            const route = trip.camera_prev + ' → ' + trip.camera_next;
+            const date = new Date(trip.t_prev);
+            const weekday = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()];
+            
+            if (!networkData[route]) {
+                networkData[route] = { Sunday: 0, Monday: 0, Tuesday: 0, Wednesday: 0, Thursday: 0, Friday: 0, Saturday: 0, total: 0 };
+            }
+            networkData[route][weekday]++;
+            networkData[route].total++;
+            
+            // Route stats
+            if (!routeStats[route]) {
+                routeStats[route] = { vehicles: new Set(), paths: new Set(), avgR: [], rmaxValues: [], breaks: 0 };
+            }
+            routeStats[route].vehicles.add(vehicle);
+            routeStats[route].paths.add(vehicle + '_' + trip.pathId);
+            if (trip.R !== null) routeStats[route].avgR.push(trip.R);
+            if (trip.usedRmax !== null && trip.usedRmax !== undefined) routeStats[route].rmaxValues.push(trip.usedRmax);
+            if (trip.status === 'break') routeStats[route].breaks++;
+        });
+    });
+    
+    // Sort routes by total usage
+    const sortedRoutes = Object.keys(networkData).sort((a, b) => networkData[b].total - networkData[a].total);
+    
+    // Build modal HTML
+    let html = `
+        <div id="networkModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:1000;overflow-y:auto;padding:20px;">
+            <div style="background:#fff;max-width:1200px;margin:0 auto;border-radius:8px;padding:20px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+                    <h2 style="margin:0;">Network Analysis</h2>
+                    <button onclick="document.getElementById('networkModal').remove()" style="padding:5px 15px;cursor:pointer;">Close</button>
+                </div>
+                
+                <div style="display:flex;gap:20px;margin-bottom:15px;flex-wrap:wrap;">
+                    <div style="background:#e3f2fd;padding:10px;border-radius:4px;">
+                        <strong>${Object.keys(networkData).length}</strong> unique routes
+                    </div>
+                    <div style="background:#e8f5e9;padding:10px;border-radius:4px;">
+                        <strong>${Object.keys(ALL_SEGMENTED_PATHS).length}</strong> vehicles
+                    </div>
+                    <div style="background:#fff3e0;padding:10px;border-radius:4px;">
+                        <strong>${Object.values(networkData).reduce((s, r) => s + r.total, 0)}</strong> total trips
+                    </div>
+                </div>
+                
+                <div style="margin-bottom:10px;">
+                    <input type="text" id="networkSearch" placeholder="Search routes..." oninput="filterNetworkTable()" style="padding:8px;width:300px;">
+                    <button onclick="downloadNetworkCSV()" style="margin-left:10px;padding:8px 15px;cursor:pointer;background:#2e7d32;color:#fff;border:none;border-radius:3px;">
+                        Download CSV
+                    </button>
+                </div>
+                
+                <div style="max-height:500px;overflow-y:auto;">
+                    <table id="networkTable" style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+                        <thead style="position:sticky;top:0;background:#f5f5f5;">
+                            <tr>
+                                <th style="padding:8px;text-align:left;border-bottom:2px solid #ddd;">Route</th>
+                                <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;">Sun</th>
+                                <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;">Mon</th>
+                                <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;">Tue</th>
+                                <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;">Wed</th>
+                                <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;">Thu</th>
+                                <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;">Fri</th>
+                                <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;">Sat</th>
+                                <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;background:#e3f2fd;">Total</th>
+                                <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;">Vehicles</th>
+                                <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;">Avg R</th>
+                                <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;">Avg r_max</th>
+                                <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;">Breaks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+    `;
+    
+    sortedRoutes.forEach(route => {
+        const data = networkData[route];
+        const stats = routeStats[route];
+        const avgR = stats.avgR.length > 0 ? (stats.avgR.reduce((a, b) => a + b, 0) / stats.avgR.length).toFixed(2) : '-';
+        const avgRmax = stats.rmaxValues && stats.rmaxValues.length > 0 ? (stats.rmaxValues.reduce((a, b) => a + b, 0) / stats.rmaxValues.length).toFixed(2) : '-';
+        
+        html += `
+            <tr class="network-row" data-route="${route.toLowerCase()}">
+                <td style="padding:6px;border-bottom:1px solid #eee;font-family:monospace;">${route}</td>
+                <td style="padding:6px;text-align:center;border-bottom:1px solid #eee;${data.Sunday > 0 ? 'background:#e8f5e9;' : ''}">${data.Sunday || '-'}</td>
+                <td style="padding:6px;text-align:center;border-bottom:1px solid #eee;${data.Monday > 0 ? 'background:#e8f5e9;' : ''}">${data.Monday || '-'}</td>
+                <td style="padding:6px;text-align:center;border-bottom:1px solid #eee;${data.Tuesday > 0 ? 'background:#e8f5e9;' : ''}">${data.Tuesday || '-'}</td>
+                <td style="padding:6px;text-align:center;border-bottom:1px solid #eee;${data.Wednesday > 0 ? 'background:#e8f5e9;' : ''}">${data.Wednesday || '-'}</td>
+                <td style="padding:6px;text-align:center;border-bottom:1px solid #eee;${data.Thursday > 0 ? 'background:#e8f5e9;' : ''}">${data.Thursday || '-'}</td>
+                <td style="padding:6px;text-align:center;border-bottom:1px solid #eee;${data.Friday > 0 ? 'background:#e8f5e9;' : ''}">${data.Friday || '-'}</td>
+                <td style="padding:6px;text-align:center;border-bottom:1px solid #eee;${data.Saturday > 0 ? 'background:#e8f5e9;' : ''}">${data.Saturday || '-'}</td>
+                <td style="padding:6px;text-align:center;border-bottom:1px solid #eee;background:#e3f2fd;font-weight:bold;">${data.total}</td>
+                <td style="padding:6px;text-align:center;border-bottom:1px solid #eee;">${stats.vehicles.size}</td>
+                <td style="padding:6px;text-align:center;border-bottom:1px solid #eee;">${avgR}</td>
+                <td style="padding:6px;text-align:center;border-bottom:1px solid #eee;color:#9c27b0;">${avgRmax}</td>
+                <td style="padding:6px;text-align:center;border-bottom:1px solid #eee;${stats.breaks > 0 ? 'color:#f44336;font-weight:bold;' : ''}">${stats.breaks || '-'}</td>
+            </tr>
+        `;
+    });
+    
+    html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Store network data for CSV export
+    window.networkExportData = { networkData, routeStats, sortedRoutes };
+    
+    // Insert modal
+    document.body.insertAdjacentHTML('beforeend', html);
+}
+
+// Filter network table
+function filterNetworkTable() {
+    const search = document.getElementById('networkSearch').value.toLowerCase();
+    const rows = document.querySelectorAll('.network-row');
+    
+    rows.forEach(row => {
+        const route = row.getAttribute('data-route');
+        row.style.display = route.includes(search) ? '' : 'none';
+    });
+}
+
+// Download network data as CSV
+function downloadNetworkCSV() {
+    if (!window.networkExportData) return;
+    
+    const { networkData, routeStats, sortedRoutes } = window.networkExportData;
+    
+    let csv = 'Route,From,To,Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Total,Vehicles,AvgR,AvgRmax,Breaks\n';
+    
+    sortedRoutes.forEach(route => {
+        const [from, to] = route.split(' → ');
+        const data = networkData[route];
+        const stats = routeStats[route];
+        const avgR = stats.avgR.length > 0 ? (stats.avgR.reduce((a, b) => a + b, 0) / stats.avgR.length).toFixed(2) : '';
+        const avgRmax = stats.rmaxValues && stats.rmaxValues.length > 0 ? (stats.rmaxValues.reduce((a, b) => a + b, 0) / stats.rmaxValues.length).toFixed(2) : '';
+        
+        csv += `"${route}","${from}","${to}",${data.Sunday},${data.Monday},${data.Tuesday},${data.Wednesday},${data.Thursday},${data.Friday},${data.Saturday},${data.total},${stats.vehicles.size},${avgR},${avgRmax},${stats.breaks}\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'network_analysis_' + new Date().toISOString().split('T')[0] + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// ============ LOAD SAVED PATHS ============
+
+function uploadProcessedPaths() {
+    document.getElementById('pathsUpload').click();
+}
+
+function handlePathsUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const statusDiv = document.getElementById('batchStatus');
+    statusDiv.innerHTML = '<span style="color:#2196f3;">Loading saved paths...</span>';
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            if (data.vehicles) {
+                ALL_SEGMENTED_PATHS = data.vehicles;
+                const vehicleCount = Object.keys(ALL_SEGMENTED_PATHS).length;
+                const totalTrips = Object.values(ALL_SEGMENTED_PATHS).reduce((sum, v) => sum + (v.tripCount || v.trips.length), 0);
+                const totalPaths = Object.values(ALL_SEGMENTED_PATHS).reduce((sum, v) => sum + (v.pathCount || new Set(v.trips.map(t => t.pathId)).size), 0);
+                
+                statusDiv.innerHTML = `<span style="color:#4caf50;">Loaded ${vehicleCount} vehicles: ${totalTrips} trips, ${totalPaths} paths</span>`;
+                
+                // Show loaded paths section
+                updateLoadedVehiclesDropdown();
+                
+            } else {
+                throw new Error('Invalid format. Expected { vehicles: {...} }');
+            }
+        } catch (err) {
+            statusDiv.innerHTML = `<span style="color:#f44336;">Error: ${err.message}</span>`;
+            console.error('Error loading paths:', err);
+        }
+    };
+    reader.readAsText(file);
+}
+
+function updateLoadedVehiclesDropdown() {
+    const section = document.getElementById('loadedPathsSection');
+    const select = document.getElementById('loadedVehicleSel');
+    
+    if (Object.keys(ALL_SEGMENTED_PATHS).length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+    
+    section.style.display = 'block';
+    
+    // Sort vehicles by path count
+    const vehicles = Object.keys(ALL_SEGMENTED_PATHS).sort((a, b) => {
+        const pathsA = ALL_SEGMENTED_PATHS[a].pathCount || new Set(ALL_SEGMENTED_PATHS[a].trips.map(t => t.pathId)).size;
+        const pathsB = ALL_SEGMENTED_PATHS[b].pathCount || new Set(ALL_SEGMENTED_PATHS[b].trips.map(t => t.pathId)).size;
+        return pathsB - pathsA;
+    });
+    
+    let html = '<option value="">-- Select Vehicle (' + vehicles.length + ') --</option>';
+    vehicles.forEach(v => {
+        const data = ALL_SEGMENTED_PATHS[v];
+        const pathCount = data.pathCount || new Set(data.trips.map(t => t.pathId)).size;
+        const tripCount = data.tripCount || data.trips.length;
+        html += `<option value="${v}">${v} (${pathCount} paths, ${tripCount} trips)</option>`;
+    });
+    
+    select.innerHTML = html;
+}
+
+function showLoadedVehiclePaths() {
+    const vehicle = document.getElementById('loadedVehicleSel').value;
+    const infoDiv = document.getElementById('loadedPathsInfo');
+    
+    if (!vehicle || !ALL_SEGMENTED_PATHS[vehicle]) {
+        infoDiv.innerHTML = '';
+        return;
+    }
+    
+    const data = ALL_SEGMENTED_PATHS[vehicle];
+    const trips = data.trips;
+    
+    // Group trips by pathId
+    const paths = {};
+    trips.forEach(t => {
+        if (!paths[t.pathId]) paths[t.pathId] = [];
+        paths[t.pathId].push(t);
+    });
+    
+    let html = `<div style="margin-bottom:8px;"><strong>${Object.keys(paths).length} paths</strong></div>`;
+    html += '<div style="max-height:200px;overflow-y:auto;">';
+    
+    Object.keys(paths).sort((a, b) => parseInt(a) - parseInt(b)).forEach(pathId => {
+        const pathTrips = paths[pathId];
+        const start = pathTrips[0].camera_prev;
+        const end = pathTrips[pathTrips.length - 1].camera_next;
+        const startTime = new Date(pathTrips[0].t_prev).toLocaleString();
+        
+        html += `
+            <div style="padding:5px;margin:3px 0;background:#f5f5f5;border-radius:3px;cursor:pointer;" 
+                 onclick="displayLoadedPath('${vehicle}', ${pathId})">
+                <div style="font-weight:bold;">Path ${pathId}: ${start} → ${end}</div>
+                <div style="font-size:0.7rem;color:#666;">${pathTrips.length} trips | ${startTime}</div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    html += `<button onclick="displayAllLoadedPaths('${vehicle}')" style="margin-top:8px;width:100%;padding:6px;cursor:pointer;background:#1565c0;color:#fff;border:none;border-radius:3px;">Show All Paths on Map</button>`;
+    
+    infoDiv.innerHTML = html;
+}
+
+function displayLoadedPath(vehicle, pathId) {
+    const data = ALL_SEGMENTED_PATHS[vehicle];
+    if (!data) return;
+    
+    const pathTrips = data.trips.filter(t => t.pathId === pathId);
+    if (pathTrips.length === 0) return;
+    
+    // Update current route and visualize
+    currentRoute = pathTrips;
+    visualizeSinglePath(pathTrips, pathId);
+    renderTripList(pathTrips);
+    updateStats(pathTrips);
+    
+    document.getElementById('activeFilter').innerHTML = `
+        <div style="margin-bottom:5px;"><strong>Loaded Path View</strong></div>
+        <div>Vehicle: ${vehicle}</div>
+        <div>Path: ${pathId}</div>
+        <div>Trips: ${pathTrips.length}</div>
+    `;
+}
+
+function displayAllLoadedPaths(vehicle) {
+    const data = ALL_SEGMENTED_PATHS[vehicle];
+    if (!data) return;
+    
+    currentRoute = data.trips;
+    visualizeRoute(data.trips);
+    renderTripList(data.trips);
+    updateStats(data.trips);
+    
+    document.getElementById('activeFilter').innerHTML = `
+        <div style="margin-bottom:5px;"><strong>Loaded Vehicle View</strong></div>
+        <div>Vehicle: ${vehicle}</div>
+        <div>Paths: ${data.pathCount || new Set(data.trips.map(t => t.pathId)).size}</div>
+        <div>Trips: ${data.trips.length}</div>
+    `;
 }
 
 // Upload Google Matrix JSON
@@ -859,7 +1401,7 @@ function checkSpatialContinuity(pathStartSite, currentSite, epsilonMeters) {
 // Segmentation using precomputed Google Matrix data (no API calls)
 function segmentRoute(trips) {
     const rMin = parseFloat(document.getElementById('rMin').value) || 0.5;
-    const rMax = parseFloat(document.getElementById('rMax').value) || 2.0;
+    const defaultRMax = parseFloat(document.getElementById('rMax').value) || 2.0;
     const epsilonMeters = parseFloat(document.getElementById('epsilonMeters').value) || 500;
     
     let pathId = 1;
@@ -873,6 +1415,9 @@ function segmentRoute(trips) {
         const obsTimeMin = trip.obs_time_seconds / 60;
         const expectedTime = getExpectedTime(trip.camera_prev, trip.camera_next);
         
+        // Get dynamic r_max for this specific route and day
+        const rMax = getRmax(trip.camera_prev, trip.camera_next, trip.t_prev);
+        
         // Calculate ratio R
         let R = null;
         let R_method = null; // Track how R was calculated
@@ -883,6 +1428,7 @@ function segmentRoute(trips) {
         let spatialReason = '';
         let status = 'normal';
         let breakReason = null;
+        let usedRmax = rMax; // Track which r_max was used
         
         // Handle self-routes (same site) specially
         const isSelfRoute = trip.camera_prev === trip.camera_next;
@@ -997,7 +1543,8 @@ function segmentRoute(trips) {
             pathStartSite: status === 'break' ? trip.camera_next : (idx === 0 ? trip.camera_prev : tripPathStart),
             corridorStart: idx === 0 ? trip.camera_prev : tripPathStart,  // The start site used for spatial check
             R,
-            R_method,  // 'path', 'hop', or 'dist-est'
+            R_method,  // 'path', 'hop', 'dist-est', or 'self'
+            usedRmax: rMax,  // The r_max used for this trip (dynamic or default)
             temporalOk,
             spatialOk,
             spatialDistance,
@@ -1674,7 +2221,7 @@ function renderTripList(trips) {
                 <div class="trip-meta">
                     <span>Obs: ${formatTime(trip.obs_time_seconds)}</span>
                     <span>Exp: ${trip.expectedTimeMin !== undefined && trip.expectedTimeMin !== null ? formatTime(trip.expectedTimeMin * 60) : '<span style="color:#f44336;">N/A</span>'}</span>
-                    ${trip.R !== null ? `<span>R: ${trip.R.toFixed(2)} <span style="font-size:0.6rem;color:#999;">${trip.R_method || ''}</span></span>` : '<span style="color:#f44336;">R: N/A</span>'}
+                    ${trip.R !== null ? `<span>R: ${trip.R.toFixed(2)}${trip.usedRmax ? '/<span style="font-size:0.65rem;color:#9c27b0;">' + trip.usedRmax.toFixed(1) + '</span>' : ''} <span style="font-size:0.6rem;color:#999;">${trip.R_method || ''}</span></span>` : '<span style="color:#f44336;">R: N/A</span>'}
                     ${expectedDist ? `<span>${expectedDist.toFixed(1)}km</span>` : ''}
                 </div>
                 ${trip.breakReason ? `<div class="break-reason">${trip.breakReason}</div>` : ''}
@@ -1947,6 +2494,13 @@ function selectTrip(idx) {
             <span class="detail-value ${statusClass}">
                 ${trip.R !== null ? trip.R.toFixed(3) : 'N/A'}
                 ${trip.R_method ? '<span style="font-size:0.7rem;color:#666;margin-left:5px;">(' + trip.R_method + ')</span>' : ''}
+            </span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">r_max Used</span>
+            <span class="detail-value">
+                ${trip.usedRmax ? trip.usedRmax.toFixed(3) : 'N/A'}
+                ${dynamicRmaxLoaded ? '<span style="font-size:0.7rem;color:#9c27b0;margin-left:5px;">(dynamic)</span>' : '<span style="font-size:0.7rem;color:#666;margin-left:5px;">(default)</span>'}
             </span>
         </div>
         
