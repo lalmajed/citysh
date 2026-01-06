@@ -1,0 +1,239 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.664032099356696,
+          24.727776011635633
+        ]
+      },
+      "properties": {
+        "name_ar": "الملك فهد",
+        "name_en": "King Fahad Rd",
+        "width_m": 80.0,
+        "side": "E",
+        "angle": 115.70530665333695,
+        "type": "MAJOR"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63371217795389,
+          24.73527419231838
+        ]
+      },
+      "properties": {
+        "name_ar": "الإمام سعود بن عبدالعزيز بن محمد",
+        "name_en": "Al Imam S'Aud Bin Abdulaziz Bin Mohammed",
+        "width_m": 60.0,
+        "side": "W",
+        "angle": 21.843677020330354,
+        "type": "MAJOR"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65557217690576,
+          24.74453293325432
+        ]
+      },
+      "properties": {
+        "name_ar": "الإمام سعود بن عبدالعزيز بن محمد",
+        "name_en": "Al Imam S'Aud Bin Abdulaziz Bin Mohammed",
+        "width_m": 60.0,
+        "side": "E",
+        "angle": 22.90458466831388,
+        "type": "MAJOR"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.645008278164276,
+          24.724091880988798
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير تركي بن عبدالعزيز الأول",
+        "name_en": "Prince Turki Ibn Abdulaziz- Senior Rd",
+        "width_m": 60.0,
+        "side": "S",
+        "angle": 116.18247843099536,
+        "type": "MAJOR"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63937742724171,
+          24.73059220119595
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير تركي بن عبدالعزيز الأول",
+        "name_en": "Prince Turki Ibn Abdulaziz- Senior Rd",
+        "width_m": 60.0,
+        "side": "W",
+        "angle": 138.77318155817028,
+        "type": "MAJOR"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.645585818237485,
+          24.740351410715288
+        ]
+      },
+      "properties": {
+        "name_ar": "التخصصي",
+        "name_en": "Al Takhasousi",
+        "width_m": 46.0,
+        "side": "N",
+        "angle": -62.882303593576914,
+        "type": "MAJOR"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.654393187296904,
+          24.723699187366687
+        ]
+      },
+      "properties": {
+        "name_ar": "التخصصي",
+        "name_en": "Al Takhasousi",
+        "width_m": 46.0,
+        "side": "E",
+        "angle": -50.522650382437625,
+        "type": "MAJOR"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.660113779095276,
+          24.735539697326494
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير نايف بن عبدالعزيز",
+        "name_en": "Prince Naief Ibn Abdulaziz",
+        "width_m": 36.0,
+        "side": "E",
+        "angle": 22.886534525265784,
+        "type": "MAJOR"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64763763736295,
+          24.741213927996853
+        ]
+      },
+      "properties": {
+        "name_ar": "جويرية بنت الحارث",
+        "name_en": "Joweiriya Bint Al Hareth",
+        "width_m": 36.0,
+        "side": "N",
+        "angle": -63.10910364108107,
+        "type": "MAJOR"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.641878242508525,
+          24.728440405714544
+        ]
+      },
+      "properties": {
+        "name_ar": "خليفة بن بديع",
+        "name_en": "Khalifa Bin Badae",
+        "width_m": 36.0,
+        "side": "S",
+        "angle": 44.53087670403578,
+        "type": "MAJOR"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.637917882652005,
+          24.731798408432788
+        ]
+      },
+      "properties": {
+        "name_ar": "محمد بن يسار",
+        "name_en": "Mohammed Bin Yasar",
+        "width_m": 30.0,
+        "side": "W",
+        "angle": 45.406456021736176,
+        "type": "MAJOR"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65557526951722,
+          24.744526822555713
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الإمام سعود بن عبد العزيز بن محمد",
+        "name_en": "Al Imam Saud Ibn Abdulaziz Ibn Mohammad Road",
+        "width_m": 25.0,
+        "side": "E",
+        "angle": 22.447024002096715,
+        "type": "ARTERIAL"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65103444661071,
+          24.742641834892755
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير عبدالإله بن عبدالعزيز",
+        "name_en": "Abdulelah Ibn Abdulaziz",
+        "width_m": 20.0,
+        "side": "E",
+        "angle": -63.18276143044548,
+        "type": "ARTERIAL"
+      }
+    }
+  ]
+}
