@@ -44,19 +44,19 @@
         .item .name { flex: 1; direction: rtl; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
         
         #mapContainer { position: fixed; left: 300px; top: 0; right: 0; bottom: 0; }
-        #map { width: 100%; height: 100%; }
+        #map { width: 100%; height: 100%; background: #e5e3df; }
         #overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 100; }
         
-        #loadingOverlay {
+        #loading {
             position: fixed; left: 300px; top: 0; right: 0; bottom: 0;
-            background: #1a1a2e; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 500;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500;
         }
-        #loadingOverlay.hidden { display: none; }
-        .loader { width: 60px; height: 60px; border: 5px solid #333; border-top-color: #e94560; border-radius: 50%; animation: spin 1s linear infinite; }
+        #loading.hidden { display: none; }
+        .spinner { width: 50px; height: 50px; border: 4px solid #333; border-top-color: #e94560; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        #loadingText { color: #e94560; margin-top: 20px; font-size: 16px; }
-        #loadingAttempt { color: #888; margin-top: 10px; font-size: 12px; }
+        #loadText { color: #e94560; margin-top: 20px; font-size: 16px; }
+        #loadProgress { color: #888; margin-top: 8px; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -81,7 +81,7 @@
                 <label>Road Extension <span class="val" id="valExt">300m</span></label>
                 <input type="range" id="sliderExt" min="0" max="1500" value="300" step="50">
             </div>
-            <div style="font-size:9px;color:#888;">Make roads longer to find boundary crossings</div>
+            <div style="font-size:9px;color:#888;">Make roads longer to find where they cross boundary</div>
         </div>
         
         <div class="box">
@@ -109,10 +109,10 @@
         <div class="list" id="list"><div style="color:#666;text-align:center;padding:15px;">Load data</div></div>
     </div>
     
-    <div id="loadingOverlay">
-        <div class="loader"></div>
-        <div id="loadingText">Loading Google Maps Keyless...</div>
-        <div id="loadingAttempt">Please wait...</div>
+    <div id="loading">
+        <div class="spinner"></div>
+        <div id="loadText">Loading Google Maps...</div>
+        <div id="loadProgress">Initializing...</div>
     </div>
     
     <div id="mapContainer">
@@ -120,304 +120,418 @@
         <canvas id="overlay"></canvas>
     </div>
 
-<script>
-var map, roads = [], boundary = [], entryExits = [], mapReady = false;
-var canvas = document.getElementById('overlay');
-var ctx = canvas.getContext('2d');
-
-// Wait for Google Maps with multiple attempts
-var attempt = 0;
-var maxAttempts = 300; // 30 seconds
-
-function waitForGoogleMaps() {
-    attempt++;
-    document.getElementById('loadingAttempt').textContent = 'Attempt ' + attempt + '/' + maxAttempts;
-    
-    if (window.google && window.google.maps && window.google.maps.Map) {
-        console.log('Google Maps loaded after ' + attempt + ' attempts');
-        initializeMap();
-    } else if (attempt < maxAttempts) {
-        setTimeout(waitForGoogleMaps, 100);
-    } else {
-        document.getElementById('loadingText').textContent = 'Loading taking longer than expected...';
-        document.getElementById('loadingAttempt').textContent = 'Still trying... Please wait or refresh';
-        setTimeout(waitForGoogleMaps, 100);
-    }
-}
-
-function initializeMap() {
-    try {
-        map = new google.maps.Map(document.getElementById('map'), {
-            center: { lat: 24.73, lng: 46.65 },
-            zoom: 14,
-            gestureHandling: 'greedy',
-            zoomControl: true,
-            mapTypeControl: true,
-            scaleControl: true,
-            streetViewControl: false,
-            rotateControl: false,
-            fullscreenControl: true
-        });
+    <script>
+        // Global variables
+        let map;
+        let roads = [];
+        let boundary = [];
+        let entryExits = [];
         
-        mapReady = true;
-        document.getElementById('loadingOverlay').classList.add('hidden');
+        // Google Maps loading - same as dynamic map
+        let mapsLoadAttempts = 0;
+        const MAX_LOAD_ATTEMPTS = 150;
         
-        resizeCanvas();
-        
-        google.maps.event.addListener(map, 'idle', draw);
-        google.maps.event.addListener(map, 'bounds_changed', function() { setTimeout(draw, 50); });
-        
-    } catch(e) {
-        console.error('Error initializing map:', e);
-        document.getElementById('loadingText').textContent = 'Error: ' + e.message;
-    }
-}
-
-function resizeCanvas() {
-    canvas.width = document.getElementById('mapContainer').clientWidth;
-    canvas.height = document.getElementById('mapContainer').clientHeight;
-    draw();
-}
-window.onresize = resizeCanvas;
-
-function toPixel(lat, lng) {
-    if (!mapReady || !map) return { x: -9999, y: -9999 };
-    var proj = map.getProjection();
-    var bounds = map.getBounds();
-    if (!proj || !bounds) return { x: -9999, y: -9999 };
-    
-    var ne = bounds.getNorthEast(), sw = bounds.getSouthWest();
-    var tr = proj.fromLatLngToPoint(ne), bl = proj.fromLatLngToPoint(sw);
-    var scale = Math.pow(2, map.getZoom());
-    var wp = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
-    
-    return { x: (wp.x - bl.x) * scale, y: (wp.y - tr.y) * scale };
-}
-
-function lineIntersect(x1,y1,x2,y2,x3,y3,x4,y4) {
-    var d = (y4-y3)*(x2-x1)-(x4-x3)*(y2-y1);
-    if (Math.abs(d) < 1e-12) return null;
-    var u = ((x4-x3)*(y1-y3)-(y4-y3)*(x1-x3))/d;
-    var v = ((x2-x1)*(y1-y3)-(y2-y1)*(x1-x3))/d;
-    return (u>=0 && u<=1 && v>=0 && v<=1) ? [x1+u*(x2-x1), y1+u*(y2-y1)] : null;
-}
-
-function extendLine(x1,y1,x2,y2,m) {
-    var d = m/111000, dx = x2-x1, dy = y2-y1, l = Math.sqrt(dx*dx+dy*dy);
-    if (l < 1e-7) return {x1:x1,y1:y1,x2:x2,y2:y2};
-    return { x1: x1-dx/l*d, y1: y1-dy/l*d, x2: x2+dx/l*d, y2: y2+dy/l*d };
-}
-
-function findCrossings() {
-    entryExits = [];
-    if (!boundary.length || !roads.length) { updateUI(); return; }
-    
-    var ext = +document.getElementById('sliderExt').value;
-    var minW = +document.getElementById('sliderWidth').value;
-    var seen = {};
-    
-    roads.forEach(function(road) {
-        var p = road.properties || {};
-        var w = +(p.width_m || p.WIDTH || p.width || 10);
-        var name = p.name_ar || p.ROADCENTERLINENAME_AR || p.name_en || 'Road';
-        if (w < minW) return;
-        
-        var g = road.geometry;
-        if (!g) return;
-        var lines = g.type === 'LineString' ? [g.coordinates] : (g.coordinates || []);
-        
-        lines.forEach(function(coords) {
-            if (!coords || coords.length < 2) return;
+        // Wait for Google Maps API - exact same logic as dynamic map
+        function waitForGoogleMaps() {
+            mapsLoadAttempts++;
+            document.getElementById('loadProgress').textContent = 'Attempt ' + mapsLoadAttempts + '/' + MAX_LOAD_ATTEMPTS;
             
-            var es = extendLine(coords[1][0], coords[1][1], coords[0][0], coords[0][1], ext);
-            var ee = extendLine(coords[coords.length-2][0], coords[coords.length-2][1], coords[coords.length-1][0], coords[coords.length-1][1], ext);
+            if (typeof google !== 'undefined' && google.maps && google.maps.Map) {
+                console.log('Google Maps API loaded successfully after', mapsLoadAttempts, 'attempts');
+                initMap();
+            } else if (mapsLoadAttempts < MAX_LOAD_ATTEMPTS) {
+                setTimeout(waitForGoogleMaps, 100);
+            } else {
+                console.error('Google Maps API failed to load after', MAX_LOAD_ATTEMPTS, 'attempts');
+                document.getElementById('loadText').textContent = 'Google Maps loading slow...';
+                document.getElementById('loadProgress').textContent = 'Still trying, please wait...';
+                // Keep trying
+                setTimeout(waitForGoogleMaps, 100);
+            }
+        }
+        
+        // Start checking for Google Maps
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', waitForGoogleMaps);
+        } else {
+            waitForGoogleMaps();
+        }
+        
+        // Canvas
+        const canvas = document.getElementById('overlay');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            const container = document.getElementById('mapContainer');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            render();
+        }
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Initialize map
+        function initMap() {
+            try {
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: { lat: 24.73, lng: 46.65 },
+                    zoom: 14,
+                    gestureHandling: 'greedy',
+                    zoomControl: true,
+                    mapTypeControl: true,
+                    scaleControl: true,
+                    streetViewControl: false,
+                    fullscreenControl: true
+                });
+                
+                document.getElementById('loading').classList.add('hidden');
+                resizeCanvas();
+                
+                map.addListener('idle', render);
+                map.addListener('bounds_changed', render);
+                map.addListener('zoom_changed', render);
+                
+                console.log('Map initialized successfully');
+            } catch (e) {
+                console.error('Map init error:', e);
+                document.getElementById('loadText').textContent = 'Error: ' + e.message;
+            }
+        }
+        
+        // Convert lat/lng to pixel
+        function toPixel(lat, lng) {
+            if (!map) return { x: -9999, y: -9999 };
+            const proj = map.getProjection();
+            const bounds = map.getBounds();
+            if (!proj || !bounds) return { x: -9999, y: -9999 };
             
-            var ec = [[es.x2, es.y2]].concat(coords).concat([[ee.x2, ee.y2]]);
+            const ne = bounds.getNorthEast();
+            const sw = bounds.getSouthWest();
+            const topRight = proj.fromLatLngToPoint(ne);
+            const bottomLeft = proj.fromLatLngToPoint(sw);
+            const scale = Math.pow(2, map.getZoom());
+            const worldPoint = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
             
-            for (var i = 0; i < ec.length-1; i++) {
-                for (var j = 0; j < boundary.length-1; j++) {
-                    var hit = lineIntersect(ec[i][0],ec[i][1],ec[i+1][0],ec[i+1][1], boundary[j][0],boundary[j][1],boundary[j+1][0],boundary[j+1][1]);
-                    if (hit) {
-                        var k = hit[0].toFixed(5)+'_'+hit[1].toFixed(5);
-                        if (!seen[k]) { seen[k]=1; entryExits.push({lng:hit[0],lat:hit[1],name:name,width:w}); }
+            return {
+                x: (worldPoint.x - bottomLeft.x) * scale,
+                y: (worldPoint.y - topRight.y) * scale
+            };
+        }
+        
+        // Line intersection
+        function lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {
+            const d = (y4-y3)*(x2-x1) - (x4-x3)*(y2-y1);
+            if (Math.abs(d) < 1e-12) return null;
+            const u = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3)) / d;
+            const v = ((x2-x1)*(y1-y3) - (y2-y1)*(x1-x3)) / d;
+            if (u >= 0 && u <= 1 && v >= 0 && v <= 1) {
+                return [x1 + u*(x2-x1), y1 + u*(y2-y1)];
+            }
+            return null;
+        }
+        
+        // Extend road line by meters
+        function extendLine(x1, y1, x2, y2, meters) {
+            const deg = meters / 111000; // meters to degrees
+            const dx = x2 - x1, dy = y2 - y1;
+            const len = Math.sqrt(dx*dx + dy*dy);
+            if (len < 1e-8) return { x1, y1, x2, y2 };
+            const ux = dx/len, uy = dy/len;
+            return {
+                x1: x1 - ux * deg,
+                y1: y1 - uy * deg,
+                x2: x2 + ux * deg,
+                y2: y2 + uy * deg
+            };
+        }
+        
+        // Find where extended roads cross boundary
+        function findCrossings() {
+            entryExits = [];
+            if (!boundary.length || !roads.length) { updateUI(); return; }
+            
+            const ext = parseInt(document.getElementById('sliderExt').value);
+            const minW = parseInt(document.getElementById('sliderWidth').value);
+            const seen = {};
+            
+            roads.forEach(road => {
+                const props = road.properties || {};
+                const w = parseFloat(props.width_m || props.WIDTH || props.width || 10);
+                const name = props.name_ar || props.ROADCENTERLINENAME_AR || props.name_en || 'Road';
+                
+                if (w < minW) return;
+                
+                const geom = road.geometry;
+                if (!geom) return;
+                
+                const lines = geom.type === 'LineString' ? [geom.coordinates] : (geom.coordinates || []);
+                
+                lines.forEach(coords => {
+                    if (!coords || coords.length < 2) return;
+                    
+                    // Extend at both ends
+                    const extStart = extendLine(coords[1][0], coords[1][1], coords[0][0], coords[0][1], ext);
+                    const last = coords.length - 1;
+                    const extEnd = extendLine(coords[last-1][0], coords[last-1][1], coords[last][0], coords[last][1], ext);
+                    
+                    // Build extended coordinates
+                    const extCoords = [[extStart.x2, extStart.y2], ...coords, [extEnd.x2, extEnd.y2]];
+                    
+                    // Check each segment against boundary
+                    for (let i = 0; i < extCoords.length - 1; i++) {
+                        const [x1, y1] = extCoords[i];
+                        const [x2, y2] = extCoords[i + 1];
+                        
+                        for (let j = 0; j < boundary.length - 1; j++) {
+                            const [bx1, by1] = boundary[j];
+                            const [bx2, by2] = boundary[j + 1];
+                            
+                            const hit = lineIntersect(x1, y1, x2, y2, bx1, by1, bx2, by2);
+                            if (hit) {
+                                const key = hit[0].toFixed(5) + '_' + hit[1].toFixed(5);
+                                if (!seen[key]) {
+                                    seen[key] = true;
+                                    entryExits.push({ lng: hit[0], lat: hit[1], name, width: w });
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+            
+            entryExits.sort((a, b) => b.width - a.width);
+            updateUI();
+            render();
+        }
+        
+        // Update UI
+        function updateUI() {
+            document.getElementById('sTotal').textContent = entryExits.length;
+            document.getElementById('sMajor').textContent = entryExits.filter(p => p.width >= 30).length;
+            document.getElementById('sOther').textContent = entryExits.filter(p => p.width < 30).length;
+            document.getElementById('btnExport').disabled = !entryExits.length;
+            
+            const list = document.getElementById('list');
+            if (!entryExits.length) {
+                const msg = roads.length ? (boundary.length ? 'Increase extension slider' : 'Load district') : 'Load roads first';
+                list.innerHTML = '<div style="color:#666;text-align:center;padding:15px;">' + msg + '</div>';
+                return;
+            }
+            
+            let html = '';
+            const max = Math.min(35, entryExits.length);
+            for (let i = 0; i < max; i++) {
+                const p = entryExits[i];
+                html += `<div class="item" onclick="gotoPoint(${i})"><div class="dot">${Math.round(p.width)}</div><div class="name">${p.name}</div></div>`;
+            }
+            if (entryExits.length > 35) {
+                html += `<div style="color:#888;text-align:center;padding:5px;">+${entryExits.length - 35} more</div>`;
+            }
+            list.innerHTML = html;
+        }
+        
+        function gotoPoint(i) {
+            const p = entryExits[i];
+            if (map && p) {
+                map.setCenter({ lat: p.lat, lng: p.lng });
+                map.setZoom(17);
+            }
+        }
+        
+        // Render on canvas
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!map) return;
+            
+            const ext = parseInt(document.getElementById('sliderExt').value);
+            const minW = parseInt(document.getElementById('sliderWidth').value);
+            const dotSize = parseInt(document.getElementById('sliderDot').value);
+            
+            // Draw extended roads
+            roads.forEach(road => {
+                const props = road.properties || {};
+                const w = parseFloat(props.width_m || props.WIDTH || props.width || 10);
+                if (w < minW) return;
+                
+                const geom = road.geometry;
+                if (!geom) return;
+                
+                const lines = geom.type === 'LineString' ? [geom.coordinates] : (geom.coordinates || []);
+                
+                lines.forEach(coords => {
+                    if (!coords || coords.length < 2) return;
+                    
+                    // Extend
+                    const extStart = extendLine(coords[1][0], coords[1][1], coords[0][0], coords[0][1], ext);
+                    const last = coords.length - 1;
+                    const extEnd = extendLine(coords[last-1][0], coords[last-1][1], coords[last][0], coords[last][1], ext);
+                    
+                    const extCoords = [[extStart.x2, extStart.y2], ...coords, [extEnd.x2, extEnd.y2]];
+                    
+                    ctx.beginPath();
+                    extCoords.forEach((c, i) => {
+                        const px = toPixel(c[1], c[0]);
+                        if (i === 0) ctx.moveTo(px.x, px.y);
+                        else ctx.lineTo(px.x, px.y);
+                    });
+                    
+                    ctx.strokeStyle = w >= 30 ? '#e94560' : w >= 15 ? '#ff9800' : '#4caf50';
+                    ctx.lineWidth = w >= 30 ? 5 : w >= 15 ? 3 : 2;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                });
+            });
+            
+            // Draw boundary
+            if (boundary.length) {
+                ctx.beginPath();
+                boundary.forEach((c, i) => {
+                    const px = toPixel(c[1], c[0]);
+                    if (i === 0) ctx.moveTo(px.x, px.y);
+                    else ctx.lineTo(px.x, px.y);
+                });
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(233, 69, 96, 0.1)';
+                ctx.fill();
+                ctx.strokeStyle = '#e94560';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([10, 5]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            
+            // Draw RED DOTS at crossings
+            entryExits.forEach(p => {
+                const px = toPixel(p.lat, p.lng);
+                const r = p.width >= 40 ? dotSize * 1.4 : p.width >= 20 ? dotSize * 1.1 : dotSize * 0.85;
+                
+                // Glow
+                ctx.beginPath();
+                ctx.arc(px.x, px.y, r + 5, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(233, 69, 96, 0.5)';
+                ctx.fill();
+                
+                // Red dot
+                ctx.beginPath();
+                ctx.arc(px.x, px.y, r, 0, Math.PI * 2);
+                ctx.fillStyle = '#e94560';
+                ctx.fill();
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // Width number
+                ctx.fillStyle = 'white';
+                ctx.font = `bold ${Math.max(9, r * 0.6)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(Math.round(p.width), px.x, px.y);
+            });
+        }
+        
+        // File handlers
+        document.getElementById('fileRoads').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                roads = data.features || [data];
+                
+                document.getElementById('statusRoads').textContent = roads.length + ' roads loaded';
+                document.getElementById('statusRoads').className = 'status';
+                
+                // Center map on roads
+                if (map && roads.length > 0) {
+                    let sumLat = 0, sumLng = 0, count = 0;
+                    roads.slice(0, 50).forEach(r => {
+                        const g = r.geometry;
+                        if (!g) return;
+                        const lines = g.type === 'LineString' ? [g.coordinates] : (g.coordinates || []);
+                        lines.forEach(cs => {
+                            const mid = cs[Math.floor(cs.length / 2)];
+                            sumLng += mid[0]; sumLat += mid[1]; count++;
+                        });
+                    });
+                    if (count > 0) {
+                        map.setCenter({ lat: sumLat / count, lng: sumLng / count });
+                        map.setZoom(14);
                     }
                 }
+                
+                findCrossings();
+            } catch (err) {
+                alert('Error loading roads: ' + err.message);
             }
         });
-    });
-    
-    entryExits.sort(function(a,b){return b.width-a.width;});
-    updateUI();
-    draw();
-}
-
-function updateUI() {
-    document.getElementById('sTotal').textContent = entryExits.length;
-    document.getElementById('sMajor').textContent = entryExits.filter(function(p){return p.width>=30;}).length;
-    document.getElementById('sOther').textContent = entryExits.filter(function(p){return p.width<30;}).length;
-    document.getElementById('btnExport').disabled = !entryExits.length;
-    
-    var list = document.getElementById('list');
-    if (!entryExits.length) {
-        list.innerHTML = '<div style="color:#666;text-align:center;padding:15px;">'+(roads.length?(boundary.length?'Increase extension':'Load district'):'Load roads')+'</div>';
-        return;
-    }
-    var html = '';
-    for (var i = 0; i < Math.min(35, entryExits.length); i++) {
-        var p = entryExits[i];
-        html += '<div class="item" onclick="gotoPoint('+i+')"><div class="dot">'+Math.round(p.width)+'</div><div class="name">'+p.name+'</div></div>';
-    }
-    if (entryExits.length > 35) html += '<div style="color:#888;text-align:center;padding:5px;">+'+(entryExits.length-35)+' more</div>';
-    list.innerHTML = html;
-}
-
-function gotoPoint(i) {
-    if (mapReady && entryExits[i]) {
-        map.setCenter({lat: entryExits[i].lat, lng: entryExits[i].lng});
-        map.setZoom(17);
-    }
-}
-
-function draw() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    if (!mapReady) return;
-    
-    var ext = +document.getElementById('sliderExt').value;
-    var minW = +document.getElementById('sliderWidth').value;
-    var dotSize = +document.getElementById('sliderDot').value;
-    
-    // Roads
-    roads.forEach(function(road) {
-        var p = road.properties || {};
-        var w = +(p.width_m || p.WIDTH || p.width || 10);
-        if (w < minW) return;
         
-        var g = road.geometry;
-        if (!g) return;
-        var lines = g.type === 'LineString' ? [g.coordinates] : (g.coordinates || []);
-        
-        lines.forEach(function(coords) {
-            if (!coords || coords.length < 2) return;
+        document.getElementById('fileDistrict').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
             
-            var es = extendLine(coords[1][0], coords[1][1], coords[0][0], coords[0][1], ext);
-            var ee = extendLine(coords[coords.length-2][0], coords[coords.length-2][1], coords[coords.length-1][0], coords[coords.length-1][1], ext);
-            var ec = [[es.x2, es.y2]].concat(coords).concat([[ee.x2, ee.y2]]);
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                const feat = data.features ? data.features[0] : data;
+                const geom = feat.geometry;
+                
+                boundary = geom.type === 'Polygon' ? geom.coordinates[0] : geom.coordinates[0][0];
+                
+                document.getElementById('statusDistrict').textContent = 'Loaded (' + boundary.length + ' points)';
+                document.getElementById('statusDistrict').className = 'status';
+                
+                // Center map on district
+                if (map && boundary.length > 0) {
+                    let sumLat = 0, sumLng = 0;
+                    boundary.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
+                    map.setCenter({ lat: sumLat / boundary.length, lng: sumLng / boundary.length });
+                    map.setZoom(14);
+                }
+                
+                findCrossings();
+            } catch (err) {
+                alert('Error loading district: ' + err.message);
+            }
+        });
+        
+        // Sliders
+        document.getElementById('sliderExt').addEventListener('input', function() {
+            document.getElementById('valExt').textContent = this.value + 'm';
+            findCrossings();
+        });
+        document.getElementById('sliderWidth').addEventListener('input', function() {
+            document.getElementById('valWidth').textContent = this.value + 'm';
+            findCrossings();
+        });
+        document.getElementById('sliderDot').addEventListener('input', function() {
+            document.getElementById('valDot').textContent = this.value;
+            render();
+        });
+        
+        // Export
+        function exportData() {
+            if (!entryExits.length) return;
             
-            ctx.beginPath();
-            ec.forEach(function(c, i) {
-                var px = toPixel(c[1], c[0]);
-                i === 0 ? ctx.moveTo(px.x, px.y) : ctx.lineTo(px.x, px.y);
-            });
-            ctx.strokeStyle = w >= 30 ? '#e94560' : w >= 15 ? '#ff9800' : '#4caf50';
-            ctx.lineWidth = w >= 30 ? 5 : w >= 15 ? 3 : 2;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-        });
-    });
+            const geojson = {
+                type: 'FeatureCollection',
+                features: entryExits.map(p => ({
+                    type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
+                    properties: { name_ar: p.name, width_m: p.width, road_class: p.width >= 30 ? 'Major' : 'Other' }
+                }))
+            };
+            
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' }));
+            a.download = 'entry_exit_points.geojson';
+            a.click();
+        }
+        
+        // Expose initMap globally for compatibility
+        window.initMap = initMap;
+    </script>
     
-    // Boundary
-    if (boundary.length) {
-        ctx.beginPath();
-        boundary.forEach(function(c, i) {
-            var px = toPixel(c[1], c[0]);
-            i === 0 ? ctx.moveTo(px.x, px.y) : ctx.lineTo(px.x, px.y);
-        });
-        ctx.closePath();
-        ctx.fillStyle = 'rgba(233,69,96,0.1)';
-        ctx.fill();
-        ctx.strokeStyle = '#e94560';
-        ctx.lineWidth = 3;
-        ctx.setLineDash([10,5]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-    }
-    
-    // Red dots
-    entryExits.forEach(function(p) {
-        var px = toPixel(p.lat, p.lng);
-        var r = p.width >= 40 ? dotSize*1.4 : p.width >= 20 ? dotSize*1.1 : dotSize*0.85;
-        
-        ctx.beginPath(); ctx.arc(px.x, px.y, r+5, 0, Math.PI*2);
-        ctx.fillStyle = 'rgba(233,69,96,0.5)'; ctx.fill();
-        
-        ctx.beginPath(); ctx.arc(px.x, px.y, r, 0, Math.PI*2);
-        ctx.fillStyle = '#e94560'; ctx.fill();
-        ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke();
-        
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold '+Math.max(9,r*0.6)+'px Arial';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(Math.round(p.width), px.x, px.y);
-    });
-}
-
-// File handlers
-document.getElementById('fileRoads').onchange = function(e) {
-    var f = e.target.files[0]; if (!f) return;
-    var r = new FileReader();
-    r.onload = function(ev) {
-        try {
-            var d = JSON.parse(ev.target.result);
-            roads = d.features || [d];
-            document.getElementById('statusRoads').textContent = roads.length + ' roads';
-            document.getElementById('statusRoads').className = 'status';
-            if (mapReady) {
-                var lat=0,lng=0,n=0;
-                roads.slice(0,50).forEach(function(rd) {
-                    var g = rd.geometry; if (!g) return;
-                    var ls = g.type==='LineString'?[g.coordinates]:(g.coordinates||[]);
-                    ls.forEach(function(cs){ var m=cs[Math.floor(cs.length/2)]; lng+=m[0]; lat+=m[1]; n++; });
-                });
-                if (n) map.setCenter({lat:lat/n, lng:lng/n});
-            }
-            findCrossings();
-        } catch(err) { alert('Error: '+err.message); }
-    };
-    r.readAsText(f);
-};
-
-document.getElementById('fileDistrict').onchange = function(e) {
-    var f = e.target.files[0]; if (!f) return;
-    var r = new FileReader();
-    r.onload = function(ev) {
-        try {
-            var d = JSON.parse(ev.target.result);
-            var ft = d.features ? d.features[0] : d;
-            var gm = ft.geometry;
-            boundary = gm.type === 'Polygon' ? gm.coordinates[0] : gm.coordinates[0][0];
-            document.getElementById('statusDistrict').textContent = 'Loaded ('+boundary.length+' pts)';
-            document.getElementById('statusDistrict').className = 'status';
-            if (mapReady) {
-                var lat=0,lng=0;
-                boundary.forEach(function(c){lng+=c[0];lat+=c[1];});
-                map.setCenter({lat:lat/boundary.length, lng:lng/boundary.length});
-            }
-            findCrossings();
-        } catch(err) { alert('Error: '+err.message); }
-    };
-    r.readAsText(f);
-};
-
-// Sliders
-document.getElementById('sliderExt').oninput = function() { document.getElementById('valExt').textContent = this.value+'m'; findCrossings(); };
-document.getElementById('sliderWidth').oninput = function() { document.getElementById('valWidth').textContent = this.value+'m'; findCrossings(); };
-document.getElementById('sliderDot').oninput = function() { document.getElementById('valDot').textContent = this.value; draw(); };
-
-// Export
-function exportData() {
-    if (!entryExits.length) return;
-    var gj = {type:'FeatureCollection',features:entryExits.map(function(p){
-        return {type:'Feature',geometry:{type:'Point',coordinates:[p.lng,p.lat]},properties:{name_ar:p.name,width_m:p.width}};
-    })};
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(gj,null,2)],{type:'application/json'}));
-    a.download = 'entry_exit_points.geojson';
-    a.click();
-}
-
-// Start
-waitForGoogleMaps();
-</script>
-<script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
+    <!-- Keyless Google Maps API - same as dynamic map -->
+    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
 </body>
 </html>
