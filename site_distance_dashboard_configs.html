@@ -60,17 +60,23 @@
                 </div>
                 <div style="margin-bottom:10px;">
                     <label>Workers: </label>
-                    <select id="workerCount" style="width:100px;padding:5px;">
-                        <option value="5">5</option>
+                    <select id="workerCount" style="width:80px;padding:5px;">
+                        <option value="3">3</option>
+                        <option value="5" selected>5</option>
                         <option value="10">10</option>
                         <option value="20">20</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
-                        <option value="200">200</option>
-                        <option value="300">300</option>
-                        <option value="500" selected>500</option>
                     </select>
-                    <span style="font-size:0.75rem;color:#666;margin-left:10px;">(same as part1/part2)</span>
+                    <label style="margin-left:10px;">Limit: </label>
+                    <select id="limitCount" style="width:100px;padding:5px;">
+                        <option value="10">10 (test)</option>
+                        <option value="50">50</option>
+                        <option value="100" selected>100</option>
+                        <option value="500">500</option>
+                        <option value="1000">1000</option>
+                        <option value="0">All</option>
+                    </select>
                 </div>
                 
                 <button class="btn btn-start" id="startBtn" onclick="startParallelExtraction()" disabled>
@@ -124,6 +130,33 @@
         <div class="map-area">
             <div class="panel">
                 <div id="map"></div>
+            </div>
+            
+            <div class="panel" style="margin-top:15px;">
+                <h2>🔍 SANITY CHECK - View Route Details</h2>
+                <div style="display:flex;gap:10px;margin-bottom:10px;">
+                    <select id="routeSelect" style="flex:1;padding:8px;">
+                        <option value="">-- Select completed route --</option>
+                    </select>
+                    <button class="btn btn-start" onclick="viewRoute()" style="width:auto;padding:8px 20px;">View Route</button>
+                </div>
+                <div id="routeDetails" style="display:none;background:#f8f9fa;padding:15px;border-radius:8px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-bottom:15px;">
+                        <div style="text-align:center;padding:10px;background:white;border-radius:6px;">
+                            <div style="font-size:1.5rem;font-weight:bold;color:#4285f4;" id="detailDist">-</div>
+                            <div style="font-size:0.8rem;color:#666;">Distance (km)</div>
+                        </div>
+                        <div style="text-align:center;padding:10px;background:white;border-radius:6px;">
+                            <div style="font-size:1.5rem;font-weight:bold;color:#34a853;" id="detailTime">-</div>
+                            <div style="font-size:0.8rem;color:#666;">Time (min)</div>
+                        </div>
+                        <div style="text-align:center;padding:10px;background:white;border-radius:6px;">
+                            <div style="font-size:1.5rem;font-weight:bold;color:#ea4335;" id="detailWaypoints">-</div>
+                            <div style="font-size:0.8rem;color:#666;">Waypoints</div>
+                        </div>
+                    </div>
+                    <div id="waypointList" style="font-size:0.85rem;"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -478,12 +511,17 @@ async function findWaypointsOnPath(path, origin, destination, directDist) {
 // ROUTE FETCHING
 // ============================================================
 
-// Simple fetch - matches the original part1/part2 approach (NO artificial delays)
-async function fetchRouteForConfig(config, retries = 3) {
+// Rate-limited fetch with backoff
+let minDelayMs = 200;
+
+async function fetchRouteForConfig(config, retries = 5) {
     const origin = config.origin;
     const dest = config.destination;
     
     for (let attempt = 1; attempt <= retries; attempt++) {
+        // Small delay between requests
+        await new Promise(r => setTimeout(r, minDelayMs));
+        
         const result = await new Promise(async (resolve) => {
             directionsService.route({
                 origin: { lat: origin.lat, lng: origin.lon },
@@ -491,6 +529,9 @@ async function fetchRouteForConfig(config, retries = 3) {
                 travelMode: 'DRIVING'
             }, async (res, status) => {
                 if (status === 'OK') {
+                    // Success - reduce delay
+                    if (minDelayMs > 50) minDelayMs = Math.max(50, minDelayMs - 10);
+                    
                     const leg = res.routes[0].legs[0];
                     const dist = leg.distance.value / 1000;
                     const time = leg.duration.value / 60;
@@ -504,10 +545,14 @@ async function fetchRouteForConfig(config, retries = 3) {
                         time_min: time, 
                         waypoints: waypoints 
                     });
+                } else if (status === 'OVER_QUERY_LIMIT') {
+                    // Rate limited - increase delay
+                    minDelayMs = Math.min(3000, minDelayMs + 200);
+                    resolve({ error: status, retryable: true });
                 } else {
                     resolve({ 
                         error: status, 
-                        retryable: status === 'UNKNOWN_ERROR' || status === 'OVER_QUERY_LIMIT'
+                        retryable: status === 'UNKNOWN_ERROR'
                     });
                 }
             });
@@ -516,8 +561,8 @@ async function fetchRouteForConfig(config, retries = 3) {
         if (!result.error) return result;
         if (!result.retryable || attempt === retries) return result;
         
-        // Simple retry delay (same as original)
-        const delay = 1000 * attempt + Math.random() * 500;
+        // Exponential backoff
+        const delay = 1000 * attempt + Math.random() * 1000;
         await new Promise(r => setTimeout(r, delay));
     }
 }
@@ -551,7 +596,14 @@ async function startParallelExtraction() {
     log('═══════════════════════════════════');
     
     // Build list of incomplete configs
-    const incompleteConfigs = CONFIGS.filter(c => !CACHE.results[c.config_id]);
+    let incompleteConfigs = CONFIGS.filter(c => !CACHE.results[c.config_id]);
+    
+    // Apply limit
+    const limit = parseInt(document.getElementById('limitCount').value);
+    if (limit > 0 && incompleteConfigs.length > limit) {
+        incompleteConfigs = incompleteConfigs.slice(0, limit);
+        log('Limited to first ' + limit + ' configs');
+    }
     
     log('Incomplete: ' + incompleteConfigs.length + ' / Cached: ' + (CONFIGS.length - incompleteConfigs.length));
     
@@ -613,10 +665,10 @@ async function startParallelExtraction() {
             document.getElementById('statWaypoints').textContent = withWaypoints;
             document.getElementById('progressFill').style.width = pct + '%';
             document.getElementById('progressFill').textContent = pct + '%';
-            document.getElementById('currentCalc').textContent = config.config_id;
+            document.getElementById('currentCalc').textContent = config.config_id + ' [delay:' + minDelayMs + 'ms]';
             
             // Save periodically
-            if (completed % 100 === 0) {
+            if (completed % 50 === 0) {
                 saveCache();
             }
         }
@@ -664,6 +716,10 @@ function loadCache() {
         }
         log('Loaded ' + Object.keys(CACHE.results).length + ' cached results');
         updateCacheStats();
+        // Update route select if it exists
+        if (document.getElementById('routeSelect')) {
+            updateRouteSelect();
+        }
     } catch(e) { 
         console.log('Cache load error: ' + e); 
     }
@@ -681,6 +737,7 @@ function saveCache() {
         log('⚠️ Cache save error: ' + e.message);
     }
     updateCacheStats();
+    updateRouteSelect();
 }
 
 function updateCacheStats() {
@@ -835,6 +892,160 @@ function download(content, filename, type) {
     a.href = URL.createObjectURL(new Blob([content], { type }));
     a.download = filename;
     a.click();
+}
+
+// ============================================================
+// SANITY CHECK - ROUTE VIEWER
+// ============================================================
+
+let directionsRenderer = null;
+let routeMarkers = [];
+
+function updateRouteSelect() {
+    const select = document.getElementById('routeSelect');
+    select.innerHTML = '<option value="">-- Select completed route (' + Object.keys(CACHE.results).length + ' available) --</option>';
+    
+    // Add completed routes
+    Object.entries(CACHE.results).slice(0, 200).forEach(([configId, result]) => {
+        const wpCount = result.waypoints ? result.waypoints.length : 0;
+        const wpText = wpCount > 0 ? ' [' + wpCount + ' wp]' : '';
+        select.innerHTML += '<option value="' + configId + '">' + configId + ' - ' + result.distance_km.toFixed(1) + 'km' + wpText + '</option>';
+    });
+}
+
+function viewRoute() {
+    const configId = document.getElementById('routeSelect').value;
+    if (!configId) {
+        alert('Select a route first!');
+        return;
+    }
+    
+    const result = CACHE.results[configId];
+    const config = CONFIGS.find(c => c.config_id === configId);
+    
+    if (!result || !config) {
+        alert('Route not found!');
+        return;
+    }
+    
+    // Update details panel
+    document.getElementById('routeDetails').style.display = 'block';
+    document.getElementById('detailDist').textContent = result.distance_km.toFixed(2);
+    document.getElementById('detailTime').textContent = result.time_min.toFixed(1);
+    document.getElementById('detailWaypoints').textContent = result.waypoints ? result.waypoints.length : 0;
+    
+    // Show waypoint list
+    let wpHtml = '<b>Route:</b> ' + config.origin.site_id + ' → ' + config.destination.site_id + '<br>';
+    if (result.waypoints && result.waypoints.length > 0) {
+        wpHtml += '<b>Waypoints:</b> ' + result.waypoints.join(' → ') + '<br>';
+    }
+    wpHtml += '<b>Origin:</b> ' + config.origin.lat.toFixed(5) + ', ' + config.origin.lon.toFixed(5);
+    wpHtml += ' (' + (config.origin.road_name || 'N/A') + ')<br>';
+    wpHtml += '<b>Destination:</b> ' + config.destination.lat.toFixed(5) + ', ' + config.destination.lon.toFixed(5);
+    wpHtml += ' (' + (config.destination.road_name || 'N/A') + ')';
+    document.getElementById('waypointList').innerHTML = wpHtml;
+    
+    // Clear previous route display
+    if (directionsRenderer) {
+        directionsRenderer.setMap(null);
+    }
+    routeMarkers.forEach(m => m.setMap(null));
+    routeMarkers = [];
+    
+    // Create new directions renderer
+    directionsRenderer = new google.maps.DirectionsRenderer({
+        map: map,
+        suppressMarkers: true,
+        polylineOptions: {
+            strokeColor: '#4285f4',
+            strokeWeight: 5,
+            strokeOpacity: 0.8
+        }
+    });
+    
+    // Build waypoints for request
+    const waypoints = (result.waypoints || []).map(siteId => {
+        const site = SITES_MAP[siteId];
+        if (site) {
+            return {
+                location: { lat: site.lat, lng: site.lon },
+                stopover: true
+            };
+        }
+        return null;
+    }).filter(w => w !== null);
+    
+    // Request route with waypoints
+    directionsService.route({
+        origin: { lat: config.origin.lat, lng: config.origin.lon },
+        destination: { lat: config.destination.lat, lng: config.destination.lon },
+        waypoints: waypoints,
+        travelMode: 'DRIVING'
+    }, (response, status) => {
+        if (status === 'OK') {
+            directionsRenderer.setDirections(response);
+            
+            // Add origin marker (green)
+            routeMarkers.push(new google.maps.Marker({
+                position: { lat: config.origin.lat, lng: config.origin.lon },
+                map: map,
+                icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                title: 'Origin: ' + config.origin.site_id,
+                zIndex: 100
+            }));
+            
+            // Add destination marker (red)
+            routeMarkers.push(new google.maps.Marker({
+                position: { lat: config.destination.lat, lng: config.destination.lon },
+                map: map,
+                icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                title: 'Destination: ' + config.destination.site_id,
+                zIndex: 100
+            }));
+            
+            // Add waypoint markers (orange)
+            (result.waypoints || []).forEach((siteId, i) => {
+                const site = SITES_MAP[siteId];
+                if (site) {
+                    routeMarkers.push(new google.maps.Marker({
+                        position: { lat: site.lat, lng: site.lon },
+                        map: map,
+                        icon: 'http://maps.google.com/mapfiles/ms/icons/orange-dot.png',
+                        title: 'Waypoint ' + (i+1) + ': ' + siteId,
+                        zIndex: 99
+                    }));
+                }
+            });
+            
+            // Calculate totals from response
+            let totalDist = 0, totalTime = 0;
+            response.routes[0].legs.forEach((leg, i) => {
+                totalDist += leg.distance.value / 1000;
+                totalTime += leg.duration.value / 60;
+                log('Leg ' + (i+1) + ': ' + (leg.distance.value/1000).toFixed(2) + ' km, ' + (leg.duration.value/60).toFixed(1) + ' min');
+            });
+            
+            log('═══════════════════════════════════');
+            log('ROUTE: ' + configId);
+            log('Cached: ' + result.distance_km.toFixed(2) + ' km, ' + result.time_min.toFixed(1) + ' min');
+            log('Live: ' + totalDist.toFixed(2) + ' km, ' + totalTime.toFixed(1) + ' min');
+            log('Waypoints: ' + (result.waypoints || []).join(', '));
+            log('═══════════════════════════════════');
+            
+            // Fit map to route
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend({ lat: config.origin.lat, lng: config.origin.lon });
+            bounds.extend({ lat: config.destination.lat, lng: config.destination.lon });
+            (result.waypoints || []).forEach(siteId => {
+                const site = SITES_MAP[siteId];
+                if (site) bounds.extend({ lat: site.lat, lng: site.lon });
+            });
+            map.fitBounds(bounds, 50);
+            
+        } else {
+            log('Error displaying route: ' + status);
+        }
+    });
 }
 
 // ============================================================
