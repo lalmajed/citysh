@@ -1685,8 +1685,9 @@
                         map.setZoom(15);
                     }
                     
-                    // Enable entry/exit toggle
-                    document.getElementById('toggleEntryExit').checked = true;
+                    // Enable entry/exit display
+                    const toggle = document.getElementById('toggleEntryExit');
+                    if (toggle) toggle.checked = true;
                     showEntryExit = true;
                     
                     hideLoading();
