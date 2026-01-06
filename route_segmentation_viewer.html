@@ -108,12 +108,31 @@
                         <span style="color:#4caf50;">Embedded: <span id="embeddedTripCount">0</span> trips, <span id="embeddedVehicleCount">0</span> vehicles</span>
                     </div>
                     <input type="file" id="tripsUpload" accept=".parquet,.json,.csv" onchange="uploadTripsData(this)" style="display:none;">
-                    <button onclick="document.getElementById('tripsUpload').click()" style="font-size:0.75rem;padding:6px 10px;cursor:pointer;background:#00897b;color:#fff;border:none;border-radius:3px;width:100%;">
-                        Upload Trips (Parquet/JSON/CSV)
+                    <button onclick="document.getElementById('tripsUpload').click()" style="font-size:0.75rem;padding:6px 10px;cursor:pointer;background:#00897b;color:#fff;border:none;border-radius:3px;width:100%;margin-bottom:5px;">
+                        Upload Trips (Small Files)
                     </button>
-                    <p style="font-size:0.65rem;color:#888;margin-top:5px;">
-                        Required columns: plate, camera_prev, camera_next, t_prev, t_next, obs_time_seconds
-                    </p>
+                    
+                    <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #ccc;">
+                        <p style="font-size:0.7rem;color:#666;margin-bottom:5px;font-weight:bold;">For Large Files (1GB+):</p>
+                        <input type="file" id="manifestUpload" accept=".json" onchange="uploadManifest(this)" style="display:none;">
+                        <button onclick="document.getElementById('manifestUpload').click()" style="font-size:0.75rem;padding:6px 10px;cursor:pointer;background:#1565c0;color:#fff;border:none;border-radius:3px;width:100%;margin-bottom:3px;">
+                            Load from Manifest (Chunked)
+                        </button>
+                        <input type="file" id="chunksUpload" accept=".json,.gz" multiple onchange="uploadChunks(this)" style="display:none;">
+                        <button onclick="document.getElementById('chunksUpload').click()" style="font-size:0.75rem;padding:6px 10px;cursor:pointer;background:#7b1fa2;color:#fff;border:none;border-radius:3px;width:100%;">
+                            Upload Chunks (Multi-Select)
+                        </button>
+                        <p style="font-size:0.6rem;color:#888;margin-top:3px;">
+                            Use preprocess_large_parquet.py to chunk 1GB+ files
+                        </p>
+                    </div>
+                    
+                    <div id="chunkProgress" style="display:none;margin-top:8px;">
+                        <div style="background:#e0e0e0;border-radius:4px;height:8px;overflow:hidden;">
+                            <div id="chunkProgressBar" style="background:#4caf50;height:100%;width:0%;transition:width 0.3s;"></div>
+                        </div>
+                        <div id="chunkProgressText" style="font-size:0.7rem;color:#666;margin-top:3px;">Loading...</div>
+                    </div>
                 </div>
                 
                 <div class="panel">
@@ -693,6 +712,20 @@ function getRmax(cameraPrev, cameraNext, tripDate, vehicleType) {
 // Process all vehicles and store segmented paths
 async function processAllVehicles() {
     const statusDiv = document.getElementById('batchStatus');
+    
+    if (VEHICLES.length === 0) {
+        statusDiv.innerHTML = '<span style="color:#f44336;">No vehicles to process. Upload trip data first.</span>';
+        return;
+    }
+    
+    // For large datasets, use batch processing
+    if (TRIPS.length > 100000) {
+        statusDiv.innerHTML = `<span style="color:#ff9800;">Large dataset detected (${TRIPS.length.toLocaleString()} trips). Using optimized batch processing...</span>`;
+        await new Promise(r => setTimeout(r, 100));
+        await processVehiclesBatch(VEHICLES, 20);
+        return;
+    }
+    
     statusDiv.innerHTML = '<span style="color:#2196f3;">Processing all vehicles...</span>';
     
     ALL_SEGMENTED_PATHS = {};
@@ -701,7 +734,11 @@ async function processAllVehicles() {
     
     for (let i = 0; i < VEHICLES.length; i++) {
         const vehicle = VEHICLES[i];
-        statusDiv.innerHTML = `<span style="color:#2196f3;">Processing ${i+1}/${VEHICLES.length}: ${vehicle}...</span>`;
+        
+        if (i % 10 === 0) {
+            statusDiv.innerHTML = `<span style="color:#2196f3;">Processing ${i+1}/${VEHICLES.length}: ${vehicle}...</span>`;
+            await new Promise(r => setTimeout(r, 0)); // Yield to UI
+        }
         
         // Get all trips for this vehicle
         const vehicleTrips = TRIPS.filter(t => t.plate === vehicle)
@@ -725,12 +762,9 @@ async function processAllVehicles() {
             totalPaths += ALL_SEGMENTED_PATHS[vehicle].pathCount;
             totalTrips += segmented.length;
         }
-        
-        // Small delay to prevent UI freezing
-        await new Promise(r => setTimeout(r, 10));
     }
     
-    statusDiv.innerHTML = `<span style="color:#4caf50;">Processed ${VEHICLES.length} vehicles: ${totalTrips} trips, ${totalPaths} paths</span>`;
+    statusDiv.innerHTML = `<span style="color:#4caf50;">Processed ${VEHICLES.length} vehicles: ${totalTrips.toLocaleString()} trips, ${totalPaths.toLocaleString()} paths</span>`;
     console.log('Batch processing complete:', ALL_SEGMENTED_PATHS);
     
     // Show loaded paths section
@@ -744,12 +778,22 @@ function downloadSegmentedPaths() {
         return;
     }
     
+    const totalTrips = Object.values(ALL_SEGMENTED_PATHS).reduce((sum, v) => sum + v.tripCount, 0);
+    
+    // For large datasets, offer chunked download
+    if (totalTrips > 500000) {
+        if (confirm(`Large dataset (${totalTrips.toLocaleString()} trips). Download as chunked files for better performance?`)) {
+            downloadSegmentedPathsChunked();
+            return;
+        }
+    }
+    
     // Build export data
     const exportData = {
         metadata: {
             exportDate: new Date().toISOString(),
             vehicleCount: Object.keys(ALL_SEGMENTED_PATHS).length,
-            totalTrips: Object.values(ALL_SEGMENTED_PATHS).reduce((sum, v) => sum + v.tripCount, 0),
+            totalTrips: totalTrips,
             totalPaths: Object.values(ALL_SEGMENTED_PATHS).reduce((sum, v) => sum + v.pathCount, 0),
             parameters: {
                 rMin: parseFloat(document.getElementById('rMin').value),
@@ -769,6 +813,75 @@ function downloadSegmentedPaths() {
     a.download = 'segmented_paths_' + new Date().toISOString().split('T')[0] + '.json';
     a.click();
     URL.revokeObjectURL(url);
+}
+
+// Download segmented paths as multiple chunk files (for large datasets)
+async function downloadSegmentedPathsChunked() {
+    const statusDiv = document.getElementById('batchStatus');
+    const vehicles = Object.keys(ALL_SEGMENTED_PATHS);
+    const chunkSize = 100; // vehicles per chunk
+    
+    statusDiv.innerHTML = '<span style="color:#2196f3;">Preparing chunked download...</span>';
+    
+    // Create manifest
+    const manifest = {
+        version: '1.0',
+        exportDate: new Date().toISOString(),
+        vehicleCount: vehicles.length,
+        totalTrips: Object.values(ALL_SEGMENTED_PATHS).reduce((sum, v) => sum + v.tripCount, 0),
+        totalPaths: Object.values(ALL_SEGMENTED_PATHS).reduce((sum, v) => sum + v.pathCount, 0),
+        parameters: {
+            rMin: parseFloat(document.getElementById('rMin').value),
+            rMaxDefault: parseFloat(document.getElementById('rMax').value),
+            epsilon: parseFloat(document.getElementById('epsilonMeters').value),
+            dynamicRmaxLoaded: dynamicRmaxLoaded
+        },
+        chunks: []
+    };
+    
+    // Download each chunk
+    let chunkNum = 0;
+    for (let i = 0; i < vehicles.length; i += chunkSize) {
+        chunkNum++;
+        const chunkVehicles = vehicles.slice(i, i + chunkSize);
+        const chunkData = {};
+        
+        chunkVehicles.forEach(v => {
+            chunkData[v] = ALL_SEGMENTED_PATHS[v];
+        });
+        
+        const chunkFilename = `segmented_chunk_${String(chunkNum).padStart(3, '0')}.json`;
+        manifest.chunks.push({
+            filename: chunkFilename,
+            vehicles: chunkVehicles.length,
+            trips: chunkVehicles.reduce((s, v) => s + ALL_SEGMENTED_PATHS[v].tripCount, 0)
+        });
+        
+        // Download chunk
+        const blob = new Blob([JSON.stringify(chunkData)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = chunkFilename;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        statusDiv.innerHTML = `<span style="color:#2196f3;">Downloaded chunk ${chunkNum}/${Math.ceil(vehicles.length / chunkSize)}...</span>`;
+        
+        // Small delay between downloads
+        await new Promise(r => setTimeout(r, 500));
+    }
+    
+    // Download manifest
+    const manifestBlob = new Blob([JSON.stringify(manifest, null, 2)], { type: 'application/json' });
+    const manifestUrl = URL.createObjectURL(manifestBlob);
+    const manifestLink = document.createElement('a');
+    manifestLink.href = manifestUrl;
+    manifestLink.download = 'segmented_manifest_' + new Date().toISOString().split('T')[0] + '.json';
+    manifestLink.click();
+    URL.revokeObjectURL(manifestUrl);
+    
+    statusDiv.innerHTML = `<span style="color:#4caf50;">Downloaded ${chunkNum} chunks + manifest</span>`;
 }
 
 // ============ NETWORK ANALYSIS ============
@@ -1105,6 +1218,229 @@ function displayAllLoadedPaths(vehicle) {
 }
 
 // ============ TRIP DATA UPLOAD ============
+
+// Track loaded chunks for large files
+let LOADED_CHUNKS = {};
+let MANIFEST_DATA = null;
+
+// Upload manifest for chunked data (large files)
+async function uploadManifest(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const statusDiv = document.getElementById('tripDataStatus');
+    statusDiv.innerHTML = '<span style="color:#2196f3;">Reading manifest...</span>';
+    
+    try {
+        const text = await file.text();
+        const manifest = JSON.parse(text);
+        
+        if (!manifest.chunks || !Array.isArray(manifest.chunks)) {
+            throw new Error('Invalid manifest: missing chunks array');
+        }
+        
+        MANIFEST_DATA = manifest;
+        LOADED_CHUNKS = {};
+        TRIPS = [];
+        VEHICLES = [];
+        
+        // Set vehicle types from manifest
+        if (manifest.vehicle_types) {
+            VEHICLE_TYPES = manifest.vehicle_types;
+        }
+        
+        const totalChunks = manifest.chunks.length;
+        const totalTrips = manifest.total_trips || manifest.chunks.reduce((s, c) => s + c.trip_count, 0);
+        
+        statusDiv.innerHTML = `
+            <span style="color:#ff9800;">Manifest loaded: ${totalTrips.toLocaleString()} trips in ${totalChunks} chunks</span>
+            <div style="font-size:0.7rem;color:#666;margin-top:3px;">Source: ${manifest.source_file || file.name}</div>
+            <div style="font-size:0.65rem;color:#1565c0;margin-top:3px;">Upload chunk files or place in same directory</div>
+        `;
+        
+        // Try to auto-load chunks from same directory (if served from server)
+        const basePath = file.name.includes('/') ? file.name.substring(0, file.name.lastIndexOf('/') + 1) : '';
+        
+        // Show chunk status
+        showChunkStatus();
+        
+    } catch (err) {
+        statusDiv.innerHTML = `<span style="color:#f44336;">Error: ${err.message}</span>`;
+        console.error('Error loading manifest:', err);
+    }
+}
+
+// Upload multiple chunk files
+async function uploadChunks(input) {
+    const files = Array.from(input.files);
+    if (files.length === 0) return;
+    
+    const progressDiv = document.getElementById('chunkProgress');
+    const progressBar = document.getElementById('chunkProgressBar');
+    const progressText = document.getElementById('chunkProgressText');
+    
+    progressDiv.style.display = 'block';
+    progressBar.style.width = '0%';
+    progressText.textContent = `Loading 0/${files.length} chunks...`;
+    
+    let loadedCount = 0;
+    let totalTrips = 0;
+    
+    for (const file of files) {
+        try {
+            progressText.textContent = `Loading ${file.name}...`;
+            
+            let text;
+            if (file.name.endsWith('.gz')) {
+                // Decompress gzip
+                const arrayBuffer = await file.arrayBuffer();
+                const decompressed = await decompressGzip(arrayBuffer);
+                text = new TextDecoder().decode(decompressed);
+            } else {
+                text = await file.text();
+            }
+            
+            const chunkData = JSON.parse(text);
+            
+            if (Array.isArray(chunkData)) {
+                LOADED_CHUNKS[file.name] = chunkData;
+                totalTrips += chunkData.length;
+            }
+            
+            loadedCount++;
+            const progress = (loadedCount / files.length) * 100;
+            progressBar.style.width = progress + '%';
+            progressText.textContent = `Loaded ${loadedCount}/${files.length} chunks (${totalTrips.toLocaleString()} trips)`;
+            
+        } catch (err) {
+            console.error(`Error loading chunk ${file.name}:`, err);
+            progressText.textContent = `Error loading ${file.name}: ${err.message}`;
+        }
+    }
+    
+    // Merge all chunks into TRIPS
+    mergeLoadedChunks();
+    
+    progressDiv.style.display = 'none';
+}
+
+// Decompress gzip data
+async function decompressGzip(arrayBuffer) {
+    const ds = new DecompressionStream('gzip');
+    const blob = new Blob([arrayBuffer]);
+    const decompressedStream = blob.stream().pipeThrough(ds);
+    const decompressedBlob = await new Response(decompressedStream).blob();
+    return await decompressedBlob.arrayBuffer();
+}
+
+// Merge all loaded chunks into TRIPS array
+function mergeLoadedChunks() {
+    const statusDiv = document.getElementById('tripDataStatus');
+    statusDiv.innerHTML = '<span style="color:#2196f3;">Merging chunks...</span>';
+    
+    TRIPS = [];
+    
+    // Sort chunk names to maintain order
+    const chunkNames = Object.keys(LOADED_CHUNKS).sort();
+    
+    for (const name of chunkNames) {
+        TRIPS.push(...LOADED_CHUNKS[name]);
+    }
+    
+    // Extract vehicles and vehicle types
+    VEHICLES = [...new Set(TRIPS.map(t => t.plate))].sort();
+    
+    VEHICLE_TYPES = {};
+    TRIPS.forEach(t => {
+        if (t.vehicle_type !== undefined || t.Vehicle_type !== undefined) {
+            const typeCode = t.vehicle_type || t.Vehicle_type;
+            const typeLabel = t.vehicle_type_label || t.Vehicle_type_label || 'Type ' + typeCode;
+            VEHICLE_TYPES[typeCode] = typeLabel;
+        }
+    });
+    
+    // Update UI
+    updateTripsUI(TRIPS.length, VEHICLES.length, `${chunkNames.length} chunks`);
+    updateVehicleDropdown();
+    
+    // Reset batch processing data
+    ALL_SEGMENTED_PATHS = {};
+    document.getElementById('loadedPathsSection').style.display = 'none';
+    document.getElementById('batchStatus').innerHTML = '';
+    
+    console.log('Merged chunks:', chunkNames.length, 'Total trips:', TRIPS.length);
+}
+
+// Show chunk loading status
+function showChunkStatus() {
+    if (!MANIFEST_DATA) return;
+    
+    const totalChunks = MANIFEST_DATA.chunks.length;
+    const loadedChunks = Object.keys(LOADED_CHUNKS).length;
+    
+    const progressDiv = document.getElementById('chunkProgress');
+    const progressBar = document.getElementById('chunkProgressBar');
+    const progressText = document.getElementById('chunkProgressText');
+    
+    if (loadedChunks < totalChunks) {
+        progressDiv.style.display = 'block';
+        const progress = (loadedChunks / totalChunks) * 100;
+        progressBar.style.width = progress + '%';
+        progressText.textContent = `${loadedChunks}/${totalChunks} chunks loaded. Upload remaining chunk files.`;
+    } else {
+        progressDiv.style.display = 'none';
+    }
+}
+
+// Process vehicles in batches for large datasets
+async function processVehiclesBatch(vehicleList, batchSize = 10) {
+    const statusDiv = document.getElementById('batchStatus');
+    const total = vehicleList.length;
+    let processed = 0;
+    
+    ALL_SEGMENTED_PATHS = {};
+    let totalPaths = 0;
+    let totalTrips = 0;
+    
+    for (let i = 0; i < total; i += batchSize) {
+        const batch = vehicleList.slice(i, i + batchSize);
+        
+        for (const vehicle of batch) {
+            const vehicleTrips = TRIPS.filter(t => t.plate === vehicle)
+                .sort((a, b) => new Date(a.t_prev) - new Date(b.t_prev));
+            
+            if (vehicleTrips.length > 0) {
+                const segmented = segmentRoute(vehicleTrips);
+                
+                ALL_SEGMENTED_PATHS[vehicle] = {
+                    trips: segmented,
+                    pathCount: new Set(segmented.map(t => t.pathId)).size,
+                    tripCount: segmented.length,
+                    dateRange: {
+                        start: vehicleTrips[0].t_prev,
+                        end: vehicleTrips[vehicleTrips.length - 1].t_next
+                    }
+                };
+                
+                totalPaths += ALL_SEGMENTED_PATHS[vehicle].pathCount;
+                totalTrips += segmented.length;
+            }
+            
+            processed++;
+        }
+        
+        // Update progress
+        const progress = Math.round((processed / total) * 100);
+        statusDiv.innerHTML = `<span style="color:#2196f3;">Processing: ${processed}/${total} vehicles (${progress}%) - ${totalTrips.toLocaleString()} trips, ${totalPaths.toLocaleString()} paths</span>`;
+        
+        // Yield to UI
+        await new Promise(r => setTimeout(r, 0));
+    }
+    
+    statusDiv.innerHTML = `<span style="color:#4caf50;">Processed ${total} vehicles: ${totalTrips.toLocaleString()} trips, ${totalPaths.toLocaleString()} paths</span>`;
+    
+    updateLoadedVehiclesDropdown();
+}
 
 // Upload trips data (Parquet, JSON, or CSV)
 async function uploadTripsData(input) {
