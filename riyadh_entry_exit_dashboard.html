@@ -172,19 +172,15 @@
             return [];
         }
         
-        // Crop boundary by moving each edge inward
+        // Crop boundary - creates a RECTANGLE like cropping a photo
         function cropBoundary(coords, north, south, east, west) {
-            if (north === 0 && south === 0 && east === 0 && west === 0) {
-                return coords.slice();
-            }
-            
             // Convert meters to degrees (approximate)
             const northDeg = north / 111000;
             const southDeg = south / 111000;
             const eastDeg = east / 111000;
             const westDeg = west / 111000;
             
-            // Get current bounds
+            // Get original bounds
             const lngs = coords.map(c => c[0]);
             const lats = coords.map(c => c[1]);
             const minLat = Math.min(...lats);
@@ -192,25 +188,20 @@
             const minLng = Math.min(...lngs);
             const maxLng = Math.max(...lngs);
             
-            // New bounds after cropping
+            // New bounds after cropping - make a rectangle
             const newMaxLat = maxLat - northDeg;
             const newMinLat = minLat + southDeg;
             const newMaxLng = maxLng - eastDeg;
             const newMinLng = minLng + westDeg;
             
-            // Clamp each point to new bounds
-            return coords.map(c => {
-                let lng = c[0];
-                let lat = c[1];
-                
-                // Move points that are outside new bounds
-                if (lat > newMaxLat) lat = newMaxLat;
-                if (lat < newMinLat) lat = newMinLat;
-                if (lng > newMaxLng) lng = newMaxLng;
-                if (lng < newMinLng) lng = newMinLng;
-                
-                return [lng, lat];
-            });
+            // Return rectangle corners (closed polygon)
+            return [
+                [newMinLng, newMaxLat],  // top-left
+                [newMaxLng, newMaxLat],  // top-right
+                [newMaxLng, newMinLat],  // bottom-right
+                [newMinLng, newMinLat],  // bottom-left
+                [newMinLng, newMaxLat]   // close polygon
+            ];
         }
         
         // Line intersection
