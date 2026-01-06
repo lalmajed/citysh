@@ -162,12 +162,38 @@ function loadConfigFile(input) {
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
-            const content = e.target.result;
-            const lines = content.trim().split('\n');
+            const content = e.target.result.trim();
             
             CONFIGS = [];
             SITES_MAP = {};
             let errors = 0;
+            let lines;
+            
+            // Check if it's a JSON array or JSONL
+            if (content.startsWith('[')) {
+                // It's a JSON array
+                log('Detected JSON array format');
+                try {
+                    const arr = JSON.parse(content);
+                    lines = arr.map(obj => JSON.stringify(obj));
+                    log('Parsed JSON array with ' + arr.length + ' items');
+                } catch(jsonErr) {
+                    log('Failed to parse as JSON array: ' + jsonErr.message);
+                    lines = content.split('\n');
+                }
+            } else {
+                // It's JSONL (one JSON per line)
+                log('Detected JSONL format');
+                lines = content.split('\n');
+            }
+            
+            log('Processing ' + lines.length + ' lines...');
+            
+            // Show first line for debugging
+            if (lines.length > 0) {
+                const firstLine = lines[0].substring(0, 200);
+                log('First line preview: ' + firstLine + (lines[0].length > 200 ? '...' : ''));
+            }
             
             lines.forEach((line, idx) => {
                 if (!line.trim()) return;
@@ -177,7 +203,21 @@ function loadConfigFile(input) {
                     // Validate required fields
                     if (!config.config_id || !config.origin || !config.destination) {
                         errors++;
-                        if (errors <= 3) log('⚠️ Line ' + (idx+1) + ': Missing required fields');
+                        if (errors <= 5) log('⚠️ Line ' + (idx+1) + ': Missing required fields. Keys found: ' + Object.keys(config).join(', '));
+                        return;
+                    }
+                    
+                    // Validate origin has lat/lon
+                    if (config.origin.lat === undefined || config.origin.lon === undefined) {
+                        errors++;
+                        if (errors <= 5) log('⚠️ Line ' + (idx+1) + ': Origin missing lat/lon');
+                        return;
+                    }
+                    
+                    // Validate destination has lat/lon
+                    if (config.destination.lat === undefined || config.destination.lon === undefined) {
+                        errors++;
+                        if (errors <= 5) log('⚠️ Line ' + (idx+1) + ': Destination missing lat/lon');
                         return;
                     }
                     
@@ -185,26 +225,37 @@ function loadConfigFile(input) {
                     CONFIGS.push(config);
                     
                     // Build sites map
-                    if (config.origin.site_id && config.origin.lat && config.origin.lon) {
+                    if (config.origin.site_id) {
                         SITES_MAP[config.origin.site_id] = config.origin;
                     }
-                    if (config.destination.site_id && config.destination.lat && config.destination.lon) {
+                    if (config.destination.site_id) {
                         SITES_MAP[config.destination.site_id] = config.destination;
                     }
                     
                 } catch(parseErr) {
                     errors++;
-                    if (errors <= 3) log('⚠️ Line ' + (idx+1) + ': JSON parse error');
+                    if (errors <= 5) {
+                        log('⚠️ Line ' + (idx+1) + ': Parse error - ' + parseErr.message);
+                        log('   Content: ' + line.substring(0, 100) + '...');
+                    }
                 }
             });
             
             // Update UI
             const fileInfo = document.getElementById('fileInfo');
             fileInfo.style.display = 'block';
-            fileInfo.className = 'file-info';
-            fileInfo.innerHTML = '✓ Loaded <b>' + CONFIGS.length.toLocaleString() + '</b> OD configs<br>' +
-                                 '✓ Found <b>' + Object.keys(SITES_MAP).length + '</b> unique sites' +
-                                 (errors > 0 ? '<br>⚠️ ' + errors + ' errors' : '');
+            
+            if (CONFIGS.length > 0) {
+                fileInfo.className = 'file-info';
+                fileInfo.innerHTML = '✓ Loaded <b>' + CONFIGS.length.toLocaleString() + '</b> OD configs<br>' +
+                                     '✓ Found <b>' + Object.keys(SITES_MAP).length + '</b> unique sites' +
+                                     (errors > 0 ? '<br>⚠️ ' + errors + ' lines skipped (errors)' : '');
+            } else {
+                fileInfo.className = 'file-info error';
+                fileInfo.innerHTML = '❌ No valid configs found!<br>' +
+                                     '⚠️ ' + errors + ' errors<br>' +
+                                     'Check the log below for details';
+            }
             
             // Show preview
             const preview = document.getElementById('preview');
