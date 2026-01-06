@@ -263,12 +263,12 @@
                             <div id="dynamicRmaxStatus" style="font-size:0.75rem;color:#666;margin-bottom:5px;">
                                 Not loaded - using fixed r_max
                             </div>
-                            <input type="file" id="rmaxUpload" accept=".json,.csv" onchange="uploadDynamicRmax(this)" style="display:none;">
+                            <input type="file" id="rmaxUpload" accept=".json,.csv,.parquet" onchange="uploadDynamicRmax(this)" style="display:none;">
                             <button onclick="document.getElementById('rmaxUpload').click()" style="font-size:0.7rem;padding:4px 8px;cursor:pointer;background:#9c27b0;color:#fff;border:none;border-radius:3px;">
-                                Upload r_max Table
+                                Upload r_max Table (JSON/CSV/Parquet)
                             </button>
                             <p style="font-size:0.65rem;color:#888;margin-top:3px;">
-                                JSON: [{camera_prev, camera_next, weekday, r_max, vehicle_type?}, ...]
+                                Columns: camera_prev, camera_next, weekday, r_max, vehicle_type (optional)
                             </p>
                         </div>
                     </div>
@@ -583,79 +583,128 @@ function checkRouteInMatrix() {
 
 // ============ DYNAMIC R_MAX ============
 
-// Upload dynamic r_max table (JSON or CSV)
-function uploadDynamicRmax(input) {
+// Upload dynamic r_max table (JSON, CSV, or Parquet)
+async function uploadDynamicRmax(input) {
     const file = input.files[0];
     if (!file) return;
     
     const statusDiv = document.getElementById('dynamicRmaxStatus');
     statusDiv.innerHTML = '<span style="color:#2196f3;">Reading file...</span>';
     
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            let data;
-            if (file.name.endsWith('.json')) {
-                data = JSON.parse(e.target.result);
-                // Handle array or {data: [...]} format
-                if (!Array.isArray(data) && data.data) data = data.data;
-            } else if (file.name.endsWith('.csv')) {
-                data = parseCSVtoRmax(e.target.result);
-            } else {
-                throw new Error('Unsupported file format. Use .json or .csv');
-            }
-            
-            // Process the r_max data
-            DYNAMIC_RMAX = {};
-            dynamicRmaxHasVehicleType = false;
-            let count = 0;
-            let countWithType = 0;
-            
-            // Check if data has vehicle_type column
-            if (data.length > 0 && (data[0].vehicle_type !== undefined || data[0].Vehicle_type !== undefined)) {
-                dynamicRmaxHasVehicleType = true;
-            }
-            
-            data.forEach(row => {
-                const prev = row.camera_prev || row.from;
-                const next = row.camera_next || row.to;
-                const weekday = row.weekday || row.day;
-                const rmax = parseFloat(row.r_max || row.rmax);
-                const vehicleType = row.vehicle_type || row.Vehicle_type;
-                
-                if (prev && next && weekday && !isNaN(rmax)) {
-                    // Store with vehicle type if available
-                    if (vehicleType !== undefined) {
-                        const keyWithType = prev + '_' + next + '_' + weekday + '_' + vehicleType;
-                        DYNAMIC_RMAX[keyWithType] = rmax;
-                        countWithType++;
-                    }
-                    
-                    // Also store without vehicle type (as fallback)
-                    const key = prev + '_' + next + '_' + weekday;
-                    // Only store if not already present (prefer specific vehicle type entries)
-                    if (DYNAMIC_RMAX[key] === undefined) {
-                        DYNAMIC_RMAX[key] = rmax;
-                    }
-                    count++;
-                }
-            });
-            
-            dynamicRmaxLoaded = true;
-            let statusMsg = `Loaded ${count} r_max entries`;
-            if (dynamicRmaxHasVehicleType) {
-                statusMsg += ` (${countWithType} with vehicle type)`;
-            }
-            statusDiv.innerHTML = `<span style="color:#4caf50;">${statusMsg}</span>
-                <div style="font-size:0.65rem;color:#666;margin-top:2px;">Source: ${file.name}</div>`;
-            console.log('Loaded dynamic r_max:', count, 'entries,', countWithType, 'with vehicle type');
-            
-        } catch (err) {
-            statusDiv.innerHTML = `<span style="color:#f44336;">Error: ${err.message}</span>`;
-            console.error('Error loading r_max:', err);
+    try {
+        let data;
+        
+        if (file.name.endsWith('.parquet')) {
+            // Handle parquet file
+            statusDiv.innerHTML = '<span style="color:#2196f3;">Reading parquet file...</span>';
+            data = await readParquetRmax(file);
+        } else if (file.name.endsWith('.json')) {
+            const text = await file.text();
+            data = JSON.parse(text);
+            // Handle array or {data: [...]} format
+            if (!Array.isArray(data) && data.data) data = data.data;
+        } else if (file.name.endsWith('.csv')) {
+            const text = await file.text();
+            data = parseCSVtoRmax(text);
+        } else {
+            throw new Error('Unsupported file format. Use .json, .csv, or .parquet');
         }
-    };
-    reader.readAsText(file);
+        
+        // Process the r_max data
+        processRmaxData(data, file.name);
+        
+    } catch (err) {
+        statusDiv.innerHTML = `<span style="color:#f44336;">Error: ${err.message}</span>`;
+        console.error('Error loading r_max:', err);
+    }
+}
+
+// Read parquet file for r_max data
+async function readParquetRmax(file) {
+    try {
+        const parquet = await import('https://cdn.jsdelivr.net/npm/parquet-wasm@0.6.0/esm/parquet_wasm.js');
+        await parquet.default();
+        
+        const arrayBuffer = await file.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        const arrowTable = parquet.readParquet(uint8Array);
+        
+        const data = [];
+        const schema = arrowTable.schema;
+        const numRows = arrowTable.numRows;
+        
+        // Get columns
+        const columns = {};
+        for (let i = 0; i < schema.fields.length; i++) {
+            const field = schema.fields[i];
+            columns[field.name.toLowerCase()] = arrowTable.getChildAt(i);
+        }
+        
+        // Convert to array of objects
+        for (let row = 0; row < numRows; row++) {
+            const record = {};
+            for (const [name, column] of Object.entries(columns)) {
+                let value = column.get(row);
+                if (typeof value === 'bigint') value = Number(value);
+                record[name] = value;
+            }
+            data.push(record);
+        }
+        
+        return data;
+        
+    } catch (err) {
+        console.error('Parquet reading failed:', err);
+        throw new Error('Could not read parquet. Convert to JSON first with: python3 convert_rmax_parquet.py ' + file.name);
+    }
+}
+
+// Process r_max data into lookup table
+function processRmaxData(data, sourceName) {
+    const statusDiv = document.getElementById('dynamicRmaxStatus');
+    
+    DYNAMIC_RMAX = {};
+    dynamicRmaxHasVehicleType = false;
+    let count = 0;
+    let countWithType = 0;
+    
+    // Check if data has vehicle_type column
+    if (data.length > 0 && (data[0].vehicle_type !== undefined || data[0].Vehicle_type !== undefined)) {
+        dynamicRmaxHasVehicleType = true;
+    }
+    
+    data.forEach(row => {
+        const prev = row.camera_prev || row.from;
+        const next = row.camera_next || row.to;
+        const weekday = row.weekday || row.day;
+        const rmax = parseFloat(row.r_max || row.rmax);
+        const vehicleType = row.vehicle_type || row.Vehicle_type;
+        
+        if (prev && next && weekday && !isNaN(rmax)) {
+            // Store with vehicle type if available
+            if (vehicleType !== undefined) {
+                const keyWithType = prev + '_' + next + '_' + weekday + '_' + vehicleType;
+                DYNAMIC_RMAX[keyWithType] = rmax;
+                countWithType++;
+            }
+            
+            // Also store without vehicle type (as fallback)
+            const key = prev + '_' + next + '_' + weekday;
+            if (DYNAMIC_RMAX[key] === undefined) {
+                DYNAMIC_RMAX[key] = rmax;
+            }
+            count++;
+        }
+    });
+    
+    dynamicRmaxLoaded = true;
+    let statusMsg = `Loaded ${count.toLocaleString()} r_max entries`;
+    if (dynamicRmaxHasVehicleType) {
+        statusMsg += ` (${countWithType.toLocaleString()} with vehicle type)`;
+    }
+    statusDiv.innerHTML = `<span style="color:#4caf50;">${statusMsg}</span>
+        <div style="font-size:0.65rem;color:#666;margin-top:2px;">Source: ${sourceName}</div>`;
+    console.log('Loaded dynamic r_max:', count, 'entries,', countWithType, 'with vehicle type');
 }
 
 // Parse CSV to r_max format
