@@ -4,6 +4,7 @@
     <title>Riyadh Map - Dynamic Counts</title>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1.0, width=device-width">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; }
@@ -54,39 +55,15 @@
         .layer-control .count { font-size: 10px; color: #666; }
         .layer-control input[type="range"] { width: 100%; margin: 2px 0; }
         
-        #canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 450; }
-        
         .btn { padding: 8px 12px; margin: 3px 0; cursor: pointer; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; width: 100%; }
         .btn-primary { background: #1a73e8; color: white; border: none; }
         .btn-success { background: #28a745; color: white; border: none; }
-        
-        .loading-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.8); z-index: 9999;
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 18px; flex-direction: column; gap: 20px;
-        }
-        .loading-overlay.hidden { display: none; }
-        .progress-bar { width: 300px; height: 20px; background: #333; border-radius: 10px; overflow: hidden; }
-        .progress-fill { height: 100%; background: #4CAF50; transition: width 0.3s; }
-        
-        .district-list { max-height: 120px; overflow-y: auto; }
-        .district-item { padding: 4px 8px; margin: 2px 0; background: #f5f5f5; border-radius: 4px; cursor: pointer; font-size: 10px; }
-        .district-item:hover { background: #e3f2fd; }
-        .district-item.selected { background: #1a73e8; color: white; }
-        
-        .search-box { width: 100%; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; margin-bottom: 5px; }
         
         .file-input { margin: 5px 0; }
         .file-input label { display: block; font-weight: 600; font-size: 10px; margin-bottom: 2px; }
         .file-input input[type="file"] { font-size: 9px; width: 100%; }
         .file-status { font-size: 9px; color: #666; }
         .file-status.loaded { color: #28a745; font-weight: bold; }
-        
-        .poi-cats { max-height: 120px; overflow-y: auto; margin-top: 5px; }
-        .poi-cat { display: flex; align-items: center; gap: 5px; padding: 3px 5px; font-size: 10px; cursor: pointer; }
-        .poi-cat:hover { background: #f0f0f0; }
-        .poi-cat .cnt { margin-left: auto; color: #999; }
         
         .info-popup {
             position: absolute; background: white; padding: 12px 15px; border-radius: 8px;
@@ -96,260 +73,149 @@
         .info-popup.show { display: block; }
         .info-popup h3 { margin: 0 0 8px 0; color: #1a73e8; font-size: 14px; }
         .info-popup .close { position: absolute; top: 5px; right: 8px; cursor: pointer; color: #999; font-size: 18px; }
-        .info-popup .close:hover { color: #333; }
         .info-popup table { width: 100%; border-collapse: collapse; }
         .info-popup td { padding: 4px 5px; border-bottom: 1px solid #eee; font-size: 11px; }
         .info-popup td:first-child { font-weight: 600; color: #555; width: 35%; }
-        .info-popup .type-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; color: white; font-size: 10px; }
-        .info-popup .type-apt { background: #2196F3; }
-        .info-popup .type-villa { background: #4CAF50; }
-        .info-popup .type-other { background: #FF9800; }
-        .info-popup .type-poi { background: #9C27B0; }
-        
-        .click-toggle { background: #fff3e0; padding: 8px; border-radius: 6px; margin: 8px 0; }
-        .click-toggle label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 11px; }
+        .type-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; color: white; font-size: 10px; }
     </style>
 </head>
 <body>
-    <div id="loadingOverlay" class="loading-overlay">
-        <div id="loadingTitle"> Loading Google Maps...</div>
-        <div class="progress-bar"><div id="progressFill" class="progress-fill" style="width: 0%"></div></div>
-        <div id="loadingStatus">Please wait while the map loads...</div>
-        <div style="font-size: 12px; color: #aaa; max-width: 400px; text-align: center; margin-top: 10px;">
-             Using keyless Google Maps API
-        </div>
-    </div>
-    
     <div id="map"></div>
-    <canvas id="canvas"></canvas>
     
-    <!-- Info Popup for clicked items -->
     <div id="infoPopup" class="info-popup">
         <span class="close" onclick="closeInfoPopup()">&times;</span>
-        <h3 id="popupTitle"> Details</h3>
+        <h3 id="popupTitle">Details</h3>
         <div id="popupContent"></div>
     </div>
     
     <div class="panel">
         <h2>Riyadh Map - Dynamic Counts</h2>
         
-        <!-- Total Stats -->
         <div class="stats-grid">
-            <div class="stat-box" style="background:#9c27b0;"><div class="num" id="totalBldg">0</div><div class="lbl"> Buildings</div></div>
-            <div class="stat-box apt"><div class="num" id="totalApt">0</div><div class="lbl"> Apartments</div></div>
-            <div class="stat-box villa"><div class="num" id="totalVilla">0</div><div class="lbl"> Villas</div></div>
-            <div class="stat-box other"><div class="num" id="totalOther">0</div><div class="lbl"> Other</div></div>
+            <div class="stat-box" style="background:#9c27b0;"><div class="num" id="totalBldg">0</div><div class="lbl">Buildings</div></div>
+            <div class="stat-box apt"><div class="num" id="totalApt">0</div><div class="lbl">Apartments</div></div>
+            <div class="stat-box villa"><div class="num" id="totalVilla">0</div><div class="lbl">Villas</div></div>
+            <div class="stat-box other"><div class="num" id="totalOther">0</div><div class="lbl">Other</div></div>
         </div>
         <div style="text-align:center; font-size:11px; color:#666; margin-bottom:8px;">
             Total Parcels: <b id="totalParcels">0</b> | POIs: <b id="totalPoi">0</b> | Roads: <b id="totalRoads">0</b>
         </div>
         
-        <!-- Selected District Stats -->
         <div class="district-stats" id="districtStats">
-            <h3 id="districtStatsTitle"> DISTRICT: None</h3>
-            <div class="row" style="color:#9c27b0;"><span> Buildings:</span><span id="distBldg">0</span></div>
-            <div class="row" style="color:#2196F3;"><span> Apartments:</span><span id="distApt">0</span></div>
-            <div class="row" style="color:#4CAF50;"><span> Villas:</span><span id="distVilla">0</span></div>
-            <div class="row" style="color:#FF9800;"><span> Other:</span><span id="distOther">0</span></div>
+            <h3 id="districtStatsTitle">DISTRICT: None</h3>
+            <div class="row" style="color:#9c27b0;"><span>Buildings:</span><span id="distBldg">0</span></div>
+            <div class="row" style="color:#2196F3;"><span>Apartments:</span><span id="distApt">0</span></div>
+            <div class="row" style="color:#4CAF50;"><span>Villas:</span><span id="distVilla">0</span></div>
+            <div class="row" style="color:#FF9800;"><span>Other:</span><span id="distOther">0</span></div>
             <div class="row total"><span>Total Parcels:</span><span id="distTotal">0</span></div>
-            <div class="row"><span> POIs:</span><span id="distPoi">0</span></div>
+            <div class="row"><span>POIs:</span><span id="distPoi">0</span></div>
             <div class="row total" style="color:#4CAF50;"><span>Villa %:</span><span id="distVillaPct">0%</span></div>
             <div class="row total" style="color:#2196F3;"><span>Apt %:</span><span id="distAptPct">0%</span></div>
-            
-            <!-- Road Stats -->
             <div style="border-top:2px solid #2196F3;margin-top:8px;padding-top:8px;">
-                <div class="row" style="color:#2196F3;font-weight:bold;"><span> ROADS</span><span></span></div>
+                <div class="row" style="color:#2196F3;font-weight:bold;"><span>ROADS</span><span></span></div>
                 <div class="row"><span>Total Roads:</span><span id="distRoads">0</span></div>
                 <div class="row"><span>Total Length:</span><span id="distRoadLength">0 km</span></div>
                 <div class="row"><span>Major (20m+):</span><span id="distMajorRoads">0</span></div>
                 <div class="row"><span>Entry/Exit Points:</span><span id="distEntryExit">~0</span></div>
             </div>
-            
-            <!-- Road Width Breakdown -->
-            <div id="distRoadWidths" style="font-size:9px;margin-top:5px;display:none;">
-                <div style="font-weight:bold;margin-bottom:3px;">By Width:</div>
-                <div id="distWidthBreakdown"></div>
-            </div>
         </div>
         
-        <!-- Dynamic Counts (In View) -->
         <div class="dynamic-stats">
-            <h3> IN CURRENT VIEW</h3>
-            <div class="row" style="color:#9c27b0;"><span> Buildings:</span><span id="viewBldg">0</span></div>
-            <div class="row" style="color:#2196F3;"><span> Apartments:</span><span id="viewApt">0</span></div>
-            <div class="row" style="color:#4CAF50;"><span> Villas:</span><span id="viewVilla">0</span></div>
-            <div class="row" style="color:#FF9800;"><span> Other:</span><span id="viewOther">0</span></div>
+            <h3>IN CURRENT VIEW</h3>
+            <div class="row" style="color:#9c27b0;"><span>Buildings:</span><span id="viewBldg">0</span></div>
+            <div class="row" style="color:#2196F3;"><span>Apartments:</span><span id="viewApt">0</span></div>
+            <div class="row" style="color:#4CAF50;"><span>Villas:</span><span id="viewVilla">0</span></div>
+            <div class="row" style="color:#FF9800;"><span>Other:</span><span id="viewOther">0</span></div>
             <div class="row total"><span>Total Parcels:</span><span id="viewTotal">0</span></div>
-            <div class="row"><span> POIs:</span><span id="viewPoi">0</span></div>
+            <div class="row"><span>POIs:</span><span id="viewPoi">0</span></div>
             <div class="row total" style="color:#4CAF50;"><span>Villa %:</span><span id="viewVillaPct">0%</span></div>
         </div>
         
-        <!-- Layer Controls -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                 LAYERS <span></span>
+                LAYERS <span>[+]</span>
             </div>
             <div class="section-content open">
                 <div class="layer-control">
                     <div class="header">
-                        <input type="checkbox" id="showBldg" checked onchange="render()">
-                        <div class="dot" style="background:#9c27b0;"></div>
-                        <span class="name">MS Buildings</span>
-                    </div>
-                    <div style="font-size:10px;">
-                        Size: <span id="bldgSizeVal">2</span> <input type="range" id="bldgSize" min="0.5" max="8" value="2" step="0.5" oninput="updateSlider('bldg')">
-                        Opacity: <span id="bldgOpacityVal">40</span>% <input type="range" id="bldgOpacity" min="10" max="100" value="40" step="5" oninput="updateSlider('bldg')">
-                    </div>
-                </div>
-                <div class="layer-control">
-                    <div class="header">
-                        <input type="checkbox" id="showApt" checked onchange="render()">
+                        <input type="checkbox" id="showApt" checked onchange="updateLayers()">
                         <div class="dot" style="background:#2196F3;"></div>
                         <span class="name">Apartments</span>
                     </div>
-                    <div style="font-size:10px;">
-                        Size: <span id="aptSizeVal">3</span> <input type="range" id="aptSize" min="1" max="8" value="3" step="0.5" oninput="updateSlider('apt')">
-                    </div>
                 </div>
                 <div class="layer-control">
                     <div class="header">
-                        <input type="checkbox" id="showVilla" checked onchange="render()">
+                        <input type="checkbox" id="showVilla" checked onchange="updateLayers()">
                         <div class="dot" style="background:#4CAF50;"></div>
                         <span class="name">Villas</span>
                     </div>
-                    <div style="font-size:10px;">
-                        Size: <span id="villaSizeVal">3</span> <input type="range" id="villaSize" min="1" max="8" value="3" step="0.5" oninput="updateSlider('villa')">
-                    </div>
                 </div>
                 <div class="layer-control">
                     <div class="header">
-                        <input type="checkbox" id="showOther" checked onchange="render()">
+                        <input type="checkbox" id="showOther" checked onchange="updateLayers()">
                         <div class="dot" style="background:#FF9800;"></div>
                         <span class="name">Other Parcels</span>
-                    </div>
-                    <div style="font-size:10px;">
-                        Size: <span id="otherSizeVal">2</span> <input type="range" id="otherSize" min="1" max="8" value="2" step="0.5" oninput="updateSlider('other')">
-                    </div>
-                </div>
-                <div class="layer-control" style="background:#f3e5f5;">
-                    <div class="header">
-                        <input type="checkbox" id="showPoi" checked onchange="render()">
-                        <div class="dot" style="background:#9C27B0;"></div>
-                        <span class="name">POIs</span>
-                        <span class="count" id="poiCount">0</span>
-                    </div>
-                    <div style="font-size:10px;">
-                        Size: <span id="poiSizeVal">4</span> <input type="range" id="poiSize" min="2" max="10" value="4" step="0.5" oninput="updateSlider('poi')">
-                    </div>
-                </div>
-                <div class="layer-control">
-                    <div class="header">
-                        <input type="checkbox" id="showDistricts" checked onchange="render()">
-                        <div class="dot" style="background:#607D8B;"></div>
-                        <span class="name">Districts</span>
                     </div>
                 </div>
                 <div class="layer-control" style="background:#e3f2fd;">
                     <div class="header">
-                        <input type="checkbox" id="showRoads" checked onchange="render()">
+                        <input type="checkbox" id="showRoads" checked onchange="updateLayers()">
                         <div class="dot" style="background:#d32f2f;"></div>
                         <span class="name">Roads</span>
                         <span class="count" id="roadCount">0</span>
                     </div>
-                    <div style="font-size:10px;">
-                        Width Scale: <span id="roadWidthVal">1</span>x <input type="range" id="roadWidth" min="0.5" max="3" value="1" step="0.25" oninput="updateSlider('road')">
-                        <label style="margin-top:5px;display:flex;align-items:center;gap:5px;">
-                            <input type="checkbox" id="showRoadLabels" checked onchange="render()"> Show Labels
-                        </label>
-                    </div>
                 </div>
-                <div class="click-toggle">
-                    <label><input type="checkbox" id="enableClick" checked>  Enable click to view details</label>
-                    <div style="font-size:9px;color:#666;margin-top:3px;margin-left:20px;">
-                        Click on POI/Parcel/District to see info. Disable to freely pan/zoom.
+                <div class="layer-control">
+                    <div class="header">
+                        <input type="checkbox" id="showDistricts" checked onchange="updateLayers()">
+                        <div class="dot" style="background:#607D8B;"></div>
+                        <span class="name">Districts</span>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Data Files -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                 DATA FILES <span></span>
+                DATA FILES <span>[+]</span>
             </div>
             <div class="section-content open">
                 <div class="file-input">
-                    <label> MS Buildings JSON:</label>
-                    <input type="file" id="buildingsFile" accept=".json">
-                    <div id="buildingsStatus" class="file-status">Upload buildings JSON</div>
-                </div>
-                <div class="file-input">
-                    <label> Parcels CSV:</label>
+                    <label>Parcels CSV:</label>
                     <input type="file" id="parcelsFile" accept=".csv">
-                    <div id="parcelsStatus" class="file-status">Use <b>riyadh_parcels_classified.csv</b> for best results</div>
+                    <div id="parcelsStatus" class="file-status">Upload parcels CSV</div>
                 </div>
                 <div class="file-input">
-                    <label> POI CSV (riyadh_pois.csv):</label>
+                    <label>POI CSV:</label>
                     <input type="file" id="poiFile" accept=".csv">
                     <div id="poiStatus" class="file-status">Upload POI CSV</div>
                 </div>
                 <div class="file-input">
-                    <label> Districts GeoJSON:</label>
+                    <label>Districts GeoJSON:</label>
                     <input type="file" id="distFile" accept=".json,.geojson">
-                    <div id="distStatus" class="file-status">Upload districts JSON</div>
+                    <div id="distStatus" class="file-status">Upload districts GeoJSON</div>
                 </div>
                 <div class="file-input" style="background:#e3f2fd;padding:8px;border-radius:6px;margin-top:8px;">
-                    <label> Roads GeoJSON (muhammadiyah_roads.geojson):</label>
+                    <label>Roads GeoJSON:</label>
                     <input type="file" id="roadsFile" accept=".json,.geojson">
-                    <div id="roadsStatus" class="file-status">Upload roads GeoJSON for visualization</div>
+                    <div id="roadsStatus" class="file-status">Upload roads GeoJSON</div>
                 </div>
             </div>
         </div>
         
-        <!-- POI Categories -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                 POI CATEGORIES (<span id="poiCatCount">0</span>) <span></span>
+                DISTRICTS <span>[+]</span>
             </div>
             <div class="section-content">
-                <div style="margin-bottom:5px;">
-                    <button onclick="selectAllPoi()" style="font-size:9px;padding:2px 5px;">All</button>
-                    <button onclick="clearAllPoi()" style="font-size:9px;padding:2px 5px;">None</button>
-                </div>
-                <div id="poiCategories" class="poi-cats"></div>
+                <input type="text" style="width:100%;padding:5px;margin-bottom:5px;border:1px solid #ddd;border-radius:4px;font-size:11px;" id="districtSearch" placeholder="Search districts..." oninput="filterDistricts()">
+                <button class="btn" onclick="clearDistrictSelection()">Clear Selection</button>
+                <div id="districtList" style="max-height:120px;overflow-y:auto;margin-top:5px;"></div>
             </div>
         </div>
         
-        <!-- Districts -->
-        <div class="section">
-            <div class="section-header" onclick="toggleSection(this)">
-                 DISTRICTS (<span id="districtCount">0</span>) <span></span>
-            </div>
-            <div class="section-content">
-                <input type="text" class="search-box" id="districtSearch" placeholder="Search districts..." oninput="filterDistricts()">
-                <button onclick="clearDistrictSelection()" style="font-size:9px;padding:2px 5px;margin-bottom:5px;">Clear Selection</button>
-                <div id="districtList" class="district-list"></div>
-            </div>
-        </div>
-        
-        <!-- Export -->
-        <div class="section">
-            <div class="section-header" onclick="toggleSection(this)">
-                 EXPORT <span></span>
-            </div>
-            <div class="section-content">
-                <button class="btn btn-success" onclick="exportVisibleParcels()">Export Visible Parcels</button>
-                <button class="btn btn-primary" onclick="exportDistrictParcels()">Export District Parcels</button>
-            </div>
-        </div>
-        
-        <div style="margin-top:8px;font-size:9px;color:#888;text-align:center;">
-            Zoom: <span id="zoomLevel">11</span> | <a href="#" onclick="resetView();return false;">Reset View</a>
-        </div>
-        
-        <!-- Road Legend (shown when roads loaded) -->
         <div id="roadLegend" style="display:none;margin-top:10px;padding:8px;background:#e3f2fd;border-radius:6px;">
-            <div style="font-weight:600;font-size:11px;margin-bottom:5px;"> Road Width Legend</div>
+            <div style="font-weight:600;font-size:11px;margin-bottom:5px;">Road Width Legend</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:9px;">
                 <div><span style="display:inline-block;width:20px;height:4px;background:#d32f2f;border-radius:2px;"></span> 36m+</div>
                 <div><span style="display:inline-block;width:20px;height:4px;background:#ff5722;border-radius:2px;"></span> 30m</div>
@@ -361,518 +227,92 @@
                 <div><span style="display:inline-block;width:20px;height:4px;background:#607d8b;border-radius:2px;"></span> 8m</div>
             </div>
         </div>
+        
+        <div style="margin-top:8px;font-size:9px;color:#888;text-align:center;">
+            Zoom: <span id="zoomLevel">11</span> | <a href="#" onclick="resetView();return false;">Reset View</a>
+        </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        let map;
-        let buildings = [];    // GeoJSON features with polygon coordinates
-        let parcels = [];      // {lat, lng, type: 'apt'|'villa'|'other', ...}
-        let poiData = [];      // {lat, lng, layer, name_ar, name_en}
-        let districts = [];    // GeoJSON features
-        let roads = [];        // GeoJSON features for roads
+        // Initialize map
+        const map = L.map('map').setView([24.7136, 46.6753], 11);
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+        
+        // Data arrays
+        let parcels = [];
+        let poiData = [];
+        let districts = [];
+        let roads = [];
+        
+        // Layer groups
+        let parcelLayers = { apt: L.layerGroup(), villa: L.layerGroup(), other: L.layerGroup() };
+        let roadsLayer = L.layerGroup().addTo(map);
+        let districtsLayer = L.layerGroup().addTo(map);
+        let poiLayer = L.layerGroup().addTo(map);
+        
         let selectedDistrict = null;
-        let activePoiCategories = new Set();
-        let infoPopup = null;
-        let buildingsFileName = '';
-        let mapsLoadAttempts = 0;
-        const MAX_LOAD_ATTEMPTS = 200; // Increased for slower connections
+        let selectedDistrictLayer = null;
         
-        // Road colors by width
+        // Road color by width
         function getRoadColor(width) {
-            if (width >= 36) return '#d32f2f';  // Major arterial - red
-            if (width >= 30) return '#ff5722';  // Arterial - deep orange
-            if (width >= 25) return '#ff9800';  // Collector - orange
-            if (width >= 20) return '#ffc107';  // Main road - amber
-            if (width >= 15) return '#8bc34a';  // Secondary - light green
-            if (width >= 12) return '#4caf50';  // Local - green
-            if (width >= 10) return '#009688';  // Minor - teal
-            return '#607d8b';                   // Alley - blue grey
+            if (width >= 36) return '#d32f2f';
+            if (width >= 30) return '#ff5722';
+            if (width >= 25) return '#ff9800';
+            if (width >= 20) return '#ffc107';
+            if (width >= 15) return '#8bc34a';
+            if (width >= 12) return '#4caf50';
+            if (width >= 10) return '#009688';
+            return '#607d8b';
         }
         
-        function getRoadLineWidth(width, zoom) {
-            const baseWidth = Math.max(1, (zoom - 10) * 0.8);
-            if (width >= 30) return baseWidth * 4;
-            if (width >= 20) return baseWidth * 3;
-            if (width >= 15) return baseWidth * 2.5;
-            if (width >= 10) return baseWidth * 2;
-            return baseWidth * 1.5;
+        function getRoadWeight(width) {
+            if (width >= 30) return 6;
+            if (width >= 20) return 5;
+            if (width >= 15) return 4;
+            return 3;
         }
-        
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        // Wait for Google Maps API to be available
-        function waitForGoogleMaps() {
-            mapsLoadAttempts++;
-            
-            // Update progress
-            const progress = Math.min(95, (mapsLoadAttempts / MAX_LOAD_ATTEMPTS) * 100);
-            document.getElementById('progressFill').style.width = progress + '%';
-            document.getElementById('loadingStatus').textContent = `Loading... (attempt ${mapsLoadAttempts}/${MAX_LOAD_ATTEMPTS})`;
-            
-            if (typeof google !== 'undefined' && google.maps && google.maps.Map) {
-                console.log('Google Maps API loaded successfully after', mapsLoadAttempts, 'attempts');
-                document.getElementById('progressFill').style.width = '100%';
-                document.getElementById('loadingStatus').textContent = 'Map loaded!';
-                setTimeout(() => {
-                    document.getElementById('loadingOverlay').classList.add('hidden');
-                    initMap();
-                }, 300);
-            } else if (mapsLoadAttempts < MAX_LOAD_ATTEMPTS) {
-                setTimeout(waitForGoogleMaps, 100);
-            } else {
-                console.error('Google Maps API failed to load after', MAX_LOAD_ATTEMPTS, 'attempts');
-                document.getElementById('loadingTitle').textContent = 'Error loading Google Maps';
-                document.getElementById('loadingStatus').innerHTML = 'The keyless API may be temporarily unavailable.<br><br><button onclick="retryLoadMaps()" style="padding:10px 20px;font-size:14px;cursor:pointer;background:#4CAF50;color:white;border:none;border-radius:5px;"> Retry</button><br><br><small>Or try refreshing the page</small>';
-                document.getElementById('loadingOverlay').classList.remove('hidden');
-            }
-        }
-        
-        function retryLoadMaps() {
-            mapsLoadAttempts = 0;
-            document.getElementById('loadingTitle').textContent = 'Retrying...';
-            document.getElementById('loadingStatus').textContent = 'Loading Google Maps API...';
-            
-            // Remove old script and add new one
-            const oldScript = document.querySelector('script[src*="mapsJavaScriptAPI"]');
-            if (oldScript) oldScript.remove();
-            
-            const script = document.createElement('script');
-            script.src = 'https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js';
-            script.async = true;
-            script.defer = true;
-            document.body.appendChild(script);
-            
-            waitForGoogleMaps();
-        }
-        
-        // Start checking for Google Maps when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', waitForGoogleMaps);
-        } else {
-            waitForGoogleMaps();
-        }
-        
-        // POI Colors by layer
-        const poiColors = {
-            'Religious': '#8B4513',
-            'EatAndDrink': '#E91E63',
-            'Educational': '#3F51B5',
-            'HealthCare': '#F44336',
-            'Commercial': '#9C27B0',
-            'Financial': '#00BCD4',
-            'Industry': '#795548',
-            'Sports': '#4CAF50',
-            'Government': '#607D8B',
-            'ParksAndSquares': '#8BC34A',
-            'GasStationsAndAutoServices': '#FF5722',
-            'HotelsAndHospitalityServices': '#FFC107',
-            'Transportation': '#2196F3',
-            'Entertainment': '#E040FB',
-            'Cultural': '#FF9800',
-            'BusinessFirms': '#00ACC1',
-            'TravelAndTourism': '#AB47BC',
-            'default': '#9C27B0'
-        };
         
         function toggleSection(header) {
             const content = header.nextElementSibling;
             content.classList.toggle('open');
-            header.querySelector('span:last-child').textContent = content.classList.contains('open') ? '' : '';
-        }
-        
-        function showLoading(title) {
-            document.getElementById('loadingTitle').textContent = title;
-            document.getElementById('loadingOverlay').classList.remove('hidden');
-        }
-        
-        function setLoadingStatus(msg, pct) {
-            document.getElementById('loadingStatus').textContent = msg;
-            document.getElementById('progressFill').style.width = pct + '%';
-        }
-        
-        function hideLoading() {
-            document.getElementById('loadingOverlay').classList.add('hidden');
-        }
-        
-        function updateSlider(layer) {
-            if (layer === 'road') {
-                document.getElementById('roadWidthVal').textContent = document.getElementById('roadWidth').value;
-            } else {
-                document.getElementById(layer + 'SizeVal').textContent = document.getElementById(layer + 'Size').value;
-                const opacityEl = document.getElementById(layer + 'Opacity');
-                const opacityVal = document.getElementById(layer + 'OpacityVal');
-                if (opacityEl && opacityVal) opacityVal.textContent = opacityEl.value;
-            }
-            render();
+            header.querySelector('span').textContent = content.classList.contains('open') ? '[-]' : '[+]';
         }
         
         function resetView() {
-            map.setCenter({lat: 24.7136, lng: 46.6753});
-            map.setZoom(11);
+            map.setView([24.7136, 46.6753], 11);
         }
         
-        // FAST CSV Parser - simple split for speed
-        function parseCSVLine(line) {
-            // Fast path: no quotes
-            if (line.indexOf('"') === -1) {
-                return line.split(',');
-            }
-            // Slow path: handle quotes
-            const result = []; let current = ''; let inQuotes = false;
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                if (char === '"') inQuotes = !inQuotes;
-                else if (char === ',' && !inQuotes) { result.push(current); current = ''; }
-                else current += char;
-            }
-            result.push(current);
-            return result;
-        }
+        // Update zoom display
+        map.on('zoomend moveend', function() {
+            document.getElementById('zoomLevel').textContent = map.getZoom().toFixed(1);
+            updateViewStats();
+        });
         
-        // Point in polygon
-        function pointInPolygon(lat, lon, polygon) {
-            if (!polygon || polygon.length < 3) return false;
-            let inside = false;
-            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-                const [xi, yi] = polygon[i];
-                const [xj, yj] = polygon[j];
-                if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
-                    inside = !inside;
-                }
-            }
-            return inside;
-        }
-        
-        let renderPending = false;
-        function render() {
-            if (renderPending) return;
-            renderPending = true;
-            requestAnimationFrame(doRender);
-        }
-        
-        function doRender() {
-            renderPending = false;
-            if (!map) return;
+        function updateViewStats() {
             const bounds = map.getBounds();
-            if (!bounds) return;
+            let viewApt = 0, viewVilla = 0, viewOther = 0, viewPoi = 0;
             
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            const proj = map.getProjection();
-            if (!proj) return;
-            
-            const zoom = map.getZoom();
-            document.getElementById('zoomLevel').textContent = zoom.toFixed(1);
-            
-            const ne = bounds.getNorthEast();
-            const sw = bounds.getSouthWest();
-            const tr = proj.fromLatLngToPoint(ne);
-            const bl = proj.fromLatLngToPoint(sw);
-            const scale = Math.pow(2, zoom);
-            const baseSize = Math.max(1, zoom - 10);
-            
-            const showBldg = document.getElementById('showBldg').checked;
-            const showApt = document.getElementById('showApt').checked;
-            const showVilla = document.getElementById('showVilla').checked;
-            const showOther = document.getElementById('showOther').checked;
-            const showPoi = document.getElementById('showPoi').checked;
-            const showDist = document.getElementById('showDistricts').checked;
-            
-            const bldgSize = parseFloat(document.getElementById('bldgSize').value) * baseSize / 2;
-            const bldgOpacity = parseInt(document.getElementById('bldgOpacity').value) / 100;
-            const aptSize = parseFloat(document.getElementById('aptSize').value) * baseSize / 2;
-            const villaSize = parseFloat(document.getElementById('villaSize').value) * baseSize / 2;
-            const otherSize = parseFloat(document.getElementById('otherSize').value) * baseSize / 2;
-            const poiSize = parseFloat(document.getElementById('poiSize').value) * baseSize / 2;
-            
-            let viewBldg = 0, viewApt = 0, viewVilla = 0, viewOther = 0, viewPoi = 0;
-            
-            // Draw districts
-            if (showDist && districts.length) {
-                // First pass: draw non-selected districts (faint)
-                if (!selectedDistrict) {
-                    districts.forEach(d => {
-                        const geom = getDistrictGeometry(d);
-                        if (!geom) return;
-                        
-                        const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
-                                       geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
-                        if (!coords || coords.length < 3) return;
-                        
-                        ctx.strokeStyle = '#607D8B';
-                        ctx.lineWidth = 1;
-                        ctx.globalAlpha = 0.4;
-                        ctx.beginPath();
-                        coords.forEach(([lon, lat], i) => {
-                            const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                            const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
-                            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-                        });
-                        ctx.closePath();
-                        ctx.stroke();
-                    });
-                    ctx.globalAlpha = 1;
+            parcels.forEach(p => {
+                if (bounds.contains([p.lat, p.lng])) {
+                    if (p.type === 'apt') viewApt++;
+                    else if (p.type === 'villa') viewVilla++;
+                    else viewOther++;
                 }
-                
-                // Second pass: draw selected district prominently
-                if (selectedDistrict && selectedDistrictObj) {
-                    const geom = getDistrictGeometry(selectedDistrictObj);
-                    if (geom) {
-                        const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
-                                       geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
-                        if (coords && coords.length >= 3) {
-                            // Fill
-                            ctx.fillStyle = 'rgba(255, 87, 34, 0.15)';
-                            ctx.beginPath();
-                            coords.forEach(([lon, lat], i) => {
-                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                                const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
-                                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-                            });
-                            ctx.closePath();
-                            ctx.fill();
-                            
-                            // Thick orange border
-                            ctx.strokeStyle = '#FF5722';
-                            ctx.lineWidth = 4;
-                            ctx.setLineDash([]);
-                            ctx.beginPath();
-                            coords.forEach(([lon, lat], i) => {
-                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                                const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
-                                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-                            });
-                            ctx.closePath();
-                            ctx.stroke();
-                            
-                            // Inner white border for visibility
-                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-                            ctx.lineWidth = 2;
-                            ctx.beginPath();
-                            coords.forEach(([lon, lat], i) => {
-                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                                const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
-                                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-                            });
-                            ctx.closePath();
-                            ctx.stroke();
-                        }
-                    }
-                }
-            }
+            });
             
-            // Draw roads (lines)
-            const showRoads = document.getElementById('showRoads').checked;
-            const showRoadLabels = document.getElementById('showRoadLabels').checked;
-            const roadWidthScale = parseFloat(document.getElementById('roadWidth')?.value || 1);
-            const swLat = sw.lat(), neLat = ne.lat(), swLng = sw.lng(), neLng = ne.lng();
+            poiData.forEach(p => {
+                if (bounds.contains([p.lat, p.lng])) viewPoi++;
+            });
             
-            if (showRoads && roads.length) {
-                const drawnLabels = new Set(); // Track drawn labels to avoid duplicates
-                
-                roads.forEach(road => {
-                    const geom = road.geometry;
-                    if (!geom) return;
-                    
-                    const props = road.properties || {};
-                    const width = parseFloat(props.width_m || props.WIDTH || props.width || 10);
-                    const color = getRoadColor(width);
-                    const lineWidth = getRoadLineWidth(width, zoom) * roadWidthScale;
-                    
-                    ctx.strokeStyle = color;
-                    ctx.lineWidth = lineWidth;
-                    ctx.lineCap = 'round';
-                    ctx.lineJoin = 'round';
-                    
-                    // Handle LineString and MultiLineString
-                    const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
-                    
-                    lines.forEach(coords => {
-                        if (!coords || coords.length < 2) return;
-                        
-                        // Check if any point is in view
-                        let inView = false;
-                        for (let i = 0; i < coords.length; i++) {
-                            const [lon, lat] = coords[i];
-                            if (lat >= swLat - 0.01 && lat <= neLat + 0.01 && lon >= swLng - 0.01 && lon <= neLng + 0.01) {
-                                inView = true;
-                                break;
-                            }
-                        }
-                        if (!inView) return;
-                        
-                        // Draw the line
-                        ctx.beginPath();
-                        let midIdx = Math.floor(coords.length / 2);
-                        let midX, midY;
-                        
-                        coords.forEach(([lon, lat], i) => {
-                            const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                            const x = (w.x - bl.x) * scale;
-                            const y = (w.y - tr.y) * scale;
-                            
-                            if (i === 0) ctx.moveTo(x, y);
-                            else ctx.lineTo(x, y);
-                            
-                            if (i === midIdx) { midX = x; midY = y; }
-                        });
-                        ctx.stroke();
-                        
-                        // Draw outline for major roads
-                        if (width >= 20) {
-                            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
-                            ctx.lineWidth = lineWidth + 2;
-                            ctx.beginPath();
-                            coords.forEach(([lon, lat], i) => {
-                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                                const x = (w.x - bl.x) * scale;
-                                const y = (w.y - tr.y) * scale;
-                                if (i === 0) ctx.moveTo(x, y);
-                                else ctx.lineTo(x, y);
-                            });
-                            ctx.stroke();
-                            
-                            // Redraw the road on top
-                            ctx.strokeStyle = color;
-                            ctx.lineWidth = lineWidth;
-                            ctx.beginPath();
-                            coords.forEach(([lon, lat], i) => {
-                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                                const x = (w.x - bl.x) * scale;
-                                const y = (w.y - tr.y) * scale;
-                                if (i === 0) ctx.moveTo(x, y);
-                                else ctx.lineTo(x, y);
-                            });
-                            ctx.stroke();
-                        }
-                        
-                        // Draw label for major roads
-                        if (showRoadLabels && width >= 15 && zoom >= 14 && midX && midY) {
-                            const name = props.name_ar || props.ROADCENTERLINENAME_AR || props.name_en || '';
-                            if (name && !drawnLabels.has(name)) {
-                                drawnLabels.add(name);
-                                
-                                ctx.font = width >= 20 ? 'bold 11px Arial' : '10px Arial';
-                                ctx.fillStyle = '#333';
-                                ctx.strokeStyle = 'white';
-                                ctx.lineWidth = 3;
-                                ctx.textAlign = 'center';
-                                ctx.strokeText(name, midX, midY - 5);
-                                ctx.fillText(name, midX, midY - 5);
-                                
-                                // Width badge
-                                ctx.font = '9px Arial';
-                                ctx.fillStyle = color;
-                                ctx.fillText(width + 'm', midX, midY + 8);
-                            }
-                        }
-                    });
-                });
-            }
-            
-            // Draw buildings (polygons or points) - OPTIMIZED
-            if (showBldg && buildings.length) {
-                ctx.globalAlpha = bldgOpacity;
-                ctx.fillStyle = 'rgba(156, 39, 176, 0.5)';
-                ctx.strokeStyle = '#9c27b0';
-                ctx.lineWidth = Math.max(1, bldgSize / 2);
-                
-                for (let i = 0; i < buildings.length; i++) {
-                    const b = buildings[i];
-                    
-                    // Fast check: is it a simple [lat, lng] array?
-                    if (Array.isArray(b) && typeof b[0] === 'number') {
-                        const lat = b[0], lng = b[1];
-                        if (lat < swLat || lat > neLat || lng < swLng || lng > neLng) continue;
-                        
-                        viewBldg++;
-                        const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
-                        ctx.beginPath();
-                        ctx.arc((w.x - bl.x) * scale, (w.y - tr.y) * scale, bldgSize, 0, 6.28);
-                        ctx.fill();
-                        continue;
-                    }
-                    
-                    // Polygon format
-                    const coords = b.geometry?.coordinates?.[0];
-                    if (!coords || coords.length < 3) continue;
-                    
-                    const firstLat = coords[0][1];
-                    if (firstLat < swLat - 0.01 || firstLat > neLat + 0.01) continue;
-                    
-                    viewBldg++;
-                    ctx.beginPath();
-                    for (let j = 0; j < coords.length; j++) {
-                        const w = proj.fromLatLngToPoint(new google.maps.LatLng(coords[j][1], coords[j][0]));
-                        const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
-                        j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-                    }
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke();
-                }
-                ctx.globalAlpha = 1;
-            }
-            
-            // Draw parcels - OPTIMIZED (batch by color to minimize state changes)
-            const aptPts = [], villaPts = [], otherPts = [];
-            const pi2 = 6.28;
-            
-            for (let i = 0; i < parcels.length; i++) {
-                const p = parcels[i];
-                if (p.lat < swLat || p.lat > neLat || p.lng < swLng || p.lng > neLng) continue;
-                
-                const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
-                const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
-                
-                if (p.type === 'apt' && showApt) { aptPts.push(x, y); viewApt++; }
-                else if (p.type === 'villa' && showVilla) { villaPts.push(x, y); viewVilla++; }
-                else if (p.type === 'other' && showOther) { otherPts.push(x, y); viewOther++; }
-            }
-            
-            // Batch draw by color
-            ctx.fillStyle = 'rgba(255, 152, 0, 0.4)';
-            for (let i = 0; i < otherPts.length; i += 2) { ctx.beginPath(); ctx.arc(otherPts[i], otherPts[i+1], otherSize, 0, pi2); ctx.fill(); }
-            ctx.fillStyle = 'rgba(76, 175, 80, 0.6)';
-            for (let i = 0; i < villaPts.length; i += 2) { ctx.beginPath(); ctx.arc(villaPts[i], villaPts[i+1], villaSize, 0, pi2); ctx.fill(); }
-            ctx.fillStyle = 'rgba(33, 150, 243, 0.6)';
-            for (let i = 0; i < aptPts.length; i += 2) { ctx.beginPath(); ctx.arc(aptPts[i], aptPts[i+1], aptSize, 0, pi2); ctx.fill(); }
-            
-            // Draw POIs - OPTIMIZED (group by layer color)
-            if (showPoi && poiData.length) {
-                const poiByColor = {};
-                for (let i = 0; i < poiData.length; i++) {
-                    const p = poiData[i];
-                    if (p.lat < swLat || p.lat > neLat || p.lng < swLng || p.lng > neLng) continue;
-                    if (activePoiCategories.size > 0 && !activePoiCategories.has(p.layer)) continue;
-                    
-                    const color = poiColors[p.layer] || poiColors['default'];
-                    if (!poiByColor[color]) poiByColor[color] = [];
-                    
-                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
-                    poiByColor[color].push((w.x - bl.x) * scale, (w.y - tr.y) * scale);
-                    viewPoi++;
-                }
-                
-                ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-                ctx.lineWidth = 1;
-                for (const color in poiByColor) {
-                    ctx.fillStyle = color;
-                    const pts = poiByColor[color];
-                    for (let i = 0; i < pts.length; i += 2) {
-                        ctx.beginPath(); ctx.arc(pts[i], pts[i+1], poiSize, 0, pi2); ctx.fill(); ctx.stroke();
-                    }
-                }
-            }
-            
-            // Update view counts
             const viewTotal = viewApt + viewVilla + viewOther;
             const villaPct = viewTotal > 0 ? (viewVilla / viewTotal * 100).toFixed(1) : 0;
             
-            document.getElementById('viewBldg').textContent = viewBldg.toLocaleString();
             document.getElementById('viewApt').textContent = viewApt.toLocaleString();
             document.getElementById('viewVilla').textContent = viewVilla.toLocaleString();
             document.getElementById('viewOther').textContent = viewOther.toLocaleString();
@@ -881,53 +321,310 @@
             document.getElementById('viewVillaPct').textContent = villaPct + '%';
         }
         
-        // Calculate district stats
-        function calculateDistrictStats() {
-            if (!selectedDistrict) {
-                document.getElementById('districtStats').classList.remove('active');
-                return;
+        function updateLayers() {
+            if (document.getElementById('showApt').checked) {
+                map.addLayer(parcelLayers.apt);
+            } else {
+                map.removeLayer(parcelLayers.apt);
+            }
+            if (document.getElementById('showVilla').checked) {
+                map.addLayer(parcelLayers.villa);
+            } else {
+                map.removeLayer(parcelLayers.villa);
+            }
+            if (document.getElementById('showOther').checked) {
+                map.addLayer(parcelLayers.other);
+            } else {
+                map.removeLayer(parcelLayers.other);
+            }
+            if (document.getElementById('showRoads').checked) {
+                map.addLayer(roadsLayer);
+            } else {
+                map.removeLayer(roadsLayer);
+            }
+            if (document.getElementById('showDistricts').checked) {
+                map.addLayer(districtsLayer);
+            } else {
+                map.removeLayer(districtsLayer);
+            }
+        }
+        
+        // File handlers
+        document.getElementById('parcelsFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const lines = evt.target.result.split('\n');
+                const headers = lines[0].toLowerCase().split(',');
+                
+                const latIdx = headers.findIndex(h => h.includes('lat'));
+                const lngIdx = headers.findIndex(h => h.includes('lon') || h === 'lng');
+                const typeIdx = headers.findIndex(h => h.includes('parcel_type'));
+                
+                parcels = [];
+                let aptCount = 0, villaCount = 0, otherCount = 0;
+                
+                // Clear existing layers
+                parcelLayers.apt.clearLayers();
+                parcelLayers.villa.clearLayers();
+                parcelLayers.other.clearLayers();
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',');
+                    const lat = parseFloat(values[latIdx]);
+                    const lng = parseFloat(values[lngIdx]);
+                    if (isNaN(lat) || isNaN(lng)) continue;
+                    
+                    let type = 'other';
+                    if (typeIdx >= 0) {
+                        const t = (values[typeIdx] || '').trim().toLowerCase();
+                        if (t === 'villa') type = 'villa';
+                        else if (t === 'apartment') type = 'apt';
+                    }
+                    
+                    parcels.push({ lat, lng, type });
+                    
+                    const color = type === 'apt' ? '#2196F3' : type === 'villa' ? '#4CAF50' : '#FF9800';
+                    const marker = L.circleMarker([lat, lng], {
+                        radius: 4,
+                        fillColor: color,
+                        color: color,
+                        weight: 1,
+                        fillOpacity: 0.6
+                    });
+                    
+                    marker.bindPopup(`<b>${type.charAt(0).toUpperCase() + type.slice(1)}</b><br>Location: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+                    parcelLayers[type].addLayer(marker);
+                    
+                    if (type === 'apt') aptCount++;
+                    else if (type === 'villa') villaCount++;
+                    else otherCount++;
+                }
+                
+                // Add layers to map
+                map.addLayer(parcelLayers.apt);
+                map.addLayer(parcelLayers.villa);
+                map.addLayer(parcelLayers.other);
+                
+                document.getElementById('parcelsStatus').innerHTML = `OK: ${parcels.length.toLocaleString()} parcels`;
+                document.getElementById('parcelsStatus').classList.add('loaded');
+                document.getElementById('totalParcels').textContent = parcels.length.toLocaleString();
+                document.getElementById('totalApt').textContent = aptCount.toLocaleString();
+                document.getElementById('totalVilla').textContent = villaCount.toLocaleString();
+                document.getElementById('totalOther').textContent = otherCount.toLocaleString();
+                
+                updateViewStats();
+            };
+            reader.readAsText(file);
+        });
+        
+        document.getElementById('roadsFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = JSON.parse(evt.target.result);
+                    roads = data.features || [];
+                    
+                    roadsLayer.clearLayers();
+                    let totalLength = 0;
+                    
+                    roads.forEach(road => {
+                        const props = road.properties || {};
+                        const width = parseFloat(props.width_m || props.WIDTH || 10);
+                        const length = parseFloat(props.length_m || props.LENGTH || 0);
+                        totalLength += length;
+                        
+                        const color = getRoadColor(width);
+                        const weight = getRoadWeight(width);
+                        
+                        const layer = L.geoJSON(road, {
+                            style: {
+                                color: color,
+                                weight: weight,
+                                opacity: 0.8
+                            }
+                        });
+                        
+                        const nameAr = props.name_ar || props.ROADCENTERLINENAME_AR || 'Unknown';
+                        const nameEn = props.name_en || props.ROADCENTERLINENAME_EN || '';
+                        
+                        layer.bindPopup(`
+                            <div style="direction:rtl;text-align:right;font-weight:bold;font-size:14px;">${nameAr}</div>
+                            <div style="color:#666;margin-bottom:8px;">${nameEn}</div>
+                            <table style="width:100%;font-size:11px;">
+                                <tr><td><b>Width:</b></td><td>${width}m</td></tr>
+                                <tr><td><b>Length:</b></td><td>${length.toFixed(0)}m</td></tr>
+                                <tr><td><b>Lanes:</b></td><td>${props.num_lanes || props.NOOFLANES || '-'}</td></tr>
+                                <tr><td><b>Paved:</b></td><td>${props.paved || props.PAVED || '-'}</td></tr>
+                                <tr><td><b>Category:</b></td><td>${props.category || '-'}</td></tr>
+                                <tr><td><b>Source:</b></td><td>${props.source || 'Balady'}</td></tr>
+                            </table>
+                        `);
+                        
+                        roadsLayer.addLayer(layer);
+                    });
+                    
+                    document.getElementById('roadsStatus').innerHTML = `OK: ${roads.length} roads (${(totalLength/1000).toFixed(2)} km)`;
+                    document.getElementById('roadsStatus').classList.add('loaded');
+                    document.getElementById('roadCount').textContent = roads.length;
+                    document.getElementById('totalRoads').textContent = roads.length;
+                    document.getElementById('roadLegend').style.display = 'block';
+                    
+                    // Zoom to roads
+                    if (roads.length > 0) {
+                        const bounds = roadsLayer.getBounds();
+                        if (bounds.isValid()) {
+                            map.fitBounds(bounds, { padding: [50, 50] });
+                        }
+                    }
+                } catch (err) {
+                    document.getElementById('roadsStatus').innerHTML = `Error: ${err.message}`;
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        document.getElementById('distFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = JSON.parse(evt.target.result);
+                    districts = data.features || data;
+                    
+                    districtsLayer.clearLayers();
+                    
+                    districts.forEach((d, idx) => {
+                        const name = d.properties?.name || d.properties?.NAME || d.properties?.name_en || `District ${idx + 1}`;
+                        
+                        const layer = L.geoJSON(d, {
+                            style: {
+                                color: '#607D8B',
+                                weight: 2,
+                                fillColor: '#607D8B',
+                                fillOpacity: 0.1
+                            }
+                        });
+                        
+                        layer.on('click', function() {
+                            selectDistrict(name, d);
+                        });
+                        
+                        layer.bindTooltip(name, { permanent: false, direction: 'center' });
+                        districtsLayer.addLayer(layer);
+                    });
+                    
+                    document.getElementById('distStatus').innerHTML = `OK: ${districts.length} districts`;
+                    document.getElementById('distStatus').classList.add('loaded');
+                    updateDistrictList();
+                } catch (err) {
+                    document.getElementById('distStatus').innerHTML = `Error: ${err.message}`;
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        function getDistrictName(d) {
+            if (d.properties) {
+                return d.properties.name || d.properties.NAME || d.properties.name_en || d.properties.name_ar || 'Unknown';
+            }
+            return 'Unknown';
+        }
+        
+        function updateDistrictList() {
+            const search = document.getElementById('districtSearch').value.toLowerCase();
+            const container = document.getElementById('districtList');
+            container.innerHTML = '';
+            
+            districts.forEach((d, idx) => {
+                const name = getDistrictName(d);
+                if (search && !name.toLowerCase().includes(search)) return;
+                
+                const div = document.createElement('div');
+                div.style.cssText = 'padding:4px 8px;margin:2px 0;background:#f5f5f5;border-radius:4px;cursor:pointer;font-size:10px;';
+                if (selectedDistrict === name) div.style.background = '#1a73e8';
+                if (selectedDistrict === name) div.style.color = 'white';
+                div.textContent = name;
+                div.onclick = () => selectDistrict(name, d);
+                container.appendChild(div);
+            });
+        }
+        
+        function filterDistricts() {
+            updateDistrictList();
+        }
+        
+        function selectDistrict(name, districtData) {
+            selectedDistrict = name;
+            updateDistrictList();
+            
+            // Highlight district
+            if (selectedDistrictLayer) {
+                map.removeLayer(selectedDistrictLayer);
             }
             
-            const d = selectedDistrictObj || districts.find(x => getDistrictName(x) === selectedDistrict);
-            if (!d) {
-                console.log('District not found:', selectedDistrict);
-                return;
+            selectedDistrictLayer = L.geoJSON(districtData, {
+                style: {
+                    color: '#FF5722',
+                    weight: 4,
+                    fillColor: '#FF5722',
+                    fillOpacity: 0.2
+                }
+            }).addTo(map);
+            
+            // Zoom to district
+            const bounds = selectedDistrictLayer.getBounds();
+            if (bounds.isValid()) {
+                map.fitBounds(bounds, { padding: [50, 50] });
             }
             
-            const geom = getDistrictGeometry(d);
-            if (!geom) {
-                console.log('No geometry for district:', selectedDistrict);
-                return;
+            // Calculate stats
+            calculateDistrictStats(districtData);
+        }
+        
+        function clearDistrictSelection() {
+            selectedDistrict = null;
+            if (selectedDistrictLayer) {
+                map.removeLayer(selectedDistrictLayer);
+                selectedDistrictLayer = null;
             }
+            document.getElementById('districtStats').classList.remove('active');
+            updateDistrictList();
+            resetView();
+        }
+        
+        function pointInPolygon(lat, lng, polygon) {
+            let inside = false;
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                const [xi, yi] = polygon[i];
+                const [xj, yj] = polygon[j];
+                if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
+                    inside = !inside;
+                }
+            }
+            return inside;
+        }
+        
+        function calculateDistrictStats(districtData) {
+            const geom = districtData.geometry;
+            if (!geom) return;
             
             const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
                            geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
             if (!coords) return;
             
-            // Convert to [lon, lat] for pointInPolygon
             const poly = coords.map(([lon, lat]) => [lon, lat]);
             
-            // Get district bounds for faster filtering
-            let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
-            coords.forEach(([lon, lat]) => {
-                if (lat < minLat) minLat = lat;
-                if (lat > maxLat) maxLat = lat;
-                if (lon < minLng) minLng = lon;
-                if (lon > maxLng) maxLng = lon;
-            });
-            
-            let bldg = 0, apt = 0, villa = 0, other = 0, poi = 0;
-            
-            buildings.forEach(b => {
-                const bCoords = b.geometry?.coordinates?.[0];
-                if (!bCoords || bCoords.length === 0) return;
-                const [lon, lat] = bCoords[0];
-                if (lat < minLat || lat > maxLat || lon < minLng || lon > maxLng) return;
-                if (pointInPolygon(lat, lon, poly)) bldg++;
-            });
+            let apt = 0, villa = 0, other = 0, poi = 0;
             
             parcels.forEach(p => {
-                if (p.lat < minLat || p.lat > maxLat || p.lng < minLng || p.lng > maxLng) return;
                 if (pointInPolygon(p.lat, p.lng, poly)) {
                     if (p.type === 'apt') apt++;
                     else if (p.type === 'villa') villa++;
@@ -936,63 +633,42 @@
             });
             
             poiData.forEach(p => {
-                if (p.lat < minLat || p.lat > maxLat || p.lng < minLng || p.lng > maxLng) return;
                 if (pointInPolygon(p.lat, p.lng, poly)) poi++;
             });
             
-            // Calculate road stats
-            let roadCount = 0, totalRoadLength = 0, majorRoads = 0;
-            const widthCounts = {};
-            const uniqueRoadNames = new Set();
+            // Road stats
+            let roadCount = 0, totalLength = 0, majorRoads = 0;
+            const uniqueRoads = new Set();
             
             roads.forEach(road => {
                 const roadGeom = road.geometry;
                 if (!roadGeom) return;
                 
                 const props = road.properties || {};
-                const width = parseFloat(props.width_m || props.WIDTH || props.width || 0);
-                const length = parseFloat(props.length_m || props.LENGTH || props.length || 0);
+                const width = parseFloat(props.width_m || props.WIDTH || 0);
+                const length = parseFloat(props.length_m || props.LENGTH || 0);
                 const nameAr = props.name_ar || props.ROADCENTERLINENAME_AR || '';
                 
-                // Check if road intersects with district
                 const lines = roadGeom.type === 'LineString' ? [roadGeom.coordinates] : roadGeom.coordinates;
                 
-                let roadInDistrict = false;
                 for (const lineCoords of lines) {
-                    if (!lineCoords || lineCoords.length === 0) continue;
-                    
-                    // Check if any point of the road is in the district
                     for (const [lon, lat] of lineCoords) {
-                        if (lat >= minLat && lat <= maxLat && lon >= minLng && lon <= maxLng) {
-                            if (pointInPolygon(lat, lon, poly)) {
-                                roadInDistrict = true;
-                                break;
-                            }
+                        if (pointInPolygon(lat, lon, poly)) {
+                            roadCount++;
+                            totalLength += length;
+                            if (width >= 20) majorRoads++;
+                            if (nameAr) uniqueRoads.add(nameAr);
+                            break;
                         }
                     }
-                    if (roadInDistrict) break;
-                }
-                
-                if (roadInDistrict) {
-                    roadCount++;
-                    totalRoadLength += length;
-                    if (width >= 20) majorRoads++;
-                    if (width > 0) {
-                        widthCounts[width] = (widthCounts[width] || 0) + 1;
-                    }
-                    if (nameAr) uniqueRoadNames.add(nameAr);
                 }
             });
-            
-            // Estimate entry/exit points (unique roads X 2 ends)
-            const entryExitEstimate = uniqueRoadNames.size * 2;
             
             const total = apt + villa + other;
             const villaPct = total > 0 ? (villa / total * 100).toFixed(1) : 0;
             const aptPct = total > 0 ? (apt / total * 100).toFixed(1) : 0;
             
-            document.getElementById('districtStatsTitle').textContent = ' DISTRICT: ' + selectedDistrict;
-            document.getElementById('distBldg').textContent = bldg.toLocaleString();
+            document.getElementById('districtStatsTitle').textContent = 'DISTRICT: ' + selectedDistrict;
             document.getElementById('distApt').textContent = apt.toLocaleString();
             document.getElementById('distVilla').textContent = villa.toLocaleString();
             document.getElementById('distOther').textContent = other.toLocaleString();
@@ -1000,537 +676,20 @@
             document.getElementById('distPoi').textContent = poi.toLocaleString();
             document.getElementById('distVillaPct').textContent = villaPct + '%';
             document.getElementById('distAptPct').textContent = aptPct + '%';
-            
-            // Update road stats
             document.getElementById('distRoads').textContent = roadCount.toLocaleString();
-            document.getElementById('distRoadLength').textContent = (totalRoadLength / 1000).toFixed(2) + ' km';
+            document.getElementById('distRoadLength').textContent = (totalLength / 1000).toFixed(2) + ' km';
             document.getElementById('distMajorRoads').textContent = majorRoads.toLocaleString();
-            document.getElementById('distEntryExit').textContent = '~' + entryExitEstimate;
-            
-            // Show road width breakdown
-            const widthBreakdown = document.getElementById('distWidthBreakdown');
-            const widthContainer = document.getElementById('distRoadWidths');
-            
-            if (Object.keys(widthCounts).length > 0) {
-                widthContainer.style.display = 'block';
-                widthBreakdown.innerHTML = Object.entries(widthCounts)
-                    .sort((a, b) => parseFloat(b[0]) - parseFloat(a[0]))
-                    .map(([w, c]) => {
-                        const color = getRoadColor(parseFloat(w));
-                        return `<span style="display:inline-block;margin:1px 3px;padding:1px 5px;background:${color};color:white;border-radius:3px;">${w}m: ${c}</span>`;
-                    }).join('');
-            } else {
-                widthContainer.style.display = 'none';
-            }
+            document.getElementById('distEntryExit').textContent = '~' + (uniqueRoads.size * 2);
             
             document.getElementById('districtStats').classList.add('active');
         }
         
-        // File loaders
-        document.getElementById('buildingsFile').addEventListener('change', function(e) {
-            const file = e.target.files[0]; if (!file) return;
-            showLoading('Loading Buildings...');
-            setLoadingStatus(`Reading ${(file.size/1024/1024).toFixed(1)} MB...`, 10);
-            buildingsFileName = file.name;
-            
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                setLoadingStatus('Parsing JSON (this may take a moment)...', 30);
-                
-                setTimeout(() => {
-                    try {
-                        const startTime = performance.now();
-                        const data = JSON.parse(evt.target.result);
-                        console.log(`JSON parsed in ${(performance.now() - startTime).toFixed(0)}ms`);
-                        
-                        setLoadingStatus('Processing...', 70);
-                        
-                        // Handle different formats - direct assignment (faster)
-                        if (data.type === 'FeatureCollection' && data.features) {
-                            buildings = data.features;
-                        } else if (Array.isArray(data) && data.length > 0) {
-                            if (data[0]?.geometry) {
-                                buildings = data;
-                            } else if (Array.isArray(data[0])) {
-                                // Array of [lat, lng] - store directly
-                                buildings = data;
-                            } else {
-                                buildings = data;
-                            }
-                        } else {
-                            buildings = [];
-                        }
-                        
-                        document.getElementById('totalBldg').textContent = buildings.length.toLocaleString();
-                        document.getElementById('buildingsStatus').innerHTML = `OK <b>${file.name}</b><br>${buildings.length.toLocaleString()} buildings`;
-                        document.getElementById('buildingsStatus').classList.add('loaded');
-                        
-                        hideLoading();
-                        showToast(` ${buildings.length.toLocaleString()} buildings!`, '#9c27b0');
-                        render();
-                    } catch(err) {
-                        hideLoading();
-                        document.getElementById('buildingsStatus').innerHTML = ` Error: ${err.message}`;
-                        console.error('Buildings load error:', err);
-                    }
-                }, 10);
-            };
-            reader.readAsText(file);
-        });
-        
-        function showToast(msg, color) {
-            const toast = document.createElement('div');
-            toast.style.cssText = `position:fixed;top:20px;left:50%;transform:translateX(-50%);background:${color};color:white;padding:15px 30px;border-radius:8px;font-weight:bold;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.3);`;
-            toast.textContent = msg;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 2000);
-        }
-        
-        document.getElementById('parcelsFile').addEventListener('change', function(e) {
-            const file = e.target.files[0]; if (!file) return;
-            showLoading('Loading Parcels...');
-            setLoadingStatus(`Reading ${(file.size/1024/1024).toFixed(1)} MB...`, 5);
-            
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                setLoadingStatus('Parsing...', 10);
-                
-                setTimeout(() => {
-                    const text = evt.target.result;
-                    const lines = text.split('\n');
-                    const headerLine = lines[0].toLowerCase();
-                    const headers = headerLine.split(',');
-                    
-                    // Find column indices once
-                    const latIdx = headers.findIndex(h => h.includes('lat') && !h.includes('parcel'));
-                    const lngIdx = headers.findIndex(h => h.includes('lon') || h === 'lng');
-                    const typeIdx = headers.findIndex(h => h.includes('parcel_type'));
-                    const aptIdx = headers.findIndex(h => h.includes('is_apartment'));
-                    const luIdx = headers.findIndex(h => h.includes('mainlanduse') || h.includes('land_use'));
-                    
-                    console.log('CSV Headers:', headers);
-                    console.log('Column indices - lat:', latIdx, 'lng:', lngIdx, 'type:', typeIdx, 'apt:', aptIdx, 'lu:', luIdx);
-                    
-                    // Pre-allocate array
-                    parcels = new Array(lines.length - 1);
-                    let aptCount = 0, villaCount = 0, otherCount = 0;
-                    let validCount = 0;
-                    
-                    setLoadingStatus('Processing rows...', 20);
-                    
-                    // Process ALL at once (faster than chunks for this size)
-                    for (let i = 1; i < lines.length; i++) {
-                        const line = lines[i];
-                        if (!line || line.length < 10) continue;
-                        
-                        const values = line.split(',');
-                        const lat = +values[latIdx];
-                        const lng = +values[lngIdx];
-                        if (lat !== lat || lng !== lng) continue; // NaN check
-                        
-                        // Fast type classification
-                        let type = 2; // 0=villa, 1=apt, 2=other
-                        
-                        if (typeIdx >= 0) {
-                            // Use pre-classified parcel_type column
-                            const t = (values[typeIdx] || '').trim().toLowerCase();
-                            if (t === 'villa') type = 0;
-                            else if (t === 'apartment') type = 1;
-                            // Debug first few rows
-                            if (i < 5) console.log('Row', i, 'parcel_type:', t, '-> type:', type);
-                        } else if (aptIdx >= 0 && luIdx >= 0) {
-                            // Fallback: only residential (100000/1000000) can be villa/apt
-                            const isApt = values[aptIdx];
-                            const lu = values[luIdx];
-                            const isResidential = (lu === '100000' || lu === '1000000');
-                            
-                            if (isResidential) {
-                                if (isApt === 'True') type = 1; // apartment
-                                else type = 0; // villa
-                            }
-                            // else: stays as other (type=2)
-                        }
-                        
-                        if (type === 0) villaCount++;
-                        else if (type === 1) aptCount++;
-                        else otherCount++;
-                        
-                        parcels[validCount++] = { lat, lng, type: type === 0 ? 'villa' : type === 1 ? 'apt' : 'other' };
-                    }
-                    
-                    // Trim array to actual size
-                    parcels.length = validCount;
-                    
-                    document.getElementById('parcelsStatus').innerHTML = `OK <b>${file.name}</b><br>${parcels.length.toLocaleString()} parcels`;
-                    document.getElementById('parcelsStatus').classList.add('loaded');
-                    document.getElementById('totalParcels').textContent = parcels.length.toLocaleString();
-                    document.getElementById('totalApt').textContent = aptCount.toLocaleString();
-                    document.getElementById('totalVilla').textContent = villaCount.toLocaleString();
-                    document.getElementById('totalOther').textContent = otherCount.toLocaleString();
-                    
-                    hideLoading();
-                    showToast(` ${parcels.length.toLocaleString()} parcels loaded!`, '#4CAF50');
-                    render();
-                }, 10);
-            };
-            reader.readAsText(file);
-        });
-        
-        document.getElementById('poiFile').addEventListener('change', function(e) {
-            const file = e.target.files[0]; if (!file) return;
-            showLoading('Loading POIs...');
-            setLoadingStatus(`Reading ${(file.size/1024/1024).toFixed(1)} MB...`, 10);
-            
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                setLoadingStatus('Processing...', 30);
-                
-                setTimeout(() => {
-                    const lines = evt.target.result.split('\n');
-                    const headers = lines[0].toLowerCase().split(',');
-                    
-                    // Find indices once
-                    const latIdx = headers.findIndex(h => h.includes('lat'));
-                    const lngIdx = headers.findIndex(h => h.includes('lon') || h === 'lng');
-                    const layerIdx = headers.findIndex(h => h === 'layer');
-                    const nameArIdx = headers.findIndex(h => h === 'name_ar');
-                    const nameEnIdx = headers.findIndex(h => h === 'name_en');
-                    
-                    poiData = new Array(lines.length);
-                    const categories = {};
-                    let count = 0;
-                    
-                    for (let i = 1; i < lines.length; i++) {
-                        const line = lines[i];
-                        if (!line || line.length < 5) continue;
-                        
-                        const values = line.split(',');
-                        const lat = +values[latIdx];
-                        const lng = +values[lngIdx];
-                        if (lat !== lat || lng !== lng) continue;
-                        
-                        const layer = values[layerIdx] || 'Unknown';
-                        categories[layer] = (categories[layer] || 0) + 1;
-                        
-                        poiData[count++] = { lat, lng, layer, name_ar: values[nameArIdx] || '', name_en: values[nameEnIdx] || '' };
-                    }
-                    poiData.length = count;
-                    
-                    document.getElementById('poiStatus').innerHTML = `OK <b>${file.name}</b><br>${poiData.length.toLocaleString()} POIs`;
-                    document.getElementById('poiStatus').classList.add('loaded');
-                    document.getElementById('totalPoi').textContent = poiData.length.toLocaleString();
-                    document.getElementById('poiCount').textContent = poiData.length.toLocaleString();
-                    document.getElementById('poiCatCount').textContent = Object.keys(categories).length;
-                    
-                    activePoiCategories = new Set(Object.keys(categories));
-                    const catContainer = document.getElementById('poiCategories');
-                    catContainer.innerHTML = Object.entries(categories).sort((a,b) => b[1]-a[1]).map(([cat, cnt]) => {
-                        const color = poiColors[cat] || poiColors['default'];
-                        return `<div class="poi-cat"><input type="checkbox" checked data-cat="${cat}">
-                            <div class="dot" style="background:${color};width:10px;height:10px;border-radius:50%;"></div>
-                            <span>${cat}</span><span class="cnt">${cnt.toLocaleString()}</span></div>`;
-                    }).join('');
-                    
-                    catContainer.querySelectorAll('input').forEach(cb => {
-                        cb.addEventListener('change', function() {
-                            const cat = this.dataset.cat;
-                            this.checked ? activePoiCategories.add(cat) : activePoiCategories.delete(cat);
-                            render();
-                        });
-                    });
-                    
-                    hideLoading();
-                    showToast(` ${poiData.length.toLocaleString()} POIs!`, '#9C27B0');
-                    render();
-                }, 10);
-            };
-            reader.readAsText(file);
-        });
-        
-        document.getElementById('distFile').addEventListener('change', function(e) {
-            const file = e.target.files[0]; if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const data = JSON.parse(evt.target.result);
-                    
-                    // Handle different formats
-                    if (data.type === 'FeatureCollection' && data.features) {
-                        // Standard GeoJSON FeatureCollection
-                        districts = data.features;
-                    } else if (Array.isArray(data) && data[0]?.geometry) {
-                        // Array of GeoJSON features
-                        districts = data;
-                    } else if (Array.isArray(data) && data[0]?.boundaries) {
-                        // Custom format with boundaries array (like your labeler)
-                        districts = data.map(d => ({
-                            type: 'Feature',
-                            properties: { 
-                                name: d.name_en || d.name || d.name_ar,
-                                name_ar: d.name_ar,
-                                name_en: d.name_en
-                            },
-                            geometry: {
-                                type: 'Polygon',
-                                coordinates: [d.boundaries[0].map(([lat, lon]) => [lon, lat])]
-                            }
-                        }));
-                    } else if (Array.isArray(data)) {
-                        // Try to use as-is
-                        districts = data;
-                    } else {
-                        districts = [];
-                    }
-                    
-                    console.log('Districts loaded:', districts.length, 'Sample:', districts[0]);
-                    
-                    if (districts.length === 0) {
-                        document.getElementById('distStatus').innerHTML = ` <b>${file.name}</b><br>No districts found. Check format.`;
-                    } else {
-                        document.getElementById('distStatus').innerHTML = `OK <b>${file.name}</b><br>${districts.length} districts loaded`;
-                        document.getElementById('distStatus').classList.add('loaded');
-                        showToast(` Loaded ${districts.length} districts`, '#607D8B');
-                    }
-                    document.getElementById('districtCount').textContent = districts.length;
-                    
-                    updateDistrictList();
-                    render();
-                } catch(err) {
-                    console.error('District load error:', err);
-                    document.getElementById('distStatus').innerHTML = ` <b>${file.name}</b><br>Error: ${err.message}`;
-                }
-            };
-            reader.readAsText(file);
-        });
-        
-        // Roads GeoJSON file handler
-        document.getElementById('roadsFile').addEventListener('change', function(e) {
-            const file = e.target.files[0]; if (!file) return;
-            showLoading('Loading Roads...');
-            setLoadingStatus(`Reading ${(file.size/1024/1024).toFixed(1)} MB...`, 10);
-            
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                setLoadingStatus('Parsing JSON...', 30);
-                
-                setTimeout(() => {
-                    try {
-                        const data = JSON.parse(evt.target.result);
-                        
-                        // Handle different formats
-                        if (data.type === 'FeatureCollection' && data.features) {
-                            roads = data.features;
-                        } else if (Array.isArray(data) && data[0]?.geometry) {
-                            roads = data;
-                        } else if (Array.isArray(data)) {
-                            roads = data;
-                        } else {
-                            roads = [];
-                        }
-                        
-                        console.log('Roads loaded:', roads.length, 'Sample:', roads[0]);
-                        
-                        // Calculate total length and width distribution
-                        let totalLength = 0;
-                        const widthDist = {};
-                        roads.forEach(r => {
-                            const props = r.properties || {};
-                            const width = parseFloat(props.width_m || props.WIDTH || props.width || 0);
-                            const length = parseFloat(props.length_m || props.LENGTH || props.length || 0);
-                            totalLength += length;
-                            if (width > 0) {
-                                widthDist[width] = (widthDist[width] || 0) + 1;
-                            }
-                        });
-                        
-                        document.getElementById('roadsStatus').innerHTML = `OK <b>${file.name}</b><br>${roads.length} roads (${(totalLength/1000).toFixed(2)} km)`;
-                        document.getElementById('roadsStatus').classList.add('loaded');
-                        document.getElementById('roadCount').textContent = roads.length;
-                        document.getElementById('totalRoads').textContent = roads.length;
-                        document.getElementById('roadLegend').style.display = 'block';
-                        
-                        // Zoom to roads if they exist
-                        if (roads.length > 0) {
-                            const firstRoad = roads[0];
-                            if (firstRoad.geometry && firstRoad.geometry.coordinates) {
-                                const coords = firstRoad.geometry.type === 'LineString' 
-                                    ? firstRoad.geometry.coordinates 
-                                    : firstRoad.geometry.coordinates[0];
-                                if (coords && coords.length > 0) {
-                                    const [lng, lat] = coords[0];
-                                    map.setCenter({ lat, lng });
-                                    map.setZoom(14);
-                                }
-                            }
-                        }
-                        
-                        hideLoading();
-                        showToast(` ${roads.length} roads loaded!`, '#2196F3');
-                        render();
-                    } catch(err) {
-                        hideLoading();
-                        console.error('Roads load error:', err);
-                        document.getElementById('roadsStatus').innerHTML = ` Error: ${err.message}`;
-                    }
-                }, 10);
-            };
-            reader.readAsText(file);
-        });
-        
-        function getDistrictName(d) {
-            if (d.properties) {
-                return d.properties.name || d.properties.NAME || d.properties.name_en || 
-                       d.properties.name_ar || d.properties.DISTRICT_NAME || d.properties.district_name;
-            }
-            return d.name || d.name_en || d.name_ar || 'Unknown';
-        }
-        
-        function updateDistrictList() {
-            const search = document.getElementById('districtSearch').value.toLowerCase();
-            const container = document.getElementById('districtList');
-            container.innerHTML = '';
-            
-            if (districts.length === 0) {
-                container.innerHTML = '<div style="color:#999;font-size:10px;padding:10px;">No districts loaded</div>';
-                return;
-            }
-            
-            districts.forEach((d, idx) => {
-                const name = getDistrictName(d) || `District ${idx + 1}`;
-                if (search && !name.toLowerCase().includes(search)) return;
-                
-                const div = document.createElement('div');
-                div.className = 'district-item' + (selectedDistrict === name ? ' selected' : '');
-                div.textContent = name;
-                div.onclick = () => selectDistrict(name, d);
-                container.appendChild(div);
-            });
-        }
-        
-        function getDistrictGeometry(d) {
-            // Handle different geometry formats
-            if (d.geometry) {
-                return d.geometry;
-            }
-            if (d.boundaries && d.boundaries[0]) {
-                return {
-                    type: 'Polygon',
-                    coordinates: [d.boundaries[0].map(([lat, lon]) => [lon, lat])]
-                };
-            }
-            return null;
-        }
-        
-        function filterDistricts() { updateDistrictList(); }
-        
-        function selectDistrict(name, districtObj) {
-            if (selectedDistrict === name) {
-                selectedDistrict = null;
-                selectedDistrictObj = null;
-            } else {
-                selectedDistrict = name;
-                selectedDistrictObj = districtObj || districts.find(d => getDistrictName(d) === name);
-                
-                // Zoom to district
-                if (selectedDistrictObj) {
-                    zoomToDistrict(selectedDistrictObj);
-                }
-            }
-            updateDistrictList();
-            calculateDistrictStats();
-            render();
-        }
-        
-        function zoomToDistrict(d) {
-            const geom = getDistrictGeometry(d);
-            if (!geom) return;
-            
-            const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
-                           geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
-            if (!coords || coords.length < 3) return;
-            
-            // Calculate bounds
-            let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
-            coords.forEach(([lon, lat]) => {
-                if (lat < minLat) minLat = lat;
-                if (lat > maxLat) maxLat = lat;
-                if (lon < minLng) minLng = lon;
-                if (lon > maxLng) maxLng = lon;
-            });
-            
-            // Fit bounds with padding
-            const bounds = new google.maps.LatLngBounds(
-                new google.maps.LatLng(minLat, minLng),
-                new google.maps.LatLng(maxLat, maxLng)
-            );
-            map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 400 });
-        }
-        
-        let selectedDistrictObj = null;
-        
-        function clearDistrictSelection() {
-            selectedDistrict = null;
-            selectedDistrictObj = null;
-            updateDistrictList();
-            calculateDistrictStats();
-            render();
-            // Reset view to all Riyadh
-            map.setCenter({ lat: 24.7136, lng: 46.6753 });
-            map.setZoom(11);
-        }
-        
-        function selectAllPoi() {
-            document.querySelectorAll('#poiCategories input').forEach(cb => { cb.checked = true; activePoiCategories.add(cb.dataset.cat); });
-            render();
-        }
-        
-        function clearAllPoi() {
-            document.querySelectorAll('#poiCategories input').forEach(cb => { cb.checked = false; });
-            activePoiCategories.clear();
-            render();
-        }
-        
-        function exportVisibleParcels() {
-            const bounds = map.getBounds();
-            const ne = bounds.getNorthEast(), sw = bounds.getSouthWest();
-            const visible = parcels.filter(p => p.lat >= sw.lat() && p.lat <= ne.lat() && p.lng >= sw.lng() && p.lng <= ne.lng());
-            downloadCSV(visible, 'visible_parcels.csv');
-        }
-        
-        function exportDistrictParcels() {
-            if (!selectedDistrict) { alert('Select a district first'); return; }
-            const d = districts.find(x => x.properties.name === selectedDistrict);
-            if (!d) return;
-            const coords = d.geometry.type === 'Polygon' ? d.geometry.coordinates[0] : d.geometry.coordinates[0][0];
-            const poly = coords.map(([lon, lat]) => [lon, lat]);
-            const inDist = parcels.filter(p => pointInPolygon(p.lat, p.lng, poly));
-            downloadCSV(inDist, `${selectedDistrict}_parcels.csv`);
-        }
-        
-        function downloadCSV(data, filename) {
-            const csv = 'latitude,longitude,type\n' + data.map(p => `${p.lat},${p.lng},${p.type}`).join('\n');
-            const blob = new Blob([csv], {type: 'text/csv'});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = filename;
-            a.click();
-        }
-        
-        // Info popup functions
         function showInfoPopup(x, y, title, content) {
             const popup = document.getElementById('infoPopup');
             document.getElementById('popupTitle').innerHTML = title;
             document.getElementById('popupContent').innerHTML = content;
-            
-            // Position popup
-            let left = x + 15;
-            let top = y + 15;
-            if (left + 300 > window.innerWidth) left = x - 315;
-            if (top + 200 > window.innerHeight) top = y - 215;
-            
-            popup.style.left = left + 'px';
-            popup.style.top = top + 'px';
+            popup.style.left = x + 'px';
+            popup.style.top = y + 'px';
             popup.classList.add('show');
         }
         
@@ -1538,323 +697,7 @@
             document.getElementById('infoPopup').classList.remove('show');
         }
         
-        // Check if a point is near a line segment
-        function pointToLineDistance(px, py, x1, y1, x2, y2) {
-            const A = px - x1;
-            const B = py - y1;
-            const C = x2 - x1;
-            const D = y2 - y1;
-            
-            const dot = A * C + B * D;
-            const lenSq = C * C + D * D;
-            let param = -1;
-            
-            if (lenSq !== 0) param = dot / lenSq;
-            
-            let xx, yy;
-            if (param < 0) { xx = x1; yy = y1; }
-            else if (param > 1) { xx = x2; yy = y2; }
-            else { xx = x1 + param * C; yy = y1 + param * D; }
-            
-            const dx = px - xx;
-            const dy = py - yy;
-            return Math.sqrt(dx * dx + dy * dy);
-        }
-        
-        function findClickedItem(lat, lng, pixelTolerance) {
-            if (!map) return null;
-            
-            const proj = map.getProjection();
-            const zoom = map.getZoom();
-            const scale = Math.pow(2, zoom);
-            const clickPt = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
-            
-            // Tolerance in world coordinates
-            const tolerance = pixelTolerance / scale;
-            
-            // Check POIs first (on top)
-            for (const p of poiData) {
-                if (activePoiCategories.size > 0 && !activePoiCategories.has(p.layer)) continue;
-                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
-                if (Math.abs(pt.x - clickPt.x) < tolerance && Math.abs(pt.y - clickPt.y) < tolerance) {
-                    return { type: 'poi', data: p };
-                }
-            }
-            
-            // Check roads (lines) - check before parcels since roads are more prominent
-            if (roads.length > 0) {
-                for (const road of roads) {
-                    const geom = road.geometry;
-                    if (!geom) continue;
-                    
-                    const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
-                    
-                    for (const coords of lines) {
-                        if (!coords || coords.length < 2) continue;
-                        
-                        // Check each segment
-                        for (let i = 0; i < coords.length - 1; i++) {
-                            const [lon1, lat1] = coords[i];
-                            const [lon2, lat2] = coords[i + 1];
-                            
-                            const pt1 = proj.fromLatLngToPoint(new google.maps.LatLng(lat1, lon1));
-                            const pt2 = proj.fromLatLngToPoint(new google.maps.LatLng(lat2, lon2));
-                            
-                            const dist = pointToLineDistance(clickPt.x, clickPt.y, pt1.x, pt1.y, pt2.x, pt2.y);
-                            
-                            if (dist < tolerance * 2) {
-                                return { type: 'road', data: road };
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // Check parcels
-            for (const p of parcels) {
-                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
-                if (Math.abs(pt.x - clickPt.x) < tolerance && Math.abs(pt.y - clickPt.y) < tolerance) {
-                    return { type: 'parcel', data: p };
-                }
-            }
-            
-            // Check buildings (polygon click)
-            for (const b of buildings) {
-                const coords = b.geometry?.coordinates?.[0];
-                if (!coords || coords.length < 3) continue;
-                
-                // Simple bounds check first
-                const [lon, bLat] = coords[0];
-                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(bLat, lon));
-                if (Math.abs(pt.x - clickPt.x) < tolerance * 3 && Math.abs(pt.y - clickPt.y) < tolerance * 3) {
-                    return { type: 'building', data: { lat: bLat, lng: lon } };
-                }
-            }
-            
-            // Check districts
-            for (const d of districts) {
-                const geom = getDistrictGeometry(d);
-                if (!geom) continue;
-                const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
-                               geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
-                if (!coords) continue;
-                const poly = coords.map(([lon, lat]) => [lon, lat]);
-                if (pointInPolygon(lat, lng, poly)) {
-                    return { type: 'district', data: d };
-                }
-            }
-            
-            return null;
-        }
-        
-        function handleMapClick(e) {
-            if (!document.getElementById('enableClick').checked) return;
-            
-            closeInfoPopup();
-            
-            const lat = e.latLng.lat();
-            const lng = e.latLng.lng();
-            const item = findClickedItem(lat, lng, 15);
-            
-            if (!item) return;
-            
-            const pixelX = e.pixel.x;
-            const pixelY = e.pixel.y;
-            
-            if (item.type === 'road') {
-                const r = item.data;
-                const props = r.properties || {};
-                const width = props.width_m || props.WIDTH || props.width || 'N/A';
-                const length = props.length_m || props.LENGTH || props.length || 'N/A';
-                const nameAr = props.name_ar || props.ROADCENTERLINENAME_AR || '-';
-                const nameEn = props.name_en || props.ROADCENTERLINENAME_EN || '-';
-                const lanes = props.num_lanes || props.NOOFLANES || props.lanes || '-';
-                const paved = props.paved || props.PAVED || '-';
-                const category = props.category || props.ROADCATEGORY || '-';
-                const condition = props.condition || props.ROADCONDITION || '-';
-                const surfaceType = props.surface_type || props.SURFACETYPE || '-';
-                const speedLimit = props.speed_limit || props.SPEEDLIMIT || '-';
-                const direction = props.road_direction || props.ROADDIRECTION || '-';
-                const streetId = props.street_id || props.STREET_ID || '-';
-                
-                const color = getRoadColor(parseFloat(width) || 10);
-                
-                showInfoPopup(pixelX, pixelY,
-                    `<span class="type-badge" style="background:${color};"> Road</span> ${width}m`,
-                    `<div style="direction:rtl;text-align:right;font-size:16px;font-weight:bold;margin-bottom:8px;">${nameAr}</div>
-                    <div style="color:#666;margin-bottom:10px;">${nameEn}</div>
-                    <table>
-                        <tr><td> Width</td><td><b>${width}m</b></td></tr>
-                        <tr><td> Length</td><td>${typeof length === 'number' ? length.toFixed(0) + 'm' : length}</td></tr>
-                        <tr><td> Lanes</td><td>${lanes}</td></tr>
-                        <tr><td> Paved</td><td>${paved}</td></tr>
-                        <tr><td> Category</td><td>${category}</td></tr>
-                        <tr><td> Condition</td><td>${condition}</td></tr>
-                        <tr><td> Surface</td><td>${surfaceType}</td></tr>
-                        <tr><td> Speed Limit</td><td>${speedLimit}</td></tr>
-                        <tr><td> Direction</td><td>${direction}</td></tr>
-                        <tr><td> Street ID</td><td style="font-size:9px;">${streetId}</td></tr>
-                    </table>`
-                );
-            } else if (item.type === 'poi') {
-                const p = item.data;
-                const color = poiColors[p.layer] || poiColors['default'];
-                showInfoPopup(pixelX, pixelY, 
-                    `<span class="type-badge type-poi">${p.layer}</span> POI`,
-                    `<table>
-                        <tr><td>Name (AR)</td><td>${p.name_ar || '-'}</td></tr>
-                        <tr><td>Name (EN)</td><td>${p.name_en || '-'}</td></tr>
-                        <tr><td>Category</td><td>${p.layer}</td></tr>
-                        <tr><td>Location</td><td>${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</td></tr>
-                    </table>`
-                );
-            } else if (item.type === 'parcel') {
-                const p = item.data;
-                const typeClass = p.type === 'apt' ? 'type-apt' : p.type === 'villa' ? 'type-villa' : 'type-other';
-                const typeName = p.type === 'apt' ? 'Apartment' : p.type === 'villa' ? 'Villa' : 'Other';
-                showInfoPopup(pixelX, pixelY,
-                    `<span class="type-badge ${typeClass}">${typeName}</span> Parcel`,
-                    `<table>
-                        <tr><td>Type</td><td>${typeName}</td></tr>
-                        <tr><td>Location</td><td>${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}</td></tr>
-                        ${p.landuse ? `<tr><td>Land Use</td><td>${p.landuse}</td></tr>` : ''}
-                        ${p.district_id ? `<tr><td>District ID</td><td>${p.district_id}</td></tr>` : ''}
-                    </table>`
-                );
-            } else if (item.type === 'building') {
-                const b = item.data;
-                showInfoPopup(pixelX, pixelY,
-                    `<span class="type-badge" style="background:#9c27b0;">Building</span> MS Building`,
-                    `<table>
-                        <tr><td>Location</td><td>${b.lat.toFixed(6)}, ${b.lng.toFixed(6)}</td></tr>
-                    </table>`
-                );
-            } else if (item.type === 'district') {
-                const d = item.data;
-                const name = getDistrictName(d);
-                
-                // Calculate quick stats for popup
-                const geom = getDistrictGeometry(d);
-                let distStats = { parcels: 0, apt: 0, villa: 0, other: 0, roads: 0, roadLength: 0, majorRoads: 0, poi: 0 };
-                
-                if (geom) {
-                    const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
-                                   geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
-                    if (coords) {
-                        const poly = coords.map(([lon, lat]) => [lon, lat]);
-                        let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
-                        coords.forEach(([lon, lat]) => {
-                            if (lat < minLat) minLat = lat;
-                            if (lat > maxLat) maxLat = lat;
-                            if (lon < minLng) minLng = lon;
-                            if (lon > maxLng) maxLng = lon;
-                        });
-                        
-                        // Count parcels
-                        parcels.forEach(p => {
-                            if (p.lat < minLat || p.lat > maxLat || p.lng < minLng || p.lng > maxLng) return;
-                            if (pointInPolygon(p.lat, p.lng, poly)) {
-                                distStats.parcels++;
-                                if (p.type === 'apt') distStats.apt++;
-                                else if (p.type === 'villa') distStats.villa++;
-                                else distStats.other++;
-                            }
-                        });
-                        
-                        // Count POIs
-                        poiData.forEach(p => {
-                            if (p.lat < minLat || p.lat > maxLat || p.lng < minLng || p.lng > maxLng) return;
-                            if (pointInPolygon(p.lat, p.lng, poly)) distStats.poi++;
-                        });
-                        
-                        // Count roads
-                        const uniqueRoads = new Set();
-                        roads.forEach(road => {
-                            const roadGeom = road.geometry;
-                            if (!roadGeom) return;
-                            const props = road.properties || {};
-                            const width = parseFloat(props.width_m || props.WIDTH || 0);
-                            const length = parseFloat(props.length_m || props.LENGTH || 0);
-                            const nameAr = props.name_ar || props.ROADCENTERLINENAME_AR || '';
-                            
-                            const lines = roadGeom.type === 'LineString' ? [roadGeom.coordinates] : roadGeom.coordinates;
-                            for (const lineCoords of lines) {
-                                for (const [lon, rLat] of lineCoords) {
-                                    if (rLat >= minLat && rLat <= maxLat && lon >= minLng && lon <= maxLng) {
-                                        if (pointInPolygon(rLat, lon, poly)) {
-                                            distStats.roads++;
-                                            distStats.roadLength += length;
-                                            if (width >= 20) distStats.majorRoads++;
-                                            if (nameAr) uniqueRoads.add(nameAr);
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                        distStats.uniqueRoads = uniqueRoads.size;
-                        distStats.entryExit = uniqueRoads.size * 2;
-                    }
-                }
-                
-                showInfoPopup(pixelX, pixelY,
-                    `<span class="type-badge" style="background:#607D8B;"> District</span>`,
-                    `<div style="font-size:16px;font-weight:bold;margin-bottom:10px;">${name}</div>
-                    <table>
-                        <tr style="background:#e3f2fd;"><td colspan="2" style="font-weight:bold;color:#1976D2;"> PARCELS</td></tr>
-                        <tr><td>Total Parcels</td><td><b>${distStats.parcels.toLocaleString()}</b></td></tr>
-                        <tr><td> Apartments</td><td>${distStats.apt.toLocaleString()}</td></tr>
-                        <tr><td> Villas</td><td>${distStats.villa.toLocaleString()}</td></tr>
-                        <tr><td> Other</td><td>${distStats.other.toLocaleString()}</td></tr>
-                        <tr><td> POIs</td><td>${distStats.poi.toLocaleString()}</td></tr>
-                        
-                        <tr style="background:#e8f5e9;"><td colspan="2" style="font-weight:bold;color:#2E7D32;"> ROADS</td></tr>
-                        <tr><td>Road Segments</td><td><b>${distStats.roads.toLocaleString()}</b></td></tr>
-                        <tr><td>Total Length</td><td>${(distStats.roadLength/1000).toFixed(2)} km</td></tr>
-                        <tr><td>Major Roads (20m+)</td><td>${distStats.majorRoads}</td></tr>
-                        <tr><td>Unique Roads</td><td>${distStats.uniqueRoads || 0}</td></tr>
-                        
-                        <tr style="background:#fff3e0;"><td colspan="2" style="font-weight:bold;color:#E65100;"> ENTRY/EXIT</td></tr>
-                        <tr><td>Est. Entry/Exit Points</td><td><b>~${distStats.entryExit || 0}</b></td></tr>
-                    </table>
-                    <div style="margin-top:10px;text-align:center;">
-                        <button onclick="selectDistrict('${name.replace(/'/g, "\\'")}');closeInfoPopup();" style="padding:5px 15px;background:#1a73e8;color:white;border:none;border-radius:4px;cursor:pointer;">Select District</button>
-                    </div>`
-                );
-            }
-        }
-        
-        function initMap() {
-            if (map) return; // Prevent double initialization
-            
-            try {
-                map = new google.maps.Map(document.getElementById('map'), {
-                    center: { lat: 24.7136, lng: 46.6753 },
-                    zoom: 11,
-                    mapTypeControl: true,
-                    gestureHandling: 'greedy'
-                });
-                
-                map.addListener('idle', render);
-                map.addListener('click', handleMapClick);
-                
-                window.addEventListener('resize', () => {
-                    render();
-                });
-                
-                console.log('Map ready. Upload your data files.');
-            } catch (err) {
-                console.error('Error initializing map:', err);
-                document.getElementById('loadingTitle').textContent = 'Map initialization error';
-                document.getElementById('loadingStatus').textContent = err.message;
-                document.getElementById('loadingOverlay').classList.remove('hidden');
-            }
-        }
-        
-        // Also expose as window.initMap for compatibility with callback parameter
-        window.initMap = initMap;
+        console.log('Map ready. Upload your data files.');
     </script>
-    <!-- Keyless Google Maps API - no API key required -->
-    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
 </body>
 </html>
