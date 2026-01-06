@@ -155,6 +155,21 @@
             <div class="row"><span>📍 POIs:</span><span id="distPoi">0</span></div>
             <div class="row total" style="color:#4CAF50;"><span>Villa %:</span><span id="distVillaPct">0%</span></div>
             <div class="row total" style="color:#2196F3;"><span>Apt %:</span><span id="distAptPct">0%</span></div>
+            
+            <!-- Road Stats -->
+            <div style="border-top:2px solid #2196F3;margin-top:8px;padding-top:8px;">
+                <div class="row" style="color:#2196F3;font-weight:bold;"><span>🛣️ ROADS</span><span></span></div>
+                <div class="row"><span>Total Roads:</span><span id="distRoads">0</span></div>
+                <div class="row"><span>Total Length:</span><span id="distRoadLength">0 km</span></div>
+                <div class="row"><span>Major (20m+):</span><span id="distMajorRoads">0</span></div>
+                <div class="row"><span>Entry/Exit Points:</span><span id="distEntryExit">~0</span></div>
+            </div>
+            
+            <!-- Road Width Breakdown -->
+            <div id="distRoadWidths" style="font-size:9px;margin-top:5px;display:none;">
+                <div style="font-weight:bold;margin-bottom:3px;">By Width:</div>
+                <div id="distWidthBreakdown"></div>
+            </div>
         </div>
         
         <!-- Dynamic Counts (In View) -->
@@ -863,17 +878,27 @@
             // Convert to [lon, lat] for pointInPolygon
             const poly = coords.map(([lon, lat]) => [lon, lat]);
             
+            // Get district bounds for faster filtering
+            let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+            coords.forEach(([lon, lat]) => {
+                if (lat < minLat) minLat = lat;
+                if (lat > maxLat) maxLat = lat;
+                if (lon < minLng) minLng = lon;
+                if (lon > maxLng) maxLng = lon;
+            });
+            
             let bldg = 0, apt = 0, villa = 0, other = 0, poi = 0;
             
             buildings.forEach(b => {
-                const coords = b.geometry?.coordinates?.[0];
-                if (!coords || coords.length === 0) return;
-                // Use first coordinate of building polygon for point-in-polygon check
-                const [lon, lat] = coords[0];
+                const bCoords = b.geometry?.coordinates?.[0];
+                if (!bCoords || bCoords.length === 0) return;
+                const [lon, lat] = bCoords[0];
+                if (lat < minLat || lat > maxLat || lon < minLng || lon > maxLng) return;
                 if (pointInPolygon(lat, lon, poly)) bldg++;
             });
             
             parcels.forEach(p => {
+                if (p.lat < minLat || p.lat > maxLat || p.lng < minLng || p.lng > maxLng) return;
                 if (pointInPolygon(p.lat, p.lng, poly)) {
                     if (p.type === 'apt') apt++;
                     else if (p.type === 'villa') villa++;
@@ -882,8 +907,56 @@
             });
             
             poiData.forEach(p => {
+                if (p.lat < minLat || p.lat > maxLat || p.lng < minLng || p.lng > maxLng) return;
                 if (pointInPolygon(p.lat, p.lng, poly)) poi++;
             });
+            
+            // Calculate road stats
+            let roadCount = 0, totalRoadLength = 0, majorRoads = 0;
+            const widthCounts = {};
+            const uniqueRoadNames = new Set();
+            
+            roads.forEach(road => {
+                const roadGeom = road.geometry;
+                if (!roadGeom) return;
+                
+                const props = road.properties || {};
+                const width = parseFloat(props.width_m || props.WIDTH || props.width || 0);
+                const length = parseFloat(props.length_m || props.LENGTH || props.length || 0);
+                const nameAr = props.name_ar || props.ROADCENTERLINENAME_AR || '';
+                
+                // Check if road intersects with district
+                const lines = roadGeom.type === 'LineString' ? [roadGeom.coordinates] : roadGeom.coordinates;
+                
+                let roadInDistrict = false;
+                for (const lineCoords of lines) {
+                    if (!lineCoords || lineCoords.length === 0) continue;
+                    
+                    // Check if any point of the road is in the district
+                    for (const [lon, lat] of lineCoords) {
+                        if (lat >= minLat && lat <= maxLat && lon >= minLng && lon <= maxLng) {
+                            if (pointInPolygon(lat, lon, poly)) {
+                                roadInDistrict = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (roadInDistrict) break;
+                }
+                
+                if (roadInDistrict) {
+                    roadCount++;
+                    totalRoadLength += length;
+                    if (width >= 20) majorRoads++;
+                    if (width > 0) {
+                        widthCounts[width] = (widthCounts[width] || 0) + 1;
+                    }
+                    if (nameAr) uniqueRoadNames.add(nameAr);
+                }
+            });
+            
+            // Estimate entry/exit points (unique roads × 2 ends)
+            const entryExitEstimate = uniqueRoadNames.size * 2;
             
             const total = apt + villa + other;
             const villaPct = total > 0 ? (villa / total * 100).toFixed(1) : 0;
@@ -898,6 +971,29 @@
             document.getElementById('distPoi').textContent = poi.toLocaleString();
             document.getElementById('distVillaPct').textContent = villaPct + '%';
             document.getElementById('distAptPct').textContent = aptPct + '%';
+            
+            // Update road stats
+            document.getElementById('distRoads').textContent = roadCount.toLocaleString();
+            document.getElementById('distRoadLength').textContent = (totalRoadLength / 1000).toFixed(2) + ' km';
+            document.getElementById('distMajorRoads').textContent = majorRoads.toLocaleString();
+            document.getElementById('distEntryExit').textContent = '~' + entryExitEstimate;
+            
+            // Show road width breakdown
+            const widthBreakdown = document.getElementById('distWidthBreakdown');
+            const widthContainer = document.getElementById('distRoadWidths');
+            
+            if (Object.keys(widthCounts).length > 0) {
+                widthContainer.style.display = 'block';
+                widthBreakdown.innerHTML = Object.entries(widthCounts)
+                    .sort((a, b) => parseFloat(b[0]) - parseFloat(a[0]))
+                    .map(([w, c]) => {
+                        const color = getRoadColor(parseFloat(w));
+                        return `<span style="display:inline-block;margin:1px 3px;padding:1px 5px;background:${color};color:white;border-radius:3px;">${w}m: ${c}</span>`;
+                    }).join('');
+            } else {
+                widthContainer.style.display = 'none';
+            }
+            
             document.getElementById('districtStats').classList.add('active');
         }
         
@@ -1413,6 +1509,29 @@
             document.getElementById('infoPopup').classList.remove('show');
         }
         
+        // Check if a point is near a line segment
+        function pointToLineDistance(px, py, x1, y1, x2, y2) {
+            const A = px - x1;
+            const B = py - y1;
+            const C = x2 - x1;
+            const D = y2 - y1;
+            
+            const dot = A * C + B * D;
+            const lenSq = C * C + D * D;
+            let param = -1;
+            
+            if (lenSq !== 0) param = dot / lenSq;
+            
+            let xx, yy;
+            if (param < 0) { xx = x1; yy = y1; }
+            else if (param > 1) { xx = x2; yy = y2; }
+            else { xx = x1 + param * C; yy = y1 + param * D; }
+            
+            const dx = px - xx;
+            const dy = py - yy;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
         function findClickedItem(lat, lng, pixelTolerance) {
             if (!map) return null;
             
@@ -1433,6 +1552,35 @@
                 }
             }
             
+            // Check roads (lines) - check before parcels since roads are more prominent
+            if (roads.length > 0) {
+                for (const road of roads) {
+                    const geom = road.geometry;
+                    if (!geom) continue;
+                    
+                    const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
+                    
+                    for (const coords of lines) {
+                        if (!coords || coords.length < 2) continue;
+                        
+                        // Check each segment
+                        for (let i = 0; i < coords.length - 1; i++) {
+                            const [lon1, lat1] = coords[i];
+                            const [lon2, lat2] = coords[i + 1];
+                            
+                            const pt1 = proj.fromLatLngToPoint(new google.maps.LatLng(lat1, lon1));
+                            const pt2 = proj.fromLatLngToPoint(new google.maps.LatLng(lat2, lon2));
+                            
+                            const dist = pointToLineDistance(clickPt.x, clickPt.y, pt1.x, pt1.y, pt2.x, pt2.y);
+                            
+                            if (dist < tolerance * 2) {
+                                return { type: 'road', data: road };
+                            }
+                        }
+                    }
+                }
+            }
+            
             // Check parcels
             for (const p of parcels) {
                 const pt = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
@@ -1446,24 +1594,20 @@
                 const coords = b.geometry?.coordinates?.[0];
                 if (!coords || coords.length < 3) continue;
                 
-                // Convert building polygon to screen coordinates
-                const screenPoly = coords.map(([lon, lat]) => {
-                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                    return { x: (w.x - bounds.getSouthWest().lng) * scale, y: (w.y - bounds.getNorthEast().lat) * scale };
-                });
-                
                 // Simple bounds check first
-                const [lon, lat] = coords[0];
-                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                const [lon, bLat] = coords[0];
+                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(bLat, lon));
                 if (Math.abs(pt.x - clickPt.x) < tolerance * 3 && Math.abs(pt.y - clickPt.y) < tolerance * 3) {
-                    return { type: 'building', data: { lat: lat, lng: lon } };
+                    return { type: 'building', data: { lat: bLat, lng: lon } };
                 }
             }
             
             // Check districts
             for (const d of districts) {
-                const coords = d.geometry.type === 'Polygon' ? d.geometry.coordinates[0] : 
-                               d.geometry.type === 'MultiPolygon' ? d.geometry.coordinates[0][0] : null;
+                const geom = getDistrictGeometry(d);
+                if (!geom) continue;
+                const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
+                               geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
                 if (!coords) continue;
                 const poly = coords.map(([lon, lat]) => [lon, lat]);
                 if (pointInPolygon(lat, lng, poly)) {
@@ -1488,7 +1632,42 @@
             const pixelX = e.pixel.x;
             const pixelY = e.pixel.y;
             
-            if (item.type === 'poi') {
+            if (item.type === 'road') {
+                const r = item.data;
+                const props = r.properties || {};
+                const width = props.width_m || props.WIDTH || props.width || 'N/A';
+                const length = props.length_m || props.LENGTH || props.length || 'N/A';
+                const nameAr = props.name_ar || props.ROADCENTERLINENAME_AR || '-';
+                const nameEn = props.name_en || props.ROADCENTERLINENAME_EN || '-';
+                const lanes = props.num_lanes || props.NOOFLANES || props.lanes || '-';
+                const paved = props.paved || props.PAVED || '-';
+                const category = props.category || props.ROADCATEGORY || '-';
+                const condition = props.condition || props.ROADCONDITION || '-';
+                const surfaceType = props.surface_type || props.SURFACETYPE || '-';
+                const speedLimit = props.speed_limit || props.SPEEDLIMIT || '-';
+                const direction = props.road_direction || props.ROADDIRECTION || '-';
+                const streetId = props.street_id || props.STREET_ID || '-';
+                
+                const color = getRoadColor(parseFloat(width) || 10);
+                
+                showInfoPopup(pixelX, pixelY,
+                    `<span class="type-badge" style="background:${color};">🛣️ Road</span> ${width}m`,
+                    `<div style="direction:rtl;text-align:right;font-size:16px;font-weight:bold;margin-bottom:8px;">${nameAr}</div>
+                    <div style="color:#666;margin-bottom:10px;">${nameEn}</div>
+                    <table>
+                        <tr><td>📏 Width</td><td><b>${width}m</b></td></tr>
+                        <tr><td>📐 Length</td><td>${typeof length === 'number' ? length.toFixed(0) + 'm' : length}</td></tr>
+                        <tr><td>🚗 Lanes</td><td>${lanes}</td></tr>
+                        <tr><td>🛤️ Paved</td><td>${paved}</td></tr>
+                        <tr><td>📊 Category</td><td>${category}</td></tr>
+                        <tr><td>🔧 Condition</td><td>${condition}</td></tr>
+                        <tr><td>🏗️ Surface</td><td>${surfaceType}</td></tr>
+                        <tr><td>⚡ Speed Limit</td><td>${speedLimit}</td></tr>
+                        <tr><td>↔️ Direction</td><td>${direction}</td></tr>
+                        <tr><td>🆔 Street ID</td><td style="font-size:9px;">${streetId}</td></tr>
+                    </table>`
+                );
+            } else if (item.type === 'poi') {
                 const p = item.data;
                 const color = poiColors[p.layer] || poiColors['default'];
                 showInfoPopup(pixelX, pixelY, 
@@ -1523,8 +1702,96 @@
                 );
             } else if (item.type === 'district') {
                 const d = item.data;
-                const name = d.properties.name || d.properties.NAME || 'Unknown';
-                selectDistrict(name);
+                const name = getDistrictName(d);
+                
+                // Calculate quick stats for popup
+                const geom = getDistrictGeometry(d);
+                let distStats = { parcels: 0, apt: 0, villa: 0, other: 0, roads: 0, roadLength: 0, majorRoads: 0, poi: 0 };
+                
+                if (geom) {
+                    const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
+                                   geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
+                    if (coords) {
+                        const poly = coords.map(([lon, lat]) => [lon, lat]);
+                        let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+                        coords.forEach(([lon, lat]) => {
+                            if (lat < minLat) minLat = lat;
+                            if (lat > maxLat) maxLat = lat;
+                            if (lon < minLng) minLng = lon;
+                            if (lon > maxLng) maxLng = lon;
+                        });
+                        
+                        // Count parcels
+                        parcels.forEach(p => {
+                            if (p.lat < minLat || p.lat > maxLat || p.lng < minLng || p.lng > maxLng) return;
+                            if (pointInPolygon(p.lat, p.lng, poly)) {
+                                distStats.parcels++;
+                                if (p.type === 'apt') distStats.apt++;
+                                else if (p.type === 'villa') distStats.villa++;
+                                else distStats.other++;
+                            }
+                        });
+                        
+                        // Count POIs
+                        poiData.forEach(p => {
+                            if (p.lat < minLat || p.lat > maxLat || p.lng < minLng || p.lng > maxLng) return;
+                            if (pointInPolygon(p.lat, p.lng, poly)) distStats.poi++;
+                        });
+                        
+                        // Count roads
+                        const uniqueRoads = new Set();
+                        roads.forEach(road => {
+                            const roadGeom = road.geometry;
+                            if (!roadGeom) return;
+                            const props = road.properties || {};
+                            const width = parseFloat(props.width_m || props.WIDTH || 0);
+                            const length = parseFloat(props.length_m || props.LENGTH || 0);
+                            const nameAr = props.name_ar || props.ROADCENTERLINENAME_AR || '';
+                            
+                            const lines = roadGeom.type === 'LineString' ? [roadGeom.coordinates] : roadGeom.coordinates;
+                            for (const lineCoords of lines) {
+                                for (const [lon, rLat] of lineCoords) {
+                                    if (rLat >= minLat && rLat <= maxLat && lon >= minLng && lon <= maxLng) {
+                                        if (pointInPolygon(rLat, lon, poly)) {
+                                            distStats.roads++;
+                                            distStats.roadLength += length;
+                                            if (width >= 20) distStats.majorRoads++;
+                                            if (nameAr) uniqueRoads.add(nameAr);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        distStats.uniqueRoads = uniqueRoads.size;
+                        distStats.entryExit = uniqueRoads.size * 2;
+                    }
+                }
+                
+                showInfoPopup(pixelX, pixelY,
+                    `<span class="type-badge" style="background:#607D8B;">🏘️ District</span>`,
+                    `<div style="font-size:16px;font-weight:bold;margin-bottom:10px;">${name}</div>
+                    <table>
+                        <tr style="background:#e3f2fd;"><td colspan="2" style="font-weight:bold;color:#1976D2;">📊 PARCELS</td></tr>
+                        <tr><td>Total Parcels</td><td><b>${distStats.parcels.toLocaleString()}</b></td></tr>
+                        <tr><td>🏢 Apartments</td><td>${distStats.apt.toLocaleString()}</td></tr>
+                        <tr><td>🏠 Villas</td><td>${distStats.villa.toLocaleString()}</td></tr>
+                        <tr><td>📦 Other</td><td>${distStats.other.toLocaleString()}</td></tr>
+                        <tr><td>📍 POIs</td><td>${distStats.poi.toLocaleString()}</td></tr>
+                        
+                        <tr style="background:#e8f5e9;"><td colspan="2" style="font-weight:bold;color:#2E7D32;">🛣️ ROADS</td></tr>
+                        <tr><td>Road Segments</td><td><b>${distStats.roads.toLocaleString()}</b></td></tr>
+                        <tr><td>Total Length</td><td>${(distStats.roadLength/1000).toFixed(2)} km</td></tr>
+                        <tr><td>Major Roads (20m+)</td><td>${distStats.majorRoads}</td></tr>
+                        <tr><td>Unique Roads</td><td>${distStats.uniqueRoads || 0}</td></tr>
+                        
+                        <tr style="background:#fff3e0;"><td colspan="2" style="font-weight:bold;color:#E65100;">🚗 ENTRY/EXIT</td></tr>
+                        <tr><td>Est. Entry/Exit Points</td><td><b>~${distStats.entryExit || 0}</b></td></tr>
+                    </table>
+                    <div style="margin-top:10px;text-align:center;">
+                        <button onclick="selectDistrict('${name.replace(/'/g, "\\'")}');closeInfoPopup();" style="padding:5px 15px;background:#1a73e8;color:white;border:none;border-radius:4px;cursor:pointer;">Select District</button>
+                    </div>`
+                );
             }
         }
         
