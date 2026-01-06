@@ -12,45 +12,81 @@
             left: 0; top: 0;
             width: 300px;
             height: 100vh;
-            background: rgba(22, 33, 62, 0.95);
-            padding: 15px;
+            background: rgba(22, 33, 62, 0.97);
+            padding: 12px;
             overflow-y: auto;
             z-index: 1000;
             color: white;
         }
         
-        h1 { font-size: 15px; color: #e94560; margin-bottom: 12px; }
-        h3 { font-size: 11px; background: #e94560; padding: 4px 8px; margin: 12px 0 8px 0; border-radius: 3px; }
+        h1 { font-size: 14px; color: #e94560; margin-bottom: 10px; }
+        h3 { font-size: 10px; background: #e94560; padding: 4px 8px; margin: 10px 0 6px 0; border-radius: 3px; }
         
         .box { background: #0f3460; padding: 10px; border-radius: 5px; margin-bottom: 8px; }
-        .box input[type="file"] { width: 100%; padding: 6px; background: #1a1a2e; border: 1px dashed #e94560; color: white; border-radius: 3px; font-size: 11px; }
-        .box .status { font-size: 10px; color: #4caf50; margin-top: 4px; }
-        .box .status.wait { color: #888; }
+        .box-title { font-size: 11px; font-weight: bold; margin-bottom: 6px; }
+        .box input[type="file"] { width: 100%; padding: 6px; background: #1a1a2e; border: 1px dashed #e94560; color: white; border-radius: 3px; font-size: 10px; }
+        .status { font-size: 10px; color: #4caf50; margin-top: 4px; }
+        .status.wait { color: #666; }
         
         .slider-row { margin: 8px 0; }
-        .slider-row label { font-size: 11px; display: block; margin-bottom: 3px; }
+        .slider-row label { font-size: 11px; display: block; margin-bottom: 4px; }
         .slider-row input { width: 100%; }
         .slider-row .val { float: right; color: #e94560; font-weight: bold; }
         
-        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
         .stat { background: #0f3460; padding: 8px; border-radius: 4px; text-align: center; }
-        .stat .n { font-size: 22px; font-weight: bold; color: #e94560; }
+        .stat .n { font-size: 20px; font-weight: bold; color: #e94560; }
         .stat .l { font-size: 9px; color: #888; }
         .stat.main { grid-column: span 2; background: #e94560; }
-        .stat.main .n { color: white; font-size: 28px; }
+        .stat.main .n { color: white; font-size: 26px; }
         .stat.main .l { color: #fcc; }
         
-        button { width: 100%; padding: 10px; background: #e94560; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        button { width: 100%; padding: 10px; background: #e94560; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; }
         button:disabled { background: #444; }
         
-        .list { max-height: 150px; overflow-y: auto; font-size: 10px; }
-        .item { display: flex; align-items: center; padding: 5px; background: #0f3460; margin: 2px 0; border-radius: 3px; cursor: pointer; }
+        .list { max-height: 130px; overflow-y: auto; font-size: 10px; }
+        .item { display: flex; align-items: center; padding: 4px; background: #0f3460; margin: 2px 0; border-radius: 3px; cursor: pointer; }
         .item:hover { background: #1a4a7a; }
-        .item .dot { width: 22px; height: 22px; background: #e94560; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; margin-right: 6px; border: 2px solid white; }
-        .item .name { flex: 1; direction: rtl; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .item .dot { width: 20px; height: 20px; background: #e94560; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; margin-right: 6px; border: 2px solid white; }
+        .item .name { flex: 1; direction: rtl; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
         
-        #map { position: fixed; left: 300px; top: 0; right: 0; bottom: 0; }
-        #canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        #mapContainer { 
+            position: fixed; 
+            left: 300px; top: 0; right: 0; bottom: 0; 
+        }
+        #map { 
+            width: 100%; 
+            height: 100%; 
+        }
+        #overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        #loading {
+            position: fixed;
+            left: 300px; top: 0; right: 0; bottom: 0;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: #e94560;
+            font-size: 18px;
+            z-index: 500;
+        }
+        #loading.hidden { display: none; }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 4px solid #333;
+            border-top-color: #e94560;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -58,24 +94,24 @@
         <h1>Entry/Exit Point Finder</h1>
         
         <div class="box">
-            <b style="font-size:11px;">1. Load Roads</b>
+            <div class="box-title">1. Load Roads GeoJSON</div>
             <input type="file" id="fileRoads" accept=".geojson,.json">
-            <div class="status wait" id="statusRoads">No roads</div>
+            <div class="status wait" id="statusRoads">No roads loaded</div>
         </div>
         
         <div class="box">
-            <b style="font-size:11px;">2. Load District Boundary</b>
+            <div class="box-title">2. Load District Boundary</div>
             <input type="file" id="fileDistrict" accept=".geojson,.json">
-            <div class="status wait" id="statusDistrict">No district</div>
+            <div class="status wait" id="statusDistrict">No district loaded</div>
         </div>
         
-        <h3>EXTEND ROADS</h3>
+        <h3>EXTEND ROADS SLIDER</h3>
         <div class="box">
             <div class="slider-row">
-                <label>Road Extension Length <span class="val" id="valExt">200m</span></label>
-                <input type="range" id="sliderExt" min="0" max="1000" value="200" step="50">
+                <label>Road Extension <span class="val" id="valExt">300m</span></label>
+                <input type="range" id="sliderExt" min="0" max="1500" value="300" step="50">
             </div>
-            <div style="font-size:10px;color:#888;margin-top:5px;">Extend roads to see where they cross the boundary</div>
+            <div style="font-size:9px;color:#888;">Extend roads beyond their endpoints. Where they cross boundary = Entry/Exit!</div>
         </div>
         
         <div class="box">
@@ -84,12 +120,12 @@
                 <input type="range" id="sliderWidth" min="0" max="40" value="10" step="2">
             </div>
             <div class="slider-row">
-                <label>Dot Size <span class="val" id="valDot">14</span></label>
-                <input type="range" id="sliderDot" min="6" max="30" value="14">
+                <label>Dot Size <span class="val" id="valDot">15</span></label>
+                <input type="range" id="sliderDot" min="8" max="30" value="15">
             </div>
         </div>
         
-        <h3>ENTRY/EXIT POINTS</h3>
+        <h3>ENTRY/EXIT RESULTS</h3>
         <div class="stats">
             <div class="stat main"><div class="n" id="sTotal">0</div><div class="l">BOUNDARY CROSSINGS</div></div>
             <div class="stat"><div class="n" id="sMajor">0</div><div class="l">Major 30m+</div></div>
@@ -97,64 +133,87 @@
         </div>
         
         <h3>EXPORT</h3>
-        <button id="btnExport" onclick="exportData()" disabled>Download GeoJSON</button>
+        <button id="btnExport" onclick="exportData()" disabled>Download Entry/Exit GeoJSON</button>
         
-        <h3>POINTS LIST</h3>
-        <div class="list" id="list"><div style="color:#666;text-align:center;padding:15px;">Load data first</div></div>
+        <h3>CROSSINGS LIST</h3>
+        <div class="list" id="list"><div style="color:#666;text-align:center;padding:15px;">Load roads + district</div></div>
     </div>
     
-    <div id="map"></div>
-    <canvas id="canvas"></canvas>
+    <div id="loading">
+        <div class="spinner"></div>
+        <div>Loading Google Maps...</div>
+    </div>
+    
+    <div id="mapContainer">
+        <div id="map"></div>
+        <canvas id="overlay"></canvas>
+    </div>
 
 <script>
-let map, roads = [], boundary = [], entryExits = [];
-let mapReady = false;
+var map = null;
+var roads = [];
+var boundary = [];
+var entryExits = [];
 
-// Wait for Google Maps
+// Initialize Google Maps
 function initMap() {
-    map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: 24.73, lng: 46.65 },
-        zoom: 14,
-        mapTypeId: 'roadmap',
-        styles: [
-            { featureType: "poi", stylers: [{ visibility: "off" }] },
-            { featureType: "transit", stylers: [{ visibility: "off" }] }
-        ]
-    });
-    
-    mapReady = true;
-    map.addListener('bounds_changed', draw);
-    map.addListener('zoom_changed', draw);
-    map.addListener('center_changed', draw);
-    
-    resizeCanvas();
+    try {
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: { lat: 24.73, lng: 46.65 },
+            zoom: 14,
+            mapTypeId: 'roadmap',
+            gestureHandling: 'greedy',
+            zoomControl: true,
+            mapTypeControl: true,
+            streetViewControl: false,
+            fullscreenControl: true
+        });
+        
+        document.getElementById('loading').classList.add('hidden');
+        
+        // Resize canvas
+        resizeCanvas();
+        
+        // Redraw on map changes
+        map.addListener('idle', draw);
+        map.addListener('zoom_changed', draw);
+        map.addListener('center_changed', draw);
+        map.addListener('bounds_changed', draw);
+        
+        console.log('Google Maps loaded successfully!');
+    } catch(e) {
+        console.error('Map init error:', e);
+        document.getElementById('loading').innerHTML = '<div style="color:#e94560;">Error loading map. Refresh page.</div>';
+    }
 }
 
-// Canvas
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+// Canvas setup
+var canvas = document.getElementById('overlay');
+var ctx = canvas.getContext('2d');
 
 function resizeCanvas() {
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+    var container = document.getElementById('mapContainer');
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
     draw();
 }
-window.onresize = resizeCanvas;
+window.addEventListener('resize', resizeCanvas);
 
-// Lat/Lng to pixel
+// Convert lat/lng to pixel
 function toPixel(lat, lng) {
-    if (!mapReady) return { x: 0, y: 0 };
-    const proj = map.getProjection();
-    if (!proj) return { x: 0, y: 0 };
-    const bounds = map.getBounds();
-    if (!bounds) return { x: 0, y: 0 };
+    if (!map) return {x: 0, y: 0};
+    var projection = map.getProjection();
+    if (!projection) return {x: 0, y: 0};
     
-    const ne = bounds.getNorthEast();
-    const sw = bounds.getSouthWest();
-    const topRight = proj.fromLatLngToPoint(ne);
-    const bottomLeft = proj.fromLatLngToPoint(sw);
-    const scale = Math.pow(2, map.getZoom());
-    const worldPoint = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
+    var bounds = map.getBounds();
+    if (!bounds) return {x: 0, y: 0};
+    
+    var ne = bounds.getNorthEast();
+    var sw = bounds.getSouthWest();
+    var topRight = projection.fromLatLngToPoint(ne);
+    var bottomLeft = projection.fromLatLngToPoint(sw);
+    var scale = Math.pow(2, map.getZoom());
+    var worldPoint = projection.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
     
     return {
         x: (worldPoint.x - bottomLeft.x) * scale,
@@ -163,22 +222,26 @@ function toPixel(lat, lng) {
 }
 
 // Line intersection
-function intersect(x1,y1,x2,y2,x3,y3,x4,y4) {
-    const d = (y4-y3)*(x2-x1)-(x4-x3)*(y2-y1);
+function lineIntersect(x1,y1,x2,y2,x3,y3,x4,y4) {
+    var d = (y4-y3)*(x2-x1)-(x4-x3)*(y2-y1);
     if (Math.abs(d) < 1e-12) return null;
-    const u = ((x4-x3)*(y1-y3)-(y4-y3)*(x1-x3))/d;
-    const v = ((x2-x1)*(y1-y3)-(y2-y1)*(x1-x3))/d;
-    if (u>=0 && u<=1 && v>=0 && v<=1) return [x1+u*(x2-x1), y1+u*(y2-y1)];
+    var u = ((x4-x3)*(y1-y3)-(y4-y3)*(x1-x3))/d;
+    var v = ((x2-x1)*(y1-y3)-(y2-y1)*(x1-x3))/d;
+    if (u>=0 && u<=1 && v>=0 && v<=1) {
+        return [x1+u*(x2-x1), y1+u*(y2-y1)];
+    }
     return null;
 }
 
-// Extend a line segment
+// Extend road line
 function extendLine(x1, y1, x2, y2, meters) {
-    const deg = meters / 111000; // rough conversion
-    const dx = x2 - x1, dy = y2 - y1;
-    const len = Math.sqrt(dx*dx + dy*dy);
-    if (len < 0.00001) return { x1, y1, x2, y2 };
-    const ux = dx/len, uy = dy/len;
+    var deg = meters / 111000;
+    var dx = x2 - x1;
+    var dy = y2 - y1;
+    var len = Math.sqrt(dx*dx + dy*dy);
+    if (len < 0.000001) return {x1:x1, y1:y1, x2:x2, y2:y2};
+    var ux = dx/len;
+    var uy = dy/len;
     return {
         x1: x1 - ux * deg,
         y1: y1 - uy * deg,
@@ -187,65 +250,71 @@ function extendLine(x1, y1, x2, y2, meters) {
     };
 }
 
-// Find crossings
+// Find where extended roads cross boundary
 function findCrossings() {
     entryExits = [];
-    if (!boundary.length || !roads.length) { updateUI(); return; }
+    if (!boundary.length || !roads.length) {
+        updateUI();
+        return;
+    }
     
-    const ext = parseInt(document.getElementById('sliderExt').value);
-    const minW = parseInt(document.getElementById('sliderWidth').value);
-    const seen = new Set();
+    var ext = parseInt(document.getElementById('sliderExt').value);
+    var minW = parseInt(document.getElementById('sliderWidth').value);
+    var seen = {};
     
-    roads.forEach(road => {
-        const p = road.properties || {};
-        const w = parseFloat(p.width_m || p.WIDTH || p.width || 10);
-        const name = p.name_ar || p.ROADCENTERLINENAME_AR || p.name_en || 'Road';
-        if (w < minW) return;
+    for (var r = 0; r < roads.length; r++) {
+        var road = roads[r];
+        var props = road.properties || {};
+        var w = parseFloat(props.width_m || props.WIDTH || props.width || 10);
+        var name = props.name_ar || props.ROADCENTERLINENAME_AR || props.name_en || 'Road';
         
-        const g = road.geometry;
-        if (!g) return;
-        const lines = g.type === 'LineString' ? [g.coordinates] : (g.coordinates || []);
+        if (w < minW) continue;
         
-        lines.forEach(coords => {
-            if (!coords || coords.length < 2) return;
+        var geom = road.geometry;
+        if (!geom) continue;
+        
+        var lines = geom.type === 'LineString' ? [geom.coordinates] : (geom.coordinates || []);
+        
+        for (var li = 0; li < lines.length; li++) {
+            var coords = lines[li];
+            if (!coords || coords.length < 2) continue;
             
-            // Extend the road at both ends
-            const first = coords[0], second = coords[1];
-            const last = coords[coords.length-1], prev = coords[coords.length-2];
+            // Extend at start
+            var extStart = extendLine(coords[1][0], coords[1][1], coords[0][0], coords[0][1], ext);
+            // Extend at end
+            var last = coords.length - 1;
+            var extEnd = extendLine(coords[last-1][0], coords[last-1][1], coords[last][0], coords[last][1], ext);
             
-            const extStart = extendLine(second[0], second[1], first[0], first[1], ext);
-            const extEnd = extendLine(prev[0], prev[1], last[0], last[1], ext);
+            // Build extended road
+            var extCoords = [[extStart.x2, extStart.y2]];
+            for (var c = 0; c < coords.length; c++) {
+                extCoords.push(coords[c]);
+            }
+            extCoords.push([extEnd.x2, extEnd.y2]);
             
-            // Build extended coordinates
-            const extCoords = [
-                [extStart.x2, extStart.y2],
-                ...coords,
-                [extEnd.x2, extEnd.y2]
-            ];
-            
-            // Check each segment
-            for (let i = 0; i < extCoords.length - 1; i++) {
-                const [x1, y1] = extCoords[i];
-                const [x2, y2] = extCoords[i+1];
+            // Check each segment against boundary
+            for (var i = 0; i < extCoords.length - 1; i++) {
+                var x1 = extCoords[i][0], y1 = extCoords[i][1];
+                var x2 = extCoords[i+1][0], y2 = extCoords[i+1][1];
                 
-                for (let j = 0; j < boundary.length - 1; j++) {
-                    const [bx1, by1] = boundary[j];
-                    const [bx2, by2] = boundary[j+1];
+                for (var j = 0; j < boundary.length - 1; j++) {
+                    var bx1 = boundary[j][0], by1 = boundary[j][1];
+                    var bx2 = boundary[j+1][0], by2 = boundary[j+1][1];
                     
-                    const hit = intersect(x1,y1,x2,y2,bx1,by1,bx2,by2);
+                    var hit = lineIntersect(x1,y1,x2,y2,bx1,by1,bx2,by2);
                     if (hit) {
-                        const key = hit[0].toFixed(5)+'_'+hit[1].toFixed(5);
-                        if (!seen.has(key)) {
-                            seen.add(key);
-                            entryExits.push({ lng: hit[0], lat: hit[1], name, width: w });
+                        var key = hit[0].toFixed(5) + '_' + hit[1].toFixed(5);
+                        if (!seen[key]) {
+                            seen[key] = true;
+                            entryExits.push({lng: hit[0], lat: hit[1], name: name, width: w});
                         }
                     }
                 }
             }
-        });
-    });
+        }
+    }
     
-    entryExits.sort((a,b) => b.width - a.width);
+    entryExits.sort(function(a,b) { return b.width - a.width; });
     updateUI();
     draw();
 }
@@ -253,216 +322,272 @@ function findCrossings() {
 // Update UI
 function updateUI() {
     document.getElementById('sTotal').textContent = entryExits.length;
-    document.getElementById('sMajor').textContent = entryExits.filter(p => p.width >= 30).length;
-    document.getElementById('sOther').textContent = entryExits.filter(p => p.width < 30).length;
-    document.getElementById('btnExport').disabled = !entryExits.length;
+    document.getElementById('sMajor').textContent = entryExits.filter(function(p){return p.width>=30;}).length;
+    document.getElementById('sOther').textContent = entryExits.filter(function(p){return p.width<30;}).length;
+    document.getElementById('btnExport').disabled = entryExits.length === 0;
     
-    const list = document.getElementById('list');
-    if (!entryExits.length) {
-        list.innerHTML = '<div style="color:#666;text-align:center;padding:15px;">'+(roads.length?(boundary.length?'Increase extension':'Load district'):'Load roads')+'</div>';
+    var list = document.getElementById('list');
+    if (entryExits.length === 0) {
+        var msg = roads.length ? (boundary.length ? 'Increase extension slider' : 'Load district') : 'Load roads first';
+        list.innerHTML = '<div style="color:#666;text-align:center;padding:15px;">' + msg + '</div>';
         return;
     }
-    list.innerHTML = entryExits.slice(0,40).map((p,i) => 
-        `<div class="item" onclick="goto(${i})"><div class="dot">${Math.round(p.width)}</div><div class="name">${p.name}</div></div>`
-    ).join('') + (entryExits.length > 40 ? '<div style="color:#888;text-align:center;padding:5px;">+more</div>' : '');
-}
-
-function goto(i) {
-    const p = entryExits[i];
-    map.setCenter({ lat: p.lat, lng: p.lng });
-    map.setZoom(17);
-}
-
-// Draw
-function draw() {
-    if (!mapReady) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    const ext = parseInt(document.getElementById('sliderExt').value);
-    const minW = parseInt(document.getElementById('sliderWidth').value);
-    const dotSize = parseInt(document.getElementById('sliderDot').value);
+    var html = '';
+    var max = Math.min(entryExits.length, 35);
+    for (var i = 0; i < max; i++) {
+        var p = entryExits[i];
+        html += '<div class="item" onclick="gotoPoint('+i+')"><div class="dot">'+Math.round(p.width)+'</div><div class="name">'+p.name+'</div></div>';
+    }
+    if (entryExits.length > 35) {
+        html += '<div style="color:#888;text-align:center;padding:5px;">+' + (entryExits.length-35) + ' more</div>';
+    }
+    list.innerHTML = html;
+}
+
+function gotoPoint(i) {
+    var p = entryExits[i];
+    if (map) {
+        map.setCenter({lat: p.lat, lng: p.lng});
+        map.setZoom(17);
+    }
+}
+
+// Draw on canvas
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!map) return;
+    
+    var ext = parseInt(document.getElementById('sliderExt').value);
+    var minW = parseInt(document.getElementById('sliderWidth').value);
+    var dotSize = parseInt(document.getElementById('sliderDot').value);
     
     // Draw extended roads
-    roads.forEach(road => {
-        const p = road.properties || {};
-        const w = parseFloat(p.width_m || p.WIDTH || p.width || 10);
-        if (w < minW) return;
+    for (var r = 0; r < roads.length; r++) {
+        var road = roads[r];
+        var props = road.properties || {};
+        var w = parseFloat(props.width_m || props.WIDTH || props.width || 10);
+        if (w < minW) continue;
         
-        const g = road.geometry;
-        if (!g) return;
-        const lines = g.type === 'LineString' ? [g.coordinates] : (g.coordinates || []);
+        var geom = road.geometry;
+        if (!geom) continue;
         
-        lines.forEach(coords => {
-            if (!coords || coords.length < 2) return;
+        var lines = geom.type === 'LineString' ? [geom.coordinates] : (geom.coordinates || []);
+        
+        for (var li = 0; li < lines.length; li++) {
+            var coords = lines[li];
+            if (!coords || coords.length < 2) continue;
             
             // Extend
-            const first = coords[0], second = coords[1];
-            const last = coords[coords.length-1], prev = coords[coords.length-2];
-            const extStart = extendLine(second[0], second[1], first[0], first[1], ext);
-            const extEnd = extendLine(prev[0], prev[1], last[0], last[1], ext);
+            var extStart = extendLine(coords[1][0], coords[1][1], coords[0][0], coords[0][1], ext);
+            var last = coords.length - 1;
+            var extEnd = extendLine(coords[last-1][0], coords[last-1][1], coords[last][0], coords[last][1], ext);
             
-            const extCoords = [[extStart.x2, extStart.y2], ...coords, [extEnd.x2, extEnd.y2]];
+            var extCoords = [[extStart.x2, extStart.y2]];
+            for (var c = 0; c < coords.length; c++) extCoords.push(coords[c]);
+            extCoords.push([extEnd.x2, extEnd.y2]);
             
             ctx.beginPath();
-            extCoords.forEach(([lng, lat], i) => {
-                const px = toPixel(lat, lng);
+            for (var i = 0; i < extCoords.length; i++) {
+                var px = toPixel(extCoords[i][1], extCoords[i][0]);
                 if (i === 0) ctx.moveTo(px.x, px.y);
                 else ctx.lineTo(px.x, px.y);
-            });
+            }
             ctx.strokeStyle = w >= 30 ? '#e94560' : w >= 15 ? '#ff9800' : '#4caf50';
-            ctx.lineWidth = w >= 30 ? 5 : w >= 15 ? 3.5 : 2;
+            ctx.lineWidth = w >= 30 ? 5 : w >= 15 ? 3 : 2;
             ctx.lineCap = 'round';
             ctx.stroke();
-        });
-    });
+        }
+    }
     
     // Draw boundary
-    if (boundary.length) {
+    if (boundary.length > 0) {
         ctx.beginPath();
-        boundary.forEach(([lng, lat], i) => {
-            const px = toPixel(lat, lng);
+        for (var i = 0; i < boundary.length; i++) {
+            var px = toPixel(boundary[i][1], boundary[i][0]);
             if (i === 0) ctx.moveTo(px.x, px.y);
             else ctx.lineTo(px.x, px.y);
-        });
+        }
         ctx.closePath();
-        ctx.fillStyle = 'rgba(233,69,96,0.1)';
+        ctx.fillStyle = 'rgba(233,69,96,0.12)';
         ctx.fill();
         ctx.strokeStyle = '#e94560';
         ctx.lineWidth = 3;
-        ctx.setLineDash([10, 5]);
+        ctx.setLineDash([10,5]);
         ctx.stroke();
         ctx.setLineDash([]);
     }
     
-    // Draw entry/exit RED DOTS
-    entryExits.forEach(p => {
-        const px = toPixel(p.lat, p.lng);
-        const r = p.width >= 40 ? dotSize * 1.4 : p.width >= 20 ? dotSize * 1.1 : dotSize * 0.9;
+    // Draw RED DOTS at crossings
+    for (var i = 0; i < entryExits.length; i++) {
+        var p = entryExits[i];
+        var px = toPixel(p.lat, p.lng);
+        var r = p.width >= 40 ? dotSize*1.4 : p.width >= 20 ? dotSize*1.1 : dotSize*0.85;
         
         // Glow
         ctx.beginPath();
-        ctx.arc(px.x, px.y, r + 5, 0, Math.PI * 2);
+        ctx.arc(px.x, px.y, r+5, 0, Math.PI*2);
         ctx.fillStyle = 'rgba(233,69,96,0.5)';
         ctx.fill();
         
         // Red dot
         ctx.beginPath();
-        ctx.arc(px.x, px.y, r, 0, Math.PI * 2);
+        ctx.arc(px.x, px.y, r, 0, Math.PI*2);
         ctx.fillStyle = '#e94560';
         ctx.fill();
         ctx.strokeStyle = 'white';
         ctx.lineWidth = 2;
         ctx.stroke();
         
-        // Width
+        // Width number
         ctx.fillStyle = 'white';
-        ctx.font = `bold ${Math.max(9, r*0.65)}px Arial`;
+        ctx.font = 'bold ' + Math.max(9, r*0.6) + 'px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(Math.round(p.width), px.x, px.y);
-    });
+    }
 }
 
-// File handlers
-document.getElementById('fileRoads').onchange = async function(e) {
-    const file = e.target.files[0];
+// File: Roads
+document.getElementById('fileRoads').addEventListener('change', function(e) {
+    var file = e.target.files[0];
     if (!file) return;
-    try {
-        const data = JSON.parse(await file.text());
-        roads = data.features || [data];
-        document.getElementById('statusRoads').textContent = roads.length + ' roads';
-        document.getElementById('statusRoads').className = 'status';
-        
-        // Center map on roads
-        let sumLat = 0, sumLng = 0, count = 0;
-        roads.forEach(r => {
-            const g = r.geometry;
-            if (!g) return;
-            (g.type === 'LineString' ? [g.coordinates] : g.coordinates || []).forEach(coords => {
-                coords.forEach(([lng, lat]) => { sumLng += lng; sumLat += lat; count++; });
-            });
-        });
-        if (count && mapReady) {
-            map.setCenter({ lat: sumLat/count, lng: sumLng/count });
-            map.setZoom(14);
+    
+    var reader = new FileReader();
+    reader.onload = function(evt) {
+        try {
+            var data = JSON.parse(evt.target.result);
+            roads = data.features || [data];
+            document.getElementById('statusRoads').textContent = roads.length + ' roads loaded';
+            document.getElementById('statusRoads').className = 'status';
+            
+            // Center map
+            if (map && roads.length > 0) {
+                var sumLat = 0, sumLng = 0, count = 0;
+                for (var i = 0; i < roads.length; i++) {
+                    var g = roads[i].geometry;
+                    if (!g) continue;
+                    var lines = g.type === 'LineString' ? [g.coordinates] : (g.coordinates || []);
+                    for (var j = 0; j < lines.length; j++) {
+                        for (var k = 0; k < lines[j].length; k++) {
+                            sumLng += lines[j][k][0];
+                            sumLat += lines[j][k][1];
+                            count++;
+                        }
+                    }
+                }
+                if (count > 0) {
+                    map.setCenter({lat: sumLat/count, lng: sumLng/count});
+                    map.setZoom(14);
+                }
+            }
+            
+            findCrossings();
+        } catch(err) {
+            alert('Error loading roads: ' + err.message);
         }
-        
-        findCrossings();
-    } catch(err) { alert('Error: ' + err.message); }
-};
+    };
+    reader.readAsText(file);
+});
 
-document.getElementById('fileDistrict').onchange = async function(e) {
-    const file = e.target.files[0];
+// File: District
+document.getElementById('fileDistrict').addEventListener('change', function(e) {
+    var file = e.target.files[0];
     if (!file) return;
-    try {
-        const data = JSON.parse(await file.text());
-        const feat = data.features ? data.features[0] : data;
-        const geom = feat.geometry;
-        boundary = geom.type === 'Polygon' ? geom.coordinates[0] : geom.coordinates[0][0];
-        
-        document.getElementById('statusDistrict').textContent = 'Loaded (' + boundary.length + ' pts)';
-        document.getElementById('statusDistrict').className = 'status';
-        
-        // Center on district
-        let sumLat = 0, sumLng = 0;
-        boundary.forEach(([lng, lat]) => { sumLng += lng; sumLat += lat; });
-        if (mapReady) {
-            map.setCenter({ lat: sumLat/boundary.length, lng: sumLng/boundary.length });
+    
+    var reader = new FileReader();
+    reader.onload = function(evt) {
+        try {
+            var data = JSON.parse(evt.target.result);
+            var feat = data.features ? data.features[0] : data;
+            var geom = feat.geometry;
+            
+            if (geom.type === 'Polygon') {
+                boundary = geom.coordinates[0];
+            } else if (geom.type === 'MultiPolygon') {
+                boundary = geom.coordinates[0][0];
+            }
+            
+            document.getElementById('statusDistrict').textContent = 'District loaded (' + boundary.length + ' pts)';
+            document.getElementById('statusDistrict').className = 'status';
+            
+            // Center on district
+            if (map && boundary.length > 0) {
+                var sumLat = 0, sumLng = 0;
+                for (var i = 0; i < boundary.length; i++) {
+                    sumLng += boundary[i][0];
+                    sumLat += boundary[i][1];
+                }
+                map.setCenter({lat: sumLat/boundary.length, lng: sumLng/boundary.length});
+                map.setZoom(14);
+            }
+            
+            findCrossings();
+        } catch(err) {
+            alert('Error loading district: ' + err.message);
         }
-        
-        findCrossings();
-    } catch(err) { alert('Error: ' + err.message); }
-};
+    };
+    reader.readAsText(file);
+});
 
 // Sliders
-document.getElementById('sliderExt').oninput = function() {
+document.getElementById('sliderExt').addEventListener('input', function() {
     document.getElementById('valExt').textContent = this.value + 'm';
     findCrossings();
-};
-document.getElementById('sliderWidth').oninput = function() {
+});
+document.getElementById('sliderWidth').addEventListener('input', function() {
     document.getElementById('valWidth').textContent = this.value + 'm';
     findCrossings();
-};
-document.getElementById('sliderDot').oninput = function() {
+});
+document.getElementById('sliderDot').addEventListener('input', function() {
     document.getElementById('valDot').textContent = this.value;
     draw();
-};
+});
 
 // Export
 function exportData() {
-    if (!entryExits.length) return;
-    const geojson = {
+    if (entryExits.length === 0) return;
+    
+    var geojson = {
         type: 'FeatureCollection',
-        features: entryExits.map(p => ({
+        features: []
+    };
+    
+    for (var i = 0; i < entryExits.length; i++) {
+        var p = entryExits[i];
+        geojson.features.push({
             type: 'Feature',
             geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
-            properties: { name_ar: p.name, width_m: p.width, road_class: p.width >= 30 ? 'Major' : 'Other' }
-        }))
-    };
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(geojson,null,2)], {type:'application/json'}));
+            properties: { 
+                name_ar: p.name, 
+                width_m: p.width, 
+                road_class: p.width >= 30 ? 'Major' : 'Other' 
+            }
+        });
+    }
+    
+    var blob = new Blob([JSON.stringify(geojson, null, 2)], {type: 'application/json'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
     a.download = 'entry_exit_points.geojson';
     a.click();
 }
 
-// Load Google Maps
-function loadGoogleMaps() {
-    const checkGoogle = setInterval(() => {
-        if (window.google && window.google.maps) {
-            clearInterval(checkGoogle);
-            initMap();
-        }
-    }, 100);
-    
-    setTimeout(() => {
-        clearInterval(checkGoogle);
-        if (!mapReady) {
-            document.getElementById('map').innerHTML = '<div style="padding:50px;color:#e94560;text-align:center;font-size:18px;">Google Maps loading... Please wait or refresh</div>';
-        }
-    }, 15000);
-}
+// Try to init map when Google loads
+var checkInterval = setInterval(function() {
+    if (window.google && window.google.maps && window.google.maps.Map) {
+        clearInterval(checkInterval);
+        initMap();
+    }
+}, 200);
 
-loadGoogleMaps();
+// Timeout
+setTimeout(function() {
+    clearInterval(checkInterval);
+    if (!map) {
+        document.getElementById('loading').innerHTML = '<div style="color:#e94560;font-size:16px;">Google Maps taking too long.<br>Please refresh the page.</div>';
+    }
+}, 20000);
 </script>
 <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
 </body>
