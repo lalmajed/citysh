@@ -13,7 +13,7 @@
             position: absolute; top: 10px; left: 10px;
             background: white; padding: 12px; border-radius: 10px;
             box-shadow: 0 2px 15px rgba(0,0,0,0.2); z-index: 1000;
-            max-width: 380px; max-height: 95vh; overflow-y: auto; font-size: 12px;
+            max-width: 400px; max-height: 95vh; overflow-y: auto; font-size: 12px;
         }
         .panel h2 { color: #1a73e8; margin-bottom: 8px; font-size: 15px; }
         
@@ -31,20 +31,16 @@
         .stat-box { padding: 8px; border-radius: 6px; text-align: center; color: white; }
         .stat-box .num { font-size: 1.2em; font-weight: bold; }
         .stat-box .lbl { font-size: 9px; opacity: 0.9; }
-        .stat-box.apt { background: #2196F3; }
-        .stat-box.villa { background: #4CAF50; }
-        .stat-box.other { background: #FF9800; }
         
-        .dynamic-stats { background: #e8f5e9; border: 2px solid #4caf50; border-radius: 8px; padding: 10px; margin: 8px 0; }
-        .dynamic-stats h3 { color: #2e7d32; font-size: 13px; margin-bottom: 8px; }
-        .dynamic-stats .row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; }
-        .dynamic-stats .row.total { font-weight: bold; border-top: 1px solid #a5d6a7; padding-top: 5px; margin-top: 5px; }
+        .entry-exit-stats { background: #fce4ec; border: 2px solid #e91e63; border-radius: 8px; padding: 10px; margin: 8px 0; }
+        .entry-exit-stats h3 { color: #c2185b; font-size: 13px; margin-bottom: 8px; }
+        .entry-exit-stats .row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; }
+        .entry-exit-stats .row.total { font-weight: bold; border-top: 1px solid #f48fb1; padding-top: 5px; margin-top: 5px; }
         
-        .district-stats { background: #fff3e0; border: 2px solid #ff9800; border-radius: 8px; padding: 10px; margin: 8px 0; display: none; }
-        .district-stats.active { display: block; }
-        .district-stats h3 { color: #e65100; font-size: 13px; margin-bottom: 8px; }
-        .district-stats .row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; }
-        .district-stats .row.total { font-weight: bold; border-top: 1px solid #ffcc80; padding-top: 5px; margin-top: 5px; }
+        .road-stats { background: #e3f2fd; border: 2px solid #2196f3; border-radius: 8px; padding: 10px; margin: 8px 0; }
+        .road-stats h3 { color: #1565c0; font-size: 13px; margin-bottom: 8px; }
+        .road-stats .row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; }
+        .road-stats .row.total { font-weight: bold; border-top: 1px solid #90caf9; padding-top: 5px; margin-top: 5px; }
         
         .layer-control { padding: 8px; margin: 5px 0; background: #f9f9f9; border-radius: 6px; }
         .layer-control .header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
@@ -57,7 +53,6 @@
         
         .btn { padding: 8px 12px; margin: 3px 0; cursor: pointer; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; width: 100%; }
         .btn-primary { background: #1a73e8; color: white; border: none; }
-        .btn-success { background: #28a745; color: white; border: none; }
         
         .loading-overlay {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -85,8 +80,12 @@
         .info-popup .close { position: absolute; top: 5px; right: 8px; cursor: pointer; color: #999; font-size: 18px; }
         .info-popup table { width: 100%; border-collapse: collapse; }
         .info-popup td { padding: 4px 5px; border-bottom: 1px solid #eee; font-size: 11px; }
-        .info-popup td:first-child { font-weight: 600; color: #555; width: 35%; }
         .type-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; color: white; font-size: 10px; }
+        
+        .legend { background: #fff; padding: 8px; border-radius: 6px; margin-top: 10px; font-size: 10px; }
+        .legend-item { display: flex; align-items: center; gap: 5px; margin: 3px 0; }
+        .legend-color { width: 20px; height: 4px; border-radius: 2px; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
@@ -106,77 +105,43 @@
     </div>
     
     <div class="panel">
-        <h2>Riyadh Map - Dynamic Counts</h2>
+        <h2>Riyadh Map - Roads & Entry/Exit</h2>
         
-        <div class="stats-grid">
-            <div class="stat-box" style="background:#9c27b0;"><div class="num" id="totalBldg">0</div><div class="lbl">Buildings</div></div>
-            <div class="stat-box apt"><div class="num" id="totalApt">0</div><div class="lbl">Apartments</div></div>
-            <div class="stat-box villa"><div class="num" id="totalVilla">0</div><div class="lbl">Villas</div></div>
-            <div class="stat-box other"><div class="num" id="totalOther">0</div><div class="lbl">Other</div></div>
-        </div>
-        <div style="text-align:center; font-size:11px; color:#666; margin-bottom:8px;">
-            Total Parcels: <b id="totalParcels">0</b> | Roads: <b id="totalRoads">0</b>
-        </div>
-        
-        <div class="district-stats" id="districtStats">
-            <h3 id="districtStatsTitle">DISTRICT: None</h3>
-            <div class="row" style="color:#2196F3;"><span>Apartments:</span><span id="distApt">0</span></div>
-            <div class="row" style="color:#4CAF50;"><span>Villas:</span><span id="distVilla">0</span></div>
-            <div class="row" style="color:#FF9800;"><span>Other:</span><span id="distOther">0</span></div>
-            <div class="row total"><span>Total Parcels:</span><span id="distTotal">0</span></div>
-            <div style="border-top:2px solid #2196F3;margin-top:8px;padding-top:8px;">
-                <div class="row" style="color:#2196F3;font-weight:bold;"><span>ROADS</span><span></span></div>
-                <div class="row"><span>Total Roads:</span><span id="distRoads">0</span></div>
-                <div class="row"><span>Total Length:</span><span id="distRoadLength">0 km</span></div>
-                <div class="row"><span>Entry/Exit Points:</span><span id="distEntryExit">~0</span></div>
-            </div>
+        <!-- Entry/Exit Stats -->
+        <div class="entry-exit-stats">
+            <h3>ENTRY/EXIT POINTS</h3>
+            <div class="row"><span>Total Entry Points:</span><span id="totalEntries">0</span></div>
+            <div class="row"><span>Total Exit Points:</span><span id="totalExits">0</span></div>
+            <div class="row total"><span>Total Entry/Exit:</span><span id="totalEntryExit">0</span></div>
+            <div class="row"><span>Major (20m+):</span><span id="majorEntryExit">0</span></div>
+            <div class="row"><span>Secondary (15m):</span><span id="secondaryEntryExit">0</span></div>
+            <div class="row"><span>Local (<15m):</span><span id="localEntryExit">0</span></div>
         </div>
         
-        <div class="dynamic-stats">
-            <h3>IN CURRENT VIEW</h3>
-            <div class="row" style="color:#2196F3;"><span>Apartments:</span><span id="viewApt">0</span></div>
-            <div class="row" style="color:#4CAF50;"><span>Villas:</span><span id="viewVilla">0</span></div>
-            <div class="row" style="color:#FF9800;"><span>Other:</span><span id="viewOther">0</span></div>
-            <div class="row total"><span>Total Parcels:</span><span id="viewTotal">0</span></div>
-            <div class="row total" style="color:#4CAF50;"><span>Villa %:</span><span id="viewVillaPct">0%</span></div>
+        <!-- Road Stats -->
+        <div class="road-stats">
+            <h3>ROAD STATISTICS</h3>
+            <div class="row"><span>Total Roads:</span><span id="totalRoads">0</span></div>
+            <div class="row"><span>Total Length:</span><span id="totalLength">0 km</span></div>
+            <div class="row"><span>Unique Road Names:</span><span id="uniqueRoads">0</span></div>
+            <div class="row total"><span>By Width:</span><span></span></div>
+            <div class="row"><span>  Major (20m+):</span><span id="roads20plus">0</span></div>
+            <div class="row"><span>  15m:</span><span id="roads15">0</span></div>
+            <div class="row"><span>  12m:</span><span id="roads12">0</span></div>
+            <div class="row"><span>  10m:</span><span id="roads10">0</span></div>
+            <div class="row"><span>  Service (<10m):</span><span id="roadsService">0</span></div>
         </div>
         
+        <!-- Layers -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
                 LAYERS <span>[-]</span>
             </div>
             <div class="section-content open">
-                <div class="layer-control">
-                    <div class="header">
-                        <input type="checkbox" id="showApt" checked onchange="render()">
-                        <div class="dot" style="background:#2196F3;"></div>
-                        <span class="name">Apartments</span>
-                    </div>
-                    <div style="font-size:10px;">
-                        Size: <input type="range" id="aptSize" min="1" max="10" value="4" oninput="render()">
-                    </div>
-                </div>
-                <div class="layer-control">
-                    <div class="header">
-                        <input type="checkbox" id="showVilla" checked onchange="render()">
-                        <div class="dot" style="background:#4CAF50;"></div>
-                        <span class="name">Villas</span>
-                    </div>
-                    <div style="font-size:10px;">
-                        Size: <input type="range" id="villaSize" min="1" max="10" value="4" oninput="render()">
-                    </div>
-                </div>
-                <div class="layer-control">
-                    <div class="header">
-                        <input type="checkbox" id="showOther" checked onchange="render()">
-                        <div class="dot" style="background:#FF9800;"></div>
-                        <span class="name">Other Parcels</span>
-                    </div>
-                </div>
                 <div class="layer-control" style="background:#e3f2fd;">
                     <div class="header">
                         <input type="checkbox" id="showRoads" checked onchange="render()">
-                        <div class="dot" style="background:#d32f2f;"></div>
+                        <div class="dot" style="background:#2196f3;"></div>
                         <span class="name">Roads</span>
                         <span class="count" id="roadCount">0</span>
                     </div>
@@ -184,55 +149,83 @@
                         Width: <input type="range" id="roadWidth" min="0.5" max="3" value="1" step="0.25" oninput="render()">
                     </div>
                 </div>
+                
+                <div class="layer-control" style="background:#fce4ec;">
+                    <div class="header">
+                        <input type="checkbox" id="showEntryExit" checked onchange="render()">
+                        <div class="dot" style="background:#e91e63;"></div>
+                        <span class="name">Entry/Exit Points</span>
+                        <span class="count" id="entryExitCount">0</span>
+                    </div>
+                    <div style="font-size:10px;">
+                        Size: <input type="range" id="entryExitSize" min="4" max="20" value="10" oninput="render()">
+                    </div>
+                    <div style="font-size:10px; margin-top:5px;">
+                        <label><input type="checkbox" id="showEntryOnly" onchange="render()"> Entries only</label>
+                        <label style="margin-left:10px;"><input type="checkbox" id="showExitOnly" onchange="render()"> Exits only</label>
+                    </div>
+                    <div style="font-size:10px; margin-top:5px;">
+                        Min Width: <select id="minEntryWidth" onchange="calculateEntryExit(); render()">
+                            <option value="0">All</option>
+                            <option value="10">10m+</option>
+                            <option value="15">15m+</option>
+                            <option value="20" selected>20m+ (Major)</option>
+                            <option value="25">25m+</option>
+                            <option value="30">30m+</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="layer-control">
+                    <div class="header">
+                        <input type="checkbox" id="showLabels" onchange="render()">
+                        <div class="dot" style="background:#333;"></div>
+                        <span class="name">Road Labels</span>
+                    </div>
+                </div>
             </div>
         </div>
         
+        <!-- Data Files -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
                 DATA FILES <span>[-]</span>
             </div>
             <div class="section-content open">
-                <div class="file-input">
-                    <label>Parcels CSV:</label>
-                    <input type="file" id="parcelsFile" accept=".csv">
-                    <div id="parcelsStatus" class="file-status">Upload parcels CSV</div>
-                </div>
-                <div class="file-input" style="background:#e3f2fd;padding:8px;border-radius:6px;margin-top:8px;">
+                <div class="file-input" style="background:#e3f2fd;padding:8px;border-radius:6px;">
                     <label>Roads GeoJSON:</label>
                     <input type="file" id="roadsFile" accept=".json,.geojson">
-                    <div id="roadsStatus" class="file-status">Upload roads GeoJSON</div>
-                </div>
-                <div class="file-input">
-                    <label>Districts GeoJSON:</label>
-                    <input type="file" id="distFile" accept=".json,.geojson">
-                    <div id="distStatus" class="file-status">Upload districts GeoJSON</div>
+                    <div id="roadsStatus" class="file-status">Upload muhammadiyah_complete_roads.geojson</div>
                 </div>
             </div>
         </div>
         
-        <div id="roadLegend" style="display:none;margin-top:10px;padding:8px;background:#e3f2fd;border-radius:6px;">
-            <div style="font-weight:600;font-size:11px;margin-bottom:5px;">Road Width Legend</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:9px;">
-                <div><span style="display:inline-block;width:20px;height:4px;background:#d32f2f;border-radius:2px;"></span> 30m+</div>
-                <div><span style="display:inline-block;width:20px;height:4px;background:#ff9800;border-radius:2px;"></span> 20m</div>
-                <div><span style="display:inline-block;width:20px;height:4px;background:#ffc107;border-radius:2px;"></span> 15m</div>
-                <div><span style="display:inline-block;width:20px;height:4px;background:#4caf50;border-radius:2px;"></span> 12m</div>
-                <div><span style="display:inline-block;width:20px;height:4px;background:#009688;border-radius:2px;"></span> 10m</div>
-                <div><span style="display:inline-block;width:20px;height:4px;background:#607d8b;border-radius:2px;"></span> 8m</div>
+        <!-- Legend -->
+        <div class="legend">
+            <div style="font-weight:600; margin-bottom:5px;">Legend</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px;">
+                <div class="legend-item"><div class="legend-color" style="background:#d32f2f;"></div> 30m+</div>
+                <div class="legend-item"><div class="legend-color" style="background:#ff9800;"></div> 20m</div>
+                <div class="legend-item"><div class="legend-color" style="background:#ffc107;"></div> 15m</div>
+                <div class="legend-item"><div class="legend-color" style="background:#4caf50;"></div> 12m</div>
+                <div class="legend-item"><div class="legend-color" style="background:#009688;"></div> 10m</div>
+                <div class="legend-item"><div class="legend-color" style="background:#607d8b;"></div> <10m</div>
+            </div>
+            <div style="margin-top:8px; border-top:1px solid #ddd; padding-top:8px;">
+                <div class="legend-item"><div class="legend-dot" style="background:#4CAF50;"></div> Entry Point</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#f44336;"></div> Exit Point</div>
             </div>
         </div>
         
         <div style="margin-top:8px;font-size:9px;color:#888;text-align:center;">
-            Zoom: <span id="zoomLevel">11</span> | <a href="#" onclick="map.setCenter({lat:24.7136,lng:46.6753});map.setZoom(11);return false;">Reset</a>
+            Zoom: <span id="zoomLevel">11</span> | <a href="#" onclick="map.setCenter({lat:24.7136,lng:46.6753});map.setZoom(14);return false;">Reset</a>
         </div>
     </div>
 
     <script>
         let map;
-        let parcels = [];
         let roads = [];
-        let districts = [];
-        let selectedDistrict = null;
+        let entryExitPoints = [];
         let mapsLoadAttempts = 0;
         
         const canvas = document.getElementById('canvas');
@@ -274,6 +267,101 @@
             header.querySelector('span').textContent = content.classList.contains('open') ? '[-]' : '[+]';
         }
         
+        function calculateEntryExit() {
+            if (!roads.length) return;
+            
+            const minWidth = parseInt(document.getElementById('minEntryWidth').value) || 0;
+            entryExitPoints = [];
+            
+            // Group roads by name to find unique roads
+            const roadsByName = {};
+            roads.forEach(road => {
+                const props = road.properties || {};
+                const name = props.name_ar || props.name_en || props.ROADCENTERLINENAME_AR || '';
+                const width = parseFloat(props.width_m || props.WIDTH || 10);
+                
+                if (width < minWidth) return;
+                if (!name) return;
+                
+                if (!roadsByName[name]) {
+                    roadsByName[name] = { segments: [], width: width };
+                }
+                roadsByName[name].segments.push(road);
+                roadsByName[name].width = Math.max(roadsByName[name].width, width);
+            });
+            
+            // For each unique road, find endpoints (entry/exit)
+            Object.entries(roadsByName).forEach(([name, data]) => {
+                const allCoords = [];
+                
+                data.segments.forEach(road => {
+                    const geom = road.geometry;
+                    if (!geom) return;
+                    
+                    const coords = geom.type === 'LineString' ? geom.coordinates : 
+                                   geom.type === 'MultiLineString' ? geom.coordinates.flat() : [];
+                    
+                    if (coords.length >= 2) {
+                        // Start point (Entry)
+                        allCoords.push({
+                            coord: coords[0],
+                            type: 'entry',
+                            name: name,
+                            width: data.width
+                        });
+                        // End point (Exit)
+                        allCoords.push({
+                            coord: coords[coords.length - 1],
+                            type: 'exit',
+                            name: name,
+                            width: data.width
+                        });
+                    }
+                });
+                
+                // Find the extreme points (actual entry/exit to district)
+                if (allCoords.length >= 2) {
+                    // Sort by longitude to find westmost (entry) and eastmost (exit)
+                    const sortedByLon = [...allCoords].sort((a, b) => a.coord[0] - b.coord[0]);
+                    
+                    // Add westmost as entry
+                    entryExitPoints.push({
+                        lat: sortedByLon[0].coord[1],
+                        lng: sortedByLon[0].coord[0],
+                        type: 'entry',
+                        name: name,
+                        width: data.width
+                    });
+                    
+                    // Add eastmost as exit
+                    entryExitPoints.push({
+                        lat: sortedByLon[sortedByLon.length - 1].coord[1],
+                        lng: sortedByLon[sortedByLon.length - 1].coord[0],
+                        type: 'exit',
+                        name: name,
+                        width: data.width
+                    });
+                }
+            });
+            
+            // Update stats
+            const entries = entryExitPoints.filter(p => p.type === 'entry');
+            const exits = entryExitPoints.filter(p => p.type === 'exit');
+            const major = entryExitPoints.filter(p => p.width >= 20);
+            const secondary = entryExitPoints.filter(p => p.width >= 15 && p.width < 20);
+            const local = entryExitPoints.filter(p => p.width < 15);
+            
+            document.getElementById('totalEntries').textContent = entries.length;
+            document.getElementById('totalExits').textContent = exits.length;
+            document.getElementById('totalEntryExit').textContent = entryExitPoints.length;
+            document.getElementById('majorEntryExit').textContent = major.length;
+            document.getElementById('secondaryEntryExit').textContent = secondary.length;
+            document.getElementById('localEntryExit').textContent = local.length;
+            document.getElementById('entryExitCount').textContent = entryExitPoints.length;
+            
+            console.log(`Entry/Exit calculated: ${entryExitPoints.length} points from ${Object.keys(roadsByName).length} unique roads`);
+        }
+        
         let renderPending = false;
         function render() {
             if (renderPending || !map) return;
@@ -306,19 +394,18 @@
             
             const swLat = sw.lat(), neLat = ne.lat(), swLng = sw.lng(), neLng = ne.lng();
             
-            const showApt = document.getElementById('showApt').checked;
-            const showVilla = document.getElementById('showVilla').checked;
-            const showOther = document.getElementById('showOther').checked;
             const showRoads = document.getElementById('showRoads').checked;
-            
-            const aptSize = parseFloat(document.getElementById('aptSize').value);
-            const villaSize = parseFloat(document.getElementById('villaSize').value);
+            const showEntryExit = document.getElementById('showEntryExit').checked;
+            const showLabels = document.getElementById('showLabels').checked;
+            const showEntryOnly = document.getElementById('showEntryOnly').checked;
+            const showExitOnly = document.getElementById('showExitOnly').checked;
             const roadWidthScale = parseFloat(document.getElementById('roadWidth').value);
-            
-            let viewApt = 0, viewVilla = 0, viewOther = 0;
+            const entryExitSize = parseFloat(document.getElementById('entryExitSize').value);
             
             // Draw roads
             if (showRoads && roads.length) {
+                const drawnLabels = new Set();
+                
                 roads.forEach(road => {
                     const geom = road.geometry;
                     if (!geom) return;
@@ -326,7 +413,7 @@
                     const props = road.properties || {};
                     const width = parseFloat(props.width_m || props.WIDTH || 10);
                     const color = getRoadColor(width);
-                    const lineWidth = Math.max(2, (zoom - 10) * roadWidthScale * (width / 10));
+                    const lineWidth = Math.max(2, (zoom - 10) * roadWidthScale * (width / 12));
                     
                     ctx.strokeStyle = color;
                     ctx.lineWidth = lineWidth;
@@ -348,106 +435,83 @@
                         if (!inView) return;
                         
                         ctx.beginPath();
+                        let midX, midY;
+                        const midIdx = Math.floor(coords.length / 2);
+                        
                         coords.forEach(([lon, lat], i) => {
                             const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
                             const x = (w.x - bl.x) * scale;
                             const y = (w.y - tr.y) * scale;
                             i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+                            if (i === midIdx) { midX = x; midY = y; }
                         });
                         ctx.stroke();
+                        
+                        // Draw label
+                        if (showLabels && width >= 15 && zoom >= 14 && midX && midY) {
+                            const name = props.name_ar || props.ROADCENTERLINENAME_AR || '';
+                            if (name && !drawnLabels.has(name)) {
+                                drawnLabels.add(name);
+                                ctx.font = '10px Arial';
+                                ctx.fillStyle = '#333';
+                                ctx.strokeStyle = 'white';
+                                ctx.lineWidth = 3;
+                                ctx.textAlign = 'center';
+                                ctx.strokeText(name, midX, midY - 5);
+                                ctx.fillText(name, midX, midY - 5);
+                            }
+                        }
                     });
                 });
             }
             
-            // Draw parcels
-            const pi2 = Math.PI * 2;
-            
-            parcels.forEach(p => {
-                if (p.lat < swLat || p.lat > neLat || p.lng < swLng || p.lng > neLng) return;
-                
-                const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
-                const x = (w.x - bl.x) * scale;
-                const y = (w.y - tr.y) * scale;
-                
-                if (p.type === 'apt' && showApt) {
-                    ctx.fillStyle = 'rgba(33, 150, 243, 0.6)';
+            // Draw Entry/Exit points
+            if (showEntryExit && entryExitPoints.length) {
+                entryExitPoints.forEach(point => {
+                    if (point.lat < swLat || point.lat > neLat || point.lng < swLng || point.lng > neLng) return;
+                    
+                    // Filter by entry/exit
+                    if (showEntryOnly && point.type !== 'entry') return;
+                    if (showExitOnly && point.type !== 'exit') return;
+                    
+                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(point.lat, point.lng));
+                    const x = (w.x - bl.x) * scale;
+                    const y = (w.y - tr.y) * scale;
+                    
+                    const size = entryExitSize * (point.width / 20);
+                    const color = point.type === 'entry' ? '#4CAF50' : '#f44336';
+                    
+                    // Draw marker
                     ctx.beginPath();
-                    ctx.arc(x, y, aptSize, 0, pi2);
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fillStyle = color;
                     ctx.fill();
-                    viewApt++;
-                } else if (p.type === 'villa' && showVilla) {
-                    ctx.fillStyle = 'rgba(76, 175, 80, 0.6)';
-                    ctx.beginPath();
-                    ctx.arc(x, y, villaSize, 0, pi2);
-                    ctx.fill();
-                    viewVilla++;
-                } else if (p.type === 'other' && showOther) {
-                    ctx.fillStyle = 'rgba(255, 152, 0, 0.4)';
-                    ctx.beginPath();
-                    ctx.arc(x, y, 3, 0, pi2);
-                    ctx.fill();
-                    viewOther++;
-                }
-            });
-            
-            // Update stats
-            const viewTotal = viewApt + viewVilla + viewOther;
-            const villaPct = viewTotal > 0 ? (viewVilla / viewTotal * 100).toFixed(1) : 0;
-            
-            document.getElementById('viewApt').textContent = viewApt.toLocaleString();
-            document.getElementById('viewVilla').textContent = viewVilla.toLocaleString();
-            document.getElementById('viewOther').textContent = viewOther.toLocaleString();
-            document.getElementById('viewTotal').textContent = viewTotal.toLocaleString();
-            document.getElementById('viewVillaPct').textContent = villaPct + '%';
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    // Draw arrow indicator
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold ' + (size * 1.2) + 'px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(point.type === 'entry' ? '>' : '<', x, y);
+                    
+                    // Draw label on hover zoom
+                    if (zoom >= 15 && point.width >= 20) {
+                        ctx.font = '9px Arial';
+                        ctx.fillStyle = '#333';
+                        ctx.strokeStyle = 'white';
+                        ctx.lineWidth = 2;
+                        ctx.textAlign = 'center';
+                        ctx.strokeText(point.name, x, y - size - 5);
+                        ctx.fillText(point.name, x, y - size - 5);
+                    }
+                });
+            }
         }
         
-        // File handlers
-        document.getElementById('parcelsFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const lines = evt.target.result.split('\n');
-                const headers = lines[0].toLowerCase().split(',');
-                
-                const latIdx = headers.findIndex(h => h.includes('lat'));
-                const lngIdx = headers.findIndex(h => h.includes('lon') || h === 'lng');
-                const typeIdx = headers.findIndex(h => h.includes('parcel_type'));
-                
-                parcels = [];
-                let aptCount = 0, villaCount = 0, otherCount = 0;
-                
-                for (let i = 1; i < lines.length; i++) {
-                    const values = lines[i].split(',');
-                    const lat = parseFloat(values[latIdx]);
-                    const lng = parseFloat(values[lngIdx]);
-                    if (isNaN(lat) || isNaN(lng)) continue;
-                    
-                    let type = 'other';
-                    if (typeIdx >= 0) {
-                        const t = (values[typeIdx] || '').trim().toLowerCase();
-                        if (t === 'villa') type = 'villa';
-                        else if (t === 'apartment') type = 'apt';
-                    }
-                    
-                    parcels.push({ lat, lng, type });
-                    if (type === 'apt') aptCount++;
-                    else if (type === 'villa') villaCount++;
-                    else otherCount++;
-                }
-                
-                document.getElementById('parcelsStatus').innerHTML = 'Loaded: ' + parcels.length.toLocaleString() + ' parcels';
-                document.getElementById('parcelsStatus').classList.add('loaded');
-                document.getElementById('totalParcels').textContent = parcels.length.toLocaleString();
-                document.getElementById('totalApt').textContent = aptCount.toLocaleString();
-                document.getElementById('totalVilla').textContent = villaCount.toLocaleString();
-                document.getElementById('totalOther').textContent = otherCount.toLocaleString();
-                render();
-            };
-            reader.readAsText(file);
-        });
-        
+        // File handler
         document.getElementById('roadsFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -458,16 +522,41 @@
                     const data = JSON.parse(evt.target.result);
                     roads = data.features || [];
                     
+                    // Calculate stats
                     let totalLength = 0;
+                    const uniqueNames = new Set();
+                    let roads20 = 0, roads15 = 0, roads12 = 0, roads10 = 0, roadsService = 0;
+                    
                     roads.forEach(r => {
-                        totalLength += parseFloat(r.properties?.length_m || r.properties?.LENGTH || 0);
+                        const props = r.properties || {};
+                        const length = parseFloat(props.length_m || props.LENGTH || 0);
+                        const width = parseFloat(props.width_m || props.WIDTH || 10);
+                        const name = props.name_ar || props.name_en || props.ROADCENTERLINENAME_AR || '';
+                        
+                        totalLength += length;
+                        if (name) uniqueNames.add(name);
+                        
+                        if (width >= 20) roads20++;
+                        else if (width >= 15) roads15++;
+                        else if (width >= 12) roads12++;
+                        else if (width >= 10) roads10++;
+                        else roadsService++;
                     });
                     
-                    document.getElementById('roadsStatus').innerHTML = 'Loaded: ' + roads.length + ' roads (' + (totalLength/1000).toFixed(2) + ' km)';
+                    document.getElementById('roadsStatus').innerHTML = 'Loaded: ' + roads.length + ' roads';
                     document.getElementById('roadsStatus').classList.add('loaded');
                     document.getElementById('roadCount').textContent = roads.length;
                     document.getElementById('totalRoads').textContent = roads.length;
-                    document.getElementById('roadLegend').style.display = 'block';
+                    document.getElementById('totalLength').textContent = (totalLength / 1000).toFixed(2) + ' km';
+                    document.getElementById('uniqueRoads').textContent = uniqueNames.size;
+                    document.getElementById('roads20plus').textContent = roads20;
+                    document.getElementById('roads15').textContent = roads15;
+                    document.getElementById('roads12').textContent = roads12;
+                    document.getElementById('roads10').textContent = roads10;
+                    document.getElementById('roadsService').textContent = roadsService;
+                    
+                    // Calculate entry/exit points
+                    calculateEntryExit();
                     
                     // Zoom to roads
                     if (roads.length > 0 && roads[0].geometry) {
@@ -482,24 +571,6 @@
                     render();
                 } catch (err) {
                     document.getElementById('roadsStatus').innerHTML = 'Error: ' + err.message;
-                }
-            };
-            reader.readAsText(file);
-        });
-        
-        document.getElementById('distFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const data = JSON.parse(evt.target.result);
-                    districts = data.features || data;
-                    document.getElementById('distStatus').innerHTML = 'Loaded: ' + districts.length + ' districts';
-                    document.getElementById('distStatus').classList.add('loaded');
-                } catch (err) {
-                    document.getElementById('distStatus').innerHTML = 'Error: ' + err.message;
                 }
             };
             reader.readAsText(file);
@@ -529,6 +600,28 @@
             const clickPt = proj.fromLatLngToPoint(e.latLng);
             const tolerance = 15 / scale;
             
+            // Check entry/exit points first
+            for (const point of entryExitPoints) {
+                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(point.lat, point.lng));
+                const dist = Math.sqrt((pt.x - clickPt.x) ** 2 + (pt.y - clickPt.y) ** 2);
+                
+                if (dist < tolerance * 2) {
+                    const color = point.type === 'entry' ? '#4CAF50' : '#f44336';
+                    const typeLabel = point.type === 'entry' ? 'ENTRY' : 'EXIT';
+                    
+                    showInfoPopup(e.pixel.x, e.pixel.y,
+                        '<span class="type-badge" style="background:' + color + ';">' + typeLabel + '</span> Point',
+                        '<div style="direction:rtl;text-align:right;font-size:14px;font-weight:bold;margin-bottom:8px;">' + point.name + '</div>' +
+                        '<table>' +
+                        '<tr><td>Type</td><td><b>' + typeLabel + '</b></td></tr>' +
+                        '<tr><td>Road Width</td><td>' + point.width + 'm</td></tr>' +
+                        '<tr><td>Location</td><td>' + point.lat.toFixed(5) + ', ' + point.lng.toFixed(5) + '</td></tr>' +
+                        '</table>'
+                    );
+                    return;
+                }
+            }
+            
             // Check roads
             for (const road of roads) {
                 const geom = road.geometry;
@@ -546,7 +639,6 @@
                         const pt1 = proj.fromLatLngToPoint(new google.maps.LatLng(lat1, lon1));
                         const pt2 = proj.fromLatLngToPoint(new google.maps.LatLng(lat2, lon2));
                         
-                        // Point to line distance
                         const A = clickPt.x - pt1.x, B = clickPt.y - pt1.y;
                         const C = pt2.x - pt1.x, D = pt2.y - pt1.y;
                         const dot = A * C + B * D;
@@ -566,8 +658,6 @@
                             const nameAr = props.name_ar || props.ROADCENTERLINENAME_AR || '-';
                             const nameEn = props.name_en || props.ROADCENTERLINENAME_EN || '';
                             const length = props.length_m || props.LENGTH || '-';
-                            const hwType = props.highway_type || props.category || '-';
-                            const source = props.source || 'Balady';
                             
                             showInfoPopup(e.pixel.x, e.pixel.y,
                                 '<span class="type-badge" style="background:' + getRoadColor(parseFloat(width) || 10) + ';">Road</span> ' + width + 'm',
@@ -576,8 +666,8 @@
                                 '<table>' +
                                 '<tr><td>Width</td><td><b>' + width + 'm</b></td></tr>' +
                                 '<tr><td>Length</td><td>' + (typeof length === 'number' ? length.toFixed(0) + 'm' : length) + '</td></tr>' +
-                                '<tr><td>Type</td><td>' + hwType + '</td></tr>' +
-                                '<tr><td>Source</td><td>' + source + '</td></tr>' +
+                                '<tr><td>Type</td><td>' + (props.highway_type || props.category || '-') + '</td></tr>' +
+                                '<tr><td>Source</td><td>' + (props.source || 'Unknown') + '</td></tr>' +
                                 '</table>'
                             );
                             return;
@@ -592,7 +682,7 @@
             
             map = new google.maps.Map(document.getElementById('map'), {
                 center: { lat: 24.7136, lng: 46.6753 },
-                zoom: 11,
+                zoom: 14,
                 mapTypeControl: true,
                 gestureHandling: 'greedy'
             });
@@ -601,10 +691,9 @@
             map.addListener('click', handleMapClick);
             window.addEventListener('resize', render);
             
-            console.log('Map ready. Upload your data files.');
+            console.log('Map ready. Upload roads GeoJSON.');
         }
         
-        // Start loading
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', waitForGoogleMaps);
         } else {
