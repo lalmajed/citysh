@@ -1,0 +1,16 @@
+{
+  "district": "Al-Mumayyidiyah",
+  "district_ar": "المميزية",
+  "timestamp": "2026-01-06T12:49:42.906494",
+  "arcgis_urls": [
+    "https://umaps.balady.gov.sa/newProxyUDP/proxy.ashx?https://umapsudp.momrah.gov.sa/server/rest/services/Umaps/Umaps_Identify_Satatistics/MapServer/28/query?where=IN_PARCELID+%3D+%27${rid}%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&returnIdsOnly=true&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson`"
+  ],
+  "layers_found": [],
+  "api_requests": [],
+  "controls_found": [
+    "Found 7 'ESRI Widget' elements",
+    "  - بحث عن الموقع",
+    "  - الصفحة الرئيسية",
+    "  - تكبير\nتصغير"
+  ]
+}
