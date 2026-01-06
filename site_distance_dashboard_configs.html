@@ -60,17 +60,28 @@
                 </div>
                 <div style="margin-bottom:10px;">
                     <label>Workers: </label>
-                    <select id="workerCount" style="width:100px;padding:5px;">
+                    <select id="workerCount" style="width:80px;padding:5px;">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3" selected>3</option>
                         <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="20">20</option>
-                        <option value="30">30</option>
-                        <option value="50" selected>50</option>
-                        <option value="100">100</option>
-                        <option value="200">200</option>
-                        <option value="500">500</option>
+                        <option value="50">50</option>
                     </select>
-                    <span style="font-size:0.75rem;color:#666;margin-left:10px;">(parallel requests)</span>
+                    <label style="margin-left:10px;">Delay (ms): </label>
+                    <select id="requestDelay" style="width:80px;padding:5px;">
+                        <option value="0">0</option>
+                        <option value="100">100</option>
+                        <option value="200" selected>200</option>
+                        <option value="500">500</option>
+                        <option value="1000">1000</option>
+                        <option value="2000">2000</option>
+                    </select>
+                </div>
+                <div style="font-size:0.7rem;color:#666;margin-bottom:10px;">
+                    ⚠️ Keyless API has rate limits. Start with 3 workers + 200ms delay.<br>
+                    Reduce workers if you see OVER_QUERY_LIMIT errors.
                 </div>
                 
                 <button class="btn btn-start" id="startBtn" onclick="startParallelExtraction()" disabled>
@@ -91,7 +102,7 @@
                 <div class="stats">
                     <div class="stat"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total Configs</div></div>
                     <div class="stat"><div class="stat-value" id="statDone">0</div><div class="stat-label">Completed</div></div>
-                    <div class="stat"><div class="stat-value" id="statCached">0</div><div class="stat-label">From Cache</div></div>
+                    <div class="stat"><div class="stat-value" id="statErrors" style="color:#ea4335;">0</div><div class="stat-label">Errors</div></div>
                     <div class="stat"><div class="stat-value" id="statWaypoints">0</div><div class="stat-label">With Waypoints</div></div>
                 </div>
             </div>
@@ -478,11 +489,24 @@ async function findWaypointsOnPath(path, origin, destination, directDist) {
 // ROUTE FETCHING
 // ============================================================
 
-async function fetchRouteForConfig(config, retries = 3) {
+// Global rate limit tracking
+let lastRequestTime = 0;
+let rateLimitHits = 0;
+let minDelayMs = 100; // Start with 100ms delay
+
+async function fetchRouteForConfig(config, retries = 5) {
     const origin = config.origin;
     const dest = config.destination;
     
     for (let attempt = 1; attempt <= retries; attempt++) {
+        // Enforce minimum delay between requests
+        const now = Date.now();
+        const timeSinceLast = now - lastRequestTime;
+        if (timeSinceLast < minDelayMs) {
+            await new Promise(r => setTimeout(r, minDelayMs - timeSinceLast));
+        }
+        lastRequestTime = Date.now();
+        
         const result = await new Promise(async (resolve) => {
             directionsService.route({
                 origin: { lat: origin.lat, lng: origin.lon },
@@ -490,6 +514,10 @@ async function fetchRouteForConfig(config, retries = 3) {
                 travelMode: 'DRIVING'
             }, async (res, status) => {
                 if (status === 'OK') {
+                    // Success - can reduce delay slightly
+                    if (minDelayMs > 100) minDelayMs = Math.max(100, minDelayMs - 10);
+                    rateLimitHits = 0;
+                    
                     const leg = res.routes[0].legs[0];
                     const dist = leg.distance.value / 1000;
                     const time = leg.duration.value / 60;
@@ -503,10 +531,15 @@ async function fetchRouteForConfig(config, retries = 3) {
                         time_min: time, 
                         waypoints: waypoints 
                     });
+                } else if (status === 'OVER_QUERY_LIMIT') {
+                    // Rate limited - increase delay significantly
+                    rateLimitHits++;
+                    minDelayMs = Math.min(5000, minDelayMs + 500); // Max 5 second delay
+                    resolve({ error: status, retryable: true });
                 } else {
                     resolve({ 
                         error: status, 
-                        retryable: status === 'UNKNOWN_ERROR' || status === 'OVER_QUERY_LIMIT' 
+                        retryable: status === 'UNKNOWN_ERROR'
                     });
                 }
             });
@@ -515,8 +548,12 @@ async function fetchRouteForConfig(config, retries = 3) {
         if (!result.error) return result;
         if (!result.retryable || attempt === retries) return result;
         
-        const delay = 1000 * attempt + Math.random() * 500;
-        await new Promise(r => setTimeout(r, delay));
+        // Exponential backoff for rate limits
+        const backoff = Math.min(30000, 2000 * Math.pow(2, attempt - 1) + Math.random() * 1000);
+        if (attempt <= 2) {
+            log('⏳ Rate limited, waiting ' + (backoff/1000).toFixed(1) + 's... (delay now: ' + minDelayMs + 'ms)');
+        }
+        await new Promise(r => setTimeout(r, backoff));
     }
 }
 
@@ -542,6 +579,7 @@ async function startParallelExtraction() {
     document.getElementById('stopBtn').style.display = 'block';
     
     const workerCount = parseInt(document.getElementById('workerCount').value);
+    minDelayMs = parseInt(document.getElementById('requestDelay').value) || 200;
     
     log('═══════════════════════════════════');
     log('STARTING ' + workerCount + ' PARALLEL WORKERS');
@@ -563,12 +601,13 @@ async function startParallelExtraction() {
     
     let configIdx = 0;
     let completed = 0;
+    let errorCount = 0;
     let fromCache = CONFIGS.length - incompleteConfigs.length;
     let withWaypoints = Object.values(CACHE.results).filter(r => r.waypoints && r.waypoints.length > 0).length;
     
     // Update initial stats
     document.getElementById('statDone').textContent = fromCache;
-    document.getElementById('statCached').textContent = fromCache;
+    document.getElementById('statErrors').textContent = '0';
     document.getElementById('statWaypoints').textContent = withWaypoints;
     
     async function worker(workerId) {
@@ -595,7 +634,11 @@ async function startParallelExtraction() {
                     log('[W' + workerId + '] ' + config.config_id + wpInfo + ' (' + completed + ' done)');
                 }
             } else {
-                log('[W' + workerId + '] ERROR: ' + config.config_id + ' - ' + result.error);
+                errorCount++;
+                document.getElementById('statErrors').textContent = errorCount;
+                if (errorCount <= 20 || errorCount % 50 === 0) {
+                    log('[W' + workerId + '] ERROR: ' + config.config_id + ' - ' + result.error);
+                }
             }
             
             // Update UI
@@ -606,7 +649,7 @@ async function startParallelExtraction() {
             document.getElementById('statWaypoints').textContent = withWaypoints;
             document.getElementById('progressFill').style.width = pct + '%';
             document.getElementById('progressFill').textContent = pct + '%';
-            document.getElementById('currentCalc').textContent = config.config_id;
+            document.getElementById('currentCalc').textContent = config.config_id + ' (delay: ' + minDelayMs + 'ms)';
             
             // Save periodically
             if (completed % 100 === 0) {
