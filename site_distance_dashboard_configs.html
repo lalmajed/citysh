@@ -60,28 +60,17 @@
                 </div>
                 <div style="margin-bottom:10px;">
                     <label>Workers: </label>
-                    <select id="workerCount" style="width:80px;padding:5px;">
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3" selected>3</option>
+                    <select id="workerCount" style="width:100px;padding:5px;">
                         <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="20">20</option>
                         <option value="50">50</option>
-                    </select>
-                    <label style="margin-left:10px;">Delay (ms): </label>
-                    <select id="requestDelay" style="width:80px;padding:5px;">
-                        <option value="0">0</option>
                         <option value="100">100</option>
-                        <option value="200" selected>200</option>
-                        <option value="500">500</option>
-                        <option value="1000">1000</option>
-                        <option value="2000">2000</option>
+                        <option value="200">200</option>
+                        <option value="300">300</option>
+                        <option value="500" selected>500</option>
                     </select>
-                </div>
-                <div style="font-size:0.7rem;color:#666;margin-bottom:10px;">
-                    ⚠️ Keyless API has rate limits. Start with 3 workers + 200ms delay.<br>
-                    Reduce workers if you see OVER_QUERY_LIMIT errors.
+                    <span style="font-size:0.75rem;color:#666;margin-left:10px;">(same as part1/part2)</span>
                 </div>
                 
                 <button class="btn btn-start" id="startBtn" onclick="startParallelExtraction()" disabled>
@@ -489,24 +478,12 @@ async function findWaypointsOnPath(path, origin, destination, directDist) {
 // ROUTE FETCHING
 // ============================================================
 
-// Global rate limit tracking
-let lastRequestTime = 0;
-let rateLimitHits = 0;
-let minDelayMs = 100; // Start with 100ms delay
-
-async function fetchRouteForConfig(config, retries = 5) {
+// Simple fetch - matches the original part1/part2 approach (NO artificial delays)
+async function fetchRouteForConfig(config, retries = 3) {
     const origin = config.origin;
     const dest = config.destination;
     
     for (let attempt = 1; attempt <= retries; attempt++) {
-        // Enforce minimum delay between requests
-        const now = Date.now();
-        const timeSinceLast = now - lastRequestTime;
-        if (timeSinceLast < minDelayMs) {
-            await new Promise(r => setTimeout(r, minDelayMs - timeSinceLast));
-        }
-        lastRequestTime = Date.now();
-        
         const result = await new Promise(async (resolve) => {
             directionsService.route({
                 origin: { lat: origin.lat, lng: origin.lon },
@@ -514,10 +491,6 @@ async function fetchRouteForConfig(config, retries = 5) {
                 travelMode: 'DRIVING'
             }, async (res, status) => {
                 if (status === 'OK') {
-                    // Success - can reduce delay slightly
-                    if (minDelayMs > 100) minDelayMs = Math.max(100, minDelayMs - 10);
-                    rateLimitHits = 0;
-                    
                     const leg = res.routes[0].legs[0];
                     const dist = leg.distance.value / 1000;
                     const time = leg.duration.value / 60;
@@ -531,15 +504,10 @@ async function fetchRouteForConfig(config, retries = 5) {
                         time_min: time, 
                         waypoints: waypoints 
                     });
-                } else if (status === 'OVER_QUERY_LIMIT') {
-                    // Rate limited - increase delay significantly
-                    rateLimitHits++;
-                    minDelayMs = Math.min(5000, minDelayMs + 500); // Max 5 second delay
-                    resolve({ error: status, retryable: true });
                 } else {
                     resolve({ 
                         error: status, 
-                        retryable: status === 'UNKNOWN_ERROR'
+                        retryable: status === 'UNKNOWN_ERROR' || status === 'OVER_QUERY_LIMIT'
                     });
                 }
             });
@@ -548,12 +516,9 @@ async function fetchRouteForConfig(config, retries = 5) {
         if (!result.error) return result;
         if (!result.retryable || attempt === retries) return result;
         
-        // Exponential backoff for rate limits
-        const backoff = Math.min(30000, 2000 * Math.pow(2, attempt - 1) + Math.random() * 1000);
-        if (attempt <= 2) {
-            log('⏳ Rate limited, waiting ' + (backoff/1000).toFixed(1) + 's... (delay now: ' + minDelayMs + 'ms)');
-        }
-        await new Promise(r => setTimeout(r, backoff));
+        // Simple retry delay (same as original)
+        const delay = 1000 * attempt + Math.random() * 500;
+        await new Promise(r => setTimeout(r, delay));
     }
 }
 
@@ -579,7 +544,6 @@ async function startParallelExtraction() {
     document.getElementById('stopBtn').style.display = 'block';
     
     const workerCount = parseInt(document.getElementById('workerCount').value);
-    minDelayMs = parseInt(document.getElementById('requestDelay').value) || 200;
     
     log('═══════════════════════════════════');
     log('STARTING ' + workerCount + ' PARALLEL WORKERS');
@@ -649,7 +613,7 @@ async function startParallelExtraction() {
             document.getElementById('statWaypoints').textContent = withWaypoints;
             document.getElementById('progressFill').style.width = pct + '%';
             document.getElementById('progressFill').textContent = pct + '%';
-            document.getElementById('currentCalc').textContent = config.config_id + ' (delay: ' + minDelayMs + 'ms)';
+            document.getElementById('currentCalc').textContent = config.config_id;
             
             // Save periodically
             if (completed % 100 === 0) {
