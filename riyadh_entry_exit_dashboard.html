@@ -8,15 +8,8 @@
         body { font-family: Arial, sans-serif; }
         
         #sidebar {
-            position: fixed;
-            left: 0; top: 0;
-            width: 300px;
-            height: 100vh;
-            background: rgba(22, 33, 62, 0.97);
-            padding: 12px;
-            overflow-y: auto;
-            z-index: 1000;
-            color: white;
+            position: fixed; left: 0; top: 0; width: 300px; height: 100vh;
+            background: rgba(22, 33, 62, 0.97); padding: 12px; overflow-y: auto; z-index: 1000; color: white;
         }
         
         h1 { font-size: 14px; color: #e94560; margin-bottom: 10px; }
@@ -50,33 +43,20 @@
         .item .dot { width: 20px; height: 20px; background: #e94560; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; margin-right: 6px; border: 2px solid white; }
         .item .name { flex: 1; direction: rtl; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
         
-        #mapContainer { 
-            position: fixed; 
-            left: 300px; top: 0; right: 0; bottom: 0; 
-        }
-        #map { 
-            width: 100%; 
-            height: 100%; 
-        }
-        #overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            pointer-events: none;
-            z-index: 100;
-        }
+        #mapContainer { position: fixed; left: 300px; top: 0; right: 0; bottom: 0; }
+        #map { width: 100%; height: 100%; }
+        #overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 100; }
         
-        #mapStatus {
-            position: absolute;
-            top: 10px; left: 10px;
-            background: rgba(0,0,0,0.7);
-            color: #4caf50;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            z-index: 200;
+        #loadingOverlay {
+            position: fixed; left: 300px; top: 0; right: 0; bottom: 0;
+            background: #1a1a2e; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 500;
         }
-        #mapStatus.error { color: #ff5722; }
-        #mapStatus.loading { color: #ffc107; }
+        #loadingOverlay.hidden { display: none; }
+        .loader { width: 60px; height: 60px; border: 5px solid #333; border-top-color: #e94560; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loadingText { color: #e94560; margin-top: 20px; font-size: 16px; }
+        #loadingAttempt { color: #888; margin-top: 10px; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -101,7 +81,7 @@
                 <label>Road Extension <span class="val" id="valExt">300m</span></label>
                 <input type="range" id="sliderExt" min="0" max="1500" value="300" step="50">
             </div>
-            <div style="font-size:9px;color:#888;">Make roads longer - where they cross boundary = Entry/Exit!</div>
+            <div style="font-size:9px;color:#888;">Make roads longer to find boundary crossings</div>
         </div>
         
         <div class="box">
@@ -122,315 +102,228 @@
             <div class="stat"><div class="n" id="sOther">0</div><div class="l">Other</div></div>
         </div>
         
-        <h3>ACTIONS</h3>
-        <button id="btnExport" onclick="exportData()" disabled>Download Entry/Exit GeoJSON</button>
-        <button onclick="retryGoogleMaps()">Retry Google Maps</button>
+        <h3>EXPORT</h3>
+        <button id="btnExport" onclick="exportData()" disabled>Download GeoJSON</button>
         
-        <h3>CROSSINGS LIST</h3>
-        <div class="list" id="list"><div style="color:#666;text-align:center;padding:15px;">Load roads + district</div></div>
+        <h3>LIST</h3>
+        <div class="list" id="list"><div style="color:#666;text-align:center;padding:15px;">Load data</div></div>
+    </div>
+    
+    <div id="loadingOverlay">
+        <div class="loader"></div>
+        <div id="loadingText">Loading Google Maps Keyless...</div>
+        <div id="loadingAttempt">Please wait...</div>
     </div>
     
     <div id="mapContainer">
         <div id="map"></div>
         <canvas id="overlay"></canvas>
-        <div id="mapStatus" class="loading">Loading Google Maps...</div>
     </div>
 
 <script>
-var map = null;
-var roads = [];
-var boundary = [];
-var entryExits = [];
-var mapLoaded = false;
-var loadAttempts = 0;
-
-// Canvas
+var map, roads = [], boundary = [], entryExits = [], mapReady = false;
 var canvas = document.getElementById('overlay');
 var ctx = canvas.getContext('2d');
 
-function resizeCanvas() {
-    var container = document.getElementById('mapContainer');
-    canvas.width = container.clientWidth;
-    canvas.height = container.clientHeight;
-    draw();
-}
-window.addEventListener('resize', resizeCanvas);
+// Wait for Google Maps with multiple attempts
+var attempt = 0;
+var maxAttempts = 300; // 30 seconds
 
-// Initialize map
-function initMap() {
-    if (mapLoaded) return;
+function waitForGoogleMaps() {
+    attempt++;
+    document.getElementById('loadingAttempt').textContent = 'Attempt ' + attempt + '/' + maxAttempts;
     
+    if (window.google && window.google.maps && window.google.maps.Map) {
+        console.log('Google Maps loaded after ' + attempt + ' attempts');
+        initializeMap();
+    } else if (attempt < maxAttempts) {
+        setTimeout(waitForGoogleMaps, 100);
+    } else {
+        document.getElementById('loadingText').textContent = 'Loading taking longer than expected...';
+        document.getElementById('loadingAttempt').textContent = 'Still trying... Please wait or refresh';
+        setTimeout(waitForGoogleMaps, 100);
+    }
+}
+
+function initializeMap() {
     try {
-        if (!window.google || !window.google.maps) {
-            throw new Error('Google Maps not available');
-        }
-        
         map = new google.maps.Map(document.getElementById('map'), {
             center: { lat: 24.73, lng: 46.65 },
             zoom: 14,
-            mapTypeId: 'roadmap',
             gestureHandling: 'greedy',
             zoomControl: true,
             mapTypeControl: true,
+            scaleControl: true,
             streetViewControl: false,
-            fullscreenControl: true,
-            styles: [
-                { featureType: "poi", stylers: [{ visibility: "off" }] },
-                { featureType: "transit", stylers: [{ visibility: "off" }] }
-            ]
+            rotateControl: false,
+            fullscreenControl: true
         });
         
-        mapLoaded = true;
-        document.getElementById('mapStatus').textContent = 'Google Maps Ready';
-        document.getElementById('mapStatus').className = '';
-        
-        setTimeout(function() {
-            document.getElementById('mapStatus').style.display = 'none';
-        }, 2000);
+        mapReady = true;
+        document.getElementById('loadingOverlay').classList.add('hidden');
         
         resizeCanvas();
         
         google.maps.event.addListener(map, 'idle', draw);
-        google.maps.event.addListener(map, 'zoom_changed', draw);
-        google.maps.event.addListener(map, 'bounds_changed', draw);
+        google.maps.event.addListener(map, 'bounds_changed', function() { setTimeout(draw, 50); });
         
-        console.log('Google Maps initialized!');
     } catch(e) {
-        console.error('Map error:', e);
-        document.getElementById('mapStatus').textContent = 'Map error - Click "Retry Google Maps"';
-        document.getElementById('mapStatus').className = 'error';
+        console.error('Error initializing map:', e);
+        document.getElementById('loadingText').textContent = 'Error: ' + e.message;
     }
 }
 
-// Retry loading Google Maps
-function retryGoogleMaps() {
-    loadAttempts++;
-    document.getElementById('mapStatus').textContent = 'Retrying... (attempt ' + loadAttempts + ')';
-    document.getElementById('mapStatus').className = 'loading';
-    document.getElementById('mapStatus').style.display = 'block';
-    
-    // Remove old script
-    var oldScript = document.getElementById('gmapsScript');
-    if (oldScript) oldScript.remove();
-    
-    // Add new script
-    var script = document.createElement('script');
-    script.id = 'gmapsScript';
-    script.src = 'https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js?v=' + Date.now();
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
-    
-    // Check for load
-    var checks = 0;
-    var checkInt = setInterval(function() {
-        checks++;
-        if (window.google && window.google.maps && window.google.maps.Map) {
-            clearInterval(checkInt);
-            initMap();
-        } else if (checks > 100) {
-            clearInterval(checkInt);
-            document.getElementById('mapStatus').textContent = 'Google Maps failed to load. Try again.';
-            document.getElementById('mapStatus').className = 'error';
-        }
-    }, 100);
+function resizeCanvas() {
+    canvas.width = document.getElementById('mapContainer').clientWidth;
+    canvas.height = document.getElementById('mapContainer').clientHeight;
+    draw();
 }
+window.onresize = resizeCanvas;
 
-// Convert lat/lng to pixel
 function toPixel(lat, lng) {
-    if (!map || !mapLoaded) return {x: -1000, y: -1000};
-    try {
-        var projection = map.getProjection();
-        if (!projection) return {x: -1000, y: -1000};
-        
-        var bounds = map.getBounds();
-        if (!bounds) return {x: -1000, y: -1000};
-        
-        var ne = bounds.getNorthEast();
-        var sw = bounds.getSouthWest();
-        var topRight = projection.fromLatLngToPoint(ne);
-        var bottomLeft = projection.fromLatLngToPoint(sw);
-        var scale = Math.pow(2, map.getZoom());
-        var worldPoint = projection.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
-        
-        return {
-            x: (worldPoint.x - bottomLeft.x) * scale,
-            y: (worldPoint.y - topRight.y) * scale
-        };
-    } catch(e) {
-        return {x: -1000, y: -1000};
-    }
+    if (!mapReady || !map) return { x: -9999, y: -9999 };
+    var proj = map.getProjection();
+    var bounds = map.getBounds();
+    if (!proj || !bounds) return { x: -9999, y: -9999 };
+    
+    var ne = bounds.getNorthEast(), sw = bounds.getSouthWest();
+    var tr = proj.fromLatLngToPoint(ne), bl = proj.fromLatLngToPoint(sw);
+    var scale = Math.pow(2, map.getZoom());
+    var wp = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
+    
+    return { x: (wp.x - bl.x) * scale, y: (wp.y - tr.y) * scale };
 }
 
-// Line intersection
 function lineIntersect(x1,y1,x2,y2,x3,y3,x4,y4) {
     var d = (y4-y3)*(x2-x1)-(x4-x3)*(y2-y1);
     if (Math.abs(d) < 1e-12) return null;
     var u = ((x4-x3)*(y1-y3)-(y4-y3)*(x1-x3))/d;
     var v = ((x2-x1)*(y1-y3)-(y2-y1)*(x1-x3))/d;
-    if (u>=0 && u<=1 && v>=0 && v<=1) {
-        return [x1+u*(x2-x1), y1+u*(y2-y1)];
-    }
-    return null;
+    return (u>=0 && u<=1 && v>=0 && v<=1) ? [x1+u*(x2-x1), y1+u*(y2-y1)] : null;
 }
 
-// Extend road
-function extendLine(x1, y1, x2, y2, meters) {
-    var deg = meters / 111000;
-    var dx = x2 - x1, dy = y2 - y1;
-    var len = Math.sqrt(dx*dx + dy*dy);
-    if (len < 0.000001) return {x1:x1, y1:y1, x2:x2, y2:y2};
-    var ux = dx/len, uy = dy/len;
-    return {
-        x1: x1 - ux * deg,
-        y1: y1 - uy * deg,
-        x2: x2 + ux * deg,
-        y2: y2 + uy * deg
-    };
+function extendLine(x1,y1,x2,y2,m) {
+    var d = m/111000, dx = x2-x1, dy = y2-y1, l = Math.sqrt(dx*dx+dy*dy);
+    if (l < 1e-7) return {x1:x1,y1:y1,x2:x2,y2:y2};
+    return { x1: x1-dx/l*d, y1: y1-dy/l*d, x2: x2+dx/l*d, y2: y2+dy/l*d };
 }
 
-// Find crossings
 function findCrossings() {
     entryExits = [];
     if (!boundary.length || !roads.length) { updateUI(); return; }
     
-    var ext = parseInt(document.getElementById('sliderExt').value);
-    var minW = parseInt(document.getElementById('sliderWidth').value);
+    var ext = +document.getElementById('sliderExt').value;
+    var minW = +document.getElementById('sliderWidth').value;
     var seen = {};
     
-    for (var r = 0; r < roads.length; r++) {
-        var road = roads[r];
-        var props = road.properties || {};
-        var w = parseFloat(props.width_m || props.WIDTH || props.width || 10);
-        var name = props.name_ar || props.ROADCENTERLINENAME_AR || props.name_en || 'Road';
-        if (w < minW) continue;
+    roads.forEach(function(road) {
+        var p = road.properties || {};
+        var w = +(p.width_m || p.WIDTH || p.width || 10);
+        var name = p.name_ar || p.ROADCENTERLINENAME_AR || p.name_en || 'Road';
+        if (w < minW) return;
         
-        var geom = road.geometry;
-        if (!geom) continue;
-        var lines = geom.type === 'LineString' ? [geom.coordinates] : (geom.coordinates || []);
+        var g = road.geometry;
+        if (!g) return;
+        var lines = g.type === 'LineString' ? [g.coordinates] : (g.coordinates || []);
         
-        for (var li = 0; li < lines.length; li++) {
-            var coords = lines[li];
-            if (!coords || coords.length < 2) continue;
+        lines.forEach(function(coords) {
+            if (!coords || coords.length < 2) return;
             
-            // Extend at both ends
-            var extStart = extendLine(coords[1][0], coords[1][1], coords[0][0], coords[0][1], ext);
-            var last = coords.length - 1;
-            var extEnd = extendLine(coords[last-1][0], coords[last-1][1], coords[last][0], coords[last][1], ext);
+            var es = extendLine(coords[1][0], coords[1][1], coords[0][0], coords[0][1], ext);
+            var ee = extendLine(coords[coords.length-2][0], coords[coords.length-2][1], coords[coords.length-1][0], coords[coords.length-1][1], ext);
             
-            var extCoords = [[extStart.x2, extStart.y2]];
-            for (var c = 0; c < coords.length; c++) extCoords.push(coords[c]);
-            extCoords.push([extEnd.x2, extEnd.y2]);
+            var ec = [[es.x2, es.y2]].concat(coords).concat([[ee.x2, ee.y2]]);
             
-            // Check intersections
-            for (var i = 0; i < extCoords.length - 1; i++) {
-                var x1 = extCoords[i][0], y1 = extCoords[i][1];
-                var x2 = extCoords[i+1][0], y2 = extCoords[i+1][1];
-                
-                for (var j = 0; j < boundary.length - 1; j++) {
-                    var hit = lineIntersect(x1,y1,x2,y2, boundary[j][0],boundary[j][1], boundary[j+1][0],boundary[j+1][1]);
+            for (var i = 0; i < ec.length-1; i++) {
+                for (var j = 0; j < boundary.length-1; j++) {
+                    var hit = lineIntersect(ec[i][0],ec[i][1],ec[i+1][0],ec[i+1][1], boundary[j][0],boundary[j][1],boundary[j+1][0],boundary[j+1][1]);
                     if (hit) {
-                        var key = hit[0].toFixed(5) + '_' + hit[1].toFixed(5);
-                        if (!seen[key]) {
-                            seen[key] = true;
-                            entryExits.push({lng: hit[0], lat: hit[1], name: name, width: w});
-                        }
+                        var k = hit[0].toFixed(5)+'_'+hit[1].toFixed(5);
+                        if (!seen[k]) { seen[k]=1; entryExits.push({lng:hit[0],lat:hit[1],name:name,width:w}); }
                     }
                 }
             }
-        }
-    }
+        });
+    });
     
-    entryExits.sort(function(a,b) { return b.width - a.width; });
+    entryExits.sort(function(a,b){return b.width-a.width;});
     updateUI();
     draw();
 }
 
-// Update UI
 function updateUI() {
     document.getElementById('sTotal').textContent = entryExits.length;
     document.getElementById('sMajor').textContent = entryExits.filter(function(p){return p.width>=30;}).length;
     document.getElementById('sOther').textContent = entryExits.filter(function(p){return p.width<30;}).length;
-    document.getElementById('btnExport').disabled = entryExits.length === 0;
+    document.getElementById('btnExport').disabled = !entryExits.length;
     
     var list = document.getElementById('list');
-    if (entryExits.length === 0) {
+    if (!entryExits.length) {
         list.innerHTML = '<div style="color:#666;text-align:center;padding:15px;">'+(roads.length?(boundary.length?'Increase extension':'Load district'):'Load roads')+'</div>';
         return;
     }
-    
     var html = '';
-    var max = Math.min(entryExits.length, 35);
-    for (var i = 0; i < max; i++) {
+    for (var i = 0; i < Math.min(35, entryExits.length); i++) {
         var p = entryExits[i];
         html += '<div class="item" onclick="gotoPoint('+i+')"><div class="dot">'+Math.round(p.width)+'</div><div class="name">'+p.name+'</div></div>';
     }
-    if (entryExits.length > 35) html += '<div style="color:#888;text-align:center;padding:5px;">+' + (entryExits.length-35) + ' more</div>';
+    if (entryExits.length > 35) html += '<div style="color:#888;text-align:center;padding:5px;">+'+(entryExits.length-35)+' more</div>';
     list.innerHTML = html;
 }
 
 function gotoPoint(i) {
-    var p = entryExits[i];
-    if (map && mapLoaded) {
-        map.setCenter({lat: p.lat, lng: p.lng});
+    if (mapReady && entryExits[i]) {
+        map.setCenter({lat: entryExits[i].lat, lng: entryExits[i].lng});
         map.setZoom(17);
     }
 }
 
-// Draw
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    if (!mapReady) return;
     
-    var ext = parseInt(document.getElementById('sliderExt').value);
-    var minW = parseInt(document.getElementById('sliderWidth').value);
-    var dotSize = parseInt(document.getElementById('sliderDot').value);
+    var ext = +document.getElementById('sliderExt').value;
+    var minW = +document.getElementById('sliderWidth').value;
+    var dotSize = +document.getElementById('sliderDot').value;
     
-    // Draw roads
-    for (var r = 0; r < roads.length; r++) {
-        var road = roads[r];
-        var props = road.properties || {};
-        var w = parseFloat(props.width_m || props.WIDTH || props.width || 10);
-        if (w < minW) continue;
+    // Roads
+    roads.forEach(function(road) {
+        var p = road.properties || {};
+        var w = +(p.width_m || p.WIDTH || p.width || 10);
+        if (w < minW) return;
         
-        var geom = road.geometry;
-        if (!geom) continue;
-        var lines = geom.type === 'LineString' ? [geom.coordinates] : (geom.coordinates || []);
+        var g = road.geometry;
+        if (!g) return;
+        var lines = g.type === 'LineString' ? [g.coordinates] : (g.coordinates || []);
         
-        for (var li = 0; li < lines.length; li++) {
-            var coords = lines[li];
-            if (!coords || coords.length < 2) continue;
+        lines.forEach(function(coords) {
+            if (!coords || coords.length < 2) return;
             
-            var extStart = extendLine(coords[1][0], coords[1][1], coords[0][0], coords[0][1], ext);
-            var last = coords.length - 1;
-            var extEnd = extendLine(coords[last-1][0], coords[last-1][1], coords[last][0], coords[last][1], ext);
-            
-            var extCoords = [[extStart.x2, extStart.y2]];
-            for (var c = 0; c < coords.length; c++) extCoords.push(coords[c]);
-            extCoords.push([extEnd.x2, extEnd.y2]);
+            var es = extendLine(coords[1][0], coords[1][1], coords[0][0], coords[0][1], ext);
+            var ee = extendLine(coords[coords.length-2][0], coords[coords.length-2][1], coords[coords.length-1][0], coords[coords.length-1][1], ext);
+            var ec = [[es.x2, es.y2]].concat(coords).concat([[ee.x2, ee.y2]]);
             
             ctx.beginPath();
-            for (var i = 0; i < extCoords.length; i++) {
-                var px = toPixel(extCoords[i][1], extCoords[i][0]);
-                if (i === 0) ctx.moveTo(px.x, px.y);
-                else ctx.lineTo(px.x, px.y);
-            }
+            ec.forEach(function(c, i) {
+                var px = toPixel(c[1], c[0]);
+                i === 0 ? ctx.moveTo(px.x, px.y) : ctx.lineTo(px.x, px.y);
+            });
             ctx.strokeStyle = w >= 30 ? '#e94560' : w >= 15 ? '#ff9800' : '#4caf50';
             ctx.lineWidth = w >= 30 ? 5 : w >= 15 ? 3 : 2;
             ctx.lineCap = 'round';
             ctx.stroke();
-        }
-    }
+        });
+    });
     
-    // Draw boundary
-    if (boundary.length > 0) {
+    // Boundary
+    if (boundary.length) {
         ctx.beginPath();
-        for (var i = 0; i < boundary.length; i++) {
-            var px = toPixel(boundary[i][1], boundary[i][0]);
-            if (i === 0) ctx.moveTo(px.x, px.y);
-            else ctx.lineTo(px.x, px.y);
-        }
+        boundary.forEach(function(c, i) {
+            var px = toPixel(c[1], c[0]);
+            i === 0 ? ctx.moveTo(px.x, px.y) : ctx.lineTo(px.x, px.y);
+        });
         ctx.closePath();
-        ctx.fillStyle = 'rgba(233,69,96,0.12)';
+        ctx.fillStyle = 'rgba(233,69,96,0.1)';
         ctx.fill();
         ctx.strokeStyle = '#e94560';
         ctx.lineWidth = 3;
@@ -439,153 +332,92 @@ function draw() {
         ctx.setLineDash([]);
     }
     
-    // Draw RED DOTS
-    for (var i = 0; i < entryExits.length; i++) {
-        var p = entryExits[i];
+    // Red dots
+    entryExits.forEach(function(p) {
         var px = toPixel(p.lat, p.lng);
         var r = p.width >= 40 ? dotSize*1.4 : p.width >= 20 ? dotSize*1.1 : dotSize*0.85;
         
-        ctx.beginPath();
-        ctx.arc(px.x, px.y, r+5, 0, Math.PI*2);
-        ctx.fillStyle = 'rgba(233,69,96,0.5)';
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(px.x, px.y, r+5, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(233,69,96,0.5)'; ctx.fill();
         
-        ctx.beginPath();
-        ctx.arc(px.x, px.y, r, 0, Math.PI*2);
-        ctx.fillStyle = '#e94560';
-        ctx.fill();
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        ctx.beginPath(); ctx.arc(px.x, px.y, r, 0, Math.PI*2);
+        ctx.fillStyle = '#e94560'; ctx.fill();
+        ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.stroke();
         
         ctx.fillStyle = 'white';
-        ctx.font = 'bold ' + Math.max(9, r*0.6) + 'px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        ctx.font = 'bold '+Math.max(9,r*0.6)+'px Arial';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(Math.round(p.width), px.x, px.y);
-    }
+    });
 }
 
 // File handlers
-document.getElementById('fileRoads').addEventListener('change', function(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function(evt) {
+document.getElementById('fileRoads').onchange = function(e) {
+    var f = e.target.files[0]; if (!f) return;
+    var r = new FileReader();
+    r.onload = function(ev) {
         try {
-            var data = JSON.parse(evt.target.result);
-            roads = data.features || [data];
-            document.getElementById('statusRoads').textContent = roads.length + ' roads loaded';
+            var d = JSON.parse(ev.target.result);
+            roads = d.features || [d];
+            document.getElementById('statusRoads').textContent = roads.length + ' roads';
             document.getElementById('statusRoads').className = 'status';
-            
-            if (map && mapLoaded && roads.length > 0) {
-                var sumLat = 0, sumLng = 0, count = 0;
-                for (var i = 0; i < Math.min(roads.length, 100); i++) {
-                    var g = roads[i].geometry;
-                    if (!g) continue;
-                    var lines = g.type === 'LineString' ? [g.coordinates] : (g.coordinates || []);
-                    for (var j = 0; j < lines.length; j++) {
-                        var mid = Math.floor(lines[j].length / 2);
-                        sumLng += lines[j][mid][0];
-                        sumLat += lines[j][mid][1];
-                        count++;
-                    }
-                }
-                if (count > 0) map.setCenter({lat: sumLat/count, lng: sumLng/count});
+            if (mapReady) {
+                var lat=0,lng=0,n=0;
+                roads.slice(0,50).forEach(function(rd) {
+                    var g = rd.geometry; if (!g) return;
+                    var ls = g.type==='LineString'?[g.coordinates]:(g.coordinates||[]);
+                    ls.forEach(function(cs){ var m=cs[Math.floor(cs.length/2)]; lng+=m[0]; lat+=m[1]; n++; });
+                });
+                if (n) map.setCenter({lat:lat/n, lng:lng/n});
             }
             findCrossings();
-        } catch(err) { alert('Error: ' + err.message); }
+        } catch(err) { alert('Error: '+err.message); }
     };
-    reader.readAsText(file);
-});
+    r.readAsText(f);
+};
 
-document.getElementById('fileDistrict').addEventListener('change', function(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    var reader = new FileReader();
-    reader.onload = function(evt) {
+document.getElementById('fileDistrict').onchange = function(e) {
+    var f = e.target.files[0]; if (!f) return;
+    var r = new FileReader();
+    r.onload = function(ev) {
         try {
-            var data = JSON.parse(evt.target.result);
-            var feat = data.features ? data.features[0] : data;
-            var geom = feat.geometry;
-            boundary = geom.type === 'Polygon' ? geom.coordinates[0] : geom.coordinates[0][0];
-            
-            document.getElementById('statusDistrict').textContent = 'Loaded (' + boundary.length + ' pts)';
+            var d = JSON.parse(ev.target.result);
+            var ft = d.features ? d.features[0] : d;
+            var gm = ft.geometry;
+            boundary = gm.type === 'Polygon' ? gm.coordinates[0] : gm.coordinates[0][0];
+            document.getElementById('statusDistrict').textContent = 'Loaded ('+boundary.length+' pts)';
             document.getElementById('statusDistrict').className = 'status';
-            
-            if (map && mapLoaded && boundary.length > 0) {
-                var sumLat = 0, sumLng = 0;
-                for (var i = 0; i < boundary.length; i++) {
-                    sumLng += boundary[i][0];
-                    sumLat += boundary[i][1];
-                }
-                map.setCenter({lat: sumLat/boundary.length, lng: sumLng/boundary.length});
+            if (mapReady) {
+                var lat=0,lng=0;
+                boundary.forEach(function(c){lng+=c[0];lat+=c[1];});
+                map.setCenter({lat:lat/boundary.length, lng:lng/boundary.length});
             }
             findCrossings();
-        } catch(err) { alert('Error: ' + err.message); }
+        } catch(err) { alert('Error: '+err.message); }
     };
-    reader.readAsText(file);
-});
+    r.readAsText(f);
+};
 
 // Sliders
-document.getElementById('sliderExt').addEventListener('input', function() {
-    document.getElementById('valExt').textContent = this.value + 'm';
-    findCrossings();
-});
-document.getElementById('sliderWidth').addEventListener('input', function() {
-    document.getElementById('valWidth').textContent = this.value + 'm';
-    findCrossings();
-});
-document.getElementById('sliderDot').addEventListener('input', function() {
-    document.getElementById('valDot').textContent = this.value;
-    draw();
-});
+document.getElementById('sliderExt').oninput = function() { document.getElementById('valExt').textContent = this.value+'m'; findCrossings(); };
+document.getElementById('sliderWidth').oninput = function() { document.getElementById('valWidth').textContent = this.value+'m'; findCrossings(); };
+document.getElementById('sliderDot').oninput = function() { document.getElementById('valDot').textContent = this.value; draw(); };
 
 // Export
 function exportData() {
-    if (entryExits.length === 0) return;
-    var geojson = { type: 'FeatureCollection', features: [] };
-    for (var i = 0; i < entryExits.length; i++) {
-        var p = entryExits[i];
-        geojson.features.push({
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
-            properties: { name_ar: p.name, width_m: p.width, road_class: p.width >= 30 ? 'Major' : 'Other' }
-        });
-    }
+    if (!entryExits.length) return;
+    var gj = {type:'FeatureCollection',features:entryExits.map(function(p){
+        return {type:'Feature',geometry:{type:'Point',coordinates:[p.lng,p.lat]},properties:{name_ar:p.name,width_m:p.width}};
+    })};
     var a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(geojson, null, 2)], {type: 'application/json'}));
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(gj,null,2)],{type:'application/json'}));
     a.download = 'entry_exit_points.geojson';
     a.click();
 }
 
-// Start loading Google Maps
-(function loadGMaps() {
-    var script = document.createElement('script');
-    script.id = 'gmapsScript';
-    script.src = 'https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js';
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
-    
-    var checks = 0;
-    var interval = setInterval(function() {
-        checks++;
-        if (window.google && window.google.maps && window.google.maps.Map) {
-            clearInterval(interval);
-            initMap();
-        } else if (checks > 150) {
-            clearInterval(interval);
-            document.getElementById('mapStatus').textContent = 'Google Maps slow to load - Click "Retry Google Maps"';
-            document.getElementById('mapStatus').className = 'error';
-        }
-    }, 100);
-})();
-
-// Also init on resize
-window.addEventListener('load', function() {
-    setTimeout(resizeCanvas, 500);
-});
+// Start
+waitForGoogleMaps();
 </script>
+<script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
 </body>
 </html>
