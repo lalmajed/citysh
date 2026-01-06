@@ -141,7 +141,7 @@
             <div class="stat-box other"><div class="num" id="totalOther">0</div><div class="lbl">📦 Other</div></div>
         </div>
         <div style="text-align:center; font-size:11px; color:#666; margin-bottom:8px;">
-            Total Parcels: <b id="totalParcels">0</b> | POIs: <b id="totalPoi">0</b>
+            Total Parcels: <b id="totalParcels">0</b> | POIs: <b id="totalPoi">0</b> | Roads: <b id="totalRoads">0</b>
         </div>
         
         <!-- Selected District Stats -->
@@ -234,6 +234,20 @@
                         <span class="name">Districts</span>
                     </div>
                 </div>
+                <div class="layer-control" style="background:#e3f2fd;">
+                    <div class="header">
+                        <input type="checkbox" id="showRoads" checked onchange="render()">
+                        <div class="dot" style="background:#d32f2f;"></div>
+                        <span class="name">Roads</span>
+                        <span class="count" id="roadCount">0</span>
+                    </div>
+                    <div style="font-size:10px;">
+                        Width Scale: <span id="roadWidthVal">1</span>x <input type="range" id="roadWidth" min="0.5" max="3" value="1" step="0.25" oninput="updateSlider('road')">
+                        <label style="margin-top:5px;display:flex;align-items:center;gap:5px;">
+                            <input type="checkbox" id="showRoadLabels" checked onchange="render()"> Show Labels
+                        </label>
+                    </div>
+                </div>
                 <div class="click-toggle">
                     <label><input type="checkbox" id="enableClick" checked> 🖱️ Enable click to view details</label>
                     <div style="font-size:9px;color:#666;margin-top:3px;margin-left:20px;">
@@ -268,6 +282,11 @@
                     <label>🗺️ Districts GeoJSON:</label>
                     <input type="file" id="distFile" accept=".json,.geojson">
                     <div id="distStatus" class="file-status">Upload districts JSON</div>
+                </div>
+                <div class="file-input" style="background:#e3f2fd;padding:8px;border-radius:6px;margin-top:8px;">
+                    <label>🛣️ Roads GeoJSON (muhammadiyah_roads.geojson):</label>
+                    <input type="file" id="roadsFile" accept=".json,.geojson">
+                    <div id="roadsStatus" class="file-status">Upload roads GeoJSON for visualization</div>
                 </div>
             </div>
         </div>
@@ -312,6 +331,21 @@
         <div style="margin-top:8px;font-size:9px;color:#888;text-align:center;">
             Zoom: <span id="zoomLevel">11</span> | <a href="#" onclick="resetView();return false;">Reset View</a>
         </div>
+        
+        <!-- Road Legend (shown when roads loaded) -->
+        <div id="roadLegend" style="display:none;margin-top:10px;padding:8px;background:#e3f2fd;border-radius:6px;">
+            <div style="font-weight:600;font-size:11px;margin-bottom:5px;">🛣️ Road Width Legend</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:9px;">
+                <div><span style="display:inline-block;width:20px;height:4px;background:#d32f2f;border-radius:2px;"></span> 36m+</div>
+                <div><span style="display:inline-block;width:20px;height:4px;background:#ff5722;border-radius:2px;"></span> 30m</div>
+                <div><span style="display:inline-block;width:20px;height:4px;background:#ff9800;border-radius:2px;"></span> 25m</div>
+                <div><span style="display:inline-block;width:20px;height:4px;background:#ffc107;border-radius:2px;"></span> 20m</div>
+                <div><span style="display:inline-block;width:20px;height:4px;background:#8bc34a;border-radius:2px;"></span> 15m</div>
+                <div><span style="display:inline-block;width:20px;height:4px;background:#4caf50;border-radius:2px;"></span> 12m</div>
+                <div><span style="display:inline-block;width:20px;height:4px;background:#009688;border-radius:2px;"></span> 10m</div>
+                <div><span style="display:inline-block;width:20px;height:4px;background:#607d8b;border-radius:2px;"></span> 8m</div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -320,12 +354,34 @@
         let parcels = [];      // {lat, lng, type: 'apt'|'villa'|'other', ...}
         let poiData = [];      // {lat, lng, layer, name_ar, name_en}
         let districts = [];    // GeoJSON features
+        let roads = [];        // GeoJSON features for roads
         let selectedDistrict = null;
         let activePoiCategories = new Set();
         let infoPopup = null;
         let buildingsFileName = '';
         let mapsLoadAttempts = 0;
         const MAX_LOAD_ATTEMPTS = 100;
+        
+        // Road colors by width
+        function getRoadColor(width) {
+            if (width >= 36) return '#d32f2f';  // Major arterial - red
+            if (width >= 30) return '#ff5722';  // Arterial - deep orange
+            if (width >= 25) return '#ff9800';  // Collector - orange
+            if (width >= 20) return '#ffc107';  // Main road - amber
+            if (width >= 15) return '#8bc34a';  // Secondary - light green
+            if (width >= 12) return '#4caf50';  // Local - green
+            if (width >= 10) return '#009688';  // Minor - teal
+            return '#607d8b';                   // Alley - blue grey
+        }
+        
+        function getRoadLineWidth(width, zoom) {
+            const baseWidth = Math.max(1, (zoom - 10) * 0.8);
+            if (width >= 30) return baseWidth * 4;
+            if (width >= 20) return baseWidth * 3;
+            if (width >= 15) return baseWidth * 2.5;
+            if (width >= 10) return baseWidth * 2;
+            return baseWidth * 1.5;
+        }
         
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -396,10 +452,14 @@
         }
         
         function updateSlider(layer) {
-            document.getElementById(layer + 'SizeVal').textContent = document.getElementById(layer + 'Size').value;
-            const opacityEl = document.getElementById(layer + 'Opacity');
-            const opacityVal = document.getElementById(layer + 'OpacityVal');
-            if (opacityEl && opacityVal) opacityVal.textContent = opacityEl.value;
+            if (layer === 'road') {
+                document.getElementById('roadWidthVal').textContent = document.getElementById('roadWidth').value;
+            } else {
+                document.getElementById(layer + 'SizeVal').textContent = document.getElementById(layer + 'Size').value;
+                const opacityEl = document.getElementById(layer + 'Opacity');
+                const opacityVal = document.getElementById(layer + 'OpacityVal');
+                if (opacityEl && opacityVal) opacityVal.textContent = opacityEl.value;
+            }
             render();
         }
         
@@ -560,14 +620,121 @@
                 }
             }
             
+            // Draw roads (lines)
+            const showRoads = document.getElementById('showRoads').checked;
+            const showRoadLabels = document.getElementById('showRoadLabels').checked;
+            const roadWidthScale = parseFloat(document.getElementById('roadWidth')?.value || 1);
+            const swLat = sw.lat(), neLat = ne.lat(), swLng = sw.lng(), neLng = ne.lng();
+            
+            if (showRoads && roads.length) {
+                const drawnLabels = new Set(); // Track drawn labels to avoid duplicates
+                
+                roads.forEach(road => {
+                    const geom = road.geometry;
+                    if (!geom) return;
+                    
+                    const props = road.properties || {};
+                    const width = parseFloat(props.width_m || props.WIDTH || props.width || 10);
+                    const color = getRoadColor(width);
+                    const lineWidth = getRoadLineWidth(width, zoom) * roadWidthScale;
+                    
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = lineWidth;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    
+                    // Handle LineString and MultiLineString
+                    const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
+                    
+                    lines.forEach(coords => {
+                        if (!coords || coords.length < 2) return;
+                        
+                        // Check if any point is in view
+                        let inView = false;
+                        for (let i = 0; i < coords.length; i++) {
+                            const [lon, lat] = coords[i];
+                            if (lat >= swLat - 0.01 && lat <= neLat + 0.01 && lon >= swLng - 0.01 && lon <= neLng + 0.01) {
+                                inView = true;
+                                break;
+                            }
+                        }
+                        if (!inView) return;
+                        
+                        // Draw the line
+                        ctx.beginPath();
+                        let midIdx = Math.floor(coords.length / 2);
+                        let midX, midY;
+                        
+                        coords.forEach(([lon, lat], i) => {
+                            const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                            const x = (w.x - bl.x) * scale;
+                            const y = (w.y - tr.y) * scale;
+                            
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                            
+                            if (i === midIdx) { midX = x; midY = y; }
+                        });
+                        ctx.stroke();
+                        
+                        // Draw outline for major roads
+                        if (width >= 20) {
+                            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                            ctx.lineWidth = lineWidth + 2;
+                            ctx.beginPath();
+                            coords.forEach(([lon, lat], i) => {
+                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                                const x = (w.x - bl.x) * scale;
+                                const y = (w.y - tr.y) * scale;
+                                if (i === 0) ctx.moveTo(x, y);
+                                else ctx.lineTo(x, y);
+                            });
+                            ctx.stroke();
+                            
+                            // Redraw the road on top
+                            ctx.strokeStyle = color;
+                            ctx.lineWidth = lineWidth;
+                            ctx.beginPath();
+                            coords.forEach(([lon, lat], i) => {
+                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
+                                const x = (w.x - bl.x) * scale;
+                                const y = (w.y - tr.y) * scale;
+                                if (i === 0) ctx.moveTo(x, y);
+                                else ctx.lineTo(x, y);
+                            });
+                            ctx.stroke();
+                        }
+                        
+                        // Draw label for major roads
+                        if (showRoadLabels && width >= 15 && zoom >= 14 && midX && midY) {
+                            const name = props.name_ar || props.ROADCENTERLINENAME_AR || props.name_en || '';
+                            if (name && !drawnLabels.has(name)) {
+                                drawnLabels.add(name);
+                                
+                                ctx.font = width >= 20 ? 'bold 11px Arial' : '10px Arial';
+                                ctx.fillStyle = '#333';
+                                ctx.strokeStyle = 'white';
+                                ctx.lineWidth = 3;
+                                ctx.textAlign = 'center';
+                                ctx.strokeText(name, midX, midY - 5);
+                                ctx.fillText(name, midX, midY - 5);
+                                
+                                // Width badge
+                                ctx.font = '9px Arial';
+                                ctx.fillStyle = color;
+                                ctx.fillText(width + 'm', midX, midY + 8);
+                            }
+                        }
+                    });
+                });
+            }
+            
             // Draw buildings (polygons or points) - OPTIMIZED
             if (showBldg && buildings.length) {
                 ctx.globalAlpha = bldgOpacity;
                 ctx.fillStyle = 'rgba(156, 39, 176, 0.5)';
                 ctx.strokeStyle = '#9c27b0';
                 ctx.lineWidth = Math.max(1, bldgSize / 2);
-                
-                const swLat = sw.lat(), neLat = ne.lat(), swLng = sw.lng(), neLng = ne.lng();
                 
                 for (let i = 0; i < buildings.length; i++) {
                     const b = buildings[i];
@@ -607,7 +774,6 @@
             }
             
             // Draw parcels - OPTIMIZED (batch by color to minimize state changes)
-            const swLat = sw.lat(), neLat = ne.lat(), swLng = sw.lng(), neLng = ne.lng();
             const aptPts = [], villaPts = [], otherPts = [];
             const pi2 = 6.28;
             
@@ -1009,6 +1175,80 @@
                     console.error('District load error:', err);
                     document.getElementById('distStatus').innerHTML = `❌ <b>${file.name}</b><br>Error: ${err.message}`;
                 }
+            };
+            reader.readAsText(file);
+        });
+        
+        // Roads GeoJSON file handler
+        document.getElementById('roadsFile').addEventListener('change', function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            showLoading('Loading Roads...');
+            setLoadingStatus(`Reading ${(file.size/1024/1024).toFixed(1)} MB...`, 10);
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                setLoadingStatus('Parsing JSON...', 30);
+                
+                setTimeout(() => {
+                    try {
+                        const data = JSON.parse(evt.target.result);
+                        
+                        // Handle different formats
+                        if (data.type === 'FeatureCollection' && data.features) {
+                            roads = data.features;
+                        } else if (Array.isArray(data) && data[0]?.geometry) {
+                            roads = data;
+                        } else if (Array.isArray(data)) {
+                            roads = data;
+                        } else {
+                            roads = [];
+                        }
+                        
+                        console.log('Roads loaded:', roads.length, 'Sample:', roads[0]);
+                        
+                        // Calculate total length and width distribution
+                        let totalLength = 0;
+                        const widthDist = {};
+                        roads.forEach(r => {
+                            const props = r.properties || {};
+                            const width = parseFloat(props.width_m || props.WIDTH || props.width || 0);
+                            const length = parseFloat(props.length_m || props.LENGTH || props.length || 0);
+                            totalLength += length;
+                            if (width > 0) {
+                                widthDist[width] = (widthDist[width] || 0) + 1;
+                            }
+                        });
+                        
+                        document.getElementById('roadsStatus').innerHTML = `✓ <b>${file.name}</b><br>${roads.length} roads (${(totalLength/1000).toFixed(2)} km)`;
+                        document.getElementById('roadsStatus').classList.add('loaded');
+                        document.getElementById('roadCount').textContent = roads.length;
+                        document.getElementById('totalRoads').textContent = roads.length;
+                        document.getElementById('roadLegend').style.display = 'block';
+                        
+                        // Zoom to roads if they exist
+                        if (roads.length > 0) {
+                            const firstRoad = roads[0];
+                            if (firstRoad.geometry && firstRoad.geometry.coordinates) {
+                                const coords = firstRoad.geometry.type === 'LineString' 
+                                    ? firstRoad.geometry.coordinates 
+                                    : firstRoad.geometry.coordinates[0];
+                                if (coords && coords.length > 0) {
+                                    const [lng, lat] = coords[0];
+                                    map.setCenter({ lat, lng });
+                                    map.setZoom(14);
+                                }
+                            }
+                        }
+                        
+                        hideLoading();
+                        showToast(`🛣️ ${roads.length} roads loaded!`, '#2196F3');
+                        render();
+                    } catch(err) {
+                        hideLoading();
+                        console.error('Roads load error:', err);
+                        document.getElementById('roadsStatus').innerHTML = `❌ Error: ${err.message}`;
+                    }
+                }, 10);
             };
             reader.readAsText(file);
         });
