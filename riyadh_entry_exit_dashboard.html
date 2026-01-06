@@ -1,944 +1,389 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Riyadh District Entry/Exit Dashboard</title>
+    <title>Entry/Exit Dashboard</title>
     <meta charset="utf-8">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; background: #1a1a2e; color: white; }
+        body { font-family: Arial, sans-serif; display: flex; height: 100vh; background: #1a1a2e; color: white; }
         
-        .container { display: flex; height: 100vh; }
-        
-        /* Sidebar */
-        .sidebar {
-            width: 320px;
+        #sidebar {
+            width: 300px;
             background: #16213e;
             padding: 15px;
             overflow-y: auto;
-            border-right: 2px solid #e94560;
         }
         
-        .sidebar h1 {
-            font-size: 18px;
-            color: #e94560;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #333;
-        }
+        h1 { font-size: 16px; color: #e94560; margin-bottom: 15px; }
+        h3 { font-size: 12px; background: #e94560; padding: 5px 8px; margin: 10px 0; border-radius: 3px; }
         
-        .section {
-            background: #1a1a2e;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 12px;
-        }
+        .file-box { margin-bottom: 10px; }
+        .file-box input { width: 100%; padding: 8px; background: #0f3460; border: 1px solid #e94560; color: white; border-radius: 4px; }
+        .file-box label { font-size: 11px; color: #888; display: block; margin-top: 3px; }
         
-        .section h3 {
-            font-size: 12px;
-            color: #0f3460;
-            background: #e94560;
-            padding: 5px 10px;
-            border-radius: 4px;
-            margin: -12px -12px 10px -12px;
-        }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+        .stat { background: #0f3460; padding: 10px; border-radius: 5px; text-align: center; }
+        .stat .num { font-size: 22px; font-weight: bold; color: #e94560; }
+        .stat .lbl { font-size: 10px; color: #888; }
+        .stat.big { grid-column: span 2; background: #e94560; }
+        .stat.big .num { color: white; font-size: 28px; }
+        .stat.big .lbl { color: #ffccd5; }
         
-        .file-input {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 8px;
-            background: #0f3460;
-            border: 1px solid #e94560;
-            border-radius: 4px;
-            color: white;
-            font-size: 11px;
-        }
+        button { width: 100%; padding: 10px; background: #e94560; border: none; color: white; border-radius: 5px; cursor: pointer; font-weight: bold; margin: 5px 0; }
+        button:hover { background: #c73e54; }
         
-        .file-input::-webkit-file-upload-button {
-            background: #e94560;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 3px;
-            color: white;
-            cursor: pointer;
-            margin-right: 10px;
-        }
+        .list { max-height: 250px; overflow-y: auto; font-size: 11px; }
+        .item { display: flex; align-items: center; padding: 5px; background: #0f3460; margin: 3px 0; border-radius: 3px; cursor: pointer; }
+        .item:hover { background: #1a4a7a; }
+        .item .dot { width: 22px; height: 22px; background: #e94560; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: bold; margin-right: 8px; }
+        .item .name { flex: 1; direction: rtl; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        .stat-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
+        #mapArea { flex: 1; position: relative; }
+        #canvas { width: 100%; height: 100%; display: block; }
         
-        .stat-box {
-            background: #0f3460;
-            padding: 10px;
-            border-radius: 6px;
-            text-align: center;
+        #legend {
+            position: absolute; bottom: 15px; right: 15px;
+            background: rgba(22,33,62,0.95); padding: 10px; border-radius: 5px;
+            font-size: 10px; border: 1px solid #e94560;
         }
-        
-        .stat-box .value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #e94560;
-        }
-        
-        .stat-box .label {
-            font-size: 10px;
-            color: #aaa;
-            margin-top: 3px;
-        }
-        
-        .stat-box.highlight {
-            background: #e94560;
-            grid-column: span 2;
-        }
-        
-        .stat-box.highlight .value {
-            color: white;
-            font-size: 32px;
-        }
-        
-        .stat-box.highlight .label {
-            color: #ffccd5;
-        }
-        
-        /* Entry/Exit List */
-        .entry-list {
-            max-height: 300px;
-            overflow-y: auto;
-            font-size: 11px;
-        }
-        
-        .entry-item {
-            display: flex;
-            align-items: center;
-            padding: 6px;
-            background: #0f3460;
-            margin-bottom: 4px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        
-        .entry-item:hover {
-            background: #1a4a7a;
-        }
-        
-        .entry-item .dot {
-            width: 24px;
-            height: 24px;
-            background: #e94560;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: bold;
-            margin-right: 8px;
-            flex-shrink: 0;
-        }
-        
-        .entry-item .info {
-            flex: 1;
-            overflow: hidden;
-        }
-        
-        .entry-item .name {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            direction: rtl;
-        }
-        
-        .entry-item .width {
-            font-size: 10px;
-            color: #e94560;
-        }
-        
-        /* Controls */
-        .control-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-            font-size: 12px;
-        }
-        
-        .control-row label {
-            flex: 1;
-        }
-        
-        .control-row input[type="range"] {
-            width: 100px;
-        }
-        
-        .control-row input[type="checkbox"] {
-            margin-right: 8px;
-        }
-        
-        /* Map */
-        .map-container {
-            flex: 1;
-            position: relative;
-        }
-        
-        #map {
-            width: 100%;
-            height: 100%;
-            background: #0f3460;
-        }
-        
-        canvas {
-            display: block;
-        }
-        
-        /* Legend */
-        .legend {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(22, 33, 62, 0.95);
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 11px;
-            border: 1px solid #e94560;
-        }
-        
-        .legend-title {
-            font-weight: bold;
-            color: #e94560;
-            margin-bottom: 8px;
-        }
-        
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 4px;
-        }
-        
-        .legend-item .color {
-            width: 20px;
-            height: 4px;
-            border-radius: 2px;
-            margin-right: 8px;
-        }
-        
-        .legend-item .dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            margin-right: 8px;
-            border: 2px solid white;
-        }
-        
-        /* Info popup */
-        .popup {
-            position: absolute;
-            background: rgba(22, 33, 62, 0.98);
-            border: 2px solid #e94560;
-            border-radius: 8px;
-            padding: 12px;
-            max-width: 280px;
-            display: none;
-            z-index: 1000;
-            font-size: 12px;
-        }
-        
-        .popup h4 {
-            color: #e94560;
-            margin-bottom: 8px;
-            direction: rtl;
-        }
-        
-        .popup table {
-            width: 100%;
-        }
-        
-        .popup td {
-            padding: 3px 0;
-        }
-        
-        .popup td:first-child {
-            color: #888;
-        }
-        
-        .popup td:last-child {
-            text-align: right;
-            font-weight: bold;
-        }
+        #legend div { margin: 3px 0; display: flex; align-items: center; }
+        #legend span { display: inline-block; width: 16px; height: 4px; margin-right: 6px; border-radius: 2px; }
+        #legend .dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid white; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="sidebar">
-            <h1>District Entry/Exit Dashboard</h1>
-            
-            <div class="section">
-                <h3>Upload Data</h3>
-                <input type="file" class="file-input" id="districtFile" accept=".geojson,.json">
-                <div style="font-size:10px;color:#888;margin-bottom:8px;">District Boundary (GeoJSON)</div>
-                
-                <input type="file" class="file-input" id="roadsFile" accept=".geojson,.json">
-                <div style="font-size:10px;color:#888;">Roads Network (GeoJSON)</div>
-            </div>
-            
-            <div class="section">
-                <h3>Entry/Exit Statistics</h3>
-                <div class="stat-grid">
-                    <div class="stat-box highlight">
-                        <div class="value" id="totalEntryExit">0</div>
-                        <div class="label">TOTAL ENTRY/EXIT POINTS</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="value" id="majorCount">0</div>
-                        <div class="label">Major (30m+)</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="value" id="arterialCount">0</div>
-                        <div class="label">Arterial (15-30m)</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="value" id="localCount">0</div>
-                        <div class="label">Local (&lt;15m)</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="value" id="totalRoads">0</div>
-                        <div class="label">Total Roads</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h3>Display Controls</h3>
-                <div class="control-row">
-                    <input type="checkbox" id="showRoads" checked>
-                    <label>Show Roads</label>
-                </div>
-                <div class="control-row">
-                    <input type="checkbox" id="showOutsideRoads" checked>
-                    <label>Show Roads Outside District</label>
-                </div>
-                <div class="control-row">
-                    <input type="checkbox" id="showEntryPoints" checked>
-                    <label>Show Entry/Exit Points</label>
-                </div>
-                <div class="control-row">
-                    <input type="checkbox" id="showBoundary" checked>
-                    <label>Show District Boundary</label>
-                </div>
-                <div class="control-row">
-                    <label>Min Road Width:</label>
-                    <input type="range" id="minWidth" min="0" max="30" value="8">
-                    <span id="minWidthVal">8m</span>
-                </div>
-                <div class="control-row">
-                    <label>Entry Point Size:</label>
-                    <input type="range" id="pointSize" min="5" max="25" value="12">
-                    <span id="pointSizeVal">12</span>
-                </div>
-                <div class="control-row">
-                    <label>Road Extension:</label>
-                    <input type="range" id="roadBuffer" min="0" max="20" value="5">
-                    <span id="roadBufferVal">500m</span>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h3>Export Data</h3>
-                <button id="exportBtn" style="width:100%;padding:10px;background:#e94560;border:none;color:white;border-radius:4px;cursor:pointer;font-weight:bold;" onclick="exportGeoJSON()">
-                    Download Entry/Exit GeoJSON
-                </button>
-            </div>
-            
-            <div class="section">
-                <h3>Entry/Exit Points List</h3>
-                <div class="entry-list" id="entryList">
-                    <div style="color:#888;text-align:center;padding:20px;">
-                        Upload district and roads to see entry/exit points
-                    </div>
-                </div>
-            </div>
+    <div id="sidebar">
+        <h1>Entry/Exit Dashboard</h1>
+        
+        <h3>1. Upload Files</h3>
+        <div class="file-box">
+            <input type="file" id="fileDistrict" accept=".geojson,.json">
+            <label>District Boundary GeoJSON</label>
+        </div>
+        <div class="file-box">
+            <input type="file" id="fileRoads" accept=".geojson,.json">
+            <label>Roads GeoJSON</label>
         </div>
         
-        <div class="map-container">
-            <canvas id="map"></canvas>
-            
-            <div class="legend">
-                <div class="legend-title">Legend</div>
-                <div class="legend-item"><div class="color" style="background:#e94560;height:3px;"></div> Major Road (30m+)</div>
-                <div class="legend-item"><div class="color" style="background:#ff9800;"></div> Arterial (15-30m)</div>
-                <div class="legend-item"><div class="color" style="background:#4caf50;"></div> Local (&lt;15m)</div>
-                <div class="legend-item"><div class="color" style="background:#444;height:2px;"></div> Outside District</div>
-                <div class="legend-item"><div class="dot" style="background:#e94560;"></div> Entry/Exit Point</div>
-                <div class="legend-item"><div class="color" style="background:transparent;border:2px dashed #e94560;height:10px;width:20px;"></div> District Boundary</div>
-            </div>
-            
-            <div class="popup" id="popup"></div>
+        <h3>2. Statistics</h3>
+        <div class="stats">
+            <div class="stat big"><div class="num" id="sTotal">0</div><div class="lbl">ENTRY/EXIT POINTS</div></div>
+            <div class="stat"><div class="num" id="sMajor">0</div><div class="lbl">Major 30m+</div></div>
+            <div class="stat"><div class="num" id="sArterial">0</div><div class="lbl">Arterial 15-30m</div></div>
+            <div class="stat"><div class="num" id="sLocal">0</div><div class="lbl">Local &lt;15m</div></div>
+            <div class="stat"><div class="num" id="sRoads">0</div><div class="lbl">Total Roads</div></div>
+        </div>
+        
+        <h3>3. Export</h3>
+        <button onclick="exportJSON()">Download Entry/Exit GeoJSON</button>
+        
+        <h3>4. Entry/Exit Points</h3>
+        <div class="list" id="list">
+            <div style="color:#666;text-align:center;padding:20px;">Upload files to see points</div>
+        </div>
+    </div>
+    
+    <div id="mapArea">
+        <canvas id="canvas"></canvas>
+        <div id="legend">
+            <b style="color:#e94560;">Legend</b>
+            <div><span style="background:#e94560;height:5px;"></span> Major Road 30m+</div>
+            <div><span style="background:#ff9800;"></span> Arterial 15-30m</div>
+            <div><span style="background:#4caf50;"></span> Local Road</div>
+            <div><span style="background:#444;"></span> Outside District</div>
+            <div><span class="dot" style="background:#e94560;"></span> Entry/Exit Point</div>
         </div>
     </div>
 
-    <script>
-        // Data
-        let district = null;  // GeoJSON polygon
-        let roads = [];       // Array of road features
-        let entryExitPoints = [];  // Calculated crossing points
-        let boundary = [];    // District boundary coordinates
+<script>
+// Data
+let boundary = [];
+let roads = [];
+let points = [];
+
+// View
+let view = { x1: 46.63, x2: 46.67, y1: 24.71, y2: 24.75 };
+
+// Canvas
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+// Resize
+function resize() {
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+    draw();
+}
+window.onresize = resize;
+window.onload = resize;
+
+// Convert coords
+function toX(lng) { return (lng - view.x1) / (view.x2 - view.x1) * canvas.width; }
+function toY(lat) { return canvas.height - (lat - view.y1) / (view.y2 - view.y1) * canvas.height; }
+
+// Line intersection
+function intersect(ax, ay, bx, by, cx, cy, dx, dy) {
+    const d = (dy - cy) * (bx - ax) - (dx - cx) * (by - ay);
+    if (Math.abs(d) < 1e-10) return null;
+    const u = ((dx - cx) * (ay - cy) - (dy - cy) * (ax - cx)) / d;
+    const v = ((bx - ax) * (ay - cy) - (by - ay) * (ax - cx)) / d;
+    if (u >= 0 && u <= 1 && v >= 0 && v <= 1) {
+        return [ax + u * (bx - ax), ay + u * (by - ay)];
+    }
+    return null;
+}
+
+// Point in polygon
+function inside(x, y) {
+    let c = false;
+    for (let i = 0, j = boundary.length - 1; i < boundary.length; j = i++) {
+        const [xi, yi] = boundary[i], [xj, yj] = boundary[j];
+        if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) c = !c;
+    }
+    return c;
+}
+
+// Calculate entry/exit points
+function calculate() {
+    points = [];
+    if (!boundary.length || !roads.length) return;
+    
+    const seen = new Set();
+    
+    roads.forEach(road => {
+        const p = road.properties || {};
+        const w = parseFloat(p.width_m || p.WIDTH || p.width || 10);
+        const name = p.name_ar || p.ROADCENTERLINENAME_AR || p.name_en || 'Unnamed';
         
-        // View state
-        let viewBox = { minLng: 46.63, maxLng: 46.67, minLat: 24.72, maxLat: 24.75 };
-        let isDragging = false;
-        let lastMouse = { x: 0, y: 0 };
+        if (w < 6) return;
         
-        // Canvas
-        const canvas = document.getElementById('map');
-        const ctx = canvas.getContext('2d');
+        const g = road.geometry;
+        if (!g) return;
         
-        // Resize canvas
-        function resizeCanvas() {
-            const container = canvas.parentElement;
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
-            render();
-        }
-        window.addEventListener('resize', resizeCanvas);
+        const lines = g.type === 'LineString' ? [g.coordinates] : (g.coordinates || []);
         
-        // Coordinate conversion
-        function lngToX(lng) {
-            return (lng - viewBox.minLng) / (viewBox.maxLng - viewBox.minLng) * canvas.width;
-        }
-        function latToY(lat) {
-            return canvas.height - (lat - viewBox.minLat) / (viewBox.maxLat - viewBox.minLat) * canvas.height;
-        }
-        function xToLng(x) {
-            return viewBox.minLng + x / canvas.width * (viewBox.maxLng - viewBox.minLng);
-        }
-        function yToLat(y) {
-            return viewBox.minLat + (canvas.height - y) / canvas.height * (viewBox.maxLat - viewBox.minLat);
-        }
-        
-        // Line intersection
-        function lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {
-            const denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
-            if (Math.abs(denom) < 1e-12) return null;
-            const ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom;
-            const ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denom;
-            if (ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1) {
-                return { x: x1 + ua * (x2 - x1), y: y1 + ua * (y2 - y1) };
-            }
-            return null;
-        }
-        
-        // Point in polygon
-        function pointInPolygon(x, y, poly) {
-            let inside = false;
-            for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-                const [xi, yi] = poly[i];
-                const [xj, yj] = poly[j];
-                if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
-                    inside = !inside;
-                }
-            }
-            return inside;
-        }
-        
-        // Calculate entry/exit points
-        function calculateEntryExits() {
-            entryExitPoints = [];
-            if (!boundary.length || !roads.length) return;
+        lines.forEach(coords => {
+            if (!coords || coords.length < 2) return;
             
-            const minWidth = parseFloat(document.getElementById('minWidth').value);
-            const seen = new Set();
-            
-            roads.forEach(road => {
-                const props = road.properties || {};
-                const width = parseFloat(props.width_m || props.WIDTH || props.width || 10);
-                const name = props.name_ar || props.name_en || props.ROADCENTERLINENAME_AR || 'Unnamed';
+            for (let i = 0; i < coords.length - 1; i++) {
+                const [x1, y1] = coords[i];
+                const [x2, y2] = coords[i + 1];
                 
-                if (width < minWidth) return;
-                
-                const geom = road.geometry;
-                if (!geom) return;
-                
-                const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
-                
-                lines.forEach(coords => {
-                    if (!coords || coords.length < 2) return;
+                for (let j = 0; j < boundary.length - 1; j++) {
+                    const [x3, y3] = boundary[j];
+                    const [x4, y4] = boundary[j + 1];
                     
-                    // Check each segment for boundary crossing
-                    for (let i = 0; i < coords.length - 1; i++) {
-                        const [x1, y1] = coords[i];
-                        const [x2, y2] = coords[i + 1];
-                        
-                        // Check intersection with each boundary edge
-                        for (let j = 0; j < boundary.length - 1; j++) {
-                            const [x3, y3] = boundary[j];
-                            const [x4, y4] = boundary[j + 1];
-                            
-                            const inter = lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4);
-                            if (inter) {
-                                const key = `${inter.x.toFixed(5)}_${inter.y.toFixed(5)}`;
-                                if (!seen.has(key)) {
-                                    seen.add(key);
-                                    entryExitPoints.push({
-                                        lng: inter.x,
-                                        lat: inter.y,
-                                        name: name,
-                                        width: width,
-                                        props: props
-                                    });
-                                }
-                            }
+                    const hit = intersect(x1, y1, x2, y2, x3, y3, x4, y4);
+                    if (hit) {
+                        const key = hit[0].toFixed(5) + '_' + hit[1].toFixed(5);
+                        if (!seen.has(key)) {
+                            seen.add(key);
+                            points.push({ lng: hit[0], lat: hit[1], name, width: w });
                         }
                     }
-                });
-            });
-            
-            // Sort by width
-            entryExitPoints.sort((a, b) => b.width - a.width);
-            
-            // Update stats
-            updateStats();
-            updateEntryList();
-        }
-        
-        // Update statistics
-        function updateStats() {
-            const major = entryExitPoints.filter(p => p.width >= 30).length;
-            const arterial = entryExitPoints.filter(p => p.width >= 15 && p.width < 30).length;
-            const local = entryExitPoints.filter(p => p.width < 15).length;
-            
-            document.getElementById('totalEntryExit').textContent = entryExitPoints.length;
-            document.getElementById('majorCount').textContent = major;
-            document.getElementById('arterialCount').textContent = arterial;
-            document.getElementById('localCount').textContent = local;
-            document.getElementById('totalRoads').textContent = roads.length;
-        }
-        
-        // Update entry list
-        function updateEntryList() {
-            const list = document.getElementById('entryList');
-            if (!entryExitPoints.length) {
-                list.innerHTML = '<div style="color:#888;text-align:center;padding:20px;">No entry/exit points found</div>';
-                return;
-            }
-            
-            list.innerHTML = entryExitPoints.slice(0, 50).map((p, i) => `
-                <div class="entry-item" onclick="focusPoint(${i})">
-                    <div class="dot">${Math.round(p.width)}</div>
-                    <div class="info">
-                        <div class="name">${p.name}</div>
-                        <div class="width">${p.width}m road</div>
-                    </div>
-                </div>
-            `).join('');
-            
-            if (entryExitPoints.length > 50) {
-                list.innerHTML += `<div style="color:#888;text-align:center;padding:10px;">...and ${entryExitPoints.length - 50} more</div>`;
-            }
-        }
-        
-        // Focus on point
-        function focusPoint(index) {
-            const p = entryExitPoints[index];
-            if (!p) return;
-            
-            const range = 0.005;
-            viewBox = {
-                minLng: p.lng - range,
-                maxLng: p.lng + range,
-                minLat: p.lat - range,
-                maxLat: p.lat + range
-            };
-            render();
-        }
-        
-        // Get road color
-        function getRoadColor(width, inside) {
-            if (!inside) return '#555';
-            if (width >= 30) return '#e94560';
-            if (width >= 20) return '#ff5722';
-            if (width >= 15) return '#ff9800';
-            if (width >= 10) return '#4caf50';
-            return '#2196f3';
-        }
-        
-        // Get road line width
-        function getRoadLineWidth(width) {
-            if (width >= 40) return 6;
-            if (width >= 30) return 5;
-            if (width >= 20) return 4;
-            if (width >= 15) return 3;
-            if (width >= 10) return 2;
-            return 1.5;
-        }
-        
-        // Render
-        function render() {
-            ctx.fillStyle = '#0f3460';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            if (!boundary.length) {
-                // Show message when no data
-                ctx.fillStyle = '#e94560';
-                ctx.font = 'bold 20px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('Upload District and Roads GeoJSON', canvas.width/2, canvas.height/2 - 15);
-                ctx.fillStyle = '#888';
-                ctx.font = '12px Arial';
-                ctx.fillText('Use the file inputs on the left sidebar', canvas.width/2, canvas.height/2 + 15);
-                return;
-            }
-            
-            const showRoads = document.getElementById('showRoads').checked;
-            const showOutside = document.getElementById('showOutsideRoads').checked;
-            const showPoints = document.getElementById('showEntryPoints').checked;
-            const showBoundary = document.getElementById('showBoundary').checked;
-            const minWidth = parseFloat(document.getElementById('minWidth').value);
-            const pointSize = parseFloat(document.getElementById('pointSize').value);
-            
-            // Draw district fill
-            ctx.beginPath();
-            boundary.forEach(([lng, lat], i) => {
-                const x = lngToX(lng);
-                const y = latToY(lat);
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-            ctx.closePath();
-            ctx.fillStyle = 'rgba(233, 69, 96, 0.1)';
-            ctx.fill();
-            
-            // Draw roads
-            if (showRoads) {
-                // Sort roads by width (draw wider roads on top)
-                const sortedRoads = [...roads].sort((a, b) => {
-                    const wa = parseFloat(a.properties?.width_m || a.properties?.WIDTH || 10);
-                    const wb = parseFloat(b.properties?.width_m || b.properties?.WIDTH || 10);
-                    return wa - wb;
-                });
-                
-                sortedRoads.forEach(road => {
-                    const props = road.properties || {};
-                    const width = parseFloat(props.width_m || props.WIDTH || props.width || 10);
-                    
-                    if (width < minWidth) return;
-                    
-                    const geom = road.geometry;
-                    if (!geom) return;
-                    
-                    const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
-                    
-                    lines.forEach(coords => {
-                        if (!coords || coords.length < 2) return;
-                        
-                        // Draw each segment
-                        for (let i = 0; i < coords.length - 1; i++) {
-                            const [lng1, lat1] = coords[i];
-                            const [lng2, lat2] = coords[i + 1];
-                            
-                            // Check if segment is inside or outside
-                            const mid = [(lng1 + lng2) / 2, (lat1 + lat2) / 2];
-                            const inside = pointInPolygon(mid[0], mid[1], boundary);
-                            
-                            if (!inside && !showOutside) return;
-                            
-                            const x1 = lngToX(lng1);
-                            const y1 = latToY(lat1);
-                            const x2 = lngToX(lng2);
-                            const y2 = latToY(lat2);
-                            
-                            ctx.beginPath();
-                            ctx.moveTo(x1, y1);
-                            ctx.lineTo(x2, y2);
-                            ctx.strokeStyle = getRoadColor(width, inside);
-                            ctx.lineWidth = getRoadLineWidth(width);
-                            ctx.lineCap = 'round';
-                            ctx.stroke();
-                        }
-                    });
-                });
-            }
-            
-            // Draw boundary
-            if (showBoundary) {
-                ctx.beginPath();
-                boundary.forEach(([lng, lat], i) => {
-                    const x = lngToX(lng);
-                    const y = latToY(lat);
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                });
-                ctx.closePath();
-                ctx.strokeStyle = '#e94560';
-                ctx.lineWidth = 3;
-                ctx.setLineDash([10, 5]);
-                ctx.stroke();
-                ctx.setLineDash([]);
-            }
-            
-            // Draw entry/exit points
-            if (showPoints) {
-                entryExitPoints.forEach(p => {
-                    if (p.width < minWidth) return;
-                    
-                    const x = lngToX(p.lng);
-                    const y = latToY(p.lat);
-                    
-                    // Size based on road width
-                    const size = p.width >= 60 ? pointSize * 1.8 :
-                                 p.width >= 40 ? pointSize * 1.5 :
-                                 p.width >= 30 ? pointSize * 1.3 :
-                                 p.width >= 20 ? pointSize * 1.1 : pointSize * 0.9;
-                    
-                    // Glow
-                    ctx.beginPath();
-                    ctx.arc(x, y, size + 5, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(233, 69, 96, 0.4)';
-                    ctx.fill();
-                    
-                    // Red dot
-                    ctx.beginPath();
-                    ctx.arc(x, y, size, 0, Math.PI * 2);
-                    ctx.fillStyle = '#e94560';
-                    ctx.fill();
-                    ctx.strokeStyle = 'white';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                    
-                    // Width label
-                    if (size >= 8) {
-                        ctx.font = `bold ${Math.max(9, size * 0.7)}px Arial`;
-                        ctx.fillStyle = 'white';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(Math.round(p.width), x, y);
-                    }
-                });
-            }
-        }
-        
-        // File handlers
-        document.getElementById('districtFile').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            try {
-                const text = await file.text();
-                const data = JSON.parse(text);
-                
-                district = data;
-                
-                // Extract boundary
-                const feature = data.features ? data.features[0] : data;
-                const geom = feature.geometry;
-                
-                if (geom.type === 'Polygon') {
-                    boundary = geom.coordinates[0];
-                } else if (geom.type === 'MultiPolygon') {
-                    boundary = geom.coordinates[0][0];
-                } else {
-                    alert('Invalid geometry type. Expected Polygon or MultiPolygon.');
-                    return;
-                }
-                
-                console.log('District loaded:', boundary.length, 'boundary points');
-                
-                // Set view to district bounds
-                const lngs = boundary.map(c => c[0]);
-                const lats = boundary.map(c => c[1]);
-                const buffer = parseFloat(document.getElementById('roadBuffer').value) / 1000;
-                
-                viewBox = {
-                    minLng: Math.min(...lngs) - buffer,
-                    maxLng: Math.max(...lngs) + buffer,
-                    minLat: Math.min(...lats) - buffer,
-                    maxLat: Math.max(...lats) + buffer
-                };
-                
-                calculateEntryExits();
-                render();
-            } catch (err) {
-                console.error('Error loading district:', err);
-                alert('Error loading district file: ' + err.message);
-            }
-        });
-        
-        document.getElementById('roadsFile').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            try {
-                const text = await file.text();
-                const data = JSON.parse(text);
-                
-                roads = data.features || [data];
-                console.log('Roads loaded:', roads.length, 'features');
-                
-                calculateEntryExits();
-                render();
-            } catch (err) {
-                console.error('Error loading roads:', err);
-                alert('Error loading roads file: ' + err.message);
-            }
-        });
-        
-        // Control handlers
-        ['showRoads', 'showOutsideRoads', 'showEntryPoints', 'showBoundary'].forEach(id => {
-            document.getElementById(id).addEventListener('change', render);
-        });
-        
-        document.getElementById('minWidth').addEventListener('input', (e) => {
-            document.getElementById('minWidthVal').textContent = e.target.value + 'm';
-            calculateEntryExits();
-            render();
-        });
-        
-        document.getElementById('pointSize').addEventListener('input', (e) => {
-            document.getElementById('pointSizeVal').textContent = e.target.value;
-            render();
-        });
-        
-        document.getElementById('roadBuffer').addEventListener('input', (e) => {
-            document.getElementById('roadBufferVal').textContent = (e.target.value * 100) + 'm';
-            if (boundary.length) {
-                const lngs = boundary.map(c => c[0]);
-                const lats = boundary.map(c => c[1]);
-                const buffer = parseFloat(e.target.value) / 1000;
-                viewBox = {
-                    minLng: Math.min(...lngs) - buffer,
-                    maxLng: Math.max(...lngs) + buffer,
-                    minLat: Math.min(...lats) - buffer,
-                    maxLat: Math.max(...lats) + buffer
-                };
-                render();
-            }
-        });
-        
-        // Mouse interactions
-        canvas.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            lastMouse = { x: e.clientX, y: e.clientY };
-        });
-        
-        canvas.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                const dx = (e.clientX - lastMouse.x) / canvas.width * (viewBox.maxLng - viewBox.minLng);
-                const dy = (e.clientY - lastMouse.y) / canvas.height * (viewBox.maxLat - viewBox.minLat);
-                
-                viewBox.minLng -= dx;
-                viewBox.maxLng -= dx;
-                viewBox.minLat += dy;
-                viewBox.maxLat += dy;
-                
-                lastMouse = { x: e.clientX, y: e.clientY };
-                render();
-            }
-        });
-        
-        canvas.addEventListener('mouseup', () => isDragging = false);
-        canvas.addEventListener('mouseleave', () => isDragging = false);
-        
-        canvas.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const zoom = e.deltaY > 0 ? 1.1 : 0.9;
-            
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-            
-            const lng = xToLng(mouseX);
-            const lat = yToLat(mouseY);
-            
-            const newWidth = (viewBox.maxLng - viewBox.minLng) * zoom;
-            const newHeight = (viewBox.maxLat - viewBox.minLat) * zoom;
-            
-            const ratioX = (lng - viewBox.minLng) / (viewBox.maxLng - viewBox.minLng);
-            const ratioY = (lat - viewBox.minLat) / (viewBox.maxLat - viewBox.minLat);
-            
-            viewBox.minLng = lng - newWidth * ratioX;
-            viewBox.maxLng = lng + newWidth * (1 - ratioX);
-            viewBox.minLat = lat - newHeight * ratioY;
-            viewBox.maxLat = lat + newHeight * (1 - ratioY);
-            
-            render();
-        });
-        
-        // Click handler for popup
-        canvas.addEventListener('click', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-            
-            // Find clicked entry/exit point
-            for (const p of entryExitPoints) {
-                const x = lngToX(p.lng);
-                const y = latToY(p.lat);
-                const dist = Math.sqrt((mouseX - x) ** 2 + (mouseY - y) ** 2);
-                
-                if (dist < 20) {
-                    const popup = document.getElementById('popup');
-                    popup.innerHTML = `
-                        <h4>${p.name}</h4>
-                        <table>
-                            <tr><td>Road Width</td><td>${p.width}m</td></tr>
-                            <tr><td>Class</td><td>${p.width >= 30 ? 'Major' : p.width >= 15 ? 'Arterial' : 'Local'}</td></tr>
-                            <tr><td>Location</td><td>${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</td></tr>
-                        </table>
-                    `;
-                    popup.style.left = (e.clientX + 10) + 'px';
-                    popup.style.top = (e.clientY - 50) + 'px';
-                    popup.style.display = 'block';
-                    return;
                 }
             }
-            
-            document.getElementById('popup').style.display = 'none';
         });
-        
-        // Export GeoJSON
-        function exportGeoJSON() {
-            if (!entryExitPoints.length) {
-                alert('No entry/exit points to export. Upload district and roads first.');
-                return;
-            }
-            
-            const geojson = {
-                type: 'FeatureCollection',
-                features: entryExitPoints.map(p => ({
-                    type: 'Feature',
-                    geometry: {
-                        type: 'Point',
-                        coordinates: [p.lng, p.lat]
-                    },
-                    properties: {
-                        name_ar: p.name,
-                        width_m: p.width,
-                        road_class: p.width >= 30 ? 'Major' : p.width >= 15 ? 'Arterial' : 'Local'
-                    }
-                }))
-            };
-            
-            const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'entry_exit_points.geojson';
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-        
-        // Initialize
-        resizeCanvas();
-        
-        // Draw initial message
-        ctx.fillStyle = '#16213e';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    });
+    
+    points.sort((a, b) => b.width - a.width);
+    updateStats();
+    updateList();
+}
+
+// Update stats
+function updateStats() {
+    document.getElementById('sTotal').textContent = points.length;
+    document.getElementById('sMajor').textContent = points.filter(p => p.width >= 30).length;
+    document.getElementById('sArterial').textContent = points.filter(p => p.width >= 15 && p.width < 30).length;
+    document.getElementById('sLocal').textContent = points.filter(p => p.width < 15).length;
+    document.getElementById('sRoads').textContent = roads.length;
+}
+
+// Update list
+function updateList() {
+    const el = document.getElementById('list');
+    if (!points.length) {
+        el.innerHTML = '<div style="color:#666;text-align:center;padding:20px;">No points found</div>';
+        return;
+    }
+    el.innerHTML = points.slice(0, 40).map((p, i) => 
+        `<div class="item" onclick="focus(${i})"><div class="dot">${Math.round(p.width)}</div><div class="name">${p.name}</div></div>`
+    ).join('') + (points.length > 40 ? `<div style="color:#666;text-align:center;padding:5px;">+${points.length-40} more</div>` : '');
+}
+
+// Focus on point
+function focus(i) {
+    const p = points[i];
+    const r = 0.004;
+    view = { x1: p.lng - r, x2: p.lng + r, y1: p.lat - r, y2: p.lat + r };
+    draw();
+}
+
+// Draw
+function draw() {
+    // Clear
+    ctx.fillStyle = '#0f3460';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Message if no data
+    if (!boundary.length) {
         ctx.fillStyle = '#e94560';
-        ctx.font = 'bold 24px Arial';
+        ctx.font = 'bold 18px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Upload District and Roads GeoJSON', canvas.width/2, canvas.height/2 - 20);
-        ctx.fillStyle = '#888';
-        ctx.font = '14px Arial';
-        ctx.fillText('Use the file inputs on the left sidebar', canvas.width/2, canvas.height/2 + 20);
-    </script>
+        ctx.fillText('Upload District and Roads GeoJSON files', canvas.width/2, canvas.height/2);
+        return;
+    }
+    
+    // District fill
+    ctx.beginPath();
+    boundary.forEach(([x, y], i) => i === 0 ? ctx.moveTo(toX(x), toY(y)) : ctx.lineTo(toX(x), toY(y)));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(233,69,96,0.15)';
+    ctx.fill();
+    
+    // Roads
+    roads.forEach(road => {
+        const p = road.properties || {};
+        const w = parseFloat(p.width_m || p.WIDTH || p.width || 10);
+        if (w < 6) return;
+        
+        const g = road.geometry;
+        if (!g) return;
+        
+        const lines = g.type === 'LineString' ? [g.coordinates] : (g.coordinates || []);
+        
+        lines.forEach(coords => {
+            if (!coords || coords.length < 2) return;
+            
+            ctx.beginPath();
+            coords.forEach(([x, y], i) => i === 0 ? ctx.moveTo(toX(x), toY(y)) : ctx.lineTo(toX(x), toY(y)));
+            
+            // Check if inside
+            const mid = coords[Math.floor(coords.length/2)];
+            const isIn = inside(mid[0], mid[1]);
+            
+            ctx.strokeStyle = !isIn ? '#444' : w >= 30 ? '#e94560' : w >= 15 ? '#ff9800' : '#4caf50';
+            ctx.lineWidth = w >= 30 ? 4 : w >= 15 ? 3 : 2;
+            ctx.stroke();
+        });
+    });
+    
+    // Boundary
+    ctx.beginPath();
+    boundary.forEach(([x, y], i) => i === 0 ? ctx.moveTo(toX(x), toY(y)) : ctx.lineTo(toX(x), toY(y)));
+    ctx.closePath();
+    ctx.strokeStyle = '#e94560';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([8, 4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    // Entry/Exit points - RED DOTS
+    points.forEach(p => {
+        const x = toX(p.lng);
+        const y = toY(p.lat);
+        const r = p.width >= 40 ? 14 : p.width >= 25 ? 11 : 9;
+        
+        // Glow
+        ctx.beginPath();
+        ctx.arc(x, y, r + 4, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(233,69,96,0.4)';
+        ctx.fill();
+        
+        // Red dot
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = '#e94560';
+        ctx.fill();
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        // Width label
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold ' + (r * 0.8) + 'px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(Math.round(p.width), x, y);
+    });
+}
+
+// File handlers
+document.getElementById('fileDistrict').onchange = async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+        const data = JSON.parse(await file.text());
+        const feat = data.features ? data.features[0] : data;
+        const geom = feat.geometry;
+        boundary = geom.type === 'Polygon' ? geom.coordinates[0] : geom.coordinates[0][0];
+        
+        // Set view
+        const xs = boundary.map(c => c[0]), ys = boundary.map(c => c[1]);
+        view = { x1: Math.min(...xs) - 0.005, x2: Math.max(...xs) + 0.005, y1: Math.min(...ys) - 0.005, y2: Math.max(...ys) + 0.005 };
+        
+        calculate();
+        draw();
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+};
+
+document.getElementById('fileRoads').onchange = async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+        const data = JSON.parse(await file.text());
+        roads = data.features || [data];
+        calculate();
+        draw();
+    } catch (err) {
+        alert('Error: ' + err.message);
+    }
+};
+
+// Export
+function exportJSON() {
+    if (!points.length) { alert('No points to export'); return; }
+    
+    const data = {
+        type: 'FeatureCollection',
+        features: points.map(p => ({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
+            properties: { name_ar: p.name, width_m: p.width, road_class: p.width >= 30 ? 'Major' : p.width >= 15 ? 'Arterial' : 'Local' }
+        }))
+    };
+    
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'}));
+    a.download = 'entry_exit_points.geojson';
+    a.click();
+}
+
+// Pan & Zoom
+let drag = false, lastX, lastY;
+canvas.onmousedown = e => { drag = true; lastX = e.clientX; lastY = e.clientY; };
+canvas.onmouseup = () => drag = false;
+canvas.onmouseleave = () => drag = false;
+canvas.onmousemove = e => {
+    if (!drag) return;
+    const dx = (e.clientX - lastX) / canvas.width * (view.x2 - view.x1);
+    const dy = (e.clientY - lastY) / canvas.height * (view.y2 - view.y1);
+    view.x1 -= dx; view.x2 -= dx;
+    view.y1 += dy; view.y2 += dy;
+    lastX = e.clientX; lastY = e.clientY;
+    draw();
+};
+canvas.onwheel = e => {
+    e.preventDefault();
+    const z = e.deltaY > 0 ? 1.2 : 0.8;
+    const cx = (view.x1 + view.x2) / 2, cy = (view.y1 + view.y2) / 2;
+    const w = (view.x2 - view.x1) * z / 2, h = (view.y2 - view.y1) * z / 2;
+    view = { x1: cx - w, x2: cx + w, y1: cy - h, y2: cy + h };
+    draw();
+};
+</script>
 </body>
 </html>
