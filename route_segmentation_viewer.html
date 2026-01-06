@@ -249,7 +249,7 @@
                                 Upload r_max Table
                             </button>
                             <p style="font-size:0.65rem;color:#888;margin-top:3px;">
-                                JSON: [{camera_prev, camera_next, weekday, r_max}, ...]
+                                JSON: [{camera_prev, camera_next, weekday, r_max, vehicle_type?}, ...]
                             </p>
                         </div>
                     </div>
@@ -343,8 +343,13 @@ let EXPECTED_DISTANCES = {}; // Store distances: "SITE_A_SITE_B" -> km
 let expectedTimesLoaded = false;
 
 // Dynamic r_max table: "camera_prev_camera_next_weekday" -> r_max
+// Or with vehicle type: "camera_prev_camera_next_weekday_vehicleType" -> r_max
 let DYNAMIC_RMAX = {};
 let dynamicRmaxLoaded = false;
+let dynamicRmaxHasVehicleType = false; // Whether r_max table includes vehicle type
+
+// Vehicle types found in data
+let VEHICLE_TYPES = {}; // { typeCode: label }
 
 // Batch processing results: vehicle -> segmented paths
 let ALL_SEGMENTED_PATHS = {};
@@ -573,6 +578,8 @@ function uploadDynamicRmax(input) {
             let data;
             if (file.name.endsWith('.json')) {
                 data = JSON.parse(e.target.result);
+                // Handle array or {data: [...]} format
+                if (!Array.isArray(data) && data.data) data = data.data;
             } else if (file.name.endsWith('.csv')) {
                 data = parseCSVtoRmax(e.target.result);
             } else {
@@ -581,24 +588,48 @@ function uploadDynamicRmax(input) {
             
             // Process the r_max data
             DYNAMIC_RMAX = {};
+            dynamicRmaxHasVehicleType = false;
             let count = 0;
+            let countWithType = 0;
+            
+            // Check if data has vehicle_type column
+            if (data.length > 0 && (data[0].vehicle_type !== undefined || data[0].Vehicle_type !== undefined)) {
+                dynamicRmaxHasVehicleType = true;
+            }
             
             data.forEach(row => {
                 const prev = row.camera_prev || row.from;
                 const next = row.camera_next || row.to;
                 const weekday = row.weekday || row.day;
                 const rmax = parseFloat(row.r_max || row.rmax);
+                const vehicleType = row.vehicle_type || row.Vehicle_type;
                 
                 if (prev && next && weekday && !isNaN(rmax)) {
+                    // Store with vehicle type if available
+                    if (vehicleType !== undefined) {
+                        const keyWithType = prev + '_' + next + '_' + weekday + '_' + vehicleType;
+                        DYNAMIC_RMAX[keyWithType] = rmax;
+                        countWithType++;
+                    }
+                    
+                    // Also store without vehicle type (as fallback)
                     const key = prev + '_' + next + '_' + weekday;
-                    DYNAMIC_RMAX[key] = rmax;
+                    // Only store if not already present (prefer specific vehicle type entries)
+                    if (DYNAMIC_RMAX[key] === undefined) {
+                        DYNAMIC_RMAX[key] = rmax;
+                    }
                     count++;
                 }
             });
             
             dynamicRmaxLoaded = true;
-            statusDiv.innerHTML = `<span style="color:#4caf50;">Loaded ${count} r_max entries from ${file.name}</span>`;
-            console.log('Loaded dynamic r_max:', count, 'entries');
+            let statusMsg = `Loaded ${count} r_max entries`;
+            if (dynamicRmaxHasVehicleType) {
+                statusMsg += ` (${countWithType} with vehicle type)`;
+            }
+            statusDiv.innerHTML = `<span style="color:#4caf50;">${statusMsg}</span>
+                <div style="font-size:0.65rem;color:#666;margin-top:2px;">Source: ${file.name}</div>`;
+            console.log('Loaded dynamic r_max:', count, 'entries,', countWithType, 'with vehicle type');
             
         } catch (err) {
             statusDiv.innerHTML = `<span style="color:#f44336;">Error: ${err.message}</span>`;
@@ -628,8 +659,8 @@ function parseCSVtoRmax(csvText) {
     return data;
 }
 
-// Get r_max for a specific route and day
-function getRmax(cameraPrev, cameraNext, tripDate) {
+// Get r_max for a specific route, day, and optionally vehicle type
+function getRmax(cameraPrev, cameraNext, tripDate, vehicleType) {
     if (!dynamicRmaxLoaded) {
         return parseFloat(document.getElementById('rMax').value) || 2.0;
     }
@@ -639,7 +670,15 @@ function getRmax(cameraPrev, cameraNext, tripDate) {
     const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const weekday = weekdays[date.getDay()];
     
-    // Try to find dynamic r_max
+    // Try to find dynamic r_max with vehicle type first (most specific)
+    if (dynamicRmaxHasVehicleType && vehicleType !== undefined) {
+        const keyWithType = cameraPrev + '_' + cameraNext + '_' + weekday + '_' + vehicleType;
+        if (DYNAMIC_RMAX[keyWithType] !== undefined) {
+            return DYNAMIC_RMAX[keyWithType];
+        }
+    }
+    
+    // Try without vehicle type
     const key = cameraPrev + '_' + cameraNext + '_' + weekday;
     if (DYNAMIC_RMAX[key] !== undefined) {
         return DYNAMIC_RMAX[key];
@@ -761,13 +800,18 @@ function showNetworkAnalysis() {
             
             // Route stats
             if (!routeStats[route]) {
-                routeStats[route] = { vehicles: new Set(), paths: new Set(), avgR: [], rmaxValues: [], breaks: 0 };
+                routeStats[route] = { vehicles: new Set(), paths: new Set(), avgR: [], rmaxValues: [], breaks: 0, vehicleTypes: {} };
             }
             routeStats[route].vehicles.add(vehicle);
             routeStats[route].paths.add(vehicle + '_' + trip.pathId);
             if (trip.R !== null) routeStats[route].avgR.push(trip.R);
             if (trip.usedRmax !== null && trip.usedRmax !== undefined) routeStats[route].rmaxValues.push(trip.usedRmax);
             if (trip.status === 'break') routeStats[route].breaks++;
+            
+            // Track vehicle types
+            const vTypeLabel = trip.vehicle_type_label || trip.Vehicle_type_label || (trip.vehicle_type !== undefined ? VEHICLE_TYPES[trip.vehicle_type] || 'Type ' + trip.vehicle_type : 'Unknown');
+            if (!routeStats[route].vehicleTypes[vTypeLabel]) routeStats[route].vehicleTypes[vTypeLabel] = 0;
+            routeStats[route].vehicleTypes[vTypeLabel]++;
         });
     });
     
@@ -819,6 +863,7 @@ function showNetworkAnalysis() {
                                 <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;">Avg R</th>
                                 <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;">Avg r_max</th>
                                 <th style="padding:8px;text-align:center;border-bottom:2px solid #ddd;">Breaks</th>
+                                <th style="padding:8px;text-align:left;border-bottom:2px solid #ddd;">Vehicle Types</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -829,6 +874,11 @@ function showNetworkAnalysis() {
         const stats = routeStats[route];
         const avgR = stats.avgR.length > 0 ? (stats.avgR.reduce((a, b) => a + b, 0) / stats.avgR.length).toFixed(2) : '-';
         const avgRmax = stats.rmaxValues && stats.rmaxValues.length > 0 ? (stats.rmaxValues.reduce((a, b) => a + b, 0) / stats.rmaxValues.length).toFixed(2) : '-';
+        
+        // Format vehicle types
+        const vTypesStr = Object.entries(stats.vehicleTypes || {})
+            .map(([type, count]) => `${type}:${count}`)
+            .join(', ') || '-';
         
         html += `
             <tr class="network-row" data-route="${route.toLowerCase()}">
@@ -845,6 +895,7 @@ function showNetworkAnalysis() {
                 <td style="padding:6px;text-align:center;border-bottom:1px solid #eee;">${avgR}</td>
                 <td style="padding:6px;text-align:center;border-bottom:1px solid #eee;color:#9c27b0;">${avgRmax}</td>
                 <td style="padding:6px;text-align:center;border-bottom:1px solid #eee;${stats.breaks > 0 ? 'color:#f44336;font-weight:bold;' : ''}">${stats.breaks || '-'}</td>
+                <td style="padding:6px;border-bottom:1px solid #eee;font-size:0.7rem;color:#00897b;">${vTypesStr}</td>
             </tr>
         `;
     });
@@ -881,7 +932,7 @@ function downloadNetworkCSV() {
     
     const { networkData, routeStats, sortedRoutes } = window.networkExportData;
     
-    let csv = 'Route,From,To,Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Total,Vehicles,AvgR,AvgRmax,Breaks\n';
+    let csv = 'Route,From,To,Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Total,Vehicles,AvgR,AvgRmax,Breaks,VehicleTypes\n';
     
     sortedRoutes.forEach(route => {
         const [from, to] = route.split(' → ');
@@ -889,8 +940,9 @@ function downloadNetworkCSV() {
         const stats = routeStats[route];
         const avgR = stats.avgR.length > 0 ? (stats.avgR.reduce((a, b) => a + b, 0) / stats.avgR.length).toFixed(2) : '';
         const avgRmax = stats.rmaxValues && stats.rmaxValues.length > 0 ? (stats.rmaxValues.reduce((a, b) => a + b, 0) / stats.rmaxValues.length).toFixed(2) : '';
+        const vTypes = Object.entries(stats.vehicleTypes || {}).map(([t, c]) => `${t}:${c}`).join('; ');
         
-        csv += `"${route}","${from}","${to}",${data.Sunday},${data.Monday},${data.Tuesday},${data.Wednesday},${data.Thursday},${data.Friday},${data.Saturday},${data.total},${stats.vehicles.size},${avgR},${avgRmax},${stats.breaks}\n`;
+        csv += `"${route}","${from}","${to}",${data.Sunday},${data.Monday},${data.Tuesday},${data.Wednesday},${data.Thursday},${data.Friday},${data.Saturday},${data.total},${stats.vehicles.size},${avgR},${avgRmax},${stats.breaks},"${vTypes}"\n`;
     });
     
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -1091,6 +1143,16 @@ async function uploadTripsData(input) {
         TRIPS = trips;
         VEHICLES = [...new Set(trips.map(t => t.plate))].sort();
         
+        // Extract vehicle types if available
+        VEHICLE_TYPES = {};
+        trips.forEach(t => {
+            if (t.vehicle_type !== undefined || t.Vehicle_type !== undefined) {
+                const typeCode = t.vehicle_type || t.Vehicle_type;
+                const typeLabel = t.vehicle_type_label || t.Vehicle_type_label || 'Type ' + typeCode;
+                VEHICLE_TYPES[typeCode] = typeLabel;
+            }
+        });
+        
         // Update UI
         updateTripsUI(trips.length, VEHICLES.length, file.name);
         updateVehicleDropdown();
@@ -1282,8 +1344,16 @@ function parseCSVLine(line) {
 // Update trips UI
 function updateTripsUI(tripCount, vehicleCount, source) {
     const statusDiv = document.getElementById('tripDataStatus');
+    
+    // Build vehicle type summary
+    let vtSummary = '';
+    if (Object.keys(VEHICLE_TYPES).length > 0) {
+        const vtList = Object.entries(VEHICLE_TYPES).map(([k, v]) => v).join(', ');
+        vtSummary = `<div style="font-size:0.65rem;color:#00897b;margin-top:2px;">Types: ${vtList}</div>`;
+    }
+    
     statusDiv.innerHTML = `<span style="color:#4caf50;">Loaded: ${tripCount} trips, ${vehicleCount} vehicles</span>
-        <div style="font-size:0.7rem;color:#666;margin-top:3px;">Source: ${source}</div>`;
+        <div style="font-size:0.7rem;color:#666;margin-top:3px;">Source: ${source}</div>${vtSummary}`;
     
     document.getElementById('embeddedTripCount').textContent = tripCount;
     document.getElementById('embeddedVehicleCount').textContent = vehicleCount;
@@ -1682,8 +1752,9 @@ function segmentRoute(trips) {
         const obsTimeMin = trip.obs_time_seconds / 60;
         const expectedTime = getExpectedTime(trip.camera_prev, trip.camera_next);
         
-        // Get dynamic r_max for this specific route and day
-        const rMax = getRmax(trip.camera_prev, trip.camera_next, trip.t_prev);
+        // Get dynamic r_max for this specific route, day, and vehicle type
+        const vehicleType = trip.vehicle_type || trip.Vehicle_type;
+        const rMax = getRmax(trip.camera_prev, trip.camera_next, trip.t_prev, vehicleType);
         
         // Calculate ratio R
         let R = null;
@@ -2478,10 +2549,14 @@ function renderTripList(trips) {
             ? `<span style="color:#1565c0;font-size:0.7rem;margin-left:5px;" title="Has ${expectedWaypoints.length} waypoint(s)">[${expectedWaypoints.length}WP]</span>` 
             : '';
         
+        // Vehicle type indicator
+        const vType = trip.vehicle_type_label || trip.Vehicle_type_label || (trip.vehicle_type !== undefined ? VEHICLE_TYPES[trip.vehicle_type] || trip.vehicle_type : '');
+        const vTypeIndicator = vType ? `<span style="color:#00897b;font-size:0.65rem;margin-left:3px;">[${vType}]</span>` : '';
+        
         html += `
             <div class="trip-item ${statusClass}" data-idx="${idx}" onclick="selectTrip(${idx})">
                 <div class="trip-header">
-                    <span class="trip-route">${trip.camera_prev} → ${trip.camera_next}${flags}${wpIndicator}</span>
+                    <span class="trip-route">${trip.camera_prev} → ${trip.camera_next}${flags}${wpIndicator}${vTypeIndicator}</span>
                     <span class="path-badge">Path ${trip.pathId}</span>
                 </div>
                 <div class="trip-time">${time}</div>
@@ -2736,6 +2811,18 @@ function selectTrip(idx) {
             <span class="detail-label">Time Window</span>
             <span class="detail-value">${new Date(trip.t_prev).toLocaleString()} → ${new Date(trip.t_next).toLocaleString()}</span>
         </div>
+        ${(trip.vehicle_type_label || trip.Vehicle_type_label || trip.vehicle_type !== undefined) ? `
+        <div class="detail-row">
+            <span class="detail-label">Vehicle Type</span>
+            <span class="detail-value" style="color:#00897b;">${trip.vehicle_type_label || trip.Vehicle_type_label || VEHICLE_TYPES[trip.vehicle_type] || trip.vehicle_type || trip.Vehicle_type}</span>
+        </div>
+        ` : ''}
+        ${trip.weekday ? `
+        <div class="detail-row">
+            <span class="detail-label">Weekday</span>
+            <span class="detail-value">${trip.weekday}</span>
+        </div>
+        ` : ''}
         
         <div style="background:#f5f5f5;margin:10px -15px;padding:10px 15px;font-weight:bold;">OBSERVED vs EXPECTED</div>
         

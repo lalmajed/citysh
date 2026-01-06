@@ -12,6 +12,11 @@ Required columns in parquet:
     - t_prev
     - t_next
     - obs_time_seconds (or will be calculated from t_prev/t_next)
+
+Optional columns:
+    - Vehicle_type / vehicle_type (numeric type code)
+    - vehicle_type_label (text label like 'Car', 'Heavy Truck')
+    - weekday (day name)
 """
 
 import sys
@@ -31,6 +36,11 @@ def convert_parquet_to_json(input_file, output_file):
         df = df.rename(columns={'plate_numbers': 'plate'})
         print("Renamed 'plate_numbers' to 'plate'")
     
+    # Standardize Vehicle_type to vehicle_type
+    if 'Vehicle_type' in df.columns and 'vehicle_type' not in df.columns:
+        df = df.rename(columns={'Vehicle_type': 'vehicle_type'})
+        print("Renamed 'Vehicle_type' to 'vehicle_type'")
+    
     # Calculate obs_time_seconds if missing
     if 'obs_time_seconds' not in df.columns:
         df['t_prev'] = pd.to_datetime(df['t_prev'])
@@ -49,8 +59,21 @@ def convert_parquet_to_json(input_file, output_file):
     # Get unique vehicles
     vehicles = sorted(df['plate'].unique().tolist())
     
+    # Get vehicle types if available
+    vehicle_types = {}
+    if 'vehicle_type' in df.columns:
+        if 'vehicle_type_label' in df.columns:
+            vt_df = df[['vehicle_type', 'vehicle_type_label']].drop_duplicates()
+            for _, row in vt_df.iterrows():
+                vehicle_types[int(row['vehicle_type'])] = row['vehicle_type_label']
+        else:
+            for vt in df['vehicle_type'].unique():
+                vehicle_types[int(vt)] = f'Type {vt}'
+    
     print(f"Trips: {len(trips)}")
     print(f"Vehicles: {len(vehicles)}")
+    if vehicle_types:
+        print(f"Vehicle Types: {vehicle_types}")
     
     # Save JSON
     output = {
@@ -58,7 +81,8 @@ def convert_parquet_to_json(input_file, output_file):
             'source': input_file,
             'converted': datetime.now().isoformat(),
             'trip_count': len(trips),
-            'vehicle_count': len(vehicles)
+            'vehicle_count': len(vehicles),
+            'vehicle_types': vehicle_types
         },
         'trips': trips
     }
