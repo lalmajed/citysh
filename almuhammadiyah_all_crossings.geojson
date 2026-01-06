@@ -12,7 +12,23 @@
       },
       "properties": {
         "name_ar": "محمد بن يسار",
-        "width_m": 30.0
+        "width_m": 30.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.637952783500054,
+          24.73183380800006
+        ]
+      },
+      "properties": {
+        "name_ar": "محمد بن يسار",
+        "width_m": 30.0,
+        "method": "transition"
       }
     },
     {
@@ -26,7 +42,23 @@
       },
       "properties": {
         "name_ar": "الإمام سعود بن عبدالعزيز بن محمد",
-        "width_m": 60.0
+        "width_m": 60.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63337988950005,
+          24.73514099250005
+        ]
+      },
+      "properties": {
+        "name_ar": "الإمام سعود بن عبدالعزيز بن محمد",
+        "width_m": 60.0,
+        "method": "transition"
       }
     },
     {
@@ -40,7 +72,23 @@
       },
       "properties": {
         "name_ar": "الإمام سعود بن عبدالعزيز بن محمد",
-        "width_m": 60.0
+        "width_m": 60.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.654099762000044,
+          24.74391082200006
+        ]
+      },
+      "properties": {
+        "name_ar": "الإمام سعود بن عبدالعزيز بن محمد",
+        "width_m": 60.0,
+        "method": "transition"
       }
     },
     {
@@ -54,7 +102,23 @@
       },
       "properties": {
         "name_ar": "الأمير تركي بن عبدالعزيز الأول",
-        "width_m": 60.0
+        "width_m": 60.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64502968350007,
+          24.724048346000075
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 60.0,
+        "method": "transition"
       }
     },
     {
@@ -68,7 +132,8 @@
       },
       "properties": {
         "name_ar": "الأمير تركي بن عبدالعزيز الأول",
-        "width_m": 60.0
+        "width_m": 60.0,
+        "method": "intersection"
       }
     },
     {
@@ -82,7 +147,8 @@
       },
       "properties": {
         "name_ar": "الأمير تركي بن عبدالعزيز الأول",
-        "width_m": 60.0
+        "width_m": 60.0,
+        "method": "intersection"
       }
     },
     {
@@ -96,7 +162,23 @@
       },
       "properties": {
         "name_ar": "الأمير تركي بن عبدالعزيز الأول",
-        "width_m": 60.0
+        "width_m": 60.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.633113948000045,
+          24.73590493650005
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 60.0,
+        "method": "transition"
       }
     },
     {
@@ -110,7 +192,23 @@
       },
       "properties": {
         "name_ar": "الأمير عبدالإله بن عبدالعزيز",
-        "width_m": 20.0
+        "width_m": 20.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65099816,
+          24.742713616499998
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير عبدالإله بن عبدالعزيز",
+        "width_m": 20.0,
+        "method": "transition"
       }
     },
     {
@@ -124,7 +222,23 @@
       },
       "properties": {
         "name_ar": "الأمير نايف بن عبدالعزيز",
-        "width_m": 36.0
+        "width_m": 36.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65999767100004,
+          24.735490683500046
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير نايف بن عبدالعزيز",
+        "width_m": 36.0,
+        "method": "transition"
       }
     },
     {
@@ -138,7 +252,8 @@
       },
       "properties": {
         "name_ar": "التخصصي",
-        "width_m": 46.0
+        "width_m": 46.0,
+        "method": "intersection"
       }
     },
     {
@@ -152,7 +267,23 @@
       },
       "properties": {
         "name_ar": "التخصصي",
-        "width_m": 46.0
+        "width_m": 46.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65440547350005,
+          24.723684271000053
+        ]
+      },
+      "properties": {
+        "name_ar": "التخصصي",
+        "width_m": 46.0,
+        "method": "transition"
       }
     },
     {
@@ -166,7 +297,8 @@
       },
       "properties": {
         "name_ar": "الملك فهد",
-        "width_m": 80.0
+        "width_m": 80.0,
+        "method": "intersection"
       }
     },
     {
@@ -180,7 +312,8 @@
       },
       "properties": {
         "name_ar": "الملك فهد",
-        "width_m": 80.0
+        "width_m": 80.0,
+        "method": "intersection"
       }
     },
     {
@@ -194,7 +327,23 @@
       },
       "properties": {
         "name_ar": "الملك فهد",
-        "width_m": 80.0
+        "width_m": 80.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.66278967700006,
+          24.730242542500065
+        ]
+      },
+      "properties": {
+        "name_ar": "الملك فهد",
+        "width_m": 80.0,
+        "method": "transition"
       }
     },
     {
@@ -208,7 +357,23 @@
       },
       "properties": {
         "name_ar": "الملك فهد",
-        "width_m": 80.0
+        "width_m": 80.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.66062666850004,
+          24.734525638000036
+        ]
+      },
+      "properties": {
+        "name_ar": "الملك فهد",
+        "width_m": 80.0,
+        "method": "transition"
       }
     },
     {
@@ -222,7 +387,23 @@
       },
       "properties": {
         "name_ar": "الملك فهد",
-        "width_m": 80.0
+        "width_m": 80.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65953566250005,
+          24.736679234000036
+        ]
+      },
+      "properties": {
+        "name_ar": "الملك فهد",
+        "width_m": 80.0,
+        "method": "transition"
       }
     },
     {
@@ -236,7 +417,23 @@
       },
       "properties": {
         "name_ar": "الملك فهد",
-        "width_m": 80.0
+        "width_m": 80.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65538576600008,
+          24.74489346750005
+        ]
+      },
+      "properties": {
+        "name_ar": "الملك فهد",
+        "width_m": 80.0,
+        "method": "transition"
       }
     },
     {
@@ -250,7 +447,23 @@
       },
       "properties": {
         "name_ar": "جويرية بنت الحارث",
-        "width_m": 36.0
+        "width_m": 36.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.647594860000055,
+          24.741298280000052
+        ]
+      },
+      "properties": {
+        "name_ar": "جويرية بنت الحارث",
+        "width_m": 36.0,
+        "method": "transition"
       }
     },
     {
@@ -264,7 +477,53 @@
       },
       "properties": {
         "name_ar": "خليفة بن بديع",
-        "width_m": 36.0
+        "width_m": 36.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.66396397822647,
+          24.727747199475587
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك فهد",
+        "width_m": 10.5,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.663957499999995,
+          24.72776015
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك فهد",
+        "width_m": 10.5,
+        "method": "transition"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65549069920971,
+          24.744515096931288
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك فهد",
+        "width_m": 10.5,
+        "method": "intersection"
       }
     },
     {
@@ -278,7 +537,293 @@
       },
       "properties": {
         "name_ar": "طريق الإمام سعود بن عبد العزيز بن محمد",
-        "width_m": 25.0
+        "width_m": 25.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.66361157140499,
+          24.728613023507656
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.66399124884834,
+          24.727861148732494
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك عبدالله",
+        "width_m": 10.5,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.66489105,
+          24.72823975
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك عبدالله",
+        "width_m": 10.5,
+        "method": "transition"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64679051371291,
+          24.720630466380655
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك عبدالله",
+        "width_m": 10.5,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64663985,
+          24.72056105
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك عبدالله",
+        "width_m": 10.5,
+        "method": "transition"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63373101831368,
+          24.735258617037292
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الإمام سعود بن عبد العزيز بن محمد",
+        "width_m": 10.5,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6337092,
+          24.735247049999998
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الإمام سعود بن عبد العزيز بن محمد",
+        "width_m": 10.5,
+        "method": "transition"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64552388400802,
+          24.74032537560207
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق التخصصي",
+        "width_m": 10.5,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.645531899999995,
+          24.74030955
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق التخصصي",
+        "width_m": 10.5,
+        "method": "transition"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.645623877020014,
+          24.74036740937581
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق التخصصي",
+        "width_m": 10.5,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64562925,
+          24.7403568
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق التخصصي",
+        "width_m": 10.5,
+        "method": "transition"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65591819606634,
+          24.74384831876139
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.655955,
+          24.74386205
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0,
+        "method": "transition"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63445489466309,
+          24.73466031563506
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 10.5,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6345379,
+          24.734592900000003
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 10.5,
+        "method": "transition"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63406288554764,
+          24.734984282600706
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 10.5,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63395885,
+          24.73507245
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 10.5,
+        "method": "transition"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63367394548829,
+          24.735313413368576
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 10.5,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63309505,
+          24.7357916
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 10.5,
+        "method": "transition"
       }
     },
     {
@@ -292,7 +837,53 @@
       },
       "properties": {
         "name_ar": "Unnamed",
-        "width_m": 20.0
+        "width_m": 20.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63468885,
+          24.73447705
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0,
+        "method": "transition"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6462612314995,
+          24.740635332238124
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6462889,
+          24.740605000000002
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0,
+        "method": "transition"
       }
     },
     {
@@ -306,7 +897,53 @@
       },
       "properties": {
         "name_ar": "Unnamed",
-        "width_m": 15.0
+        "width_m": 15.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65563015,
+          24.744396700000003
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 15.0,
+        "method": "transition"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.646916558786124,
+          24.720536895360404
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 10.5,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64691095,
+          24.72054885
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 10.5,
+        "method": "transition"
       }
     },
     {
@@ -320,7 +957,23 @@
       },
       "properties": {
         "name_ar": "Unnamed",
-        "width_m": 20.0
+        "width_m": 20.0,
+        "method": "intersection"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6465585,
+          24.7210282
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0,
+        "method": "transition"
       }
     },
     {
@@ -334,7 +987,8 @@
       },
       "properties": {
         "name_ar": "Unnamed",
-        "width_m": 20.0
+        "width_m": 20.0,
+        "method": "intersection"
       }
     }
   ]

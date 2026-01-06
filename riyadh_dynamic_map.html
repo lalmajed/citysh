@@ -560,15 +560,37 @@
                             geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
             if (!boundary || boundary.length < 3) return { total: 0, major: 0, secondary: 0, local: 0 };
             
+            // Get bounds for quick filtering
+            let minLng = 180, maxLng = -180, minLat = 90, maxLat = -90;
+            boundary.forEach(([lng, lat]) => {
+                minLng = Math.min(minLng, lng);
+                maxLng = Math.max(maxLng, lng);
+                minLat = Math.min(minLat, lat);
+                maxLat = Math.max(maxLat, lat);
+            });
+            
+            // Point in polygon check
+            function isInside(lng, lat) {
+                let inside = false;
+                for (let i = 0, j = boundary.length - 1; i < boundary.length; j = i++) {
+                    const [xi, yi] = boundary[i];
+                    const [xj, yj] = boundary[j];
+                    if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
+                        inside = !inside;
+                    }
+                }
+                return inside;
+            }
+            
             let major = 0, secondary = 0, local = 0;
-            const seen = new Set(); // Avoid duplicates
+            const seen = new Set();
             
             roads.forEach(road => {
                 const props = road.properties || {};
                 const width = parseFloat(props.width_m || props.WIDTH || props.width || 10);
                 const name = props.name_ar || props.name_en || props.ROADCENTERLINENAME_AR || 'Unnamed';
                 
-                if (width < 10) return; // Only roads 10m+
+                if (width < 10) return;
                 
                 const roadGeom = road.geometry;
                 if (!roadGeom) return;
@@ -582,18 +604,17 @@
                         const [x1, y1] = coords[i];
                         const [x2, y2] = coords[i + 1];
                         
+                        // Method 1: Check line-line intersection with boundary edges
                         for (let j = 0; j < boundary.length - 1; j++) {
                             const [x3, y3] = boundary[j];
                             const [x4, y4] = boundary[j + 1];
                             
                             const intersection = lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4);
                             if (intersection) {
-                                // Create unique key to avoid duplicate points
                                 const key = `${intersection.x.toFixed(5)}_${intersection.y.toFixed(5)}`;
                                 if (seen.has(key)) continue;
                                 seen.add(key);
                                 
-                                // Calculate road angle at crossing
                                 const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
                                 
                                 entryExitPoints.push({
@@ -609,6 +630,46 @@
                                 if (width >= 20) major++;
                                 else if (width >= 15) secondary++;
                                 else local++;
+                            }
+                        }
+                        
+                        // Method 2: Check if segment crosses from inside to outside (or vice versa)
+                        // This catches roads that enter between boundary polygon vertices
+                        const p1Inside = isInside(x1, y1);
+                        const p2Inside = isInside(x2, y2);
+                        
+                        if (p1Inside !== p2Inside) {
+                            // This segment crosses the boundary!
+                            // Estimate crossing point (midpoint of segment near boundary)
+                            const midX = (x1 + x2) / 2;
+                            const midY = (y1 + y2) / 2;
+                            
+                            const key = `${midX.toFixed(5)}_${midY.toFixed(5)}`;
+                            if (!seen.has(key)) {
+                                // Check if we're close to the boundary (within reasonable distance)
+                                const nearBoundary = (
+                                    Math.abs(midX - minLng) < 0.005 || Math.abs(midX - maxLng) < 0.005 ||
+                                    Math.abs(midY - minLat) < 0.005 || Math.abs(midY - maxLat) < 0.005
+                                );
+                                
+                                if (nearBoundary) {
+                                    seen.add(key);
+                                    const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+                                    
+                                    entryExitPoints.push({
+                                        lat: midY,
+                                        lng: midX,
+                                        name: name,
+                                        nameEn: props.name_en || props.ROADCENTERLINENAME_EN || '',
+                                        width: width,
+                                        angle: angle,
+                                        roadProps: props
+                                    });
+                                    
+                                    if (width >= 20) major++;
+                                    else if (width >= 15) secondary++;
+                                    else local++;
+                                }
                             }
                         }
                     }
