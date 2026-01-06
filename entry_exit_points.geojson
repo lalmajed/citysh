@@ -1,0 +1,614 @@
+{
+  "type": "FeatureCollection",
+  "name": "Al Muhammadiyah Entry/Exit Points",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.664032099356696,
+          24.727776011635633
+        ]
+      },
+      "properties": {
+        "name_ar": "الملك فهد",
+        "name_en": "King Fahad Rd",
+        "width_m": 80.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.66398840382381,
+          24.727866782731084
+        ]
+      },
+      "properties": {
+        "name_ar": "الملك فهد",
+        "name_en": "King Fahad Rd",
+        "width_m": 80.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.662740041191796,
+          24.730338913719407
+        ]
+      },
+      "properties": {
+        "name_ar": "الملك فهد",
+        "name_en": "King Fahad Rd",
+        "width_m": 80.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.660699898488375,
+          24.73437900581156
+        ]
+      },
+      "properties": {
+        "name_ar": "الملك فهد",
+        "name_en": "King Fahad Rd",
+        "width_m": 80.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.659838045043216,
+          24.736085733355566
+        ]
+      },
+      "properties": {
+        "name_ar": "الملك فهد",
+        "name_en": "King Fahad Rd",
+        "width_m": 80.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65556095304652,
+          24.744544629333824
+        ]
+      },
+      "properties": {
+        "name_ar": "الملك فهد",
+        "name_en": "King Fahad Rd",
+        "width_m": 80.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63371217795389,
+          24.73527419231838
+        ]
+      },
+      "properties": {
+        "name_ar": "الإمام سعود بن عبدالعزيز بن محمد",
+        "name_en": "Al Imam S'Aud Bin Abdulaziz Bin Mohammed",
+        "width_m": 60.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65557217690576,
+          24.74453293325432
+        ]
+      },
+      "properties": {
+        "name_ar": "الإمام سعود بن عبدالعزيز بن محمد",
+        "name_en": "Al Imam S'Aud Bin Abdulaziz Bin Mohammed",
+        "width_m": 60.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.645008278164276,
+          24.724091880988798
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير تركي بن عبدالعزيز الأول",
+        "name_en": "Prince Turki Ibn Abdulaziz- Senior Rd",
+        "width_m": 60.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64314399022697,
+          24.72704136432036
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير تركي بن عبدالعزيز الأول",
+        "name_en": "Prince Turki Ibn Abdulaziz- Senior Rd",
+        "width_m": 60.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63937742724171,
+          24.73059220119595
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير تركي بن عبدالعزيز الأول",
+        "name_en": "Prince Turki Ibn Abdulaziz- Senior Rd",
+        "width_m": 60.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63377989329173,
+          24.735358283076895
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير تركي بن عبدالعزيز الأول",
+        "name_en": "Prince Turki Ibn Abdulaziz- Senior Rd",
+        "width_m": 60.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.645585818237485,
+          24.740351410715288
+        ]
+      },
+      "properties": {
+        "name_ar": "التخصصي",
+        "name_en": "Al Takhasousi",
+        "width_m": 46.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.654393187296904,
+          24.723699187366687
+        ]
+      },
+      "properties": {
+        "name_ar": "التخصصي",
+        "name_en": "Al Takhasousi",
+        "width_m": 46.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.660113779095276,
+          24.735539697326494
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير نايف بن عبدالعزيز",
+        "name_en": "Prince Naief Ibn Abdulaziz",
+        "width_m": 36.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64763763736295,
+          24.741213927996853
+        ]
+      },
+      "properties": {
+        "name_ar": "جويرية بنت الحارث",
+        "name_en": "Joweiriya Bint Al Hareth",
+        "width_m": 36.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.641878242508525,
+          24.728440405714544
+        ]
+      },
+      "properties": {
+        "name_ar": "خليفة بن بديع",
+        "name_en": "Khalifa Bin Badae",
+        "width_m": 36.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.637917882652005,
+          24.731798408432788
+        ]
+      },
+      "properties": {
+        "name_ar": "محمد بن يسار",
+        "name_en": "Mohammed Bin Yasar",
+        "width_m": 30.0,
+        "road_class": "Major"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65557526951722,
+          24.744526822555713
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الإمام سعود بن عبد العزيز بن محمد",
+        "name_en": "Al Imam Saud Ibn Abdulaziz Ibn Mohammad Road",
+        "width_m": 25.0,
+        "road_class": "Arterial"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65103444661071,
+          24.742641834892755
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير عبدالإله بن عبدالعزيز",
+        "name_en": "Abdulelah Ibn Abdulaziz",
+        "width_m": 20.0,
+        "road_class": "Arterial"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.634681187420355,
+          24.734473301162613
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "name_en": "",
+        "width_m": 20.0,
+        "road_class": "Arterial"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64658124002616,
+          24.721036912653698
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "name_en": "",
+        "width_m": 20.0,
+        "road_class": "Arterial"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.646839932473966,
+          24.720534486462874
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "name_en": "",
+        "width_m": 20.0,
+        "road_class": "Arterial"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65563929297538,
+          24.744400318447184
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "name_en": "",
+        "width_m": 15.0,
+        "road_class": "Arterial"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.66396397822647,
+          24.727747199475587
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك فهد",
+        "name_en": "King Fahd Road",
+        "width_m": 10.5,
+        "road_class": "Local"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65549069920971,
+          24.744515096931288
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك فهد",
+        "name_en": "King Fahd Road",
+        "width_m": 10.5,
+        "road_class": "Local"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.66399124884834,
+          24.727861148732494
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك عبدالله",
+        "name_en": "King Abdullah Road",
+        "width_m": 10.5,
+        "road_class": "Local"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64679051371291,
+          24.720630466380655
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك عبدالله",
+        "name_en": "King Abdullah Road",
+        "width_m": 10.5,
+        "road_class": "Local"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63373101831368,
+          24.735258617037292
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الإمام سعود بن عبد العزيز بن محمد",
+        "name_en": "Al Imam Saud Ibn Abdulaziz Ibn Mohammad Road",
+        "width_m": 10.5,
+        "road_class": "Local"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64552388400802,
+          24.74032537560207
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق التخصصي",
+        "name_en": "Al Takhassousi Road",
+        "width_m": 10.5,
+        "road_class": "Local"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.645623877020014,
+          24.74036740937581
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق التخصصي",
+        "name_en": "Al Takhassousi Road",
+        "width_m": 10.5,
+        "road_class": "Local"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63445489466309,
+          24.73466031563506
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "name_en": "Prince Turki Bin Abdulaziz Al Awal Road",
+        "width_m": 10.5,
+        "road_class": "Local"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63406288554764,
+          24.734984282600706
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "name_en": "Prince Turki Bin Abdulaziz Al Awal Road",
+        "width_m": 10.5,
+        "road_class": "Local"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63367394548829,
+          24.735313413368576
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "name_en": "Prince Turki Bin Abdulaziz Al Awal Road",
+        "width_m": 10.5,
+        "road_class": "Local"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.646916558786124,
+          24.720536895360404
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "name_en": "Prince Turki Bin Abdulaziz Al Awal Road",
+        "width_m": 10.5,
+        "road_class": "Local"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.66361157140499,
+          24.728613023507656
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "name_en": "",
+        "width_m": 10.0,
+        "road_class": "Local"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65591819606634,
+          24.74384831876139
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "name_en": "",
+        "width_m": 10.0,
+        "road_class": "Local"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6462612314995,
+          24.740635332238124
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "name_en": "",
+        "width_m": 10.0,
+        "road_class": "Local"
+      }
+    }
+  ]
+}

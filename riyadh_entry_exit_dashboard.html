@@ -343,6 +343,13 @@
             </div>
             
             <div class="section">
+                <h3>Export Data</h3>
+                <button id="exportBtn" style="width:100%;padding:10px;background:#e94560;border:none;color:white;border-radius:4px;cursor:pointer;font-weight:bold;" onclick="exportGeoJSON()">
+                    Download Entry/Exit GeoJSON
+                </button>
+            </div>
+            
+            <div class="section">
                 <h3>Entry/Exit Points List</h3>
                 <div class="entry-list" id="entryList">
                     <div style="color:#888;text-align:center;padding:20px;">
@@ -569,7 +576,17 @@
             ctx.fillStyle = '#0f3460';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            if (!boundary.length) return;
+            if (!boundary.length) {
+                // Show message when no data
+                ctx.fillStyle = '#e94560';
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Upload District and Roads GeoJSON', canvas.width/2, canvas.height/2 - 15);
+                ctx.fillStyle = '#888';
+                ctx.font = '12px Arial';
+                ctx.fillText('Use the file inputs on the left sidebar', canvas.width/2, canvas.height/2 + 15);
+                return;
+            }
             
             const showRoads = document.getElementById('showRoads').checked;
             const showOutside = document.getElementById('showOutsideRoads').checked;
@@ -704,48 +721,64 @@
             const file = e.target.files[0];
             if (!file) return;
             
-            const text = await file.text();
-            const data = JSON.parse(text);
-            
-            district = data;
-            
-            // Extract boundary
-            const feature = data.features ? data.features[0] : data;
-            const geom = feature.geometry;
-            
-            if (geom.type === 'Polygon') {
-                boundary = geom.coordinates[0];
-            } else if (geom.type === 'MultiPolygon') {
-                boundary = geom.coordinates[0][0];
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                
+                district = data;
+                
+                // Extract boundary
+                const feature = data.features ? data.features[0] : data;
+                const geom = feature.geometry;
+                
+                if (geom.type === 'Polygon') {
+                    boundary = geom.coordinates[0];
+                } else if (geom.type === 'MultiPolygon') {
+                    boundary = geom.coordinates[0][0];
+                } else {
+                    alert('Invalid geometry type. Expected Polygon or MultiPolygon.');
+                    return;
+                }
+                
+                console.log('District loaded:', boundary.length, 'boundary points');
+                
+                // Set view to district bounds
+                const lngs = boundary.map(c => c[0]);
+                const lats = boundary.map(c => c[1]);
+                const buffer = parseFloat(document.getElementById('roadBuffer').value) / 1000;
+                
+                viewBox = {
+                    minLng: Math.min(...lngs) - buffer,
+                    maxLng: Math.max(...lngs) + buffer,
+                    minLat: Math.min(...lats) - buffer,
+                    maxLat: Math.max(...lats) + buffer
+                };
+                
+                calculateEntryExits();
+                render();
+            } catch (err) {
+                console.error('Error loading district:', err);
+                alert('Error loading district file: ' + err.message);
             }
-            
-            // Set view to district bounds
-            const lngs = boundary.map(c => c[0]);
-            const lats = boundary.map(c => c[1]);
-            const buffer = parseFloat(document.getElementById('roadBuffer').value) / 1000;
-            
-            viewBox = {
-                minLng: Math.min(...lngs) - buffer,
-                maxLng: Math.max(...lngs) + buffer,
-                minLat: Math.min(...lats) - buffer,
-                maxLat: Math.max(...lats) + buffer
-            };
-            
-            calculateEntryExits();
-            render();
         });
         
         document.getElementById('roadsFile').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
             
-            const text = await file.text();
-            const data = JSON.parse(text);
-            
-            roads = data.features || [data];
-            
-            calculateEntryExits();
-            render();
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                
+                roads = data.features || [data];
+                console.log('Roads loaded:', roads.length, 'features');
+                
+                calculateEntryExits();
+                render();
+            } catch (err) {
+                console.error('Error loading roads:', err);
+                alert('Error loading roads file: ' + err.message);
+            }
         });
         
         // Control handlers
@@ -861,8 +894,51 @@
             document.getElementById('popup').style.display = 'none';
         });
         
+        // Export GeoJSON
+        function exportGeoJSON() {
+            if (!entryExitPoints.length) {
+                alert('No entry/exit points to export. Upload district and roads first.');
+                return;
+            }
+            
+            const geojson = {
+                type: 'FeatureCollection',
+                features: entryExitPoints.map(p => ({
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [p.lng, p.lat]
+                    },
+                    properties: {
+                        name_ar: p.name,
+                        width_m: p.width,
+                        road_class: p.width >= 30 ? 'Major' : p.width >= 15 ? 'Arterial' : 'Local'
+                    }
+                }))
+            };
+            
+            const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'entry_exit_points.geojson';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
         // Initialize
         resizeCanvas();
+        
+        // Draw initial message
+        ctx.fillStyle = '#16213e';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#e94560';
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Upload District and Roads GeoJSON', canvas.width/2, canvas.height/2 - 20);
+        ctx.fillStyle = '#888';
+        ctx.font = '14px Arial';
+        ctx.fillText('Use the file inputs on the left sidebar', canvas.width/2, canvas.height/2 + 20);
     </script>
 </body>
 </html>
