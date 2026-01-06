@@ -41,7 +41,7 @@
         .stat.main .n { color: white; font-size: 26px; }
         .stat.main .l { color: #fcc; }
         
-        button { width: 100%; padding: 10px; background: #e94560; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button { width: 100%; padding: 10px; background: #e94560; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 3px 0; }
         button:disabled { background: #444; }
         
         .list { max-height: 130px; overflow-y: auto; font-size: 10px; }
@@ -65,28 +65,18 @@
             z-index: 100;
         }
         
-        #loading {
-            position: fixed;
-            left: 300px; top: 0; right: 0; bottom: 0;
-            background: #1a1a2e;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            color: #e94560;
-            font-size: 18px;
-            z-index: 500;
+        #mapStatus {
+            position: absolute;
+            top: 10px; left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: #4caf50;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            z-index: 200;
         }
-        #loading.hidden { display: none; }
-        .spinner {
-            width: 50px; height: 50px;
-            border: 4px solid #333;
-            border-top-color: #e94560;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        #mapStatus.error { color: #ff5722; }
+        #mapStatus.loading { color: #ffc107; }
     </style>
 </head>
 <body>
@@ -105,13 +95,13 @@
             <div class="status wait" id="statusDistrict">No district loaded</div>
         </div>
         
-        <h3>EXTEND ROADS SLIDER</h3>
+        <h3>EXTEND ROADS</h3>
         <div class="box">
             <div class="slider-row">
                 <label>Road Extension <span class="val" id="valExt">300m</span></label>
                 <input type="range" id="sliderExt" min="0" max="1500" value="300" step="50">
             </div>
-            <div style="font-size:9px;color:#888;">Extend roads beyond their endpoints. Where they cross boundary = Entry/Exit!</div>
+            <div style="font-size:9px;color:#888;">Make roads longer - where they cross boundary = Entry/Exit!</div>
         </div>
         
         <div class="box">
@@ -125,28 +115,25 @@
             </div>
         </div>
         
-        <h3>ENTRY/EXIT RESULTS</h3>
+        <h3>RESULTS</h3>
         <div class="stats">
-            <div class="stat main"><div class="n" id="sTotal">0</div><div class="l">BOUNDARY CROSSINGS</div></div>
+            <div class="stat main"><div class="n" id="sTotal">0</div><div class="l">ENTRY/EXIT POINTS</div></div>
             <div class="stat"><div class="n" id="sMajor">0</div><div class="l">Major 30m+</div></div>
             <div class="stat"><div class="n" id="sOther">0</div><div class="l">Other</div></div>
         </div>
         
-        <h3>EXPORT</h3>
+        <h3>ACTIONS</h3>
         <button id="btnExport" onclick="exportData()" disabled>Download Entry/Exit GeoJSON</button>
+        <button onclick="retryGoogleMaps()">Retry Google Maps</button>
         
         <h3>CROSSINGS LIST</h3>
         <div class="list" id="list"><div style="color:#666;text-align:center;padding:15px;">Load roads + district</div></div>
     </div>
     
-    <div id="loading">
-        <div class="spinner"></div>
-        <div>Loading Google Maps...</div>
-    </div>
-    
     <div id="mapContainer">
         <div id="map"></div>
         <canvas id="overlay"></canvas>
+        <div id="mapStatus" class="loading">Loading Google Maps...</div>
     </div>
 
 <script>
@@ -154,40 +141,10 @@ var map = null;
 var roads = [];
 var boundary = [];
 var entryExits = [];
+var mapLoaded = false;
+var loadAttempts = 0;
 
-// Initialize Google Maps
-function initMap() {
-    try {
-        map = new google.maps.Map(document.getElementById('map'), {
-            center: { lat: 24.73, lng: 46.65 },
-            zoom: 14,
-            mapTypeId: 'roadmap',
-            gestureHandling: 'greedy',
-            zoomControl: true,
-            mapTypeControl: true,
-            streetViewControl: false,
-            fullscreenControl: true
-        });
-        
-        document.getElementById('loading').classList.add('hidden');
-        
-        // Resize canvas
-        resizeCanvas();
-        
-        // Redraw on map changes
-        map.addListener('idle', draw);
-        map.addListener('zoom_changed', draw);
-        map.addListener('center_changed', draw);
-        map.addListener('bounds_changed', draw);
-        
-        console.log('Google Maps loaded successfully!');
-    } catch(e) {
-        console.error('Map init error:', e);
-        document.getElementById('loading').innerHTML = '<div style="color:#e94560;">Error loading map. Refresh page.</div>';
-    }
-}
-
-// Canvas setup
+// Canvas
 var canvas = document.getElementById('overlay');
 var ctx = canvas.getContext('2d');
 
@@ -199,26 +156,110 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
+// Initialize map
+function initMap() {
+    if (mapLoaded) return;
+    
+    try {
+        if (!window.google || !window.google.maps) {
+            throw new Error('Google Maps not available');
+        }
+        
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: { lat: 24.73, lng: 46.65 },
+            zoom: 14,
+            mapTypeId: 'roadmap',
+            gestureHandling: 'greedy',
+            zoomControl: true,
+            mapTypeControl: true,
+            streetViewControl: false,
+            fullscreenControl: true,
+            styles: [
+                { featureType: "poi", stylers: [{ visibility: "off" }] },
+                { featureType: "transit", stylers: [{ visibility: "off" }] }
+            ]
+        });
+        
+        mapLoaded = true;
+        document.getElementById('mapStatus').textContent = 'Google Maps Ready';
+        document.getElementById('mapStatus').className = '';
+        
+        setTimeout(function() {
+            document.getElementById('mapStatus').style.display = 'none';
+        }, 2000);
+        
+        resizeCanvas();
+        
+        google.maps.event.addListener(map, 'idle', draw);
+        google.maps.event.addListener(map, 'zoom_changed', draw);
+        google.maps.event.addListener(map, 'bounds_changed', draw);
+        
+        console.log('Google Maps initialized!');
+    } catch(e) {
+        console.error('Map error:', e);
+        document.getElementById('mapStatus').textContent = 'Map error - Click "Retry Google Maps"';
+        document.getElementById('mapStatus').className = 'error';
+    }
+}
+
+// Retry loading Google Maps
+function retryGoogleMaps() {
+    loadAttempts++;
+    document.getElementById('mapStatus').textContent = 'Retrying... (attempt ' + loadAttempts + ')';
+    document.getElementById('mapStatus').className = 'loading';
+    document.getElementById('mapStatus').style.display = 'block';
+    
+    // Remove old script
+    var oldScript = document.getElementById('gmapsScript');
+    if (oldScript) oldScript.remove();
+    
+    // Add new script
+    var script = document.createElement('script');
+    script.id = 'gmapsScript';
+    script.src = 'https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js?v=' + Date.now();
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+    
+    // Check for load
+    var checks = 0;
+    var checkInt = setInterval(function() {
+        checks++;
+        if (window.google && window.google.maps && window.google.maps.Map) {
+            clearInterval(checkInt);
+            initMap();
+        } else if (checks > 100) {
+            clearInterval(checkInt);
+            document.getElementById('mapStatus').textContent = 'Google Maps failed to load. Try again.';
+            document.getElementById('mapStatus').className = 'error';
+        }
+    }, 100);
+}
+
 // Convert lat/lng to pixel
 function toPixel(lat, lng) {
-    if (!map) return {x: 0, y: 0};
-    var projection = map.getProjection();
-    if (!projection) return {x: 0, y: 0};
-    
-    var bounds = map.getBounds();
-    if (!bounds) return {x: 0, y: 0};
-    
-    var ne = bounds.getNorthEast();
-    var sw = bounds.getSouthWest();
-    var topRight = projection.fromLatLngToPoint(ne);
-    var bottomLeft = projection.fromLatLngToPoint(sw);
-    var scale = Math.pow(2, map.getZoom());
-    var worldPoint = projection.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
-    
-    return {
-        x: (worldPoint.x - bottomLeft.x) * scale,
-        y: (worldPoint.y - topRight.y) * scale
-    };
+    if (!map || !mapLoaded) return {x: -1000, y: -1000};
+    try {
+        var projection = map.getProjection();
+        if (!projection) return {x: -1000, y: -1000};
+        
+        var bounds = map.getBounds();
+        if (!bounds) return {x: -1000, y: -1000};
+        
+        var ne = bounds.getNorthEast();
+        var sw = bounds.getSouthWest();
+        var topRight = projection.fromLatLngToPoint(ne);
+        var bottomLeft = projection.fromLatLngToPoint(sw);
+        var scale = Math.pow(2, map.getZoom());
+        var worldPoint = projection.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
+        
+        return {
+            x: (worldPoint.x - bottomLeft.x) * scale,
+            y: (worldPoint.y - topRight.y) * scale
+        };
+    } catch(e) {
+        return {x: -1000, y: -1000};
+    }
 }
 
 // Line intersection
@@ -233,15 +274,13 @@ function lineIntersect(x1,y1,x2,y2,x3,y3,x4,y4) {
     return null;
 }
 
-// Extend road line
+// Extend road
 function extendLine(x1, y1, x2, y2, meters) {
     var deg = meters / 111000;
-    var dx = x2 - x1;
-    var dy = y2 - y1;
+    var dx = x2 - x1, dy = y2 - y1;
     var len = Math.sqrt(dx*dx + dy*dy);
     if (len < 0.000001) return {x1:x1, y1:y1, x2:x2, y2:y2};
-    var ux = dx/len;
-    var uy = dy/len;
+    var ux = dx/len, uy = dy/len;
     return {
         x1: x1 - ux * deg,
         y1: y1 - uy * deg,
@@ -250,13 +289,10 @@ function extendLine(x1, y1, x2, y2, meters) {
     };
 }
 
-// Find where extended roads cross boundary
+// Find crossings
 function findCrossings() {
     entryExits = [];
-    if (!boundary.length || !roads.length) {
-        updateUI();
-        return;
-    }
+    if (!boundary.length || !roads.length) { updateUI(); return; }
     
     var ext = parseInt(document.getElementById('sliderExt').value);
     var minW = parseInt(document.getElementById('sliderWidth').value);
@@ -267,41 +303,32 @@ function findCrossings() {
         var props = road.properties || {};
         var w = parseFloat(props.width_m || props.WIDTH || props.width || 10);
         var name = props.name_ar || props.ROADCENTERLINENAME_AR || props.name_en || 'Road';
-        
         if (w < minW) continue;
         
         var geom = road.geometry;
         if (!geom) continue;
-        
         var lines = geom.type === 'LineString' ? [geom.coordinates] : (geom.coordinates || []);
         
         for (var li = 0; li < lines.length; li++) {
             var coords = lines[li];
             if (!coords || coords.length < 2) continue;
             
-            // Extend at start
+            // Extend at both ends
             var extStart = extendLine(coords[1][0], coords[1][1], coords[0][0], coords[0][1], ext);
-            // Extend at end
             var last = coords.length - 1;
             var extEnd = extendLine(coords[last-1][0], coords[last-1][1], coords[last][0], coords[last][1], ext);
             
-            // Build extended road
             var extCoords = [[extStart.x2, extStart.y2]];
-            for (var c = 0; c < coords.length; c++) {
-                extCoords.push(coords[c]);
-            }
+            for (var c = 0; c < coords.length; c++) extCoords.push(coords[c]);
             extCoords.push([extEnd.x2, extEnd.y2]);
             
-            // Check each segment against boundary
+            // Check intersections
             for (var i = 0; i < extCoords.length - 1; i++) {
                 var x1 = extCoords[i][0], y1 = extCoords[i][1];
                 var x2 = extCoords[i+1][0], y2 = extCoords[i+1][1];
                 
                 for (var j = 0; j < boundary.length - 1; j++) {
-                    var bx1 = boundary[j][0], by1 = boundary[j][1];
-                    var bx2 = boundary[j+1][0], by2 = boundary[j+1][1];
-                    
-                    var hit = lineIntersect(x1,y1,x2,y2,bx1,by1,bx2,by2);
+                    var hit = lineIntersect(x1,y1,x2,y2, boundary[j][0],boundary[j][1], boundary[j+1][0],boundary[j+1][1]);
                     if (hit) {
                         var key = hit[0].toFixed(5) + '_' + hit[1].toFixed(5);
                         if (!seen[key]) {
@@ -328,8 +355,7 @@ function updateUI() {
     
     var list = document.getElementById('list');
     if (entryExits.length === 0) {
-        var msg = roads.length ? (boundary.length ? 'Increase extension slider' : 'Load district') : 'Load roads first';
-        list.innerHTML = '<div style="color:#666;text-align:center;padding:15px;">' + msg + '</div>';
+        list.innerHTML = '<div style="color:#666;text-align:center;padding:15px;">'+(roads.length?(boundary.length?'Increase extension':'Load district'):'Load roads')+'</div>';
         return;
     }
     
@@ -339,30 +365,27 @@ function updateUI() {
         var p = entryExits[i];
         html += '<div class="item" onclick="gotoPoint('+i+')"><div class="dot">'+Math.round(p.width)+'</div><div class="name">'+p.name+'</div></div>';
     }
-    if (entryExits.length > 35) {
-        html += '<div style="color:#888;text-align:center;padding:5px;">+' + (entryExits.length-35) + ' more</div>';
-    }
+    if (entryExits.length > 35) html += '<div style="color:#888;text-align:center;padding:5px;">+' + (entryExits.length-35) + ' more</div>';
     list.innerHTML = html;
 }
 
 function gotoPoint(i) {
     var p = entryExits[i];
-    if (map) {
+    if (map && mapLoaded) {
         map.setCenter({lat: p.lat, lng: p.lng});
         map.setZoom(17);
     }
 }
 
-// Draw on canvas
+// Draw
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (!map) return;
     
     var ext = parseInt(document.getElementById('sliderExt').value);
     var minW = parseInt(document.getElementById('sliderWidth').value);
     var dotSize = parseInt(document.getElementById('sliderDot').value);
     
-    // Draw extended roads
+    // Draw roads
     for (var r = 0; r < roads.length; r++) {
         var road = roads[r];
         var props = road.properties || {};
@@ -371,14 +394,12 @@ function draw() {
         
         var geom = road.geometry;
         if (!geom) continue;
-        
         var lines = geom.type === 'LineString' ? [geom.coordinates] : (geom.coordinates || []);
         
         for (var li = 0; li < lines.length; li++) {
             var coords = lines[li];
             if (!coords || coords.length < 2) continue;
             
-            // Extend
             var extStart = extendLine(coords[1][0], coords[1][1], coords[0][0], coords[0][1], ext);
             var last = coords.length - 1;
             var extEnd = extendLine(coords[last-1][0], coords[last-1][1], coords[last][0], coords[last][1], ext);
@@ -418,19 +439,17 @@ function draw() {
         ctx.setLineDash([]);
     }
     
-    // Draw RED DOTS at crossings
+    // Draw RED DOTS
     for (var i = 0; i < entryExits.length; i++) {
         var p = entryExits[i];
         var px = toPixel(p.lat, p.lng);
         var r = p.width >= 40 ? dotSize*1.4 : p.width >= 20 ? dotSize*1.1 : dotSize*0.85;
         
-        // Glow
         ctx.beginPath();
         ctx.arc(px.x, px.y, r+5, 0, Math.PI*2);
         ctx.fillStyle = 'rgba(233,69,96,0.5)';
         ctx.fill();
         
-        // Red dot
         ctx.beginPath();
         ctx.arc(px.x, px.y, r, 0, Math.PI*2);
         ctx.fillStyle = '#e94560';
@@ -439,7 +458,6 @@ function draw() {
         ctx.lineWidth = 2;
         ctx.stroke();
         
-        // Width number
         ctx.fillStyle = 'white';
         ctx.font = 'bold ' + Math.max(9, r*0.6) + 'px Arial';
         ctx.textAlign = 'center';
@@ -448,11 +466,10 @@ function draw() {
     }
 }
 
-// File: Roads
+// File handlers
 document.getElementById('fileRoads').addEventListener('change', function(e) {
     var file = e.target.files[0];
     if (!file) return;
-    
     var reader = new FileReader();
     reader.onload = function(evt) {
         try {
@@ -461,71 +478,51 @@ document.getElementById('fileRoads').addEventListener('change', function(e) {
             document.getElementById('statusRoads').textContent = roads.length + ' roads loaded';
             document.getElementById('statusRoads').className = 'status';
             
-            // Center map
-            if (map && roads.length > 0) {
+            if (map && mapLoaded && roads.length > 0) {
                 var sumLat = 0, sumLng = 0, count = 0;
-                for (var i = 0; i < roads.length; i++) {
+                for (var i = 0; i < Math.min(roads.length, 100); i++) {
                     var g = roads[i].geometry;
                     if (!g) continue;
                     var lines = g.type === 'LineString' ? [g.coordinates] : (g.coordinates || []);
                     for (var j = 0; j < lines.length; j++) {
-                        for (var k = 0; k < lines[j].length; k++) {
-                            sumLng += lines[j][k][0];
-                            sumLat += lines[j][k][1];
-                            count++;
-                        }
+                        var mid = Math.floor(lines[j].length / 2);
+                        sumLng += lines[j][mid][0];
+                        sumLat += lines[j][mid][1];
+                        count++;
                     }
                 }
-                if (count > 0) {
-                    map.setCenter({lat: sumLat/count, lng: sumLng/count});
-                    map.setZoom(14);
-                }
+                if (count > 0) map.setCenter({lat: sumLat/count, lng: sumLng/count});
             }
-            
             findCrossings();
-        } catch(err) {
-            alert('Error loading roads: ' + err.message);
-        }
+        } catch(err) { alert('Error: ' + err.message); }
     };
     reader.readAsText(file);
 });
 
-// File: District
 document.getElementById('fileDistrict').addEventListener('change', function(e) {
     var file = e.target.files[0];
     if (!file) return;
-    
     var reader = new FileReader();
     reader.onload = function(evt) {
         try {
             var data = JSON.parse(evt.target.result);
             var feat = data.features ? data.features[0] : data;
             var geom = feat.geometry;
+            boundary = geom.type === 'Polygon' ? geom.coordinates[0] : geom.coordinates[0][0];
             
-            if (geom.type === 'Polygon') {
-                boundary = geom.coordinates[0];
-            } else if (geom.type === 'MultiPolygon') {
-                boundary = geom.coordinates[0][0];
-            }
-            
-            document.getElementById('statusDistrict').textContent = 'District loaded (' + boundary.length + ' pts)';
+            document.getElementById('statusDistrict').textContent = 'Loaded (' + boundary.length + ' pts)';
             document.getElementById('statusDistrict').className = 'status';
             
-            // Center on district
-            if (map && boundary.length > 0) {
+            if (map && mapLoaded && boundary.length > 0) {
                 var sumLat = 0, sumLng = 0;
                 for (var i = 0; i < boundary.length; i++) {
                     sumLng += boundary[i][0];
                     sumLat += boundary[i][1];
                 }
                 map.setCenter({lat: sumLat/boundary.length, lng: sumLng/boundary.length});
-                map.setZoom(14);
             }
-            
             findCrossings();
-        } catch(err) {
-            alert('Error loading district: ' + err.message);
-        }
+        } catch(err) { alert('Error: ' + err.message); }
     };
     reader.readAsText(file);
 });
@@ -547,48 +544,48 @@ document.getElementById('sliderDot').addEventListener('input', function() {
 // Export
 function exportData() {
     if (entryExits.length === 0) return;
-    
-    var geojson = {
-        type: 'FeatureCollection',
-        features: []
-    };
-    
+    var geojson = { type: 'FeatureCollection', features: [] };
     for (var i = 0; i < entryExits.length; i++) {
         var p = entryExits[i];
         geojson.features.push({
             type: 'Feature',
             geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
-            properties: { 
-                name_ar: p.name, 
-                width_m: p.width, 
-                road_class: p.width >= 30 ? 'Major' : 'Other' 
-            }
+            properties: { name_ar: p.name, width_m: p.width, road_class: p.width >= 30 ? 'Major' : 'Other' }
         });
     }
-    
-    var blob = new Blob([JSON.stringify(geojson, null, 2)], {type: 'application/json'});
     var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(geojson, null, 2)], {type: 'application/json'}));
     a.download = 'entry_exit_points.geojson';
     a.click();
 }
 
-// Try to init map when Google loads
-var checkInterval = setInterval(function() {
-    if (window.google && window.google.maps && window.google.maps.Map) {
-        clearInterval(checkInterval);
-        initMap();
-    }
-}, 200);
+// Start loading Google Maps
+(function loadGMaps() {
+    var script = document.createElement('script');
+    script.id = 'gmapsScript';
+    script.src = 'https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+    
+    var checks = 0;
+    var interval = setInterval(function() {
+        checks++;
+        if (window.google && window.google.maps && window.google.maps.Map) {
+            clearInterval(interval);
+            initMap();
+        } else if (checks > 150) {
+            clearInterval(interval);
+            document.getElementById('mapStatus').textContent = 'Google Maps slow to load - Click "Retry Google Maps"';
+            document.getElementById('mapStatus').className = 'error';
+        }
+    }, 100);
+})();
 
-// Timeout
-setTimeout(function() {
-    clearInterval(checkInterval);
-    if (!map) {
-        document.getElementById('loading').innerHTML = '<div style="color:#e94560;font-size:16px;">Google Maps taking too long.<br>Please refresh the page.</div>';
-    }
-}, 20000);
+// Also init on resize
+window.addEventListener('load', function() {
+    setTimeout(resizeCanvas, 500);
+});
 </script>
-<script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
 </body>
 </html>
