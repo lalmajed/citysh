@@ -162,9 +162,11 @@
                 <div class="row"><span>Total Roads:</span><span id="distRoads">0</span></div>
                 <div class="row"><span>Total Length:</span><span id="distRoadLength">0 km</span></div>
                 <div class="row"><span>Major (20m+):</span><span id="distMajorRoads">0</span></div>
-                <div class="row" style="background:#fce4ec;margin:0 -10px;padding:3px 10px;"><span>Entry/Exit Crossings:</span><span id="distEntryExit">0</span></div>
-                <div class="row"><span style="padding-left:10px;">Major (20m+):</span><span id="distMajorCrossings">0</span></div>
-                <div class="row"><span style="padding-left:10px;">Secondary (15-20m):</span><span id="distSecCrossings">0</span></div>
+                <div class="row" style="background:#fce4ec;margin:0 -10px;padding:3px 10px;"><span>Boundary Crossings:</span><span id="distEntryExit">0</span></div>
+                <div class="row"><span style="padding-left:10px;color:#2e7d32;">Entries (in):</span><span id="distEntries" style="color:#2e7d32;">0</span></div>
+                <div class="row"><span style="padding-left:10px;color:#c62828;">Exits (out):</span><span id="distExits" style="color:#c62828;">0</span></div>
+                <div class="row"><span style="padding-left:10px;">Major (30m+):</span><span id="distMajorCrossings">0</span></div>
+                <div class="row"><span style="padding-left:10px;">Secondary (15-30m):</span><span id="distSecCrossings">0</span></div>
                 <div class="row"><span style="padding-left:10px;">Local (<15m):</span><span id="distLocalCrossings">0</span></div>
             </div>
             
@@ -378,7 +380,9 @@
                 <div><span style="display:inline-block;width:20px;height:4px;background:#607d8b;border-radius:2px;"></span> 8m</div>
             </div>
             <div style="margin-top:8px;border-top:1px solid #90caf9;padding-top:8px;">
-                <div style="font-size:10px;"><span style="display:inline-block;width:12px;height:12px;background:#e91e63;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);vertical-align:middle;"></span> Entry/Exit Point (boundary crossing)</div>
+                <div style="font-weight:600;font-size:10px;margin-bottom:4px;">Boundary Crossings:</div>
+                <div style="font-size:10px;margin-bottom:3px;"><span style="display:inline-block;width:0;height:0;border-top:6px solid transparent;border-bottom:6px solid transparent;border-left:12px solid #2e7d32;vertical-align:middle;margin-right:3px;"></span> ENTRY (into district)</div>
+                <div style="font-size:10px;"><span style="display:inline-block;width:0;height:0;border-top:6px solid transparent;border-bottom:6px solid transparent;border-right:12px solid #c62828;vertical-align:middle;margin-right:3px;"></span> EXIT (out of district)</div>
             </div>
         </div>
     </div>
@@ -548,28 +552,20 @@
             return null;
         }
         
-        // Calculate ALL entry/exit points where roads cross district boundary
+        // Calculate entry/exit points where roads cross district boundary
+        // Algorithm: Find road segments that intersect boundary, determine ENTRY vs EXIT
         function calculateEntryExitPoints(districtObj) {
             entryExitPoints = [];
-            if (!districtObj || roads.length === 0) return { total: 0, major: 0, secondary: 0, local: 0 };
+            if (!districtObj || roads.length === 0) return { total: 0, major: 0, secondary: 0, local: 0, entries: 0, exits: 0 };
             
             const geom = getDistrictGeometry(districtObj);
-            if (!geom) return { total: 0, major: 0, secondary: 0, local: 0 };
+            if (!geom) return { total: 0, major: 0, secondary: 0, local: 0, entries: 0, exits: 0 };
             
             const boundary = geom.type === 'Polygon' ? geom.coordinates[0] : 
                             geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
-            if (!boundary || boundary.length < 3) return { total: 0, major: 0, secondary: 0, local: 0 };
+            if (!boundary || boundary.length < 3) return { total: 0, major: 0, secondary: 0, local: 0, entries: 0, exits: 0 };
             
-            // Get bounds for quick filtering
-            let minLng = 180, maxLng = -180, minLat = 90, maxLat = -90;
-            boundary.forEach(([lng, lat]) => {
-                minLng = Math.min(minLng, lng);
-                maxLng = Math.max(maxLng, lng);
-                minLat = Math.min(minLat, lat);
-                maxLat = Math.max(maxLat, lat);
-            });
-            
-            // Point in polygon check
+            // Point in polygon check (ray casting)
             function isInside(lng, lat) {
                 let inside = false;
                 for (let i = 0, j = boundary.length - 1; i < boundary.length; j = i++) {
@@ -582,15 +578,16 @@
                 return inside;
             }
             
-            let major = 0, secondary = 0, local = 0;
-            const seen = new Set();
+            let major = 0, secondary = 0, local = 0, entries = 0, exits = 0;
+            const seenLocs = new Set(); // Deduplicate by location
+            const crossings = [];
             
             roads.forEach(road => {
                 const props = road.properties || {};
                 const width = parseFloat(props.width_m || props.WIDTH || props.width || 10);
                 const name = props.name_ar || props.name_en || props.ROADCENTERLINENAME_AR || 'Unnamed';
                 
-                if (width < 10) return;
+                if (width < 10) return; // Skip very small roads
                 
                 const roadGeom = road.geometry;
                 if (!roadGeom) return;
@@ -604,83 +601,61 @@
                         const [x1, y1] = coords[i];
                         const [x2, y2] = coords[i + 1];
                         
-                        // Method 1: Check line-line intersection with boundary edges
+                        // Check intersection with each boundary edge
                         for (let j = 0; j < boundary.length - 1; j++) {
                             const [x3, y3] = boundary[j];
                             const [x4, y4] = boundary[j + 1];
                             
                             const intersection = lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4);
                             if (intersection) {
-                                const key = `${intersection.x.toFixed(5)}_${intersection.y.toFixed(5)}`;
-                                if (seen.has(key)) continue;
-                                seen.add(key);
+                                // Determine direction: ENTRY (outside->inside) or EXIT (inside->outside)
+                                const p1Inside = isInside(x1, y1);
+                                const p2Inside = isInside(x2, y2);
                                 
+                                let direction;
+                                if (!p1Inside && p2Inside) direction = 'ENTRY';
+                                else if (p1Inside && !p2Inside) direction = 'EXIT';
+                                else direction = 'CROSS';
+                                
+                                // Calculate road angle at crossing
                                 const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
                                 
-                                entryExitPoints.push({
+                                crossings.push({
                                     lat: intersection.y,
                                     lng: intersection.x,
                                     name: name,
                                     nameEn: props.name_en || props.ROADCENTERLINENAME_EN || '',
                                     width: width,
+                                    direction: direction,
                                     angle: angle,
                                     roadProps: props
                                 });
-                                
-                                if (width >= 20) major++;
-                                else if (width >= 15) secondary++;
-                                else local++;
-                            }
-                        }
-                        
-                        // Method 2: Check if segment crosses from inside to outside (or vice versa)
-                        // This catches roads that enter between boundary polygon vertices
-                        const p1Inside = isInside(x1, y1);
-                        const p2Inside = isInside(x2, y2);
-                        
-                        if (p1Inside !== p2Inside) {
-                            // This segment crosses the boundary!
-                            // Estimate crossing point (midpoint of segment near boundary)
-                            const midX = (x1 + x2) / 2;
-                            const midY = (y1 + y2) / 2;
-                            
-                            const key = `${midX.toFixed(5)}_${midY.toFixed(5)}`;
-                            if (!seen.has(key)) {
-                                // Check if we're close to the boundary (within reasonable distance)
-                                const nearBoundary = (
-                                    Math.abs(midX - minLng) < 0.005 || Math.abs(midX - maxLng) < 0.005 ||
-                                    Math.abs(midY - minLat) < 0.005 || Math.abs(midY - maxLat) < 0.005
-                                );
-                                
-                                if (nearBoundary) {
-                                    seen.add(key);
-                                    const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
-                                    
-                                    entryExitPoints.push({
-                                        lat: midY,
-                                        lng: midX,
-                                        name: name,
-                                        nameEn: props.name_en || props.ROADCENTERLINENAME_EN || '',
-                                        width: width,
-                                        angle: angle,
-                                        roadProps: props
-                                    });
-                                    
-                                    if (width >= 20) major++;
-                                    else if (width >= 15) secondary++;
-                                    else local++;
-                                }
                             }
                         }
                     }
                 });
             });
             
-            // Sort by width (largest first)
-            entryExitPoints.sort((a, b) => b.width - a.width);
+            // Deduplicate by location (keep wider roads)
+            crossings.sort((a, b) => b.width - a.width);
+            
+            crossings.forEach(c => {
+                const key = `${c.lng.toFixed(4)}_${c.lat.toFixed(4)}`;
+                if (!seenLocs.has(key)) {
+                    seenLocs.add(key);
+                    entryExitPoints.push(c);
+                    
+                    if (c.width >= 30) major++;
+                    else if (c.width >= 15) secondary++;
+                    else local++;
+                    
+                    if (c.direction === 'ENTRY') entries++;
+                    else if (c.direction === 'EXIT') exits++;
+                }
+            });
             
             document.getElementById('entryExitCount').textContent = entryExitPoints.length;
-            return { total: entryExitPoints.length, major, secondary, local };
+            return { total: entryExitPoints.length, major, secondary, local, entries, exits };
         }
         
         let renderPending = false;
@@ -926,56 +901,83 @@
                     const y = (w.y - tr.y) * scale;
                     
                     // Size based on road width
-                    const size = point.width >= 60 ? entryExitSize * 2.0 :
-                                 point.width >= 40 ? entryExitSize * 1.7 : 
-                                 point.width >= 30 ? entryExitSize * 1.4 : 
-                                 point.width >= 20 ? entryExitSize * 1.2 : entryExitSize * 0.9;
+                    const baseSize = entryExitSize;
+                    const size = point.width >= 60 ? baseSize * 2.2 :
+                                 point.width >= 40 ? baseSize * 1.8 : 
+                                 point.width >= 30 ? baseSize * 1.5 : 
+                                 point.width >= 20 ? baseSize * 1.2 : baseSize;
                     
-                    // Color by road width
-                    const color = point.width >= 60 ? '#b71c1c' :  // Dark red for highways 60m+
-                                  point.width >= 40 ? '#c62828' :  // Red for major 40m+
-                                  point.width >= 30 ? '#d32f2f' :  // Red for 30m+
-                                  point.width >= 20 ? '#e65100' :  // Orange for 20m+
-                                  point.width >= 15 ? '#f57c00' :  // Light orange for 15m+
-                                  '#7b1fa2';                        // Purple for others
+                    // Color: Green for ENTRY, Red for EXIT, Purple for CROSS
+                    const isEntry = point.direction === 'ENTRY';
+                    const isExit = point.direction === 'EXIT';
+                    const color = isEntry ? '#2e7d32' : isExit ? '#c62828' : '#7b1fa2';  // Green, Red, or Purple
+                    const glowColor = isEntry ? 'rgba(76, 175, 80, 0.4)' : isExit ? 'rgba(244, 67, 54, 0.4)' : 'rgba(156, 39, 176, 0.4)';
+                    
+                    ctx.save();
+                    ctx.translate(x, y);
+                    
+                    // Rotate arrow based on road angle
+                    const rotAngle = (point.angle * Math.PI / 180);
+                    // If EXIT, flip arrow direction
+                    ctx.rotate(isEntry ? rotAngle : rotAngle + Math.PI);
                     
                     // Outer glow
-                    ctx.beginPath();
-                    ctx.arc(x, y, size + 5, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(233, 30, 99, 0.3)';
-                    ctx.fill();
+                    ctx.shadowColor = color;
+                    ctx.shadowBlur = 12;
                     
-                    // Main circle
+                    // Draw arrow shape
+                    const arrowLen = size * 2;
+                    const arrowWidth = size * 1.2;
+                    const headLen = size * 1.0;
+                    
                     ctx.beginPath();
-                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    // Arrow body
+                    ctx.moveTo(-arrowLen/2, -arrowWidth/3);
+                    ctx.lineTo(arrowLen/2 - headLen, -arrowWidth/3);
+                    // Arrow head
+                    ctx.lineTo(arrowLen/2 - headLen, -arrowWidth/2);
+                    ctx.lineTo(arrowLen/2, 0);
+                    ctx.lineTo(arrowLen/2 - headLen, arrowWidth/2);
+                    ctx.lineTo(arrowLen/2 - headLen, arrowWidth/3);
+                    // Back to start
+                    ctx.lineTo(-arrowLen/2, arrowWidth/3);
+                    ctx.closePath();
+                    
                     ctx.fillStyle = color;
                     ctx.fill();
+                    
+                    // White border
+                    ctx.shadowBlur = 0;
                     ctx.strokeStyle = 'white';
-                    ctx.lineWidth = 3;
+                    ctx.lineWidth = 2;
                     ctx.stroke();
                     
-                    // Width number inside circle
-                    ctx.font = 'bold ' + Math.max(10, size * 0.8) + 'px Arial';
+                    ctx.restore();
+                    
+                    // Width label next to arrow
+                    ctx.font = 'bold ' + Math.max(10, size * 0.7) + 'px Arial';
                     ctx.fillStyle = 'white';
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 3;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(Math.round(point.width), x, y);
+                    ctx.strokeText(Math.round(point.width) + 'm', x, y);
+                    ctx.fillText(Math.round(point.width) + 'm', x, y);
                     
-                    // Road name label below
-                    if (zoom >= 13 && point.width >= 15) {
-                        ctx.font = 'bold 10px Arial';
+                    // Road name label (at higher zoom)
+                    if (zoom >= 14 && point.width >= 20) {
+                        ctx.font = 'bold 9px Arial';
                         ctx.fillStyle = '#333';
                         ctx.strokeStyle = 'white';
-                        ctx.lineWidth = 3;
-                        ctx.textAlign = 'center';
+                        ctx.lineWidth = 2;
                         
                         let displayName = point.name;
-                        if (displayName.length > 18) {
-                            displayName = displayName.substring(0, 16) + '...';
+                        if (displayName.length > 20) {
+                            displayName = displayName.substring(0, 18) + '...';
                         }
                         
-                        ctx.strokeText(displayName, x, y + size + 12);
-                        ctx.fillText(displayName, x, y + size + 12);
+                        ctx.strokeText(displayName, x, y + size * 2 + 8);
+                        ctx.fillText(displayName, x, y + size * 2 + 8);
                     }
                 });
             }
@@ -1213,6 +1215,8 @@
             document.getElementById('distRoadLength').textContent = (totalRoadLength / 1000).toFixed(2) + ' km';
             document.getElementById('distMajorRoads').textContent = majorRoads.toLocaleString();
             document.getElementById('distEntryExit').textContent = entryExitStats.total;
+            document.getElementById('distEntries').textContent = entryExitStats.entries || 0;
+            document.getElementById('distExits').textContent = entryExitStats.exits || 0;
             document.getElementById('distMajorCrossings').textContent = entryExitStats.major;
             document.getElementById('distSecCrossings').textContent = entryExitStats.secondary;
             document.getElementById('distLocalCrossings').textContent = entryExitStats.local;
@@ -1889,17 +1893,22 @@
             
             if (item.type === 'entryexit') {
                 const p = item.data;
-                const color = getRoadColor(p.width);
+                const isEntry = p.direction === 'ENTRY';
+                const dirColor = isEntry ? '#2e7d32' : '#c62828';
+                const dirBg = isEntry ? '#e8f5e9' : '#ffebee';
+                const dirLabel = isEntry ? 'ENTRY (into district)' : 'EXIT (out of district)';
                 showInfoPopup(pixelX, pixelY,
-                    `<span class="type-badge" style="background:#e91e63;">Entry/Exit</span> Boundary Crossing`,
+                    `<span class="type-badge" style="background:${dirColor};">${p.direction || 'CROSSING'}</span> Boundary Crossing`,
                     `<div style="direction:rtl;text-align:right;font-size:14px;font-weight:bold;margin-bottom:8px;">${p.name}</div>
                     <table>
+                        <tr><td>Direction</td><td style="color:${dirColor};font-weight:bold;">${dirLabel}</td></tr>
                         <tr><td>Road Width</td><td><b>${p.width}m</b></td></tr>
+                        <tr><td>Road Class</td><td>${p.width >= 30 ? 'Major Highway' : p.width >= 15 ? 'Arterial' : 'Local'}</td></tr>
                         <tr><td>Type</td><td>${p.roadProps?.highway_type || p.roadProps?.category || p.roadProps?.ROADCATEGORY || '-'}</td></tr>
                         <tr><td>Location</td><td>${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</td></tr>
                     </table>
-                    <div style="margin-top:10px;padding:8px;background:#fce4ec;border-radius:4px;font-size:10px;color:#880e4f;">
-                        This point marks where the road crosses the district boundary (entry or exit point).
+                    <div style="margin-top:10px;padding:8px;background:${dirBg};border-radius:4px;font-size:10px;color:${dirColor};">
+                        ${isEntry ? 'Traffic can ENTER the district via this road.' : 'Traffic can EXIT the district via this road.'}
                     </div>`
                 );
             } else if (item.type === 'road') {
