@@ -112,11 +112,11 @@
 </head>
 <body>
     <div id="loadingOverlay" class="loading-overlay">
-        <div id="loadingTitle">🗺️ Loading Google Maps...</div>
+        <div id="loadingTitle"> Loading Google Maps...</div>
         <div class="progress-bar"><div id="progressFill" class="progress-fill" style="width: 0%"></div></div>
         <div id="loadingStatus">Please wait while the map loads...</div>
         <div style="font-size: 12px; color: #aaa; max-width: 400px; text-align: center; margin-top: 10px;">
-            💡 Using keyless Google Maps API
+             Using keyless Google Maps API
         </div>
     </div>
     
@@ -126,7 +126,7 @@
     <!-- Info Popup for clicked items -->
     <div id="infoPopup" class="info-popup">
         <span class="close" onclick="closeInfoPopup()">&times;</span>
-        <h3 id="popupTitle">📍 Details</h3>
+        <h3 id="popupTitle"> Details</h3>
         <div id="popupContent"></div>
     </div>
     
@@ -135,10 +135,10 @@
         
         <!-- Total Stats -->
         <div class="stats-grid">
-            <div class="stat-box" style="background:#9c27b0;"><div class="num" id="totalBldg">0</div><div class="lbl">🏗️ Buildings</div></div>
-            <div class="stat-box apt"><div class="num" id="totalApt">0</div><div class="lbl">🏢 Apartments</div></div>
-            <div class="stat-box villa"><div class="num" id="totalVilla">0</div><div class="lbl">🏠 Villas</div></div>
-            <div class="stat-box other"><div class="num" id="totalOther">0</div><div class="lbl">📦 Other</div></div>
+            <div class="stat-box" style="background:#9c27b0;"><div class="num" id="totalBldg">0</div><div class="lbl"> Buildings</div></div>
+            <div class="stat-box apt"><div class="num" id="totalApt">0</div><div class="lbl"> Apartments</div></div>
+            <div class="stat-box villa"><div class="num" id="totalVilla">0</div><div class="lbl"> Villas</div></div>
+            <div class="stat-box other"><div class="num" id="totalOther">0</div><div class="lbl"> Other</div></div>
         </div>
         <div style="text-align:center; font-size:11px; color:#666; margin-bottom:8px;">
             Total Parcels: <b id="totalParcels">0</b> | POIs: <b id="totalPoi">0</b> | Roads: <b id="totalRoads">0</b>
@@ -146,19 +146,19 @@
         
         <!-- Selected District Stats -->
         <div class="district-stats" id="districtStats">
-            <h3 id="districtStatsTitle">📍 DISTRICT: None</h3>
-            <div class="row" style="color:#9c27b0;"><span>🏗️ Buildings:</span><span id="distBldg">0</span></div>
-            <div class="row" style="color:#2196F3;"><span>🏢 Apartments:</span><span id="distApt">0</span></div>
-            <div class="row" style="color:#4CAF50;"><span>🏠 Villas:</span><span id="distVilla">0</span></div>
-            <div class="row" style="color:#FF9800;"><span>📦 Other:</span><span id="distOther">0</span></div>
+            <h3 id="districtStatsTitle"> DISTRICT: None</h3>
+            <div class="row" style="color:#9c27b0;"><span> Buildings:</span><span id="distBldg">0</span></div>
+            <div class="row" style="color:#2196F3;"><span> Apartments:</span><span id="distApt">0</span></div>
+            <div class="row" style="color:#4CAF50;"><span> Villas:</span><span id="distVilla">0</span></div>
+            <div class="row" style="color:#FF9800;"><span> Other:</span><span id="distOther">0</span></div>
             <div class="row total"><span>Total Parcels:</span><span id="distTotal">0</span></div>
-            <div class="row"><span>📍 POIs:</span><span id="distPoi">0</span></div>
+            <div class="row"><span> POIs:</span><span id="distPoi">0</span></div>
             <div class="row total" style="color:#4CAF50;"><span>Villa %:</span><span id="distVillaPct">0%</span></div>
             <div class="row total" style="color:#2196F3;"><span>Apt %:</span><span id="distAptPct">0%</span></div>
             
             <!-- Road Stats -->
             <div style="border-top:2px solid #2196F3;margin-top:8px;padding-top:8px;">
-                <div class="row" style="color:#2196F3;font-weight:bold;"><span>🛣️ ROADS</span><span></span></div>
+                <div class="row" style="color:#2196F3;font-weight:bold;"><span> ROADS</span><span></span></div>
                 <div class="row"><span>Total Roads:</span><span id="distRoads">0</span></div>
                 <div class="row"><span>Total Length:</span><span id="distRoadLength">0 km</span></div>
                 <div class="row"><span>Major (20m+):</span><span id="distMajorRoads">0</span></div>
@@ -174,20 +174,20 @@
         
         <!-- Dynamic Counts (In View) -->
         <div class="dynamic-stats">
-            <h3>📍 IN CURRENT VIEW</h3>
-            <div class="row" style="color:#9c27b0;"><span>🏗️ Buildings:</span><span id="viewBldg">0</span></div>
-            <div class="row" style="color:#2196F3;"><span>🏢 Apartments:</span><span id="viewApt">0</span></div>
-            <div class="row" style="color:#4CAF50;"><span>🏠 Villas:</span><span id="viewVilla">0</span></div>
-            <div class="row" style="color:#FF9800;"><span>📦 Other:</span><span id="viewOther">0</span></div>
+            <h3> IN CURRENT VIEW</h3>
+            <div class="row" style="color:#9c27b0;"><span> Buildings:</span><span id="viewBldg">0</span></div>
+            <div class="row" style="color:#2196F3;"><span> Apartments:</span><span id="viewApt">0</span></div>
+            <div class="row" style="color:#4CAF50;"><span> Villas:</span><span id="viewVilla">0</span></div>
+            <div class="row" style="color:#FF9800;"><span> Other:</span><span id="viewOther">0</span></div>
             <div class="row total"><span>Total Parcels:</span><span id="viewTotal">0</span></div>
-            <div class="row"><span>📍 POIs:</span><span id="viewPoi">0</span></div>
+            <div class="row"><span> POIs:</span><span id="viewPoi">0</span></div>
             <div class="row total" style="color:#4CAF50;"><span>Villa %:</span><span id="viewVillaPct">0%</span></div>
         </div>
         
         <!-- Layer Controls -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                🎨 LAYERS <span>▼</span>
+                 LAYERS <span></span>
             </div>
             <div class="section-content open">
                 <div class="layer-control">
@@ -264,7 +264,7 @@
                     </div>
                 </div>
                 <div class="click-toggle">
-                    <label><input type="checkbox" id="enableClick" checked> 🖱️ Enable click to view details</label>
+                    <label><input type="checkbox" id="enableClick" checked>  Enable click to view details</label>
                     <div style="font-size:9px;color:#666;margin-top:3px;margin-left:20px;">
                         Click on POI/Parcel/District to see info. Disable to freely pan/zoom.
                     </div>
@@ -275,31 +275,31 @@
         <!-- Data Files -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                📂 DATA FILES <span>▼</span>
+                 DATA FILES <span></span>
             </div>
             <div class="section-content open">
                 <div class="file-input">
-                    <label>🏗️ MS Buildings JSON:</label>
+                    <label> MS Buildings JSON:</label>
                     <input type="file" id="buildingsFile" accept=".json">
                     <div id="buildingsStatus" class="file-status">Upload buildings JSON</div>
                 </div>
                 <div class="file-input">
-                    <label>📊 Parcels CSV:</label>
+                    <label> Parcels CSV:</label>
                     <input type="file" id="parcelsFile" accept=".csv">
                     <div id="parcelsStatus" class="file-status">Use <b>riyadh_parcels_classified.csv</b> for best results</div>
                 </div>
                 <div class="file-input">
-                    <label>📍 POI CSV (riyadh_pois.csv):</label>
+                    <label> POI CSV (riyadh_pois.csv):</label>
                     <input type="file" id="poiFile" accept=".csv">
                     <div id="poiStatus" class="file-status">Upload POI CSV</div>
                 </div>
                 <div class="file-input">
-                    <label>🗺️ Districts GeoJSON:</label>
+                    <label> Districts GeoJSON:</label>
                     <input type="file" id="distFile" accept=".json,.geojson">
                     <div id="distStatus" class="file-status">Upload districts JSON</div>
                 </div>
                 <div class="file-input" style="background:#e3f2fd;padding:8px;border-radius:6px;margin-top:8px;">
-                    <label>🛣️ Roads GeoJSON (muhammadiyah_roads.geojson):</label>
+                    <label> Roads GeoJSON (muhammadiyah_roads.geojson):</label>
                     <input type="file" id="roadsFile" accept=".json,.geojson">
                     <div id="roadsStatus" class="file-status">Upload roads GeoJSON for visualization</div>
                 </div>
@@ -309,7 +309,7 @@
         <!-- POI Categories -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                📍 POI CATEGORIES (<span id="poiCatCount">0</span>) <span>▼</span>
+                 POI CATEGORIES (<span id="poiCatCount">0</span>) <span></span>
             </div>
             <div class="section-content">
                 <div style="margin-bottom:5px;">
@@ -323,7 +323,7 @@
         <!-- Districts -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                🏘️ DISTRICTS (<span id="districtCount">0</span>) <span>▼</span>
+                 DISTRICTS (<span id="districtCount">0</span>) <span></span>
             </div>
             <div class="section-content">
                 <input type="text" class="search-box" id="districtSearch" placeholder="Search districts..." oninput="filterDistricts()">
@@ -335,7 +335,7 @@
         <!-- Export -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                📤 EXPORT <span>▼</span>
+                 EXPORT <span></span>
             </div>
             <div class="section-content">
                 <button class="btn btn-success" onclick="exportVisibleParcels()">Export Visible Parcels</button>
@@ -349,7 +349,7 @@
         
         <!-- Road Legend (shown when roads loaded) -->
         <div id="roadLegend" style="display:none;margin-top:10px;padding:8px;background:#e3f2fd;border-radius:6px;">
-            <div style="font-weight:600;font-size:11px;margin-bottom:5px;">🛣️ Road Width Legend</div>
+            <div style="font-weight:600;font-size:11px;margin-bottom:5px;"> Road Width Legend</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:9px;">
                 <div><span style="display:inline-block;width:20px;height:4px;background:#d32f2f;border-radius:2px;"></span> 36m+</div>
                 <div><span style="display:inline-block;width:20px;height:4px;background:#ff5722;border-radius:2px;"></span> 30m</div>
@@ -423,7 +423,7 @@
             } else {
                 console.error('Google Maps API failed to load after', MAX_LOAD_ATTEMPTS, 'attempts');
                 document.getElementById('loadingTitle').textContent = 'Error loading Google Maps';
-                document.getElementById('loadingStatus').innerHTML = 'The keyless API may be temporarily unavailable.<br><br><button onclick="retryLoadMaps()" style="padding:10px 20px;font-size:14px;cursor:pointer;background:#4CAF50;color:white;border:none;border-radius:5px;">🔄 Retry</button><br><br><small>Or try refreshing the page</small>';
+                document.getElementById('loadingStatus').innerHTML = 'The keyless API may be temporarily unavailable.<br><br><button onclick="retryLoadMaps()" style="padding:10px 20px;font-size:14px;cursor:pointer;background:#4CAF50;color:white;border:none;border-radius:5px;"> Retry</button><br><br><small>Or try refreshing the page</small>';
                 document.getElementById('loadingOverlay').classList.remove('hidden');
             }
         }
@@ -478,7 +478,7 @@
         function toggleSection(header) {
             const content = header.nextElementSibling;
             content.classList.toggle('open');
-            header.querySelector('span:last-child').textContent = content.classList.contains('open') ? '▼' : '▶';
+            header.querySelector('span:last-child').textContent = content.classList.contains('open') ? '' : '';
         }
         
         function showLoading(title) {
@@ -984,14 +984,14 @@
                 }
             });
             
-            // Estimate entry/exit points (unique roads × 2 ends)
+            // Estimate entry/exit points (unique roads X 2 ends)
             const entryExitEstimate = uniqueRoadNames.size * 2;
             
             const total = apt + villa + other;
             const villaPct = total > 0 ? (villa / total * 100).toFixed(1) : 0;
             const aptPct = total > 0 ? (apt / total * 100).toFixed(1) : 0;
             
-            document.getElementById('districtStatsTitle').textContent = '📍 DISTRICT: ' + selectedDistrict;
+            document.getElementById('districtStatsTitle').textContent = ' DISTRICT: ' + selectedDistrict;
             document.getElementById('distBldg').textContent = bldg.toLocaleString();
             document.getElementById('distApt').textContent = apt.toLocaleString();
             document.getElementById('distVilla').textContent = villa.toLocaleString();
@@ -1062,15 +1062,15 @@
                         }
                         
                         document.getElementById('totalBldg').textContent = buildings.length.toLocaleString();
-                        document.getElementById('buildingsStatus').innerHTML = `✓ <b>${file.name}</b><br>${buildings.length.toLocaleString()} buildings`;
+                        document.getElementById('buildingsStatus').innerHTML = `OK <b>${file.name}</b><br>${buildings.length.toLocaleString()} buildings`;
                         document.getElementById('buildingsStatus').classList.add('loaded');
                         
                         hideLoading();
-                        showToast(`🏗️ ${buildings.length.toLocaleString()} buildings!`, '#9c27b0');
+                        showToast(` ${buildings.length.toLocaleString()} buildings!`, '#9c27b0');
                         render();
                     } catch(err) {
                         hideLoading();
-                        document.getElementById('buildingsStatus').innerHTML = `❌ Error: ${err.message}`;
+                        document.getElementById('buildingsStatus').innerHTML = ` Error: ${err.message}`;
                         console.error('Buildings load error:', err);
                     }
                 }, 10);
@@ -1161,7 +1161,7 @@
                     // Trim array to actual size
                     parcels.length = validCount;
                     
-                    document.getElementById('parcelsStatus').innerHTML = `✓ <b>${file.name}</b><br>${parcels.length.toLocaleString()} parcels`;
+                    document.getElementById('parcelsStatus').innerHTML = `OK <b>${file.name}</b><br>${parcels.length.toLocaleString()} parcels`;
                     document.getElementById('parcelsStatus').classList.add('loaded');
                     document.getElementById('totalParcels').textContent = parcels.length.toLocaleString();
                     document.getElementById('totalApt').textContent = aptCount.toLocaleString();
@@ -1169,7 +1169,7 @@
                     document.getElementById('totalOther').textContent = otherCount.toLocaleString();
                     
                     hideLoading();
-                    showToast(`📊 ${parcels.length.toLocaleString()} parcels loaded!`, '#4CAF50');
+                    showToast(` ${parcels.length.toLocaleString()} parcels loaded!`, '#4CAF50');
                     render();
                 }, 10);
             };
@@ -1216,7 +1216,7 @@
                     }
                     poiData.length = count;
                     
-                    document.getElementById('poiStatus').innerHTML = `✓ <b>${file.name}</b><br>${poiData.length.toLocaleString()} POIs`;
+                    document.getElementById('poiStatus').innerHTML = `OK <b>${file.name}</b><br>${poiData.length.toLocaleString()} POIs`;
                     document.getElementById('poiStatus').classList.add('loaded');
                     document.getElementById('totalPoi').textContent = poiData.length.toLocaleString();
                     document.getElementById('poiCount').textContent = poiData.length.toLocaleString();
@@ -1240,7 +1240,7 @@
                     });
                     
                     hideLoading();
-                    showToast(`📍 ${poiData.length.toLocaleString()} POIs!`, '#9C27B0');
+                    showToast(` ${poiData.length.toLocaleString()} POIs!`, '#9C27B0');
                     render();
                 }, 10);
             };
@@ -1286,11 +1286,11 @@
                     console.log('Districts loaded:', districts.length, 'Sample:', districts[0]);
                     
                     if (districts.length === 0) {
-                        document.getElementById('distStatus').innerHTML = `⚠️ <b>${file.name}</b><br>No districts found. Check format.`;
+                        document.getElementById('distStatus').innerHTML = ` <b>${file.name}</b><br>No districts found. Check format.`;
                     } else {
-                        document.getElementById('distStatus').innerHTML = `✓ <b>${file.name}</b><br>${districts.length} districts loaded`;
+                        document.getElementById('distStatus').innerHTML = `OK <b>${file.name}</b><br>${districts.length} districts loaded`;
                         document.getElementById('distStatus').classList.add('loaded');
-                        showToast(`🗺️ Loaded ${districts.length} districts`, '#607D8B');
+                        showToast(` Loaded ${districts.length} districts`, '#607D8B');
                     }
                     document.getElementById('districtCount').textContent = districts.length;
                     
@@ -1298,7 +1298,7 @@
                     render();
                 } catch(err) {
                     console.error('District load error:', err);
-                    document.getElementById('distStatus').innerHTML = `❌ <b>${file.name}</b><br>Error: ${err.message}`;
+                    document.getElementById('distStatus').innerHTML = ` <b>${file.name}</b><br>Error: ${err.message}`;
                 }
             };
             reader.readAsText(file);
@@ -1344,7 +1344,7 @@
                             }
                         });
                         
-                        document.getElementById('roadsStatus').innerHTML = `✓ <b>${file.name}</b><br>${roads.length} roads (${(totalLength/1000).toFixed(2)} km)`;
+                        document.getElementById('roadsStatus').innerHTML = `OK <b>${file.name}</b><br>${roads.length} roads (${(totalLength/1000).toFixed(2)} km)`;
                         document.getElementById('roadsStatus').classList.add('loaded');
                         document.getElementById('roadCount').textContent = roads.length;
                         document.getElementById('totalRoads').textContent = roads.length;
@@ -1366,12 +1366,12 @@
                         }
                         
                         hideLoading();
-                        showToast(`🛣️ ${roads.length} roads loaded!`, '#2196F3');
+                        showToast(` ${roads.length} roads loaded!`, '#2196F3');
                         render();
                     } catch(err) {
                         hideLoading();
                         console.error('Roads load error:', err);
-                        document.getElementById('roadsStatus').innerHTML = `❌ Error: ${err.message}`;
+                        document.getElementById('roadsStatus').innerHTML = ` Error: ${err.message}`;
                     }
                 }, 10);
             };
@@ -1680,20 +1680,20 @@
                 const color = getRoadColor(parseFloat(width) || 10);
                 
                 showInfoPopup(pixelX, pixelY,
-                    `<span class="type-badge" style="background:${color};">🛣️ Road</span> ${width}m`,
+                    `<span class="type-badge" style="background:${color};"> Road</span> ${width}m`,
                     `<div style="direction:rtl;text-align:right;font-size:16px;font-weight:bold;margin-bottom:8px;">${nameAr}</div>
                     <div style="color:#666;margin-bottom:10px;">${nameEn}</div>
                     <table>
-                        <tr><td>📏 Width</td><td><b>${width}m</b></td></tr>
-                        <tr><td>📐 Length</td><td>${typeof length === 'number' ? length.toFixed(0) + 'm' : length}</td></tr>
-                        <tr><td>🚗 Lanes</td><td>${lanes}</td></tr>
-                        <tr><td>🛤️ Paved</td><td>${paved}</td></tr>
-                        <tr><td>📊 Category</td><td>${category}</td></tr>
-                        <tr><td>🔧 Condition</td><td>${condition}</td></tr>
-                        <tr><td>🏗️ Surface</td><td>${surfaceType}</td></tr>
-                        <tr><td>⚡ Speed Limit</td><td>${speedLimit}</td></tr>
-                        <tr><td>↔️ Direction</td><td>${direction}</td></tr>
-                        <tr><td>🆔 Street ID</td><td style="font-size:9px;">${streetId}</td></tr>
+                        <tr><td> Width</td><td><b>${width}m</b></td></tr>
+                        <tr><td> Length</td><td>${typeof length === 'number' ? length.toFixed(0) + 'm' : length}</td></tr>
+                        <tr><td> Lanes</td><td>${lanes}</td></tr>
+                        <tr><td> Paved</td><td>${paved}</td></tr>
+                        <tr><td> Category</td><td>${category}</td></tr>
+                        <tr><td> Condition</td><td>${condition}</td></tr>
+                        <tr><td> Surface</td><td>${surfaceType}</td></tr>
+                        <tr><td> Speed Limit</td><td>${speedLimit}</td></tr>
+                        <tr><td> Direction</td><td>${direction}</td></tr>
+                        <tr><td> Street ID</td><td style="font-size:9px;">${streetId}</td></tr>
                     </table>`
                 );
             } else if (item.type === 'poi') {
@@ -1798,23 +1798,23 @@
                 }
                 
                 showInfoPopup(pixelX, pixelY,
-                    `<span class="type-badge" style="background:#607D8B;">🏘️ District</span>`,
+                    `<span class="type-badge" style="background:#607D8B;"> District</span>`,
                     `<div style="font-size:16px;font-weight:bold;margin-bottom:10px;">${name}</div>
                     <table>
-                        <tr style="background:#e3f2fd;"><td colspan="2" style="font-weight:bold;color:#1976D2;">📊 PARCELS</td></tr>
+                        <tr style="background:#e3f2fd;"><td colspan="2" style="font-weight:bold;color:#1976D2;"> PARCELS</td></tr>
                         <tr><td>Total Parcels</td><td><b>${distStats.parcels.toLocaleString()}</b></td></tr>
-                        <tr><td>🏢 Apartments</td><td>${distStats.apt.toLocaleString()}</td></tr>
-                        <tr><td>🏠 Villas</td><td>${distStats.villa.toLocaleString()}</td></tr>
-                        <tr><td>📦 Other</td><td>${distStats.other.toLocaleString()}</td></tr>
-                        <tr><td>📍 POIs</td><td>${distStats.poi.toLocaleString()}</td></tr>
+                        <tr><td> Apartments</td><td>${distStats.apt.toLocaleString()}</td></tr>
+                        <tr><td> Villas</td><td>${distStats.villa.toLocaleString()}</td></tr>
+                        <tr><td> Other</td><td>${distStats.other.toLocaleString()}</td></tr>
+                        <tr><td> POIs</td><td>${distStats.poi.toLocaleString()}</td></tr>
                         
-                        <tr style="background:#e8f5e9;"><td colspan="2" style="font-weight:bold;color:#2E7D32;">🛣️ ROADS</td></tr>
+                        <tr style="background:#e8f5e9;"><td colspan="2" style="font-weight:bold;color:#2E7D32;"> ROADS</td></tr>
                         <tr><td>Road Segments</td><td><b>${distStats.roads.toLocaleString()}</b></td></tr>
                         <tr><td>Total Length</td><td>${(distStats.roadLength/1000).toFixed(2)} km</td></tr>
                         <tr><td>Major Roads (20m+)</td><td>${distStats.majorRoads}</td></tr>
                         <tr><td>Unique Roads</td><td>${distStats.uniqueRoads || 0}</td></tr>
                         
-                        <tr style="background:#fff3e0;"><td colspan="2" style="font-weight:bold;color:#E65100;">🚗 ENTRY/EXIT</td></tr>
+                        <tr style="background:#fff3e0;"><td colspan="2" style="font-weight:bold;color:#E65100;"> ENTRY/EXIT</td></tr>
                         <tr><td>Est. Entry/Exit Points</td><td><b>~${distStats.entryExit || 0}</b></td></tr>
                     </table>
                     <div style="margin-top:10px;text-align:center;">
