@@ -1679,10 +1679,9 @@
                     document.getElementById('entryExitCount').textContent = entryExitPoints.length;
                     
                     // Center on first point if exists
-                    if (entryExitPoints.length > 0) {
+                    if (entryExitPoints.length > 0 && leafletMap) {
                         const p = entryExitPoints[0];
-                        map.setCenter({ lat: p.lat, lng: p.lng });
-                        map.setZoom(15);
+                        leafletMap.setView([p.lat, p.lng], 15);
                     }
                     
                     // Enable entry/exit display
