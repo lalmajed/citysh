@@ -121,6 +121,13 @@
             <div class="stat"><div class="n" id="sOther">0</div><div class="l">Other</div></div>
         </div>
         
+        <h3>ENTRY/EXIT POINTS</h3>
+        <div class="box">
+            <div class="box-title">Load Saved Points</div>
+            <input type="file" id="filePoints" accept=".geojson,.json">
+            <div class="status wait" id="statusPoints">No points loaded</div>
+        </div>
+        
         <h3>EXPORT</h3>
         <button id="btnExport" onclick="exportData()" disabled>Download Entry/Exit GeoJSON</button>
         <button onclick="exportBoundary()">Download Modified Boundary</button>
