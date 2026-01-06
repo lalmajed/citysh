@@ -54,17 +54,18 @@
         .leaflet-popup-content { direction: rtl; }
         
         .vertex-handle {
-            width: 14px !important;
-            height: 14px !important;
-            background: #ffeb3b !important;
-            border: 2px solid #e94560 !important;
+            width: 22px !important;
+            height: 22px !important;
+            background: #00ff00 !important;
+            border: 4px solid #000 !important;
             border-radius: 50% !important;
             cursor: move !important;
-            box-shadow: 0 0 6px rgba(0,0,0,0.5);
+            box-shadow: 0 0 12px #00ff00, 0 0 20px rgba(0,255,0,0.5);
         }
         .vertex-handle:hover {
             background: #fff !important;
-            transform: scale(1.3);
+            transform: scale(1.4);
+            box-shadow: 0 0 20px #fff, 0 0 30px rgba(255,255,255,0.8);
         }
     </style>
 </head>
@@ -163,8 +164,8 @@
             
             const vertexIcon = L.divIcon({
                 className: 'vertex-handle',
-                iconSize: [14, 14],
-                iconAnchor: [7, 7]
+                iconSize: [22, 22],
+                iconAnchor: [11, 11]
             });
             
             // Skip last point if it's same as first (closed polygon)
