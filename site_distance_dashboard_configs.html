@@ -58,6 +58,10 @@
                 <div id="mapStatus" style="background:#fff3e0;color:#e65100;padding:8px;border-radius:4px;margin-bottom:10px;font-size:0.85rem;text-align:center;">
                     ⏳ Loading Google Maps...
                 </div>
+                <div style="background:#e3f2fd;padding:8px;border-radius:4px;margin-bottom:10px;font-size:0.75rem;color:#1565c0;">
+                    💡 <b>Tip:</b> Keyless API has ~600-1000 requests/session limit. 
+                    If rate limited, PAUSE for 1-2 min then RESUME. Progress is auto-saved!
+                </div>
                 <div style="margin-bottom:10px;">
                     <label>Workers: </label>
                     <select id="workerCount" style="width:80px;padding:5px;">
@@ -83,9 +87,14 @@
                     🚀 START EXTRACTION
                 </button>
                 
-                <button class="btn btn-stop" id="stopBtn" onclick="stopExtraction()" style="display:none;">
-                    ⏹️ STOP
-                </button>
+                <div id="runningBtns" style="display:none;">
+                    <button class="btn" id="pauseBtn" onclick="togglePause()" style="background:#ff9800;margin-bottom:5px;">
+                        ⏸️ PAUSE
+                    </button>
+                    <button class="btn btn-stop" id="stopBtn" onclick="stopExtraction()">
+                        ⏹️ STOP
+                    </button>
+                </div>
             </div>
             
             <div class="panel">
@@ -511,15 +520,22 @@ async function findWaypointsOnPath(path, origin, destination, directDist) {
 // ROUTE FETCHING
 // ============================================================
 
-// Rate-limited fetch with backoff
-let minDelayMs = 200;
+// Rate-limited fetch with aggressive backoff
+let minDelayMs = 500;
+let consecutiveErrors = 0;
+let paused = false;
 
 async function fetchRouteForConfig(config, retries = 5) {
     const origin = config.origin;
     const dest = config.destination;
     
     for (let attempt = 1; attempt <= retries; attempt++) {
-        // Small delay between requests
+        // Wait if paused
+        while (paused) {
+            await new Promise(r => setTimeout(r, 1000));
+        }
+        
+        // Delay between requests
         await new Promise(r => setTimeout(r, minDelayMs));
         
         const result = await new Promise(async (resolve) => {
@@ -529,8 +545,9 @@ async function fetchRouteForConfig(config, retries = 5) {
                 travelMode: 'DRIVING'
             }, async (res, status) => {
                 if (status === 'OK') {
-                    // Success - reduce delay
-                    if (minDelayMs > 50) minDelayMs = Math.max(50, minDelayMs - 10);
+                    // Success - slowly reduce delay
+                    consecutiveErrors = 0;
+                    if (minDelayMs > 300) minDelayMs = Math.max(300, minDelayMs - 50);
                     
                     const leg = res.routes[0].legs[0];
                     const dist = leg.distance.value / 1000;
@@ -546,8 +563,18 @@ async function fetchRouteForConfig(config, retries = 5) {
                         waypoints: waypoints 
                     });
                 } else if (status === 'OVER_QUERY_LIMIT') {
-                    // Rate limited - increase delay
-                    minDelayMs = Math.min(3000, minDelayMs + 200);
+                    // Rate limited - increase delay significantly
+                    consecutiveErrors++;
+                    minDelayMs = Math.min(10000, minDelayMs + 500 * consecutiveErrors);
+                    
+                    // Auto-pause if too many consecutive errors
+                    if (consecutiveErrors >= 5 && !paused) {
+                        paused = true;
+                        log('⚠️ AUTO-PAUSED: Too many rate limit errors. Click RESUME to continue.');
+                        document.getElementById('pauseBtn').textContent = '▶️ RESUME (paused)';
+                        document.getElementById('pauseBtn').style.background = '#4caf50';
+                    }
+                    
                     resolve({ error: status, retryable: true });
                 } else {
                     resolve({ 
@@ -561,9 +588,26 @@ async function fetchRouteForConfig(config, retries = 5) {
         if (!result.error) return result;
         if (!result.retryable || attempt === retries) return result;
         
-        // Exponential backoff
-        const delay = 1000 * attempt + Math.random() * 1000;
+        // Exponential backoff - wait longer each retry
+        const delay = 2000 * Math.pow(2, attempt - 1) + Math.random() * 2000;
+        log('⏳ Retry ' + attempt + '/' + retries + ' in ' + (delay/1000).toFixed(1) + 's...');
         await new Promise(r => setTimeout(r, delay));
+    }
+}
+
+function togglePause() {
+    paused = !paused;
+    const btn = document.getElementById('pauseBtn');
+    if (paused) {
+        btn.textContent = '▶️ RESUME';
+        btn.style.background = '#4caf50';
+        log('⏸️ PAUSED - Wait 1-2 minutes for quota to reset, then click RESUME');
+    } else {
+        btn.textContent = '⏸️ PAUSE';
+        btn.style.background = '#ff9800';
+        consecutiveErrors = 0;
+        minDelayMs = 500; // Reset delay
+        log('▶️ RESUMED with delay: ' + minDelayMs + 'ms');
     }
 }
 
@@ -585,8 +629,13 @@ async function startParallelExtraction() {
     }
     
     running = true;
+    paused = false;
+    consecutiveErrors = 0;
+    minDelayMs = 500;
     document.getElementById('startBtn').style.display = 'none';
-    document.getElementById('stopBtn').style.display = 'block';
+    document.getElementById('runningBtns').style.display = 'block';
+    document.getElementById('pauseBtn').textContent = '⏸️ PAUSE';
+    document.getElementById('pauseBtn').style.background = '#ff9800';
     
     const workerCount = parseInt(document.getElementById('workerCount').value);
     
@@ -665,7 +714,8 @@ async function startParallelExtraction() {
             document.getElementById('statWaypoints').textContent = withWaypoints;
             document.getElementById('progressFill').style.width = pct + '%';
             document.getElementById('progressFill').textContent = pct + '%';
-            document.getElementById('currentCalc').textContent = config.config_id + ' [delay:' + minDelayMs + 'ms]';
+            const statusText = paused ? ' [PAUSED]' : ' [' + minDelayMs + 'ms]';
+            document.getElementById('currentCalc').textContent = config.config_id + statusText;
             
             // Save periodically
             if (completed % 50 === 0) {
@@ -678,8 +728,9 @@ async function startParallelExtraction() {
         if (activeWorkers === 0) {
             saveCache();
             running = false;
+            paused = false;
             document.getElementById('startBtn').style.display = 'block';
-            document.getElementById('stopBtn').style.display = 'none';
+            document.getElementById('runningBtns').style.display = 'none';
             
             log('═══════════════════════════════════');
             log('EXTRACTION COMPLETE!');
