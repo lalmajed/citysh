@@ -3,6 +3,8 @@
 <head>
     <title>Entry/Exit Dashboard</title>
     <meta charset="utf-8">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; }
@@ -43,20 +45,9 @@
         .item .dot { width: 20px; height: 20px; background: #e94560; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; margin-right: 6px; border: 2px solid white; }
         .item .name { flex: 1; direction: rtl; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
         
-        #mapContainer { position: fixed; left: 300px; top: 0; right: 0; bottom: 0; }
-        #map { width: 100%; height: 100%; background: #e5e3df; }
-        #overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 100; }
+        #map { position: fixed; left: 300px; top: 0; right: 0; bottom: 0; z-index: 1; }
         
-        #loading {
-            position: fixed; left: 300px; top: 0; right: 0; bottom: 0;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500;
-        }
-        #loading.hidden { display: none; }
-        .spinner { width: 50px; height: 50px; border: 4px solid #333; border-top-color: #e94560; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        #loadText { color: #e94560; margin-top: 20px; font-size: 16px; }
-        #loadProgress { color: #888; margin-top: 8px; font-size: 12px; }
+        .leaflet-popup-content { direction: rtl; }
     </style>
 </head>
 <body>
@@ -90,8 +81,8 @@
                 <input type="range" id="sliderWidth" min="0" max="40" value="10" step="2">
             </div>
             <div class="slider-row">
-                <label>Dot Size <span class="val" id="valDot">15</span></label>
-                <input type="range" id="sliderDot" min="8" max="30" value="15">
+                <label>Dot Size <span class="val" id="valDot">12</span></label>
+                <input type="range" id="sliderDot" min="6" max="25" value="12">
             </div>
         </div>
         
@@ -105,117 +96,35 @@
         <h3>EXPORT</h3>
         <button id="btnExport" onclick="exportData()" disabled>Download GeoJSON</button>
         
-        <h3>LIST</h3>
-        <div class="list" id="list"><div style="color:#666;text-align:center;padding:15px;">Load data</div></div>
+        <h3>POINT LIST</h3>
+        <div class="list" id="list"><div style="color:#666;text-align:center;padding:15px;">Load roads + district</div></div>
     </div>
     
-    <div id="loading">
-        <div class="spinner"></div>
-        <div id="loadText">Loading Google Maps...</div>
-        <div id="loadProgress">Initializing...</div>
-    </div>
-    
-    <div id="mapContainer">
-        <div id="map"></div>
-        <canvas id="overlay"></canvas>
-    </div>
+    <div id="map"></div>
 
     <script>
-        // Global variables
-        let map;
+        // Initialize Leaflet map - LOADS INSTANTLY
+        const map = L.map('map', {
+            center: [24.73, 46.65],
+            zoom: 14,
+            zoomControl: true
+        });
+        
+        // Add OpenStreetMap tiles - FREE, NO API KEY
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'OpenStreetMap',
+            maxZoom: 19
+        }).addTo(map);
+        
+        // Data
         let roads = [];
         let boundary = [];
         let entryExits = [];
         
-        // Google Maps loading - same as dynamic map
-        let mapsLoadAttempts = 0;
-        const MAX_LOAD_ATTEMPTS = 150;
-        
-        // Wait for Google Maps API - exact same logic as dynamic map
-        function waitForGoogleMaps() {
-            mapsLoadAttempts++;
-            document.getElementById('loadProgress').textContent = 'Attempt ' + mapsLoadAttempts + '/' + MAX_LOAD_ATTEMPTS;
-            
-            if (typeof google !== 'undefined' && google.maps && google.maps.Map) {
-                console.log('Google Maps API loaded successfully after', mapsLoadAttempts, 'attempts');
-                initMap();
-            } else if (mapsLoadAttempts < MAX_LOAD_ATTEMPTS) {
-                setTimeout(waitForGoogleMaps, 100);
-            } else {
-                console.error('Google Maps API failed to load after', MAX_LOAD_ATTEMPTS, 'attempts');
-                document.getElementById('loadText').textContent = 'Google Maps loading slow...';
-                document.getElementById('loadProgress').textContent = 'Still trying, please wait...';
-                // Keep trying
-                setTimeout(waitForGoogleMaps, 100);
-            }
-        }
-        
-        // Start checking for Google Maps
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', waitForGoogleMaps);
-        } else {
-            waitForGoogleMaps();
-        }
-        
-        // Canvas
-        const canvas = document.getElementById('overlay');
-        const ctx = canvas.getContext('2d');
-        
-        function resizeCanvas() {
-            const container = document.getElementById('mapContainer');
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
-            render();
-        }
-        window.addEventListener('resize', resizeCanvas);
-        
-        // Initialize map
-        function initMap() {
-            try {
-                map = new google.maps.Map(document.getElementById('map'), {
-                    center: { lat: 24.73, lng: 46.65 },
-                    zoom: 14,
-                    gestureHandling: 'greedy',
-                    zoomControl: true,
-                    mapTypeControl: true,
-                    scaleControl: true,
-                    streetViewControl: false,
-                    fullscreenControl: true
-                });
-                
-                document.getElementById('loading').classList.add('hidden');
-                resizeCanvas();
-                
-                map.addListener('idle', render);
-                map.addListener('bounds_changed', render);
-                map.addListener('zoom_changed', render);
-                
-                console.log('Map initialized successfully');
-            } catch (e) {
-                console.error('Map init error:', e);
-                document.getElementById('loadText').textContent = 'Error: ' + e.message;
-            }
-        }
-        
-        // Convert lat/lng to pixel
-        function toPixel(lat, lng) {
-            if (!map) return { x: -9999, y: -9999 };
-            const proj = map.getProjection();
-            const bounds = map.getBounds();
-            if (!proj || !bounds) return { x: -9999, y: -9999 };
-            
-            const ne = bounds.getNorthEast();
-            const sw = bounds.getSouthWest();
-            const topRight = proj.fromLatLngToPoint(ne);
-            const bottomLeft = proj.fromLatLngToPoint(sw);
-            const scale = Math.pow(2, map.getZoom());
-            const worldPoint = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
-            
-            return {
-                x: (worldPoint.x - bottomLeft.x) * scale,
-                y: (worldPoint.y - topRight.y) * scale
-            };
-        }
+        // Layers
+        let roadsLayer = L.layerGroup().addTo(map);
+        let boundaryLayer = L.layerGroup().addTo(map);
+        let pointsLayer = L.layerGroup().addTo(map);
         
         // Line intersection
         function lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {
@@ -229,9 +138,9 @@
             return null;
         }
         
-        // Extend road line by meters
+        // Extend line by meters
         function extendLine(x1, y1, x2, y2, meters) {
-            const deg = meters / 111000; // meters to degrees
+            const deg = meters / 111000;
             const dx = x2 - x1, dy = y2 - y1;
             const len = Math.sqrt(dx*dx + dy*dy);
             if (len < 1e-8) return { x1, y1, x2, y2 };
@@ -244,7 +153,7 @@
             };
         }
         
-        // Find where extended roads cross boundary
+        // Find crossings
         function findCrossings() {
             entryExits = [];
             if (!boundary.length || !roads.length) { updateUI(); return; }
@@ -256,7 +165,7 @@
             roads.forEach(road => {
                 const props = road.properties || {};
                 const w = parseFloat(props.width_m || props.WIDTH || props.width || 10);
-                const name = props.name_ar || props.ROADCENTERLINENAME_AR || props.name_en || 'Road';
+                const name = props.name_ar || props.ROADCENTERLINENAME_AR || props.name_en || props.name || 'Road';
                 
                 if (w < minW) return;
                 
@@ -273,19 +182,17 @@
                     const last = coords.length - 1;
                     const extEnd = extendLine(coords[last-1][0], coords[last-1][1], coords[last][0], coords[last][1], ext);
                     
-                    // Build extended coordinates
                     const extCoords = [[extStart.x2, extStart.y2], ...coords, [extEnd.x2, extEnd.y2]];
                     
-                    // Check each segment against boundary
                     for (let i = 0; i < extCoords.length - 1; i++) {
-                        const [x1, y1] = extCoords[i];
-                        const [x2, y2] = extCoords[i + 1];
+                        const [rx1, ry1] = extCoords[i];
+                        const [rx2, ry2] = extCoords[i + 1];
                         
                         for (let j = 0; j < boundary.length - 1; j++) {
                             const [bx1, by1] = boundary[j];
                             const [bx2, by2] = boundary[j + 1];
                             
-                            const hit = lineIntersect(x1, y1, x2, y2, bx1, by1, bx2, by2);
+                            const hit = lineIntersect(rx1, ry1, rx2, ry2, bx1, by1, bx2, by2);
                             if (hit) {
                                 const key = hit[0].toFixed(5) + '_' + hit[1].toFixed(5);
                                 if (!seen[key]) {
@@ -318,29 +225,29 @@
             }
             
             let html = '';
-            const max = Math.min(35, entryExits.length);
+            const max = Math.min(40, entryExits.length);
             for (let i = 0; i < max; i++) {
                 const p = entryExits[i];
                 html += `<div class="item" onclick="gotoPoint(${i})"><div class="dot">${Math.round(p.width)}</div><div class="name">${p.name}</div></div>`;
             }
-            if (entryExits.length > 35) {
-                html += `<div style="color:#888;text-align:center;padding:5px;">+${entryExits.length - 35} more</div>`;
+            if (entryExits.length > 40) {
+                html += `<div style="color:#888;text-align:center;padding:5px;">+${entryExits.length - 40} more</div>`;
             }
             list.innerHTML = html;
         }
         
         function gotoPoint(i) {
             const p = entryExits[i];
-            if (map && p) {
-                map.setCenter({ lat: p.lat, lng: p.lng });
-                map.setZoom(17);
+            if (p) {
+                map.setView([p.lat, p.lng], 17);
             }
         }
         
-        // Render on canvas
+        // Render on map
         function render() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (!map) return;
+            roadsLayer.clearLayers();
+            boundaryLayer.clearLayers();
+            pointsLayer.clearLayers();
             
             const ext = parseInt(document.getElementById('sliderExt').value);
             const minW = parseInt(document.getElementById('sliderWidth').value);
@@ -356,75 +263,57 @@
                 if (!geom) return;
                 
                 const lines = geom.type === 'LineString' ? [geom.coordinates] : (geom.coordinates || []);
+                const color = w >= 30 ? '#e94560' : w >= 15 ? '#ff9800' : '#4caf50';
+                const weight = w >= 30 ? 4 : w >= 15 ? 3 : 2;
                 
                 lines.forEach(coords => {
                     if (!coords || coords.length < 2) return;
                     
-                    // Extend
                     const extStart = extendLine(coords[1][0], coords[1][1], coords[0][0], coords[0][1], ext);
                     const last = coords.length - 1;
                     const extEnd = extendLine(coords[last-1][0], coords[last-1][1], coords[last][0], coords[last][1], ext);
                     
                     const extCoords = [[extStart.x2, extStart.y2], ...coords, [extEnd.x2, extEnd.y2]];
+                    const latlngs = extCoords.map(c => [c[1], c[0]]);
                     
-                    ctx.beginPath();
-                    extCoords.forEach((c, i) => {
-                        const px = toPixel(c[1], c[0]);
-                        if (i === 0) ctx.moveTo(px.x, px.y);
-                        else ctx.lineTo(px.x, px.y);
-                    });
-                    
-                    ctx.strokeStyle = w >= 30 ? '#e94560' : w >= 15 ? '#ff9800' : '#4caf50';
-                    ctx.lineWidth = w >= 30 ? 5 : w >= 15 ? 3 : 2;
-                    ctx.lineCap = 'round';
-                    ctx.stroke();
+                    L.polyline(latlngs, { color, weight, opacity: 0.8 }).addTo(roadsLayer);
                 });
             });
             
             // Draw boundary
             if (boundary.length) {
-                ctx.beginPath();
-                boundary.forEach((c, i) => {
-                    const px = toPixel(c[1], c[0]);
-                    if (i === 0) ctx.moveTo(px.x, px.y);
-                    else ctx.lineTo(px.x, px.y);
-                });
-                ctx.closePath();
-                ctx.fillStyle = 'rgba(233, 69, 96, 0.1)';
-                ctx.fill();
-                ctx.strokeStyle = '#e94560';
-                ctx.lineWidth = 3;
-                ctx.setLineDash([10, 5]);
-                ctx.stroke();
-                ctx.setLineDash([]);
+                const latlngs = boundary.map(c => [c[1], c[0]]);
+                L.polygon(latlngs, {
+                    color: '#e94560',
+                    weight: 3,
+                    fillColor: '#e94560',
+                    fillOpacity: 0.1,
+                    dashArray: '10, 5'
+                }).addTo(boundaryLayer);
             }
             
-            // Draw RED DOTS at crossings
-            entryExits.forEach(p => {
-                const px = toPixel(p.lat, p.lng);
-                const r = p.width >= 40 ? dotSize * 1.4 : p.width >= 20 ? dotSize * 1.1 : dotSize * 0.85;
+            // Draw entry/exit points
+            entryExits.forEach((p, i) => {
+                const r = p.width >= 40 ? dotSize * 1.3 : p.width >= 20 ? dotSize : dotSize * 0.8;
                 
-                // Glow
-                ctx.beginPath();
-                ctx.arc(px.x, px.y, r + 5, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(233, 69, 96, 0.5)';
-                ctx.fill();
+                const marker = L.circleMarker([p.lat, p.lng], {
+                    radius: r,
+                    fillColor: '#e94560',
+                    color: 'white',
+                    weight: 2,
+                    fillOpacity: 1
+                }).addTo(pointsLayer);
                 
-                // Red dot
-                ctx.beginPath();
-                ctx.arc(px.x, px.y, r, 0, Math.PI * 2);
-                ctx.fillStyle = '#e94560';
-                ctx.fill();
-                ctx.strokeStyle = 'white';
-                ctx.lineWidth = 2;
-                ctx.stroke();
+                marker.bindPopup(`<b>${p.name}</b><br>Width: ${p.width}m<br>Type: ${p.width >= 30 ? 'Major Road' : 'Local Road'}`);
                 
-                // Width number
-                ctx.fillStyle = 'white';
-                ctx.font = `bold ${Math.max(9, r * 0.6)}px Arial`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(Math.round(p.width), px.x, px.y);
+                // Add width label
+                const icon = L.divIcon({
+                    className: 'width-label',
+                    html: `<div style="background:#e94560;color:white;border-radius:50%;width:${r*2}px;height:${r*2}px;display:flex;align-items:center;justify-content:center;font-size:${Math.max(8,r*0.7)}px;font-weight:bold;border:2px solid white;">${Math.round(p.width)}</div>`,
+                    iconSize: [r*2, r*2],
+                    iconAnchor: [r, r]
+                });
+                L.marker([p.lat, p.lng], { icon }).addTo(pointsLayer);
             });
         }
         
@@ -441,27 +330,28 @@
                 document.getElementById('statusRoads').textContent = roads.length + ' roads loaded';
                 document.getElementById('statusRoads').className = 'status';
                 
-                // Center map on roads
-                if (map && roads.length > 0) {
+                // Center on roads
+                if (roads.length > 0) {
                     let sumLat = 0, sumLng = 0, count = 0;
                     roads.slice(0, 50).forEach(r => {
                         const g = r.geometry;
                         if (!g) return;
                         const lines = g.type === 'LineString' ? [g.coordinates] : (g.coordinates || []);
                         lines.forEach(cs => {
-                            const mid = cs[Math.floor(cs.length / 2)];
-                            sumLng += mid[0]; sumLat += mid[1]; count++;
+                            if (cs.length > 0) {
+                                const mid = cs[Math.floor(cs.length / 2)];
+                                sumLng += mid[0]; sumLat += mid[1]; count++;
+                            }
                         });
                     });
                     if (count > 0) {
-                        map.setCenter({ lat: sumLat / count, lng: sumLng / count });
-                        map.setZoom(14);
+                        map.setView([sumLat / count, sumLng / count], 14);
                     }
                 }
                 
                 findCrossings();
             } catch (err) {
-                alert('Error loading roads: ' + err.message);
+                alert('Error: ' + err.message);
             }
         });
         
@@ -480,17 +370,16 @@
                 document.getElementById('statusDistrict').textContent = 'Loaded (' + boundary.length + ' points)';
                 document.getElementById('statusDistrict').className = 'status';
                 
-                // Center map on district
-                if (map && boundary.length > 0) {
+                // Center on district
+                if (boundary.length > 0) {
                     let sumLat = 0, sumLng = 0;
                     boundary.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
-                    map.setCenter({ lat: sumLat / boundary.length, lng: sumLng / boundary.length });
-                    map.setZoom(14);
+                    map.setView([sumLat / boundary.length, sumLng / boundary.length], 14);
                 }
                 
                 findCrossings();
             } catch (err) {
-                alert('Error loading district: ' + err.message);
+                alert('Error: ' + err.message);
             }
         });
         
@@ -526,12 +415,6 @@
             a.download = 'entry_exit_points.geojson';
             a.click();
         }
-        
-        // Expose initMap globally for compatibility
-        window.initMap = initMap;
     </script>
-    
-    <!-- Keyless Google Maps API - same as dynamic map -->
-    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
 </body>
 </html>
