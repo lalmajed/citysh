@@ -10,7 +10,7 @@
         body { font-family: Arial, sans-serif; }
         
         #sidebar {
-            position: fixed; left: 0; top: 0; width: 300px; height: 100vh;
+            position: fixed; left: 0; top: 0; width: 320px; height: 100vh;
             background: rgba(22, 33, 62, 0.97); padding: 12px; overflow-y: auto; z-index: 1000; color: white;
         }
         
@@ -23,10 +23,12 @@
         .status { font-size: 10px; color: #4caf50; margin-top: 4px; }
         .status.wait { color: #666; }
         
-        .slider-row { margin: 8px 0; }
-        .slider-row label { font-size: 11px; display: block; margin-bottom: 4px; }
+        .slider-row { margin: 6px 0; }
+        .slider-row label { font-size: 10px; display: block; margin-bottom: 3px; }
         .slider-row input[type="range"] { width: 100%; }
         .slider-row .val { float: right; color: #e94560; font-weight: bold; }
+        
+        .crop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
         
         .color-row { margin: 8px 0; display: flex; align-items: center; gap: 8px; }
         .color-row label { font-size: 11px; flex: 1; }
@@ -43,13 +45,13 @@
         button { width: 100%; padding: 10px; background: #e94560; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 3px 0; }
         button:disabled { background: #444; }
         
-        .list { max-height: 130px; overflow-y: auto; font-size: 10px; }
+        .list { max-height: 120px; overflow-y: auto; font-size: 10px; }
         .item { display: flex; align-items: center; padding: 4px; background: #0f3460; margin: 2px 0; border-radius: 3px; cursor: pointer; }
         .item:hover { background: #1a4a7a; }
         .item .dot { width: 20px; height: 20px; background: #e94560; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; margin-right: 6px; border: 2px solid white; }
         .item .name { flex: 1; direction: rtl; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
         
-        #map { position: fixed; left: 300px; top: 0; right: 0; bottom: 0; z-index: 1; }
+        #map { position: fixed; left: 320px; top: 0; right: 0; bottom: 0; z-index: 1; }
         
         .leaflet-popup-content { direction: rtl; }
     </style>
@@ -70,15 +72,29 @@
             <div class="status wait" id="statusDistrict">No district loaded</div>
         </div>
         
-        <h3>DISTRICT BOUNDARY</h3>
+        <h3>CROP BOUNDARY (like photo crop)</h3>
         <div class="box">
-            <div class="slider-row">
-                <label>Boundary Shrink <span class="val" id="valShrink">0m</span></label>
-                <input type="range" id="sliderShrink" min="0" max="500" value="0" step="10">
+            <div class="crop-grid">
+                <div class="slider-row">
+                    <label>North <span class="val" id="valNorth">0m</span></label>
+                    <input type="range" id="sliderNorth" min="0" max="500" value="0" step="10">
+                </div>
+                <div class="slider-row">
+                    <label>South <span class="val" id="valSouth">0m</span></label>
+                    <input type="range" id="sliderSouth" min="0" max="500" value="0" step="10">
+                </div>
+                <div class="slider-row">
+                    <label>East <span class="val" id="valEast">0m</span></label>
+                    <input type="range" id="sliderEast" min="0" max="500" value="0" step="10">
+                </div>
+                <div class="slider-row">
+                    <label>West <span class="val" id="valWest">0m</span></label>
+                    <input type="range" id="sliderWest" min="0" max="500" value="0" step="10">
+                </div>
             </div>
-            <div style="font-size:9px;color:#888;">Shrink boundary inward (tighter)</div>
+            <div style="font-size:9px;color:#888;margin-top:6px;">Move each edge inward</div>
             
-            <div class="color-row">
+            <div class="color-row" style="margin-top:10px;">
                 <label>District Color</label>
                 <input type="color" id="colorDistrict" value="#e94560">
             </div>
@@ -94,13 +110,9 @@
                 <label>Road Extension <span class="val" id="valExt">300m</span></label>
                 <input type="range" id="sliderExt" min="0" max="1500" value="300" step="50">
             </div>
-            <div style="font-size:9px;color:#888;">Make roads longer to find where they cross boundary</div>
-        </div>
-        
-        <div class="box">
             <div class="slider-row">
-                <label>Min Road Width <span class="val" id="valWidth">10m</span></label>
-                <input type="range" id="sliderWidth" min="0" max="40" value="10" step="2">
+                <label>Min Road Width <span class="val" id="valWidth">0m</span></label>
+                <input type="range" id="sliderWidth" min="0" max="40" value="0" step="2">
             </div>
             <div class="slider-row">
                 <label>Dot Size <span class="val" id="valDot">12</span></label>
@@ -132,7 +144,6 @@
             zoomControl: true
         });
         
-        // Add OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: 'OpenStreetMap',
             maxZoom: 19
@@ -140,42 +151,65 @@
         
         // Data
         let roads = [];
-        let originalBoundary = []; // Original boundary coordinates
-        let boundary = []; // Current (possibly shrunk) boundary
+        let originalBoundary = [];
+        let boundary = [];
         let entryExits = [];
+        let boundingBox = { minLat: 0, maxLat: 0, minLng: 0, maxLng: 0 };
         
         // Layers
         let roadsLayer = L.layerGroup().addTo(map);
         let boundaryLayer = L.layerGroup().addTo(map);
         let pointsLayer = L.layerGroup().addTo(map);
         
-        // Get centroid of polygon
-        function getCentroid(coords) {
-            let sumLat = 0, sumLng = 0;
-            coords.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
-            return [sumLng / coords.length, sumLat / coords.length];
+        // Get all line coordinates from a feature (handles LineString and MultiLineString)
+        function getLines(geometry) {
+            if (!geometry) return [];
+            if (geometry.type === 'LineString') {
+                return [geometry.coordinates];
+            } else if (geometry.type === 'MultiLineString') {
+                return geometry.coordinates;
+            }
+            return [];
         }
         
-        // Shrink boundary toward centroid by meters
-        function shrinkBoundary(coords, meters) {
-            if (meters <= 0) return coords.slice();
+        // Crop boundary by moving each edge inward
+        function cropBoundary(coords, north, south, east, west) {
+            if (north === 0 && south === 0 && east === 0 && west === 0) {
+                return coords.slice();
+            }
             
-            const center = getCentroid(coords);
-            const shrinkDeg = meters / 111000; // meters to degrees approx
+            // Convert meters to degrees (approximate)
+            const northDeg = north / 111000;
+            const southDeg = south / 111000;
+            const eastDeg = east / 111000;
+            const westDeg = west / 111000;
             
+            // Get current bounds
+            const lngs = coords.map(c => c[0]);
+            const lats = coords.map(c => c[1]);
+            const minLat = Math.min(...lats);
+            const maxLat = Math.max(...lats);
+            const minLng = Math.min(...lngs);
+            const maxLng = Math.max(...lngs);
+            
+            // New bounds after cropping
+            const newMaxLat = maxLat - northDeg;
+            const newMinLat = minLat + southDeg;
+            const newMaxLng = maxLng - eastDeg;
+            const newMinLng = minLng + westDeg;
+            
+            // Clamp each point to new bounds
             return coords.map(c => {
-                const dx = c[0] - center[0];
-                const dy = c[1] - center[1];
-                const dist = Math.sqrt(dx*dx + dy*dy);
+                let lng = c[0];
+                let lat = c[1];
                 
-                if (dist < 1e-8) return c.slice();
+                // Move points that are outside new bounds
+                if (lat > newMaxLat) lat = newMaxLat;
+                if (lat < newMinLat) lat = newMinLat;
+                if (lng > newMaxLng) lng = newMaxLng;
+                if (lng < newMinLng) lng = newMinLng;
                 
-                // Move point toward center
-                const shrinkRatio = Math.max(0, dist - shrinkDeg) / dist;
-                return [
-                    center[0] + dx * shrinkRatio,
-                    center[1] + dy * shrinkRatio
-                ];
+                return [lng, lat];
             });
         }
         
@@ -206,10 +240,13 @@
             };
         }
         
-        // Update shrunk boundary
+        // Update cropped boundary
         function updateBoundary() {
-            const shrink = parseInt(document.getElementById('sliderShrink').value);
-            boundary = shrinkBoundary(originalBoundary, shrink);
+            const north = parseInt(document.getElementById('sliderNorth').value);
+            const south = parseInt(document.getElementById('sliderSouth').value);
+            const east = parseInt(document.getElementById('sliderEast').value);
+            const west = parseInt(document.getElementById('sliderWest').value);
+            boundary = cropBoundary(originalBoundary, north, south, east, west);
             findCrossings();
         }
         
@@ -224,15 +261,12 @@
             
             roads.forEach(road => {
                 const props = road.properties || {};
-                const w = parseFloat(props.width_m || props.WIDTH || props.width || 10);
+                const w = parseFloat(props.width_m || props.WIDTH || props.width || 8);
                 const name = props.name_ar || props.ROADCENTERLINENAME_AR || props.name_en || props.name || 'Road';
                 
                 if (w < minW) return;
                 
-                const geom = road.geometry;
-                if (!geom) return;
-                
-                const lines = geom.type === 'LineString' ? [geom.coordinates] : (geom.coordinates || []);
+                const lines = getLines(road.geometry);
                 
                 lines.forEach(coords => {
                     if (!coords || coords.length < 2) return;
@@ -279,7 +313,7 @@
             
             const list = document.getElementById('list');
             if (!entryExits.length) {
-                const msg = roads.length ? (boundary.length ? 'Increase extension slider' : 'Load district') : 'Load roads first';
+                const msg = roads.length ? (boundary.length ? 'Adjust sliders' : 'Load district') : 'Load roads first';
                 list.innerHTML = '<div style="color:#666;text-align:center;padding:15px;">' + msg + '</div>';
                 return;
             }
@@ -298,9 +332,7 @@
         
         function gotoPoint(i) {
             const p = entryExits[i];
-            if (p) {
-                map.setView([p.lat, p.lng], 17);
-            }
+            if (p) map.setView([p.lat, p.lng], 17);
         }
         
         // Render on map
@@ -315,22 +347,20 @@
             const districtColor = document.getElementById('colorDistrict').value;
             const fillOpacity = parseInt(document.getElementById('sliderOpacity').value) / 100;
             
-            // Draw extended roads
+            // Draw roads
             roads.forEach(road => {
                 const props = road.properties || {};
-                const w = parseFloat(props.width_m || props.WIDTH || props.width || 10);
+                const w = parseFloat(props.width_m || props.WIDTH || props.width || 8);
                 if (w < minW) return;
                 
-                const geom = road.geometry;
-                if (!geom) return;
-                
-                const lines = geom.type === 'LineString' ? [geom.coordinates] : (geom.coordinates || []);
+                const lines = getLines(road.geometry);
                 const color = w >= 30 ? '#e94560' : w >= 15 ? '#ff9800' : '#4caf50';
                 const weight = w >= 30 ? 4 : w >= 15 ? 3 : 2;
                 
                 lines.forEach(coords => {
                     if (!coords || coords.length < 2) return;
                     
+                    // Extend
                     const extStart = extendLine(coords[1][0], coords[1][1], coords[0][0], coords[0][1], ext);
                     const last = coords.length - 1;
                     const extEnd = extendLine(coords[last-1][0], coords[last-1][1], coords[last][0], coords[last][1], ext);
@@ -338,11 +368,13 @@
                     const extCoords = [[extStart.x2, extStart.y2], ...coords, [extEnd.x2, extEnd.y2]];
                     const latlngs = extCoords.map(c => [c[1], c[0]]);
                     
-                    L.polyline(latlngs, { color, weight, opacity: 0.8 }).addTo(roadsLayer);
+                    const line = L.polyline(latlngs, { color, weight, opacity: 0.8 });
+                    line.bindPopup(`<b>${props.name_ar || props.name_en || 'Road'}</b><br>Width: ${w}m`);
+                    line.addTo(roadsLayer);
                 });
             });
             
-            // Draw boundary (current shrunk version)
+            // Draw boundary
             if (boundary.length) {
                 const latlngs = boundary.map(c => [c[1], c[0]]);
                 L.polygon(latlngs, {
@@ -366,9 +398,8 @@
                     fillOpacity: 1
                 }).addTo(pointsLayer);
                 
-                marker.bindPopup(`<b>${p.name}</b><br>Width: ${p.width}m<br>Type: ${p.width >= 30 ? 'Major Road' : 'Local Road'}`);
+                marker.bindPopup(`<b>${p.name}</b><br>Width: ${p.width}m`);
                 
-                // Add width label
                 const icon = L.divIcon({
                     className: 'width-label',
                     html: `<div style="background:#e94560;color:white;border-radius:50%;width:${r*2}px;height:${r*2}px;display:flex;align-items:center;justify-content:center;font-size:${Math.max(8,r*0.7)}px;font-weight:bold;border:2px solid white;">${Math.round(p.width)}</div>`,
@@ -389,20 +420,26 @@
                 const data = JSON.parse(text);
                 roads = data.features || [data];
                 
+                // Filter to only features with valid geometry
+                roads = roads.filter(r => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString'));
+                
                 document.getElementById('statusRoads').textContent = roads.length + ' roads loaded';
                 document.getElementById('statusRoads').className = 'status';
+                
+                console.log('Loaded roads:', roads.length);
+                console.log('Sample road:', roads[0]);
                 
                 // Center on roads
                 if (roads.length > 0) {
                     let sumLat = 0, sumLng = 0, count = 0;
-                    roads.slice(0, 50).forEach(r => {
-                        const g = r.geometry;
-                        if (!g) return;
-                        const lines = g.type === 'LineString' ? [g.coordinates] : (g.coordinates || []);
-                        lines.forEach(cs => {
-                            if (cs.length > 0) {
-                                const mid = cs[Math.floor(cs.length / 2)];
-                                sumLng += mid[0]; sumLat += mid[1]; count++;
+                    roads.slice(0, 100).forEach(r => {
+                        const lines = getLines(r.geometry);
+                        lines.forEach(coords => {
+                            if (coords && coords.length > 0) {
+                                const mid = coords[Math.floor(coords.length / 2)];
+                                if (mid && mid.length >= 2) {
+                                    sumLng += mid[0]; sumLat += mid[1]; count++;
+                                }
                             }
                         });
                     });
@@ -413,6 +450,7 @@
                 
                 findCrossings();
             } catch (err) {
+                console.error('Error loading roads:', err);
                 alert('Error: ' + err.message);
             }
         });
@@ -430,30 +468,46 @@
                 originalBoundary = geom.type === 'Polygon' ? geom.coordinates[0] : geom.coordinates[0][0];
                 boundary = originalBoundary.slice();
                 
+                // Calculate bounding box
+                const lngs = originalBoundary.map(c => c[0]);
+                const lats = originalBoundary.map(c => c[1]);
+                boundingBox = {
+                    minLat: Math.min(...lats),
+                    maxLat: Math.max(...lats),
+                    minLng: Math.min(...lngs),
+                    maxLng: Math.max(...lngs)
+                };
+                
                 document.getElementById('statusDistrict').textContent = 'Loaded (' + originalBoundary.length + ' points)';
                 document.getElementById('statusDistrict').className = 'status';
                 
-                // Reset shrink slider
-                document.getElementById('sliderShrink').value = 0;
-                document.getElementById('valShrink').textContent = '0m';
+                // Reset crop sliders
+                ['North', 'South', 'East', 'West'].forEach(dir => {
+                    document.getElementById('slider' + dir).value = 0;
+                    document.getElementById('val' + dir).textContent = '0m';
+                });
                 
                 // Center on district
-                if (originalBoundary.length > 0) {
-                    const center = getCentroid(originalBoundary);
-                    map.setView([center[1], center[0]], 14);
-                }
+                const centerLat = (boundingBox.minLat + boundingBox.maxLat) / 2;
+                const centerLng = (boundingBox.minLng + boundingBox.maxLng) / 2;
+                map.setView([centerLat, centerLng], 14);
                 
                 findCrossings();
             } catch (err) {
+                console.error('Error loading district:', err);
                 alert('Error: ' + err.message);
             }
         });
         
-        // Sliders
-        document.getElementById('sliderShrink').addEventListener('input', function() {
-            document.getElementById('valShrink').textContent = this.value + 'm';
-            updateBoundary();
+        // Crop sliders
+        ['North', 'South', 'East', 'West'].forEach(dir => {
+            document.getElementById('slider' + dir).addEventListener('input', function() {
+                document.getElementById('val' + dir).textContent = this.value + 'm';
+                updateBoundary();
+            });
         });
+        
+        // Other sliders
         document.getElementById('sliderExt').addEventListener('input', function() {
             document.getElementById('valExt').textContent = this.value + 'm';
             findCrossings();
@@ -470,9 +524,7 @@
             document.getElementById('valOpacity').textContent = this.value + '%';
             render();
         });
-        document.getElementById('colorDistrict').addEventListener('input', function() {
-            render();
-        });
+        document.getElementById('colorDistrict').addEventListener('input', render);
         
         // Export
         function exportData() {
