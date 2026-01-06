@@ -548,42 +548,63 @@
             return null;
         }
         
-        // Calculate entry/exit points where roads cross district boundary
-        // Algorithm: Find road segments that intersect boundary, determine ENTRY vs EXIT
+        // Calculate entry/exit points - where roads meet the district boundary
+        // Method 1: Road endpoints at edge
+        // Method 2: Roads that cross the boundary (highways passing through)
         function calculateEntryExitPoints(districtObj) {
             entryExitPoints = [];
-            if (!districtObj || roads.length === 0) return { total: 0, major: 0, secondary: 0, local: 0, entries: 0, exits: 0 };
+            if (!districtObj || roads.length === 0) return { total: 0, major: 0, secondary: 0, local: 0 };
             
             const geom = getDistrictGeometry(districtObj);
-            if (!geom) return { total: 0, major: 0, secondary: 0, local: 0, entries: 0, exits: 0 };
+            if (!geom) return { total: 0, major: 0, secondary: 0, local: 0 };
             
             const boundary = geom.type === 'Polygon' ? geom.coordinates[0] : 
                             geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
-            if (!boundary || boundary.length < 3) return { total: 0, major: 0, secondary: 0, local: 0, entries: 0, exits: 0 };
+            if (!boundary || boundary.length < 3) return { total: 0, major: 0, secondary: 0, local: 0 };
             
-            // Point in polygon check (ray casting)
-            function isInside(lng, lat) {
-                let inside = false;
-                for (let i = 0, j = boundary.length - 1; i < boundary.length; j = i++) {
-                    const [xi, yi] = boundary[i];
-                    const [xj, yj] = boundary[j];
-                    if (((yi > lat) !== (yj > lat)) && (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
-                        inside = !inside;
-                    }
+            // Distance to nearest boundary point
+            function distToBoundary(x, y) {
+                let minDist = Infinity;
+                for (const [bx, by] of boundary) {
+                    const d = Math.sqrt((x - bx) ** 2 + (y - by) ** 2);
+                    minDist = Math.min(minDist, d);
                 }
-                return inside;
+                return minDist;
             }
             
-            let major = 0, secondary = 0, local = 0, entries = 0, exits = 0;
-            const seenLocs = new Set(); // Deduplicate by location
-            const crossings = [];
+            // Check if point is at the edge
+            function isAtEdge(x, y) {
+                return distToBoundary(x, y) < 0.0015; // ~150m threshold
+            }
+            
+            let major = 0, secondary = 0, local = 0;
+            const seenLocs = new Set();
+            
+            function addPoint(lng, lat, name, nameEn, width, props) {
+                const key = `${lng.toFixed(4)}_${lat.toFixed(4)}`;
+                if (!seenLocs.has(key)) {
+                    seenLocs.add(key);
+                    entryExitPoints.push({
+                        lat: lat,
+                        lng: lng,
+                        name: name,
+                        nameEn: nameEn,
+                        width: width,
+                        roadProps: props
+                    });
+                    if (width >= 30) major++;
+                    else if (width >= 15) secondary++;
+                    else local++;
+                }
+            }
             
             roads.forEach(road => {
                 const props = road.properties || {};
                 const width = parseFloat(props.width_m || props.WIDTH || props.width || 10);
                 const name = props.name_ar || props.name_en || props.ROADCENTERLINENAME_AR || 'Unnamed';
+                const nameEn = props.name_en || props.ROADCENTERLINENAME_EN || '';
                 
-                if (width < 10) return; // Skip very small roads
+                if (width < 8) return;
                 
                 const roadGeom = road.geometry;
                 if (!roadGeom) return;
@@ -593,65 +614,40 @@
                 lines.forEach(coords => {
                     if (!coords || coords.length < 2) return;
                     
+                    // Method 1: Check endpoints at edge
+                    const start = coords[0];
+                    const end = coords[coords.length - 1];
+                    
+                    if (isAtEdge(start[0], start[1])) {
+                        addPoint(start[0], start[1], name, nameEn, width, props);
+                    }
+                    if (isAtEdge(end[0], end[1])) {
+                        addPoint(end[0], end[1], name, nameEn, width, props);
+                    }
+                    
+                    // Method 2: Check line-boundary intersections (for roads passing through)
                     for (let i = 0; i < coords.length - 1; i++) {
                         const [x1, y1] = coords[i];
                         const [x2, y2] = coords[i + 1];
                         
-                        // Check intersection with each boundary edge
                         for (let j = 0; j < boundary.length - 1; j++) {
                             const [x3, y3] = boundary[j];
                             const [x4, y4] = boundary[j + 1];
                             
-                            const intersection = lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4);
-                            if (intersection) {
-                                // Determine direction: ENTRY (outside->inside) or EXIT (inside->outside)
-                                const p1Inside = isInside(x1, y1);
-                                const p2Inside = isInside(x2, y2);
-                                
-                                let direction;
-                                if (!p1Inside && p2Inside) direction = 'ENTRY';
-                                else if (p1Inside && !p2Inside) direction = 'EXIT';
-                                else direction = 'CROSS';
-                                
-                                // Calculate road angle at crossing
-                                const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
-                                
-                                crossings.push({
-                                    lat: intersection.y,
-                                    lng: intersection.x,
-                                    name: name,
-                                    nameEn: props.name_en || props.ROADCENTERLINENAME_EN || '',
-                                    width: width,
-                                    direction: direction,
-                                    angle: angle,
-                                    roadProps: props
-                                });
+                            const inter = lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4);
+                            if (inter) {
+                                addPoint(inter.x, inter.y, name, nameEn, width, props);
                             }
                         }
                     }
                 });
             });
             
-            // Deduplicate by location (keep wider roads)
-            crossings.sort((a, b) => b.width - a.width);
-            
-            crossings.forEach(c => {
-                const key = `${c.lng.toFixed(4)}_${c.lat.toFixed(4)}`;
-                if (!seenLocs.has(key)) {
-                    seenLocs.add(key);
-                    entryExitPoints.push(c);
-                    
-                    if (c.width >= 30) major++;
-                    else if (c.width >= 15) secondary++;
-                    else local++;
-                    
-                    if (c.direction === 'ENTRY') entries++;
-                    else if (c.direction === 'EXIT') exits++;
-                }
-            });
+            // Sort by width (largest first)
+            entryExitPoints.sort((a, b) => b.width - a.width);
             
             document.getElementById('entryExitCount').textContent = entryExitPoints.length;
-            return { total: entryExitPoints.length, major, secondary, local, entries, exits };
+            return { total: entryExitPoints.length, major, secondary, local };
         }
         
         let renderPending = false;

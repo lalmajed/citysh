@@ -1,0 +1,2399 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.664032099356696,
+          24.727776011635633
+        ]
+      },
+      "properties": {
+        "name_ar": "الملك فهد",
+        "width_m": 80.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.66398840382381,
+          24.727866782731084
+        ]
+      },
+      "properties": {
+        "name_ar": "الملك فهد",
+        "width_m": 80.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.662740041191796,
+          24.730338913719407
+        ]
+      },
+      "properties": {
+        "name_ar": "الملك فهد",
+        "width_m": 80.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.660699898488375,
+          24.73437900581156
+        ]
+      },
+      "properties": {
+        "name_ar": "الملك فهد",
+        "width_m": 80.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.659838045043216,
+          24.736085733355566
+        ]
+      },
+      "properties": {
+        "name_ar": "الملك فهد",
+        "width_m": 80.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63371217795389,
+          24.73527419231838
+        ]
+      },
+      "properties": {
+        "name_ar": "الإمام سعود بن عبدالعزيز بن محمد",
+        "width_m": 60.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65557217690576,
+          24.74453293325432
+        ]
+      },
+      "properties": {
+        "name_ar": "الإمام سعود بن عبدالعزيز بن محمد",
+        "width_m": 60.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63428835800005,
+          24.734941797000033
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 60.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.645008278164276,
+          24.724091880988798
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 60.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64314399022697,
+          24.72704136432036
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 60.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63937742724171,
+          24.73059220119595
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 60.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63377989329173,
+          24.735358283076895
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 60.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.645585818237485,
+          24.740351410715288
+        ]
+      },
+      "properties": {
+        "name_ar": "التخصصي",
+        "width_m": 46.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.654393187296904,
+          24.723699187366687
+        ]
+      },
+      "properties": {
+        "name_ar": "التخصصي",
+        "width_m": 46.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.660113779095276,
+          24.735539697326494
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير نايف بن عبدالعزيز",
+        "width_m": 36.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64763763736295,
+          24.741213927996853
+        ]
+      },
+      "properties": {
+        "name_ar": "جويرية بنت الحارث",
+        "width_m": 36.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64180899400003,
+          24.728372282000066
+        ]
+      },
+      "properties": {
+        "name_ar": "خليفة بن بديع",
+        "width_m": 36.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.641878242508525,
+          24.728440405714544
+        ]
+      },
+      "properties": {
+        "name_ar": "خليفة بن بديع",
+        "width_m": 36.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.637917882652005,
+          24.731798408432788
+        ]
+      },
+      "properties": {
+        "name_ar": "محمد بن يسار",
+        "width_m": 30.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.639838285999986,
+          24.73037304500002
+        ]
+      },
+      "properties": {
+        "name_ar": "فرسان",
+        "width_m": 30.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64354521400003,
+          24.740331288999982
+        ]
+      },
+      "properties": {
+        "name_ar": "يحيى بن سليم الطائفي",
+        "width_m": 25.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.642683299,
+          24.73996790199999
+        ]
+      },
+      "properties": {
+        "name_ar": "يحيى بن سليم الطائفي",
+        "width_m": 25.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6641653,
+          24.728102
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك فهد الفرعي",
+        "width_m": 25.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6561243,
+          24.7440548
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك فهد الفرعي",
+        "width_m": 25.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6424383,
+          24.7391081
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الإمام سعود بن عبد العزيز بن محمد",
+        "width_m": 25.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6558538,
+          24.7447666
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الإمام سعود بن عبد العزيز بن محمد",
+        "width_m": 25.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6552223,
+          24.744381
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الإمام سعود بن عبد العزيز بن محمد",
+        "width_m": 25.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6559199,
+          24.7446692
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الإمام سعود بن عبد العزيز بن محمد",
+        "width_m": 25.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6337071,
+          24.7354265
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الإمام سعود بن عبد العزيز بن محمد",
+        "width_m": 25.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64240376700002,
+          24.739449807000028
+        ]
+      },
+      "properties": {
+        "name_ar": "إبراهيم بن الخل",
+        "width_m": 22.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.642756432,
+          24.72920481699998
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي العباس اللخمي",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.642646204000016,
+          24.729292568999995
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي العباس اللخمي",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.640481094999984,
+          24.731048914999974
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي العباس اللخمي",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64636796299999,
+          24.72162363299998
+        ]
+      },
+      "properties": {
+        "name_ar": "إبراهيم العجاجي",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64453060599999,
+          24.725825052999994
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي بشير",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64716680599997,
+          24.721959589999983
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي حميدان",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64542979800001,
+          24.725392370999998
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي حميدان",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.644610774,
+          24.72504055799999
+        ]
+      },
+      "properties": {
+        "name_ar": "أحمد العامري",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65103444661071,
+          24.742641834892755
+        ]
+      },
+      "properties": {
+        "name_ar": "الأمير عبدالإله بن عبدالعزيز",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64176791,
+          24.730005055999982
+        ]
+      },
+      "properties": {
+        "name_ar": "عنابه",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.641109399000015,
+          24.73053924499999
+        ]
+      },
+      "properties": {
+        "name_ar": "غزة",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64429917299998,
+          24.725583083000004
+        ]
+      },
+      "properties": {
+        "name_ar": "زيد بن أسلم",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.647554421999985,
+          24.719539671000007
+        ]
+      },
+      "properties": {
+        "name_ar": "عبدالرحمن الطبيشي",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64036870699999,
+          24.730930747000002
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي العباس اللخمي",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6639378,
+          24.7274522
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6331986,
+          24.735015
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول الفرعي",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6347049,
+          24.7341767
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول الفرعي",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6343054,
+          24.7353889
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6338991,
+          24.7356257
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6329754,
+          24.7356283
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول الفرعي",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6644795,
+          24.7282348
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6643757,
+          24.7276307
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6441608,
+          24.7252126
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول الفرعي",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6439775,
+          24.7260623
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول الفرعي",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6349958,
+          24.7344031
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.634681187420355,
+          24.734473301162613
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6325495,
+          24.7347963
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6326585,
+          24.7346788
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6396042,
+          24.7303228
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6400139,
+          24.7297972
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6460587,
+          24.7215402
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول الفرعي",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6439691,
+          24.7256002
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6445595,
+          24.7248092
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6473298,
+          24.7198927
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6469907,
+          24.7197564
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6462179,
+          24.7212493
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6466078,
+          24.7214024
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64658124002616,
+          24.721036912653698
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6392981,
+          24.7309297
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.633052,
+          24.7351613
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول الفرعي",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6469332,
+          24.7207306
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6467978,
+          24.7202514
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.646839932473966,
+          24.720534486462874
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 20.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65433957800002,
+          24.74495558900003
+        ]
+      },
+      "properties": {
+        "name_ar": "وادي حبان",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.654649817999996,
+          24.744354955000006
+        ]
+      },
+      "properties": {
+        "name_ar": "وادي حبان",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65437351999998,
+          24.744969604999994
+        ]
+      },
+      "properties": {
+        "name_ar": "وادي حبان",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64324062200001,
+          24.739242671
+        ]
+      },
+      "properties": {
+        "name_ar": "وادي ذي الرمث",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64316860500003,
+          24.73834276399998
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي المعالي الجيلي",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64419425800003,
+          24.73878205599999
+        ]
+      },
+      "properties": {
+        "name_ar": "ريدة",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.643829455,
+          24.73949669199999
+        ]
+      },
+      "properties": {
+        "name_ar": "صخر",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64477750499998,
+          24.739031528999988
+        ]
+      },
+      "properties": {
+        "name_ar": "الشعيبات",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.643608933999985,
+          24.738529621999987
+        ]
+      },
+      "properties": {
+        "name_ar": "حسين البوري",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6597285,
+          24.735694
+        ]
+      },
+      "properties": {
+        "name_ar": "شارع الأمير نايف بن عبدالعزيز",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6599714,
+          24.7352014
+        ]
+      },
+      "properties": {
+        "name_ar": "شارع الأمير نايف بن عبدالعزيز",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6422058,
+          24.7283757
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6417961,
+          24.7287641
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6448578,
+          24.7398657
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6405038,
+          24.7310612
+        ]
+      },
+      "properties": {
+        "name_ar": "فرسان",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6562861,
+          24.7446796
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6439153,
+          24.72568
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6595916,
+          24.7352851
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6594838,
+          24.7353593
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6609491,
+          24.7359909
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6610756,
+          24.7358662
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6550056,
+          24.7441288
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65563929297538,
+          24.744400318447184
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6421963,
+          24.7288867
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.642368,
+          24.7287912
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 15.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6645339,
+          24.7273791
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك فهد الفرعي",
+        "width_m": 14.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.655732004000015,
+          24.743617416999996
+        ]
+      },
+      "properties": {
+        "name_ar": "عبدالعزيز بن رباح",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.658765414000015,
+          24.735826589999988
+        ]
+      },
+      "properties": {
+        "name_ar": "يافا",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65950450499997,
+          24.736135574000002
+        ]
+      },
+      "properties": {
+        "name_ar": "الصباح",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.66331260300001,
+          24.72858740999999
+        ]
+      },
+      "properties": {
+        "name_ar": "ابن رواحة",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65498443199999,
+          24.743302916999994
+        ]
+      },
+      "properties": {
+        "name_ar": "الحسين بن علي",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64284813900002,
+          24.73963698099999
+        ]
+      },
+      "properties": {
+        "name_ar": "محمد بن محمد الهاشمي",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6648773,
+          24.7266648
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6443115,
+          24.7258104
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6471458,
+          24.7219535
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6448619,
+          24.7251674
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6474989,
+          24.7195431
+        ]
+      },
+      "properties": {
+        "name_ar": "شارع عبدالرحمن الطبيش",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6464741,
+          24.72167
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6432573,
+          24.7391901
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6587293,
+          24.7358413
+        ]
+      },
+      "properties": {
+        "name_ar": "شارع يافا",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6438459,
+          24.7394337
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6447489,
+          24.7390113
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6458052,
+          24.7213919
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6448353,
+          24.7236737
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6440584,
+          24.7253873
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6438717,
+          24.7249323
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6446068,
+          24.7252548
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6444139,
+          24.7256422
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 12.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64371424500001,
+          24.740001999000015
+        ]
+      },
+      "properties": {
+        "name_ar": "سيلمان بن سحمان",
+        "width_m": 11.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6646835,
+          24.7279676
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك عبدالله",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.66396397822647,
+          24.727747199475587
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك فهد",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6335782,
+          24.7351776
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6328769,
+          24.735011
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6334397,
+          24.7352999
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65549069920971,
+          24.744515096931288
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك فهد",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6551827,
+          24.7444796
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الإمام سعود بن عبد العزيز بن محمد",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6633839,
+          24.7276056
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك عبدالله",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6634653,
+          24.727431
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك عبدالله",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6602212,
+          24.7359321
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6475663,
+          24.7209879
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك عبدالله",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6457134,
+          24.7201342
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك عبدالله",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64679051371291,
+          24.720630466380655
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك عبدالله",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.647669,
+          24.7207348
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك عبدالله",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6458224,
+          24.7199529
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الملك عبدالله",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6425257,
+          24.7389938
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الإمام سعود بن عبد العزيز بن محمد",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64552388400802,
+          24.74032537560207
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق التخصصي",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6477908,
+          24.7206578
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.648312,
+          24.7214177
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.634799,
+          24.7342773
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6348547,
+          24.7343356
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63445489466309,
+          24.73466031563506
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63406288554764,
+          24.734984282600706
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.644843,
+          24.7242891
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6449665,
+          24.7243287
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.646916558786124,
+          24.720536895360404
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6471784,
+          24.7202036
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق الأمير تركي بن عبدالعزيز الأول الفرعي",
+        "width_m": 10.5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6633562,
+          24.728615
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6637889,
+          24.7288291
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.66361157140499,
+          24.728613023507656
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6636435,
+          24.7273686
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6640064,
+          24.7272441
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6646909,
+          24.7270213
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6642542,
+          24.7267938
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.656457,
+          24.7434594
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6559488,
+          24.7432279
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.65591819606634,
+          24.74384831876139
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.634425,
+          24.7355673
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6350532,
+          24.7356967
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6347703,
+          24.7358812
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6547696,
+          24.745531
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6553089,
+          24.7456031
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6462612314995,
+          24.740635332238124
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6549764,
+          24.7450701
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6548288,
+          24.7444439
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6562007,
+          24.7450326
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6555184,
+          24.7452028
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6474827,
+          24.7205266
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6464273,
+          24.720101
+        ]
+      },
+      "properties": {
+        "name_ar": "Unnamed",
+        "width_m": 10.0
+      }
+    }
+  ]
+}
