@@ -316,9 +316,14 @@
                     <div id="distStatus" class="file-status">Upload districts JSON</div>
                 </div>
                 <div class="file-input" style="background:#e3f2fd;padding:8px;border-radius:6px;margin-top:8px;">
-                    <label>🛣️ Roads GeoJSON (muhammadiyah_roads.geojson):</label>
+                    <label>Roads GeoJSON:</label>
                     <input type="file" id="roadsFile" accept=".json,.geojson">
                     <div id="roadsStatus" class="file-status">Upload roads GeoJSON for visualization</div>
+                </div>
+                <div class="file-input" style="background:#ffe0e0;padding:8px;border-radius:6px;margin-top:8px;">
+                    <label>Entry/Exit Points GeoJSON:</label>
+                    <input type="file" id="entryExitFile" accept=".json,.geojson">
+                    <div id="entryExitStatus" class="file-status">Upload entry_exit_points.geojson</div>
                 </div>
             </div>
         </div>
@@ -1552,6 +1557,61 @@
                         document.getElementById('roadsStatus').innerHTML = `❌ Error: ${err.message}`;
                     }
                 }, 10);
+            };
+            reader.readAsText(file);
+        });
+        
+        // Entry/Exit Points GeoJSON file handler
+        document.getElementById('entryExitFile').addEventListener('change', function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            showLoading('Loading Entry/Exit Points...');
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = JSON.parse(evt.target.result);
+                    const features = data.features || [data];
+                    
+                    // Convert to entryExitPoints format
+                    entryExitPoints = features.map(f => {
+                        const props = f.properties || {};
+                        const coords = f.geometry.coordinates;
+                        return {
+                            lat: coords[1],
+                            lng: coords[0],
+                            name: props.name_ar || props.name || props.name_en || 'Entry/Exit',
+                            width: parseFloat(props.width_m || props.width || 10),
+                            roadClass: props.road_class || (props.width_m >= 30 ? 'Major' : 'Other')
+                        };
+                    });
+                    
+                    // Count by type
+                    const major = entryExitPoints.filter(p => p.width >= 30).length;
+                    const other = entryExitPoints.length - major;
+                    
+                    document.getElementById('entryExitStatus').innerHTML = `<b>${entryExitPoints.length}</b> points loaded (${major} major, ${other} other)`;
+                    document.getElementById('entryExitStatus').classList.add('loaded');
+                    document.getElementById('entryExitCount').textContent = entryExitPoints.length;
+                    
+                    // Center on first point if exists
+                    if (entryExitPoints.length > 0) {
+                        const p = entryExitPoints[0];
+                        map.setCenter({ lat: p.lat, lng: p.lng });
+                        map.setZoom(15);
+                    }
+                    
+                    // Enable entry/exit toggle
+                    document.getElementById('toggleEntryExit').checked = true;
+                    showEntryExit = true;
+                    
+                    hideLoading();
+                    showToast(`Loaded ${entryExitPoints.length} entry/exit points!`, '#e94560');
+                    render();
+                } catch(err) {
+                    hideLoading();
+                    console.error('Entry/Exit load error:', err);
+                    document.getElementById('entryExitStatus').innerHTML = `Error: ${err.message}`;
+                }
             };
             reader.readAsText(file);
         });
