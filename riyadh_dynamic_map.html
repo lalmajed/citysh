@@ -895,6 +895,8 @@
         }
         
         // Render zone entry/exit points on map
+        let currentInfoWindow = null;
+        
         function renderZoneEntryExits() {
             if (!googleMap) return;
             
@@ -912,17 +914,40 @@
             zone.entryExitPoints.forEach((point, idx) => {
                 const isMajor = point.width >= 30;
                 const color = isMajor ? '#d32f2f' : '#e91e63';
-                const radius = isMajor ? 10 : 7;
+                const radius = isMajor ? 12 : 8;
                 
                 const marker = new google.maps.Circle({
                     center: { lat: point.lat, lng: point.lng },
-                    radius: radius * 5,
+                    radius: radius * 3,
                     fillColor: color,
                     fillOpacity: 0.9,
                     strokeColor: '#fff',
-                    strokeWeight: 2,
-                    map: googleMap
+                    strokeWeight: 3,
+                    map: googleMap,
+                    clickable: true,
+                    zIndex: 1000
                 });
+                
+                // Click handler to show info and delete option
+                google.maps.event.addListener(marker, 'click', function() {
+                    if (currentInfoWindow) currentInfoWindow.close();
+                    
+                    const content = `
+                        <div style="padding:8px;min-width:150px;">
+                            <b style="color:${color};">${point.roadName || 'Entry/Exit'}</b><br>
+                            <span style="font-size:12px;">Width: ${point.width || 'N/A'}m</span><br>
+                            <span style="font-size:11px;color:#666;">Zone: ${zone.name}</span><br>
+                            <button onclick="deleteZoneEntryPoint(${idx})" style="margin-top:8px;padding:6px 12px;background:#d32f2f;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;">Delete Point</button>
+                        </div>
+                    `;
+                    
+                    currentInfoWindow = new google.maps.InfoWindow({
+                        content: content,
+                        position: marker.getCenter()
+                    });
+                    currentInfoWindow.open(googleMap);
+                });
+                
                 zoneEntryExitMarkers.markers.push(marker);
             });
         }
@@ -953,11 +978,16 @@
             const zone = drawnPolygons[selectedZoneIndex];
             if (!zone.entryExitPoints) zone.entryExitPoints = [];
             
+            // Prompt for road name and width
+            const roadName = prompt('Road name:', 'Entry/Exit') || 'Entry/Exit';
+            const widthStr = prompt('Road width (m):', '15');
+            const width = parseFloat(widthStr) || 15;
+            
             zone.entryExitPoints.push({
                 lat: lat,
                 lng: lng,
-                roadName: 'Manual Entry',
-                width: 15,
+                roadName: roadName,
+                width: width,
                 zoneIndex: selectedZoneIndex
             });
             
@@ -968,7 +998,11 @@
             
             updateZonesList();
             renderZoneEntryExits();
-            showToast('Entry point added', '#4caf50');
+            
+            // Update stats display
+            selectZone(selectedZoneIndex);
+            
+            showToast('Entry point added: ' + roadName, '#4caf50');
         }
         
         // Delete zone entry point
@@ -977,9 +1011,16 @@
             
             const zone = drawnPolygons[selectedZoneIndex];
             if (zone.entryExitPoints && zone.entryExitPoints[idx]) {
+                // Close info window
+                if (currentInfoWindow) currentInfoWindow.close();
+                
                 zone.entryExitPoints.splice(idx, 1);
                 updateZonesList();
                 renderZoneEntryExits();
+                
+                // Update stats display
+                selectZone(selectedZoneIndex);
+                
                 showToast('Entry point deleted', '#757575');
             }
         }
