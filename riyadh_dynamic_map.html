@@ -280,7 +280,8 @@
                         Size: <span id="entryExitSizeVal">12</span> <input type="range" id="entryExitSize" min="6" max="24" value="12" step="1" oninput="document.getElementById('entryExitSizeVal').textContent=this.value;render()">
                     </div>
                     <div style="font-size:9px;color:#c2185b;margin-top:3px;">
-                        Load points from file (use Dashboard to create)
+                        <button id="addEntryExitBtn" onclick="toggleAddEntryExitMode()" style="padding:4px 8px;font-size:9px;background:#e94560;color:white;border:none;border-radius:3px;cursor:pointer;margin-right:4px;">Add Entry/Exit Point</button>
+                        <button onclick="exportEntryExitPoints()" style="padding:4px 8px;font-size:9px;background:#2196F3;color:white;border:none;border-radius:3px;cursor:pointer;">Export</button>
                     </div>
                 </div>
                 <div class="click-toggle">
@@ -638,14 +639,91 @@
             return null;
         }
         
-        // Entry/exit points are loaded from file only (use the dashboard to create them)
-        // No automatic detection - just display what's loaded
+        // Entry/exit points management
+        let addEntryExitMode = false;
+        
         function getEntryExitStats() {
             const major = entryExitPoints.filter(p => p.width >= 30).length;
             const secondary = entryExitPoints.filter(p => p.width >= 15 && p.width < 30).length;
             const local = entryExitPoints.filter(p => p.width < 15).length;
             return { total: entryExitPoints.length, major, secondary, local };
         }
+        
+        function deleteEntryExitPoint(idx) {
+            if (idx >= 0 && idx < entryExitPoints.length) {
+                entryExitPoints.splice(idx, 1);
+                document.getElementById('entryExitCount').textContent = entryExitPoints.length;
+                closeInfoPopup();
+                render();
+                showToast('Entry/exit point deleted', '#d32f2f');
+            }
+        }
+        
+        function toggleAddEntryExitMode() {
+            addEntryExitMode = !addEntryExitMode;
+            const btn = document.getElementById('addEntryExitBtn');
+            if (addEntryExitMode) {
+                btn.style.background = '#4caf50';
+                btn.textContent = 'Click map to add point (ESC to cancel)';
+                showToast('Click on map to add entry/exit point', '#4caf50');
+            } else {
+                btn.style.background = '#e94560';
+                btn.textContent = 'Add Entry/Exit Point';
+            }
+        }
+        
+        function addEntryExitPoint(lat, lng) {
+            const name = prompt('Enter road name (Arabic or English):', 'Road');
+            if (!name) return;
+            
+            const widthStr = prompt('Enter road width in meters:', '15');
+            const width = parseFloat(widthStr) || 15;
+            
+            entryExitPoints.push({
+                lat: lat,
+                lng: lng,
+                name: name,
+                width: width,
+                roadClass: width >= 30 ? 'Major' : 'Other'
+            });
+            
+            document.getElementById('entryExitCount').textContent = entryExitPoints.length;
+            addEntryExitMode = false;
+            document.getElementById('addEntryExitBtn').style.background = '#e94560';
+            document.getElementById('addEntryExitBtn').textContent = 'Add Entry/Exit Point';
+            render();
+            showToast('Entry/exit point added!', '#4caf50');
+        }
+        
+        function exportEntryExitPoints() {
+            if (!entryExitPoints.length) {
+                showToast('No entry/exit points to export', '#ff9800');
+                return;
+            }
+            const geojson = {
+                type: 'FeatureCollection',
+                features: entryExitPoints.map(p => ({
+                    type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
+                    properties: { name_ar: p.name, width_m: p.width, road_class: p.width >= 30 ? 'Major' : 'Other' }
+                }))
+            };
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' }));
+            a.download = 'entry_exit_points.geojson';
+            a.click();
+            showToast('Exported ' + entryExitPoints.length + ' points!', '#4caf50');
+        }
+        
+        // ESC key to cancel add mode
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && addEntryExitMode) {
+                addEntryExitMode = false;
+                document.getElementById('addEntryExitBtn').style.background = '#e94560';
+                document.getElementById('addEntryExitBtn').textContent = 'Add Entry/Exit Point';
+                showToast('Add mode cancelled', '#ff9800');
+            }
+        });
         
         let renderPending = false;
         function render() {
@@ -1884,12 +1962,19 @@
         }
         
         function handleMapClick(e) {
+            const lat = e.latLng.lat();
+            const lng = e.latLng.lng();
+            
+            // Check if in add entry/exit mode
+            if (addEntryExitMode) {
+                addEntryExitPoint(lat, lng);
+                return;
+            }
+            
             if (!document.getElementById('enableClick').checked) return;
             
             closeInfoPopup();
             
-            const lat = e.latLng.lat();
-            const lng = e.latLng.lng();
             const item = findClickedItem(lat, lng, 15);
             
             if (!item) return;
@@ -1899,6 +1984,7 @@
             
             if (item.type === 'entryexit') {
                 const p = item.data;
+                const idx = entryExitPoints.indexOf(p);
                 showInfoPopup(pixelX, pixelY,
                     `<span class="type-badge" style="background:#d32f2f;">Entry/Exit</span> Road Crossing Point`,
                     `<div style="direction:rtl;text-align:right;font-size:14px;font-weight:bold;margin-bottom:8px;">${p.name}</div>
@@ -1907,9 +1993,7 @@
                         <tr><td>Road Class</td><td>${p.width >= 30 ? 'Major Highway' : p.width >= 15 ? 'Arterial' : 'Local Road'}</td></tr>
                         <tr><td>Location</td><td>${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</td></tr>
                     </table>
-                    <div style="margin-top:10px;padding:8px;background:#ffebee;border-radius:4px;font-size:10px;color:#c62828;">
-                        This road crosses the district boundary - entry/exit point.
-                    </div>`
+                    <button onclick="deleteEntryExitPoint(${idx})" style="width:100%;margin-top:10px;padding:8px;background:#d32f2f;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:bold;">Delete This Point</button>`
                 );
             } else if (item.type === 'road') {
                 const r = item.data;
