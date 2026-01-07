@@ -305,9 +305,16 @@
                             <span class="count" id="polygonCount" style="background:#9c27b0;">0</span>
                         </div>
                         
+                        <!-- Load Zones File -->
+                        <div style="margin-bottom:8px;padding:6px;background:#e1bee7;border-radius:4px;">
+                            <label style="font-size:9px;font-weight:bold;">Load Zones GeoJSON:</label>
+                            <input type="file" id="zonesFile" accept=".json,.geojson" style="font-size:9px;width:100%;margin-top:4px;">
+                            <div id="zonesFileStatus" style="font-size:8px;color:#666;margin-top:2px;">Upload residential_zones.geojson</div>
+                        </div>
+                        
                         <!-- Zone Creation Controls -->
                         <div style="margin-bottom:8px;padding:6px;background:#ede7f6;border-radius:4px;">
-                            <label style="font-size:9px;">Min Road Width: <span id="zoneWidthVal">30</span>m</label>
+                            <label style="font-size:9px;">Or create manually - Min Road Width: <span id="zoneWidthVal">30</span>m</label>
                             <input type="range" id="zoneRoadWidth" min="20" max="50" value="30" step="5" style="width:100%;" oninput="document.getElementById('zoneWidthVal').textContent=this.value">
                             <button id="createZoneBtn" onclick="toggleCreateZoneMode()" style="padding:5px 8px;font-size:9px;background:#9c27b0;color:white;border:none;border-radius:3px;cursor:pointer;width:100%;margin-top:4px;">Create Zone</button>
                         </div>
@@ -2562,6 +2569,105 @@
                     hideLoading();
                     console.error('Entry/Exit load error:', err);
                     document.getElementById('entryExitStatus').innerHTML = `Error: ${err.message}`;
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        // Residential Zones GeoJSON file handler
+        document.getElementById('zonesFile').addEventListener('change', function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            showLoading('Loading Zones...');
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = JSON.parse(evt.target.result);
+                    const features = data.features || [data];
+                    
+                    // Clear existing zones
+                    if (zonePolygonsLayer) zonePolygonsLayer.clearLayers();
+                    if (zoneEntryExitMarkers) zoneEntryExitMarkers.clearLayers();
+                    drawnPolygons = [];
+                    selectedZoneIndex = -1;
+                    
+                    // Colors for zones
+                    const colors = ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#009688', '#4caf50', '#ff9800', '#ff5722'];
+                    
+                    // Process each zone
+                    features.forEach((f, idx) => {
+                        if (!f.geometry) return;
+                        
+                        let coords = [];
+                        if (f.geometry.type === 'Polygon') {
+                            coords = f.geometry.coordinates[0].map(c => [c[0], c[1]]);
+                        } else if (f.geometry.type === 'MultiPolygon') {
+                            coords = f.geometry.coordinates[0][0].map(c => [c[0], c[1]]);
+                        }
+                        
+                        // Remove closing point if same as first
+                        if (coords.length > 1) {
+                            const first = coords[0];
+                            const last = coords[coords.length - 1];
+                            if (first[0] === last[0] && first[1] === last[1]) {
+                                coords.pop();
+                            }
+                        }
+                        
+                        const name = f.properties?.name || f.properties?.NAME || f.properties?.zone_name || `Zone ${idx + 1}`;
+                        const color = colors[idx % colors.length];
+                        
+                        // Check for existing entry/exit points in the file
+                        let entryExits = [];
+                        if (f.properties?.entryExitPoints) {
+                            entryExits = f.properties.entryExitPoints;
+                        }
+                        
+                        drawnPolygons.push({
+                            name: name,
+                            coordinates: coords,
+                            color: color,
+                            entryExitPoints: entryExits
+                        });
+                        
+                        // Draw on map
+                        if (leafletMap && zonePolygonsLayer) {
+                            const latlngs = coords.map(c => [c[1], c[0]]);
+                            const polygon = L.polygon(latlngs, {
+                                color: color,
+                                weight: 3,
+                                fillColor: color,
+                                fillOpacity: 0.25
+                            }).addTo(zonePolygonsLayer);
+                            
+                            polygon.bindPopup(`
+                                <b>${name}</b><br>
+                                <button onclick="selectZone(${idx})" style="background:#9c27b0;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:4px;margin-top:5px;margin-right:4px;">Select</button>
+                                <button onclick="deleteZone(${idx})" style="background:#d32f2f;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete</button>
+                            `);
+                        }
+                    });
+                    
+                    // Update UI
+                    document.getElementById('zonesFileStatus').innerHTML = `<b>${drawnPolygons.length}</b> zones loaded`;
+                    document.getElementById('zonesFileStatus').style.color = '#4caf50';
+                    document.getElementById('polygonCount').textContent = drawnPolygons.length;
+                    updateZonesList();
+                    
+                    // Zoom to zones
+                    if (drawnPolygons.length > 0 && leafletMap) {
+                        const allCoords = drawnPolygons.flatMap(z => z.coordinates.map(c => [c[1], c[0]]));
+                        const bounds = L.latLngBounds(allCoords);
+                        leafletMap.fitBounds(bounds, { padding: [30, 30] });
+                    }
+                    
+                    hideLoading();
+                    showToast(`Loaded ${drawnPolygons.length} zones!`, '#9c27b0');
+                } catch(err) {
+                    hideLoading();
+                    console.error('Zones load error:', err);
+                    document.getElementById('zonesFileStatus').innerHTML = `Error: ${err.message}`;
+                    document.getElementById('zonesFileStatus').style.color = '#d32f2f';
                 }
             };
             reader.readAsText(file);
