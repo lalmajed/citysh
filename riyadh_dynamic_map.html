@@ -505,6 +505,9 @@
                     pixel: { x: e.pixel?.x || 0, y: e.pixel?.y || 0 }
                 }));
                 
+                // Initialize zone polygons array for Google Maps
+                zonePolygonsLayer = { polygons: [] };
+                
                 document.getElementById('loadingOverlay').classList.add('hidden');
                 document.getElementById('mapTypeLabel').textContent = 'Google Maps';
                 console.log('Google Maps ready!');
@@ -900,17 +903,38 @@
                 color: color
             });
             
-            const polygon = L.polygon(latlngs, {
-                color: color,
-                weight: 3,
-                fillColor: color,
-                fillOpacity: 0.25
-            }).addTo(zonePolygonsLayer);
-            
-            polygon.bindPopup(`
-                <b>Zone ${zoneNum}</b><br>
-                <button onclick="deleteZone(${zoneNum - 1})" style="background:#d32f2f;color:white;border:none;padding:8px 15px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete This Zone</button>
-            `);
+            // Draw polygon on map (works with both Google Maps and Leaflet)
+            if (useLeaflet && leafletMap) {
+                const polygon = L.polygon(latlngs, {
+                    color: color,
+                    weight: 3,
+                    fillColor: color,
+                    fillOpacity: 0.25
+                }).addTo(zonePolygonsLayer);
+                
+                polygon.bindPopup(`
+                    <b>Zone ${zoneNum}</b><br>
+                    <button onclick="deleteZone(${zoneNum - 1})" style="background:#d32f2f;color:white;border:none;padding:8px 15px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete This Zone</button>
+                `);
+            } else if (googleMap) {
+                const polygon = new google.maps.Polygon({
+                    paths: latlngs.map(p => ({ lat: p[0], lng: p[1] })),
+                    strokeColor: color,
+                    strokeWeight: 3,
+                    fillColor: color,
+                    fillOpacity: 0.25,
+                    map: googleMap
+                });
+                zonePolygonsLayer.polygons.push(polygon);
+                
+                google.maps.event.addListener(polygon, 'click', function() {
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: `<b>Zone ${zoneNum}</b><br><button onclick="deleteZone(${zoneNum - 1})" style="background:#d32f2f;color:white;border:none;padding:8px 15px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete</button>`,
+                        position: { lat: latlngs[0][0], lng: latlngs[0][1] }
+                    });
+                    infoWindow.open(googleMap);
+                });
+            }
             
             document.getElementById('polygonCount').textContent = drawnPolygons.length;
             showToast('Zone ' + zoneNum + ' created! Surrounded by red roads.', '#4caf50');
@@ -939,28 +963,55 @@
         
         function deleteZone(idx) {
             drawnPolygons.splice(idx, 1);
-            // Redraw all zones
-            zonePolygonsLayer.clearLayers();
-            drawnPolygons.forEach((zone, i) => {
-                const latlngs = zone.coordinates.map(c => [c[1], c[0]]);
-                const polygon = L.polygon(latlngs, {
-                    color: zone.color,
-                    weight: 3,
-                    fillColor: zone.color,
-                    fillOpacity: 0.25
-                }).addTo(zonePolygonsLayer);
-                polygon.bindPopup(`
-                    <b>${zone.name}</b><br>
-                    <button onclick="deleteZone(${i})" style="background:#d32f2f;color:white;border:none;padding:8px 15px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete This Zone</button>
-                `);
-            });
+            
+            // Clear and redraw all zones
+            if (useLeaflet && zonePolygonsLayer && zonePolygonsLayer.clearLayers) {
+                zonePolygonsLayer.clearLayers();
+                drawnPolygons.forEach((zone, i) => {
+                    const latlngs = zone.coordinates.map(c => [c[1], c[0]]);
+                    const polygon = L.polygon(latlngs, {
+                        color: zone.color,
+                        weight: 3,
+                        fillColor: zone.color,
+                        fillOpacity: 0.25
+                    }).addTo(zonePolygonsLayer);
+                    polygon.bindPopup(`
+                        <b>${zone.name}</b><br>
+                        <button onclick="deleteZone(${i})" style="background:#d32f2f;color:white;border:none;padding:8px 15px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete This Zone</button>
+                    `);
+                });
+            } else if (zonePolygonsLayer && zonePolygonsLayer.polygons) {
+                // Google Maps - clear and redraw
+                zonePolygonsLayer.polygons.forEach(p => p.setMap(null));
+                zonePolygonsLayer.polygons = [];
+                drawnPolygons.forEach((zone, i) => {
+                    const latlngs = zone.coordinates.map(c => [c[1], c[0]]);
+                    const polygon = new google.maps.Polygon({
+                        paths: latlngs.map(p => ({ lat: p[0], lng: p[1] })),
+                        strokeColor: zone.color,
+                        strokeWeight: 3,
+                        fillColor: zone.color,
+                        fillOpacity: 0.25,
+                        map: googleMap
+                    });
+                    zonePolygonsLayer.polygons.push(polygon);
+                });
+            }
+            
             document.getElementById('polygonCount').textContent = drawnPolygons.length;
             showToast('Zone deleted', '#757575');
         }
         
         function clearAllPolygons() {
             if (drawnPolygons.length && !confirm('Delete all zones?')) return;
-            if (zonePolygonsLayer) zonePolygonsLayer.clearLayers();
+            
+            if (useLeaflet && zonePolygonsLayer && zonePolygonsLayer.clearLayers) {
+                zonePolygonsLayer.clearLayers();
+            } else if (zonePolygonsLayer && zonePolygonsLayer.polygons) {
+                zonePolygonsLayer.polygons.forEach(p => p.setMap(null));
+                zonePolygonsLayer.polygons = [];
+            }
+            
             drawnPolygons = [];
             document.getElementById('polygonCount').textContent = 0;
             showToast('All zones cleared', '#757575');
@@ -1041,7 +1092,7 @@
                 color: '#9c27b0'
             });
             
-            if (useLeaflet && leafletMap) {
+            if (useLeaflet && leafletMap && zonePolygonsLayer.clearLayers) {
                 const polygon = L.polygon(latlngs, {
                     color: '#9c27b0',
                     weight: 3,
@@ -1050,6 +1101,16 @@
                 }).addTo(zonePolygonsLayer);
                 
                 polygon.bindPopup('<b>Merged Zone</b>');
+            } else if (googleMap) {
+                const polygon = new google.maps.Polygon({
+                    paths: latlngs.map(p => ({ lat: p[0], lng: p[1] })),
+                    strokeColor: '#9c27b0',
+                    strokeWeight: 3,
+                    fillColor: '#9c27b0',
+                    fillOpacity: 0.25,
+                    map: googleMap
+                });
+                if (zonePolygonsLayer.polygons) zonePolygonsLayer.polygons.push(polygon);
             }
             
             document.getElementById('polygonCount').textContent = 1;
