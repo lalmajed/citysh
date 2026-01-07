@@ -285,20 +285,20 @@
                     </div>
                     
                     <div class="layer-toggle" style="background:#f3e5f5;margin-top:8px;padding:8px;border-radius:6px;">
-                        <span class="name" style="color:#7b1fa2;font-weight:bold;">Auto Zone Polygons</span>
+                        <span class="name" style="color:#7b1fa2;font-weight:bold;">Residential Zones</span>
                         <span class="count" id="polygonCount" style="background:#9c27b0;">0</span>
                         <div style="margin-top:6px;">
-                            <label style="font-size:9px;">Min Road Width: <span id="zoneWidthVal">25</span>m</label>
+                            <label style="font-size:9px;">Min Road Width (red roads): <span id="zoneWidthVal">25</span>m</label>
                             <input type="range" id="zoneRoadWidth" min="15" max="50" value="25" step="5" style="width:100%;" oninput="document.getElementById('zoneWidthVal').textContent=this.value">
                         </div>
                         <div style="margin-top:6px;">
-                            <button onclick="generateZonesFromRoads()" style="padding:6px 10px;font-size:10px;background:#9c27b0;color:white;border:none;border-radius:3px;cursor:pointer;margin-right:4px;font-weight:bold;">Generate Zones from Roads</button>
+                            <button id="createZoneBtn" onclick="toggleCreateZoneMode()" style="padding:6px 10px;font-size:10px;background:#9c27b0;color:white;border:none;border-radius:3px;cursor:pointer;font-weight:bold;width:100%;">Create Zone (click inside)</button>
                         </div>
                         <div style="margin-top:6px;">
                             <button onclick="exportPolygons()" style="padding:4px 8px;font-size:9px;background:#2196F3;color:white;border:none;border-radius:3px;cursor:pointer;margin-right:4px;">Export GeoJSON</button>
-                            <button onclick="clearAllPolygons()" style="padding:4px 8px;font-size:9px;background:#757575;color:white;border:none;border-radius:3px;cursor:pointer;">Clear</button>
+                            <button onclick="clearAllPolygons()" style="padding:4px 8px;font-size:9px;background:#757575;color:white;border:none;border-radius:3px;cursor:pointer;">Clear All</button>
                         </div>
-                        <div style="font-size:9px;color:#666;margin-top:4px;">Auto-generates polygons enclosed by major roads</div>
+                        <div style="font-size:9px;color:#666;margin-top:4px;">Click inside area bounded by red roads to create zone. Click zone to delete.</div>
                     </div>
                 </div>
                 <div class="click-toggle">
@@ -669,19 +669,29 @@
         let drawnPolygons = [];
         
         let zonePolygonsLayer = null;
+        let createZoneMode = false;
+        let majorRoadSegments = []; // Cached major road segments
         
-        // Auto-generate polygons from major roads
-        function generateZonesFromRoads() {
-            if (roads.length === 0) {
-                showToast('Load roads first!', '#ff9800');
-                return;
+        // Toggle zone creation mode
+        function toggleCreateZoneMode() {
+            createZoneMode = !createZoneMode;
+            const btn = document.getElementById('createZoneBtn');
+            if (createZoneMode) {
+                btn.style.background = '#4caf50';
+                btn.textContent = 'Click inside area bounded by red roads';
+                cacheMajorRoads();
+                showToast('Click inside an area surrounded by major (red) roads!', '#4caf50');
+            } else {
+                btn.style.background = '#9c27b0';
+                btn.textContent = 'Create Zone (click inside)';
             }
-            
+        }
+        
+        // Cache major road segments for faster lookup
+        function cacheMajorRoads() {
             const minWidth = parseFloat(document.getElementById('zoneRoadWidth').value) || 25;
-            showToast('Generating zones from roads >= ' + minWidth + 'm...', '#9c27b0');
+            majorRoadSegments = [];
             
-            // Filter major roads
-            const majorRoads = [];
             roads.forEach(road => {
                 const props = road.properties || {};
                 const width = parseFloat(props.width_m || props.WIDTH || props.width || 0);
@@ -691,171 +701,136 @@
                     const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
                     lines.forEach(coords => {
                         if (coords && coords.length >= 2) {
-                            majorRoads.push({
-                                coords: coords,
-                                width: width,
-                                name: props.name_ar || props.name_en || 'Road'
-                            });
+                            for (let i = 0; i < coords.length - 1; i++) {
+                                majorRoadSegments.push({
+                                    x1: coords[i][0], y1: coords[i][1],
+                                    x2: coords[i+1][0], y2: coords[i+1][1],
+                                    name: props.name_ar || props.name_en || 'Road'
+                                });
+                            }
                         }
                     });
                 }
             });
-            
-            if (majorRoads.length === 0) {
-                showToast('No roads found with width >= ' + minWidth + 'm', '#ff9800');
+            console.log('Cached', majorRoadSegments.length, 'major road segments');
+        }
+        
+        // Create zone by clicking inside - traces boundary using ray casting
+        function createZoneAtPoint(lat, lng) {
+            if (majorRoadSegments.length === 0) {
+                showToast('No major roads found! Load roads first.', '#ff9800');
                 return;
             }
             
-            // Find intersections and build graph
-            const nodes = new Map(); // key: "lat,lng" -> { lat, lng, edges: [] }
-            const tolerance = 0.0003; // ~30m
+            // Find boundary by casting rays in multiple directions
+            const directions = 36; // Every 10 degrees
+            const boundaryPoints = [];
             
-            function getNodeKey(lat, lng) {
-                // Round to grid for clustering nearby points
-                const rlat = Math.round(lat / tolerance) * tolerance;
-                const rlng = Math.round(lng / tolerance) * tolerance;
-                return rlat.toFixed(5) + ',' + rlng.toFixed(5);
-            }
-            
-            function getOrCreateNode(lat, lng) {
-                const key = getNodeKey(lat, lng);
-                if (!nodes.has(key)) {
-                    nodes.set(key, { lat, lng, edges: [], key });
-                }
-                return nodes.get(key);
-            }
-            
-            // Add all road segments as edges
-            majorRoads.forEach(road => {
-                for (let i = 0; i < road.coords.length - 1; i++) {
-                    const [lng1, lat1] = road.coords[i];
-                    const [lng2, lat2] = road.coords[i + 1];
-                    
-                    const n1 = getOrCreateNode(lat1, lng1);
-                    const n2 = getOrCreateNode(lat2, lng2);
-                    
-                    if (n1.key !== n2.key) {
-                        n1.edges.push(n2);
-                        n2.edges.push(n1);
-                    }
-                }
-            });
-            
-            // Find minimal cycles (polygons)
-            const foundPolygons = [];
-            const visitedEdges = new Set();
-            
-            function edgeKey(n1, n2) {
-                return n1.key < n2.key ? n1.key + '-' + n2.key : n2.key + '-' + n1.key;
-            }
-            
-            function angle(from, to) {
-                return Math.atan2(to.lat - from.lat, to.lng - from.lng);
-            }
-            
-            // For each node, try to find polygons by following right-hand rule
-            nodes.forEach((startNode) => {
-                if (startNode.edges.length < 2) return;
+            for (let i = 0; i < directions; i++) {
+                const angle = (i / directions) * 2 * Math.PI;
+                const dx = Math.cos(angle);
+                const dy = Math.sin(angle);
                 
-                startNode.edges.forEach(firstNext => {
-                    const ek = edgeKey(startNode, firstNext);
-                    if (visitedEdges.has(ek + '_r')) return;
-                    
-                    // Follow the right-most path
-                    const path = [startNode];
-                    let current = startNode;
-                    let next = firstNext;
-                    let steps = 0;
-                    const maxSteps = 50;
-                    
-                    while (steps < maxSteps) {
-                        steps++;
-                        path.push(next);
-                        
-                        const ekey = edgeKey(current, next);
-                        visitedEdges.add(ekey + '_r');
-                        
-                        if (next.key === startNode.key && path.length > 3) {
-                            // Found a cycle!
-                            const coords = path.map(n => [n.lng, n.lat]);
-                            
-                            // Check if it's a valid polygon (not too small, not self-intersecting)
-                            if (coords.length >= 4) {
-                                // Calculate area to filter tiny polygons
-                                let area = 0;
-                                for (let i = 0; i < coords.length - 1; i++) {
-                                    area += coords[i][0] * coords[i+1][1];
-                                    area -= coords[i+1][0] * coords[i][1];
-                                }
-                                area = Math.abs(area) / 2;
-                                
-                                if (area > 0.000001) { // Minimum area threshold
-                                    foundPolygons.push(coords);
-                                }
-                            }
-                            break;
-                        }
-                        
-                        // Find right-most turn
-                        if (next.edges.length < 2) break;
-                        
-                        const inAngle = angle(next, current);
-                        let bestNext = null;
-                        let bestAngle = -999;
-                        
-                        next.edges.forEach(candidate => {
-                            if (candidate.key === current.key) return;
-                            const outAngle = angle(next, candidate);
-                            let turn = outAngle - inAngle;
-                            if (turn > Math.PI) turn -= 2 * Math.PI;
-                            if (turn < -Math.PI) turn += 2 * Math.PI;
-                            
-                            if (turn > bestAngle) {
-                                bestAngle = turn;
-                                bestNext = candidate;
-                            }
-                        });
-                        
-                        if (!bestNext) break;
-                        current = next;
-                        next = bestNext;
+                // Find nearest intersection with major road in this direction
+                let nearestDist = Infinity;
+                let nearestPoint = null;
+                
+                majorRoadSegments.forEach(seg => {
+                    const hit = raySegmentIntersect(lng, lat, dx, dy, seg.x1, seg.y1, seg.x2, seg.y2);
+                    if (hit && hit.dist < nearestDist) {
+                        nearestDist = hit.dist;
+                        nearestPoint = { lng: hit.x, lat: hit.y };
                     }
                 });
+                
+                if (nearestPoint && nearestDist < 0.02) { // Max ~2km
+                    boundaryPoints.push(nearestPoint);
+                }
+            }
+            
+            if (boundaryPoints.length < 4) {
+                showToast('Could not find enclosing roads. Try clicking in a different spot.', '#ff9800');
+                return;
+            }
+            
+            // Create polygon from boundary points
+            const coords = boundaryPoints.map(p => [p.lng, p.lat]);
+            const latlngs = boundaryPoints.map(p => [p.lat, p.lng]);
+            
+            const zoneNum = drawnPolygons.length + 1;
+            const colors = ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#009688', '#4caf50'];
+            const color = colors[zoneNum % colors.length];
+            
+            drawnPolygons.push({
+                name: 'Zone ' + zoneNum,
+                coordinates: coords,
+                color: color
             });
             
-            // Clear previous zones
-            zonePolygonsLayer.clearLayers();
-            drawnPolygons = [];
+            const polygon = L.polygon(latlngs, {
+                color: color,
+                weight: 3,
+                fillColor: color,
+                fillOpacity: 0.25
+            }).addTo(zonePolygonsLayer);
             
-            // Add found polygons
-            const colors = ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39'];
-            
-            foundPolygons.forEach((coords, i) => {
-                const latlngs = coords.map(c => [c[1], c[0]]);
-                const color = colors[i % colors.length];
-                
-                drawnPolygons.push({
-                    name: 'Zone ' + (i + 1),
-                    coordinates: coords
-                });
-                
-                L.polygon(latlngs, {
-                    color: color,
-                    weight: 2,
-                    fillColor: color,
-                    fillOpacity: 0.2
-                }).bindPopup(`<b>Zone ${i + 1}</b>`).addTo(zonePolygonsLayer);
-            });
+            polygon.bindPopup(`
+                <b>Zone ${zoneNum}</b><br>
+                <button onclick="deleteZone(${zoneNum - 1})" style="background:#d32f2f;color:white;border:none;padding:8px 15px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete This Zone</button>
+            `);
             
             document.getElementById('polygonCount').textContent = drawnPolygons.length;
-            showToast('Generated ' + drawnPolygons.length + ' zones!', '#9c27b0');
+            showToast('Zone ' + zoneNum + ' created! Click to delete or create more.', '#9c27b0');
+        }
+        
+        // Ray-segment intersection
+        function raySegmentIntersect(rx, ry, dx, dy, x1, y1, x2, y2) {
+            const sx = x2 - x1;
+            const sy = y2 - y1;
+            
+            const denom = dx * sy - dy * sx;
+            if (Math.abs(denom) < 1e-10) return null;
+            
+            const t = ((x1 - rx) * sy - (y1 - ry) * sx) / denom;
+            const u = ((x1 - rx) * dy - (y1 - ry) * dx) / denom;
+            
+            if (t > 0.0001 && u >= 0 && u <= 1) {
+                return {
+                    x: rx + t * dx,
+                    y: ry + t * dy,
+                    dist: t
+                };
+            }
+            return null;
+        }
+        
+        function deleteZone(idx) {
+            drawnPolygons.splice(idx, 1);
+            // Redraw all zones
+            zonePolygonsLayer.clearLayers();
+            drawnPolygons.forEach((zone, i) => {
+                const latlngs = zone.coordinates.map(c => [c[1], c[0]]);
+                const polygon = L.polygon(latlngs, {
+                    color: zone.color,
+                    weight: 3,
+                    fillColor: zone.color,
+                    fillOpacity: 0.25
+                }).addTo(zonePolygonsLayer);
+                polygon.bindPopup(`
+                    <b>${zone.name}</b><br>
+                    <button onclick="deleteZone(${i})" style="background:#d32f2f;color:white;border:none;padding:8px 15px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete This Zone</button>
+                `);
+            });
+            document.getElementById('polygonCount').textContent = drawnPolygons.length;
+            showToast('Zone deleted', '#757575');
         }
         
         function clearAllPolygons() {
+            if (drawnPolygons.length && !confirm('Delete all zones?')) return;
             zonePolygonsLayer.clearLayers();
             drawnPolygons = [];
             document.getElementById('polygonCount').textContent = 0;
-            showToast('Zones cleared', '#757575');
+            showToast('All zones cleared', '#757575');
         }
         
         function exportPolygons() {
@@ -2192,6 +2167,12 @@
         function handleMapClick(e) {
             const lat = e.latLng.lat();
             const lng = e.latLng.lng();
+            
+            // Check if in create zone mode
+            if (createZoneMode) {
+                createZoneAtPoint(lat, lng);
+                return;
+            }
             
             // Check if in add entry/exit mode
             if (addEntryExitMode) {
