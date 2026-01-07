@@ -307,9 +307,10 @@
                         
                         <!-- Load Zones Files (multiple) -->
                         <div style="margin-bottom:8px;padding:6px;background:#e1bee7;border-radius:4px;">
-                            <label style="font-size:9px;font-weight:bold;">Load Zone Files (select multiple):</label>
-                            <input type="file" id="zonesFile" accept=".json,.geojson" multiple style="font-size:9px;width:100%;margin-top:4px;">
-                            <div id="zonesFileStatus" style="font-size:8px;color:#666;margin-top:2px;">Select all residential_zones files</div>
+                            <label style="font-size:9px;font-weight:bold;">Load Zone Files:</label>
+                            <input type="file" id="zonesFile" accept=".json,.geojson,.JSON,.GEOJSON" multiple="multiple" style="font-size:9px;width:100%;margin-top:4px;">
+                            <div id="zonesFileStatus" style="font-size:8px;color:#666;margin-top:2px;">Ctrl+click to select multiple files</div>
+                            <button onclick="document.getElementById('zonesFile').click()" style="width:100%;margin-top:4px;padding:6px;font-size:10px;background:#7b1fa2;color:white;border:none;border-radius:3px;cursor:pointer;font-weight:bold;">Select Zone Files</button>
                         </div>
                         
                         <!-- Zone Creation Controls -->
@@ -2574,11 +2575,19 @@
             reader.readAsText(file);
         });
         
+        // Ensure multiple file selection is enabled
+        const zonesFileInput = document.getElementById('zonesFile');
+        if (zonesFileInput) {
+            zonesFileInput.setAttribute('multiple', 'multiple');
+            zonesFileInput.multiple = true;
+        }
+        
         // Residential Zones GeoJSON file handler (multiple files)
         document.getElementById('zonesFile').addEventListener('change', function(e) {
             const files = e.target.files;
             if (!files || files.length === 0) return;
             
+            console.log('Files selected:', files.length);
             showLoading(`Loading ${files.length} zone files...`);
             
             // Clear existing zones
