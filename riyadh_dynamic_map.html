@@ -4,9 +4,11 @@
     <title>Riyadh Map - Dynamic Counts</title>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1.0, width=device-width">
-    <!-- Leaflet CSS -->
+    <!-- Leaflet as fallback -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Google Maps Keyless API -->
+    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js" async defer></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; }
@@ -134,7 +136,7 @@
     </div>
     
     <div class="panel">
-        <h2>Riyadh Map - Dynamic Counts</h2>
+        <h2>Riyadh Map <span id="mapTypeLabel" style="font-size:10px;background:#4caf50;color:white;padding:2px 6px;border-radius:3px;margin-left:5px;">Loading...</span></h2>
         
         <!-- Total Stats -->
         <div class="stats-grid">
@@ -309,8 +311,9 @@
                             <button id="createZoneBtn" onclick="toggleCreateZoneMode()" style="padding:6px 10px;font-size:10px;background:#9c27b0;color:white;border:none;border-radius:3px;cursor:pointer;font-weight:bold;width:100%;">Create Zone (click inside)</button>
                         </div>
                         <div style="margin-top:6px;">
-                            <button onclick="exportPolygons()" style="padding:4px 8px;font-size:9px;background:#2196F3;color:white;border:none;border-radius:3px;cursor:pointer;margin-right:4px;">Export GeoJSON</button>
-                            <button onclick="clearAllPolygons()" style="padding:4px 8px;font-size:9px;background:#757575;color:white;border:none;border-radius:3px;cursor:pointer;">Clear All</button>
+                            <button onclick="mergeAllZones()" style="padding:4px 8px;font-size:9px;background:#ff9800;color:white;border:none;border-radius:3px;cursor:pointer;margin-right:4px;">Merge All</button>
+                            <button onclick="exportPolygons()" style="padding:4px 8px;font-size:9px;background:#2196F3;color:white;border:none;border-radius:3px;cursor:pointer;margin-right:4px;">Export</button>
+                            <button onclick="clearAllPolygons()" style="padding:4px 8px;font-size:9px;background:#757575;color:white;border:none;border-radius:3px;cursor:pointer;">Clear</button>
                         </div>
                         <div style="font-size:9px;color:#666;margin-top:4px;">Click inside area bounded by red roads to create zone. Click zone to delete.</div>
                     </div>
@@ -462,12 +465,60 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
-        // Use Leaflet first (always works), then try Google Maps as enhancement
-        let useLeaflet = true;
+        // Try Google Maps first, fallback to Leaflet
+        let useLeaflet = false;
         let leafletMap = null;
+        let googleMap = null;
+        let gmapsAttempts = 0;
+        const MAX_GMAPS_ATTEMPTS = 100; // 10 seconds
+        
+        function tryGoogleMaps() {
+            gmapsAttempts++;
+            document.getElementById('loadingStatus').textContent = 'Loading Google Maps... (' + gmapsAttempts + ')';
+            
+            if (typeof google !== 'undefined' && google.maps && google.maps.Map) {
+                console.log('Google Maps loaded after', gmapsAttempts, 'attempts');
+                initGoogleMap();
+            } else if (gmapsAttempts < MAX_GMAPS_ATTEMPTS) {
+                setTimeout(tryGoogleMaps, 100);
+            } else {
+                console.log('Google Maps failed, using Leaflet');
+                useLeaflet = true;
+                initLeafletMap();
+            }
+        }
+        
+        function initGoogleMap() {
+            document.getElementById('loadingStatus').textContent = 'Initializing Google Maps...';
+            
+            try {
+                googleMap = new google.maps.Map(document.getElementById('map'), {
+                    center: { lat: 24.7136, lng: 46.6753 },
+                    zoom: 11,
+                    mapTypeControl: true,
+                    gestureHandling: 'greedy'
+                });
+                
+                map = googleMap;
+                
+                googleMap.addListener('idle', render);
+                googleMap.addListener('click', (e) => handleMapClick({
+                    latLng: e.latLng,
+                    pixel: { x: e.pixel?.x || 0, y: e.pixel?.y || 0 }
+                }));
+                
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                document.getElementById('mapTypeLabel').textContent = 'Google Maps';
+                console.log('Google Maps ready!');
+            } catch (err) {
+                console.error('Google Maps init error:', err);
+                useLeaflet = true;
+                initLeafletMap();
+            }
+        }
         
         function initLeafletMap() {
-            document.getElementById('loadingStatus').textContent = 'Initializing map...';
+            document.getElementById('loadingStatus').textContent = 'Initializing OpenStreetMap...';
             
             leafletMap = L.map('map', {
                 center: [24.7136, 46.6753],
@@ -479,6 +530,8 @@
                 attribution: 'OpenStreetMap',
                 maxZoom: 19
             }).addTo(leafletMap);
+            
+            document.getElementById('mapTypeLabel').textContent = 'OpenStreetMap';
             
             // Create Google Maps compatible shim
             window.google = window.google || {};
@@ -566,11 +619,11 @@
             console.log('Leaflet map ready!');
         }
         
-        // Start immediately with Leaflet
+        // Try Google Maps first, fallback to Leaflet
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initLeafletMap);
+            document.addEventListener('DOMContentLoaded', tryGoogleMaps);
         } else {
-            initLeafletMap();
+            tryGoogleMaps();
         }
         
         // POI Colors by layer
@@ -909,10 +962,101 @@
         
         function clearAllPolygons() {
             if (drawnPolygons.length && !confirm('Delete all zones?')) return;
-            zonePolygonsLayer.clearLayers();
+            if (zonePolygonsLayer) zonePolygonsLayer.clearLayers();
             drawnPolygons = [];
             document.getElementById('polygonCount').textContent = 0;
             showToast('All zones cleared', '#757575');
+        }
+        
+        function mergeAllZones() {
+            if (drawnPolygons.length < 2) {
+                showToast('Need at least 2 zones to merge', '#ff9800');
+                return;
+            }
+            
+            // Collect all points from all polygons
+            const allPoints = [];
+            drawnPolygons.forEach(zone => {
+                zone.coordinates.forEach(coord => {
+                    allPoints.push({ lng: coord[0], lat: coord[1] });
+                });
+            });
+            
+            // Create convex hull (simple approach - find outer boundary)
+            // Sort points by angle from centroid
+            let sumLat = 0, sumLng = 0;
+            allPoints.forEach(p => { sumLat += p.lat; sumLng += p.lng; });
+            const centerLat = sumLat / allPoints.length;
+            const centerLng = sumLng / allPoints.length;
+            
+            // Sort by angle
+            allPoints.sort((a, b) => {
+                const angleA = Math.atan2(a.lat - centerLat, a.lng - centerLng);
+                const angleB = Math.atan2(b.lat - centerLat, b.lng - centerLng);
+                return angleA - angleB;
+            });
+            
+            // Simple convex hull using gift wrapping
+            const hull = [];
+            let leftmost = allPoints.reduce((min, p) => p.lng < min.lng ? p : min, allPoints[0]);
+            let current = leftmost;
+            let iterations = 0;
+            
+            do {
+                hull.push(current);
+                let next = allPoints[0];
+                
+                for (const candidate of allPoints) {
+                    if (next === current) {
+                        next = candidate;
+                        continue;
+                    }
+                    
+                    const cross = (next.lng - current.lng) * (candidate.lat - current.lat) -
+                                  (next.lat - current.lat) * (candidate.lng - current.lng);
+                    
+                    if (cross < 0) {
+                        next = candidate;
+                    }
+                }
+                
+                current = next;
+                iterations++;
+            } while (current !== leftmost && iterations < allPoints.length + 10);
+            
+            if (hull.length < 3) {
+                showToast('Could not merge zones', '#d32f2f');
+                return;
+            }
+            
+            // Clear existing zones
+            if (zonePolygonsLayer) zonePolygonsLayer.clearLayers();
+            drawnPolygons = [];
+            
+            // Create merged zone
+            const coords = hull.map(p => [p.lng, p.lat]);
+            const latlngs = hull.map(p => [p.lat, p.lng]);
+            
+            drawnPolygons.push({
+                name: 'Merged Zone',
+                coordinates: coords,
+                color: '#9c27b0'
+            });
+            
+            if (useLeaflet && leafletMap) {
+                const polygon = L.polygon(latlngs, {
+                    color: '#9c27b0',
+                    weight: 3,
+                    fillColor: '#9c27b0',
+                    fillOpacity: 0.25
+                }).addTo(zonePolygonsLayer);
+                
+                polygon.bindPopup('<b>Merged Zone</b>');
+            }
+            
+            document.getElementById('polygonCount').textContent = 1;
+            showToast('Merged ' + hull.length + ' points into 1 zone!', '#9c27b0');
+            render();
         }
         
         function exportPolygons() {
