@@ -1393,7 +1393,13 @@
             if (selectedZoneIndex === idx) {
                 selectedZoneIndex = -1;
                 document.getElementById('selectedZoneInfo').style.display = 'none';
-                if (zoneEntryExitMarkers) zoneEntryExitMarkers.clearLayers();
+                if (zoneEntryExitMarkers) {
+                    if (zoneEntryExitMarkers.clearLayers) zoneEntryExitMarkers.clearLayers();
+                    else if (zoneEntryExitMarkers.markers) {
+                        zoneEntryExitMarkers.markers.forEach(m => m.setMap(null));
+                        zoneEntryExitMarkers.markers = [];
+                    }
+                }
             } else if (selectedZoneIndex > idx) {
                 selectedZoneIndex--;
             }
@@ -1449,7 +1455,13 @@
             }
             
             // Clear zone entry markers
-            if (zoneEntryExitMarkers) zoneEntryExitMarkers.clearLayers();
+            if (zoneEntryExitMarkers) {
+                if (zoneEntryExitMarkers.clearLayers) zoneEntryExitMarkers.clearLayers();
+                else if (zoneEntryExitMarkers.markers) {
+                    zoneEntryExitMarkers.markers.forEach(m => m.setMap(null));
+                    zoneEntryExitMarkers.markers = [];
+                }
+            }
             
             drawnPolygons = [];
             selectedZoneIndex = -1;
@@ -1575,7 +1587,13 @@
                 document.getElementById('polygonCount').textContent = 1;
                 selectedZoneIndex = -1;
                 document.getElementById('selectedZoneInfo').style.display = 'none';
-                if (zoneEntryExitMarkers) zoneEntryExitMarkers.clearLayers();
+                if (zoneEntryExitMarkers) {
+                    if (zoneEntryExitMarkers.clearLayers) zoneEntryExitMarkers.clearLayers();
+                    else if (zoneEntryExitMarkers.markers) {
+                        zoneEntryExitMarkers.markers.forEach(m => m.setMap(null));
+                        zoneEntryExitMarkers.markers = [];
+                    }
+                }
                 updateZonesList();
                 showToast('Merged ' + originalCount + ' zones into 1!', '#9c27b0');
             } catch (err) {
@@ -2739,8 +2757,22 @@
                     const features = data.features || [data];
                     
                     // Clear existing zones
-                    if (zonePolygonsLayer) zonePolygonsLayer.clearLayers();
-                    if (zoneEntryExitMarkers) zoneEntryExitMarkers.clearLayers();
+                    if (zonePolygonsLayer) {
+                        if (zonePolygonsLayer.clearLayers) {
+                            zonePolygonsLayer.clearLayers();
+                        } else if (zonePolygonsLayer.polygons) {
+                            zonePolygonsLayer.polygons.forEach(p => p.setMap(null));
+                            zonePolygonsLayer.polygons = [];
+                        }
+                    }
+                    if (zoneEntryExitMarkers) {
+                        if (zoneEntryExitMarkers.clearLayers) {
+                            zoneEntryExitMarkers.clearLayers();
+                        } else if (zoneEntryExitMarkers.markers) {
+                            zoneEntryExitMarkers.markers.forEach(m => m.setMap(null));
+                            zoneEntryExitMarkers.markers = [];
+                        }
+                    }
                     drawnPolygons = [];
                     selectedZoneIndex = -1;
                     
