@@ -691,8 +691,7 @@
         }
         
         function resetView() {
-            map.setCenter({lat: 24.7136, lng: 46.6753});
-            map.setZoom(11);
+            setMapCenter(24.7136, 46.6753, 11);
         }
         
         // FAST CSV Parser - simple split for speed
@@ -2668,8 +2667,7 @@
                                     : firstRoad.geometry.coordinates[0];
                                 if (coords && coords.length > 0) {
                                     const [lng, lat] = coords[0];
-                                    map.setCenter({ lat, lng });
-                                    map.setZoom(14);
+                                    setMapCenter(lat, lng, 14);
                                 }
                             }
                         }
@@ -3059,11 +3057,7 @@
             });
             
             // Fit bounds with padding
-            const bounds = new google.maps.LatLngBounds(
-                new google.maps.LatLng(minLat, minLng),
-                new google.maps.LatLng(maxLat, maxLng)
-            );
-            map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 400 });
+            fitMapBounds(maxLat, minLat, maxLng, minLng, 50);
         }
         
         let selectedDistrictObj = null;
@@ -3075,8 +3069,7 @@
             calculateDistrictStats();
             render();
             // Reset view to all Riyadh
-            map.setCenter({ lat: 24.7136, lng: 46.6753 });
-            map.setZoom(11);
+            setMapCenter(24.7136, 46.6753, 11);
         }
         
         function selectAllPoi() {
