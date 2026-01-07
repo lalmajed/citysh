@@ -280,8 +280,19 @@
                         Size: <span id="entryExitSizeVal">12</span> <input type="range" id="entryExitSize" min="6" max="24" value="12" step="1" oninput="document.getElementById('entryExitSizeVal').textContent=this.value;render()">
                     </div>
                     <div style="font-size:9px;color:#c2185b;margin-top:3px;">
-                        <button id="addEntryExitBtn" onclick="toggleAddEntryExitMode()" style="padding:4px 8px;font-size:9px;background:#e94560;color:white;border:none;border-radius:3px;cursor:pointer;margin-right:4px;">Add Entry/Exit Point</button>
+                        <button id="addEntryExitBtn" onclick="toggleAddEntryExitMode()" style="padding:4px 8px;font-size:9px;background:#e94560;color:white;border:none;border-radius:3px;cursor:pointer;margin-right:4px;">Add Point</button>
                         <button onclick="exportEntryExitPoints()" style="padding:4px 8px;font-size:9px;background:#2196F3;color:white;border:none;border-radius:3px;cursor:pointer;">Export</button>
+                    </div>
+                    
+                    <div class="layer-toggle" style="background:#f3e5f5;margin-top:8px;padding:8px;border-radius:6px;">
+                        <span class="name" style="color:#7b1fa2;font-weight:bold;">Zone Polygons</span>
+                        <span class="count" id="polygonCount" style="background:#9c27b0;">0</span>
+                        <div style="margin-top:6px;">
+                            <button id="drawPolygonBtn" onclick="toggleDrawPolygon()" style="padding:4px 8px;font-size:9px;background:#9c27b0;color:white;border:none;border-radius:3px;cursor:pointer;margin-right:4px;">Draw Zone Polygon</button>
+                            <button onclick="exportPolygons()" style="padding:4px 8px;font-size:9px;background:#2196F3;color:white;border:none;border-radius:3px;cursor:pointer;margin-right:4px;">Export</button>
+                            <button onclick="clearAllPolygons()" style="padding:4px 8px;font-size:9px;background:#757575;color:white;border:none;border-radius:3px;cursor:pointer;">Clear</button>
+                        </div>
+                        <div style="font-size:9px;color:#666;margin-top:4px;">Draw polygons along major roads to define residential zones</div>
                     </div>
                 </div>
                 <div class="click-toggle">
@@ -525,6 +536,13 @@
                 pixel: { x: e.containerPoint.x, y: e.containerPoint.y }
             }));
             
+            leafletMap.on('dblclick', (e) => {
+                if (drawPolygonMode && polygonPoints.length >= 3) {
+                    finishPolygon();
+                    e.originalEvent.preventDefault();
+                }
+            });
+            
             window.addEventListener('resize', render);
             
             // Hide loading
@@ -644,6 +662,131 @@
         
         // Entry/exit points management
         let addEntryExitMode = false;
+        
+        // Polygon drawing
+        let drawPolygonMode = false;
+        let polygonPoints = [];
+        let drawnPolygons = [];
+        let tempPolygonLayer = null;
+        
+        function toggleDrawPolygon() {
+            drawPolygonMode = !drawPolygonMode;
+            const btn = document.getElementById('drawPolygonBtn');
+            if (drawPolygonMode) {
+                btn.style.background = '#4caf50';
+                btn.textContent = 'Drawing... (click points, double-click to finish)';
+                polygonPoints = [];
+                showToast('Click to add polygon points. Double-click to finish.', '#4caf50');
+            } else {
+                btn.style.background = '#9c27b0';
+                btn.textContent = 'Draw Zone Polygon';
+                polygonPoints = [];
+                if (tempPolygonLayer) {
+                    leafletMap.removeLayer(tempPolygonLayer);
+                    tempPolygonLayer = null;
+                }
+            }
+        }
+        
+        function addPolygonPoint(lat, lng) {
+            polygonPoints.push([lat, lng]);
+            updateTempPolygon();
+        }
+        
+        function updateTempPolygon() {
+            if (tempPolygonLayer) {
+                leafletMap.removeLayer(tempPolygonLayer);
+            }
+            if (polygonPoints.length >= 2) {
+                tempPolygonLayer = L.polygon(polygonPoints, {
+                    color: '#9c27b0',
+                    weight: 3,
+                    fillColor: '#9c27b0',
+                    fillOpacity: 0.2,
+                    dashArray: '5, 5'
+                }).addTo(leafletMap);
+            }
+        }
+        
+        function finishPolygon() {
+            if (polygonPoints.length < 3) {
+                showToast('Need at least 3 points for a polygon', '#ff9800');
+                return;
+            }
+            
+            const name = prompt('Enter zone name:', 'Residential Zone ' + (drawnPolygons.length + 1));
+            if (!name) {
+                polygonPoints = [];
+                if (tempPolygonLayer) {
+                    leafletMap.removeLayer(tempPolygonLayer);
+                    tempPolygonLayer = null;
+                }
+                return;
+            }
+            
+            // Save polygon
+            drawnPolygons.push({
+                name: name,
+                coordinates: polygonPoints.map(p => [p[1], p[0]]) // Convert to [lng, lat] for GeoJSON
+            });
+            
+            // Draw permanent polygon
+            L.polygon(polygonPoints, {
+                color: '#9c27b0',
+                weight: 3,
+                fillColor: '#9c27b0',
+                fillOpacity: 0.15
+            }).bindPopup(`<b>${name}</b><br><button onclick="deletePolygon(${drawnPolygons.length - 1})" style="background:#d32f2f;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:3px;">Delete</button>`).addTo(leafletMap);
+            
+            // Reset
+            polygonPoints = [];
+            if (tempPolygonLayer) {
+                leafletMap.removeLayer(tempPolygonLayer);
+                tempPolygonLayer = null;
+            }
+            drawPolygonMode = false;
+            document.getElementById('drawPolygonBtn').style.background = '#9c27b0';
+            document.getElementById('drawPolygonBtn').textContent = 'Draw Zone Polygon';
+            document.getElementById('polygonCount').textContent = drawnPolygons.length;
+            
+            showToast('Zone "' + name + '" created!', '#9c27b0');
+        }
+        
+        function deletePolygon(idx) {
+            drawnPolygons.splice(idx, 1);
+            document.getElementById('polygonCount').textContent = drawnPolygons.length;
+            showToast('Polygon deleted. Refresh to update map.', '#ff9800');
+        }
+        
+        function exportPolygons() {
+            if (!drawnPolygons.length) {
+                showToast('No polygons to export', '#ff9800');
+                return;
+            }
+            const geojson = {
+                type: 'FeatureCollection',
+                features: drawnPolygons.map((p, i) => ({
+                    type: 'Feature',
+                    properties: { name: p.name, id: i + 1 },
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [[...p.coordinates, p.coordinates[0]]] // Close the polygon
+                    }
+                }))
+            };
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' }));
+            a.download = 'residential_zones.geojson';
+            a.click();
+            showToast('Exported ' + drawnPolygons.length + ' zones!', '#4caf50');
+        }
+        
+        function clearAllPolygons() {
+            if (!confirm('Delete all drawn polygons?')) return;
+            drawnPolygons = [];
+            document.getElementById('polygonCount').textContent = 0;
+            showToast('All polygons cleared. Refresh to update map.', '#ff9800');
+        }
         
         function getEntryExitStats() {
             const major = entryExitPoints.filter(p => p.width >= 30).length;
@@ -1956,6 +2099,12 @@
         function handleMapClick(e) {
             const lat = e.latLng.lat();
             const lng = e.latLng.lng();
+            
+            // Check if in draw polygon mode
+            if (drawPolygonMode) {
+                addPolygonPoint(lat, lng);
+                return;
+            }
             
             // Check if in add entry/exit mode
             if (addEntryExitMode) {
