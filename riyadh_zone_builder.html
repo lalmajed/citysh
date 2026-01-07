@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Zone Builder - Combine Zones & Entry/Exits</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; display: flex; height: 100vh; background: #f5f5f5; }
+        
+        #sidebar {
+            width: 400px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #9c27b0, #673ab7);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        .header h1 { font-size: 18px; margin-bottom: 5px; }
+        .header p { font-size: 11px; opacity: 0.9; }
+        
+        .section {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .section-title {
+            font-weight: bold;
+            color: #7b1fa2;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        
+        .file-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .file-row input[type="file"] {
+            flex: 1;
+            font-size: 11px;
+        }
+        .file-row button {
+            padding: 6px 12px;
+            background: #9c27b0;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .file-row button:hover { background: #7b1fa2; }
+        
+        .status {
+            font-size: 11px;
+            color: #666;
+            padding: 4px 8px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+        .status.success { background: #e8f5e9; color: #2e7d32; }
+        .status.error { background: #ffebee; color: #c62828; }
+        
+        #zonesList {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .zone-card {
+            background: #f3e5f5;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #9c27b0;
+        }
+        .zone-card.selected {
+            background: #e1bee7;
+            box-shadow: 0 2px 8px rgba(156,39,176,0.3);
+        }
+        .zone-card .name {
+            font-weight: bold;
+            color: #7b1fa2;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .zone-card .stats {
+            font-size: 11px;
+            color: #666;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .zone-card .stats span {
+            background: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        .zone-card .actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .zone-card button {
+            padding: 4px 8px;
+            font-size: 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .btn-select { background: #9c27b0; color: white; }
+        .btn-load-entries { background: #e91e63; color: white; }
+        .btn-delete { background: #757575; color: white; }
+        .btn-zoom { background: #2196f3; color: white; }
+        
+        .entry-count {
+            background: #e91e63;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+        
+        #exportSection {
+            padding: 12px;
+            background: #e8f5e9;
+            border-top: 2px solid #4caf50;
+        }
+        #exportSection button {
+            width: 100%;
+            padding: 12px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+        #exportSection button:hover { background: #388e3c; }
+        #exportSection .summary {
+            font-size: 12px;
+            color: #2e7d32;
+            text-align: center;
+        }
+        
+        #map {
+            flex: 1;
+            background: #e0e0e0;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            z-index: 10000;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } }
+        
+        .hidden-input {
+            position: absolute;
+            left: -9999px;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <div class="header">
+            <h1>Zone Builder</h1>
+            <p>Load zones + entry/exits, combine into one file</p>
+        </div>
+        
+        <!-- Load Zone Section -->
+        <div class="section">
+            <div class="section-title">1. Load Zone Boundaries</div>
+            <input type="file" id="zoneFileInput" accept=".json,.geojson" class="hidden-input">
+            <button onclick="document.getElementById('zoneFileInput').click()" style="width:100%;padding:10px;background:#9c27b0;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;">
+                + Add Zone File
+            </button>
+            <div id="zoneLoadStatus" class="status">Click to load a zone boundary file</div>
+        </div>
+        
+        <!-- Load Entries Section -->
+        <div class="section">
+            <div class="section-title">2. Load Entry/Exit Points</div>
+            <input type="file" id="entryFileInput" accept=".json,.geojson" class="hidden-input">
+            <button id="loadEntriesBtn" onclick="loadEntriesForSelected()" style="width:100%;padding:10px;background:#e91e63;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;" disabled>
+                Select a zone first, then load its entries
+            </button>
+            <div id="entryLoadStatus" class="status">First select a zone, then load its entry/exit file</div>
+        </div>
+        
+        <!-- Zones List -->
+        <div class="section-title" style="padding: 10px 12px 0;">Loaded Zones (<span id="zoneCount">0</span>)</div>
+        <div id="zonesList">
+            <div style="text-align:center;color:#999;padding:30px;font-size:12px;">
+                No zones loaded yet.<br>Click "Add Zone File" to start.
+            </div>
+        </div>
+        
+        <!-- Export Section -->
+        <div id="exportSection">
+            <button onclick="exportCombined()">Export Combined JSON</button>
+            <div class="summary">
+                <span id="totalZones">0</span> zones, <span id="totalEntries">0</span> entry/exit points
+            </div>
+        </div>
+    </div>
+    
+    <div id="map"></div>
+    
+    <script>
+        // Data storage
+        let zones = [];
+        let selectedZoneIndex = -1;
+        
+        // Map
+        let map;
+        let zoneLayer;
+        let entryLayer;
+        
+        // Colors
+        const colors = ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#009688', '#4caf50', '#ff9800', '#ff5722', '#795548', '#607d8b'];
+        
+        // Initialize map
+        function initMap() {
+            map = L.map('map').setView([24.7136, 46.6753], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: 'OpenStreetMap'
+            }).addTo(map);
+            
+            zoneLayer = L.layerGroup().addTo(map);
+            entryLayer = L.layerGroup().addTo(map);
+        }
+        
+        // Load zone file
+        document.getElementById('zoneFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = JSON.parse(evt.target.result);
+                    const features = data.features || [data];
+                    
+                    // Find polygon
+                    let zonePolygon = null;
+                    let entryPoints = [];
+                    
+                    features.forEach(f => {
+                        if (!f.geometry) return;
+                        
+                        if (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon') {
+                            let coords = [];
+                            if (f.geometry.type === 'Polygon') {
+                                coords = f.geometry.coordinates[0];
+                            } else {
+                                coords = f.geometry.coordinates[0][0];
+                            }
+                            zonePolygon = {
+                                coords: coords,
+                                name: f.properties?.name || f.properties?.NAME || null
+                            };
+                        } else if (f.geometry.type === 'Point') {
+                            entryPoints.push({
+                                lat: f.geometry.coordinates[1],
+                                lng: f.geometry.coordinates[0],
+                                roadName: f.properties?.roadName || f.properties?.name || 'Entry/Exit',
+                                width: parseFloat(f.properties?.width || 15)
+                            });
+                        }
+                    });
+                    
+                    if (zonePolygon) {
+                        const idx = zones.length;
+                        const name = zonePolygon.name || file.name.replace(/\.(geo)?json$/i, '') || `Zone ${idx + 1}`;
+                        
+                        zones.push({
+                            name: name,
+                            coordinates: zonePolygon.coords,
+                            color: colors[idx % colors.length],
+                            entryExitPoints: entryPoints
+                        });
+                        
+                        document.getElementById('zoneLoadStatus').className = 'status success';
+                        document.getElementById('zoneLoadStatus').textContent = `Loaded: ${name}` + (entryPoints.length ? ` (with ${entryPoints.length} entries)` : '');
+                        
+                        updateZonesList();
+                        renderZones();
+                        showToast(`Zone "${name}" added!`);
+                    } else {
+                        document.getElementById('zoneLoadStatus').className = 'status error';
+                        document.getElementById('zoneLoadStatus').textContent = 'No polygon found in file';
+                    }
+                } catch(err) {
+                    document.getElementById('zoneLoadStatus').className = 'status error';
+                    document.getElementById('zoneLoadStatus').textContent = 'Error: ' + err.message;
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+        
+        // Load entries for selected zone
+        function loadEntriesForSelected() {
+            if (selectedZoneIndex < 0) {
+                showToast('Select a zone first!');
+                return;
+            }
+            document.getElementById('entryFileInput').click();
+        }
+        
+        document.getElementById('entryFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file || selectedZoneIndex < 0) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = JSON.parse(evt.target.result);
+                    const features = data.features || [data];
+                    
+                    let entryPoints = [];
+                    features.forEach(f => {
+                        if (f.geometry && f.geometry.type === 'Point') {
+                            entryPoints.push({
+                                lat: f.geometry.coordinates[1],
+                                lng: f.geometry.coordinates[0],
+                                roadName: f.properties?.roadName || f.properties?.name || f.properties?.road_name || 'Entry/Exit',
+                                width: parseFloat(f.properties?.width || f.properties?.width_m || 15)
+                            });
+                        }
+                    });
+                    
+                    // Add to selected zone
+                    zones[selectedZoneIndex].entryExitPoints = entryPoints;
+                    
+                    document.getElementById('entryLoadStatus').className = 'status success';
+                    document.getElementById('entryLoadStatus').textContent = `Loaded ${entryPoints.length} entries for ${zones[selectedZoneIndex].name}`;
+                    
+                    updateZonesList();
+                    renderEntries();
+                    showToast(`${entryPoints.length} entry points loaded!`);
+                } catch(err) {
+                    document.getElementById('entryLoadStatus').className = 'status error';
+                    document.getElementById('entryLoadStatus').textContent = 'Error: ' + err.message;
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+        
+        // Select zone
+        function selectZone(idx) {
+            selectedZoneIndex = idx;
+            updateZonesList();
+            renderEntries();
+            
+            const btn = document.getElementById('loadEntriesBtn');
+            btn.disabled = false;
+            btn.textContent = `Load entries for: ${zones[idx].name}`;
+            
+            // Zoom to zone
+            const zone = zones[idx];
+            const latlngs = zone.coordinates.map(c => [c[1], c[0]]);
+            map.fitBounds(L.latLngBounds(latlngs), { padding: [50, 50] });
+        }
+        
+        // Delete zone
+        function deleteZone(idx) {
+            if (!confirm(`Delete zone "${zones[idx].name}"?`)) return;
+            zones.splice(idx, 1);
+            if (selectedZoneIndex === idx) selectedZoneIndex = -1;
+            else if (selectedZoneIndex > idx) selectedZoneIndex--;
+            updateZonesList();
+            renderZones();
+            renderEntries();
+        }
+        
+        // Update zones list UI
+        function updateZonesList() {
+            const container = document.getElementById('zonesList');
+            
+            if (zones.length === 0) {
+                container.innerHTML = '<div style="text-align:center;color:#999;padding:30px;font-size:12px;">No zones loaded yet.<br>Click "Add Zone File" to start.</div>';
+                document.getElementById('zoneCount').textContent = '0';
+                document.getElementById('totalZones').textContent = '0';
+                document.getElementById('totalEntries').textContent = '0';
+                return;
+            }
+            
+            let totalEntries = 0;
+            let html = '';
+            
+            zones.forEach((zone, idx) => {
+                const entryCount = zone.entryExitPoints ? zone.entryExitPoints.length : 0;
+                totalEntries += entryCount;
+                const isSelected = idx === selectedZoneIndex;
+                
+                html += `
+                    <div class="zone-card ${isSelected ? 'selected' : ''}" style="border-left-color:${zone.color}">
+                        <div class="name">
+                            <span>${zone.name}</span>
+                            <span class="entry-count">${entryCount} entries</span>
+                        </div>
+                        <div class="stats">
+                            <span>Points: ${zone.coordinates.length}</span>
+                            <span style="background:${zone.color};color:white;">Color</span>
+                        </div>
+                        <div class="actions">
+                            <button class="btn-select" onclick="selectZone(${idx})">${isSelected ? 'Selected' : 'Select'}</button>
+                            <button class="btn-zoom" onclick="zoomToZone(${idx})">Zoom</button>
+                            <button class="btn-delete" onclick="deleteZone(${idx})">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            document.getElementById('zoneCount').textContent = zones.length;
+            document.getElementById('totalZones').textContent = zones.length;
+            document.getElementById('totalEntries').textContent = totalEntries;
+        }
+        
+        // Zoom to zone
+        function zoomToZone(idx) {
+            const zone = zones[idx];
+            const latlngs = zone.coordinates.map(c => [c[1], c[0]]);
+            map.fitBounds(L.latLngBounds(latlngs), { padding: [50, 50] });
+        }
+        
+        // Render zones on map
+        function renderZones() {
+            zoneLayer.clearLayers();
+            
+            zones.forEach((zone, idx) => {
+                const latlngs = zone.coordinates.map(c => [c[1], c[0]]);
+                const polygon = L.polygon(latlngs, {
+                    color: zone.color,
+                    weight: 3,
+                    fillColor: zone.color,
+                    fillOpacity: 0.2
+                }).addTo(zoneLayer);
+                
+                polygon.bindPopup(`<b>${zone.name}</b><br>Entries: ${zone.entryExitPoints?.length || 0}`);
+                polygon.on('click', () => selectZone(idx));
+            });
+            
+            // Fit map to all zones
+            if (zones.length > 0) {
+                const allCoords = zones.flatMap(z => z.coordinates.map(c => [c[1], c[0]]));
+                map.fitBounds(L.latLngBounds(allCoords), { padding: [30, 30] });
+            }
+        }
+        
+        // Render entry points for selected zone
+        function renderEntries() {
+            entryLayer.clearLayers();
+            
+            if (selectedZoneIndex < 0) return;
+            
+            const zone = zones[selectedZoneIndex];
+            if (!zone.entryExitPoints) return;
+            
+            zone.entryExitPoints.forEach((p, idx) => {
+                const isMajor = p.width >= 30;
+                const marker = L.circleMarker([p.lat, p.lng], {
+                    radius: isMajor ? 10 : 7,
+                    fillColor: isMajor ? '#d32f2f' : '#e91e63',
+                    color: '#fff',
+                    weight: 2,
+                    fillOpacity: 0.9
+                }).addTo(entryLayer);
+                
+                marker.bindPopup(`<b>${p.roadName}</b><br>Width: ${p.width}m`);
+            });
+        }
+        
+        // Export combined JSON
+        function exportCombined() {
+            if (zones.length === 0) {
+                showToast('No zones to export!');
+                return;
+            }
+            
+            const features = [];
+            
+            // Add each zone and its entries
+            zones.forEach((zone, zoneIdx) => {
+                // Zone polygon
+                features.push({
+                    type: 'Feature',
+                    properties: {
+                        type: 'zone',
+                        name: zone.name,
+                        id: zoneIdx + 1,
+                        color: zone.color,
+                        entryCount: zone.entryExitPoints ? zone.entryExitPoints.length : 0
+                    },
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [zone.coordinates]
+                    }
+                });
+                
+                // Entry/exit points
+                if (zone.entryExitPoints) {
+                    zone.entryExitPoints.forEach((p, entryIdx) => {
+                        features.push({
+                            type: 'Feature',
+                            properties: {
+                                type: 'entry_exit',
+                                zoneName: zone.name,
+                                zoneId: zoneIdx + 1,
+                                id: entryIdx + 1,
+                                roadName: p.roadName,
+                                width: p.width
+                            },
+                            geometry: {
+                                type: 'Point',
+                                coordinates: [p.lng, p.lat]
+                            }
+                        });
+                    });
+                }
+            });
+            
+            const geojson = {
+                type: 'FeatureCollection',
+                properties: {
+                    name: 'Al Muhammadiyah Residential Zones',
+                    totalZones: zones.length,
+                    totalEntries: zones.reduce((sum, z) => sum + (z.entryExitPoints?.length || 0), 0),
+                    created: new Date().toISOString()
+                },
+                features: features
+            };
+            
+            const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'muhammadiyah_zones_combined.geojson';
+            a.click();
+            
+            showToast(`Exported ${zones.length} zones with ${geojson.properties.totalEntries} entries!`);
+        }
+        
+        // Toast notification
+        function showToast(msg) {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+            
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        // Initialize
+        initMap();
+    </script>
+</body>
+</html>
