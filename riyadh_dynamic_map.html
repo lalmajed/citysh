@@ -288,8 +288,8 @@
                         <span class="name" style="color:#7b1fa2;font-weight:bold;">Residential Zones</span>
                         <span class="count" id="polygonCount" style="background:#9c27b0;">0</span>
                         <div style="margin-top:6px;">
-                            <label style="font-size:9px;">Min Road Width (red roads): <span id="zoneWidthVal">25</span>m</label>
-                            <input type="range" id="zoneRoadWidth" min="15" max="50" value="25" step="5" style="width:100%;" oninput="document.getElementById('zoneWidthVal').textContent=this.value">
+                            <label style="font-size:9px;">Min Road Width: <span id="zoneWidthVal">30</span>m <span style="color:#d32f2f;font-weight:bold;">(RED = 30m+)</span></label>
+                            <input type="range" id="zoneRoadWidth" min="20" max="50" value="30" step="5" style="width:100%;" oninput="document.getElementById('zoneWidthVal').textContent=this.value">
                         </div>
                         <div style="margin-top:6px;">
                             <button id="createZoneBtn" onclick="toggleCreateZoneMode()" style="padding:6px 10px;font-size:10px;background:#9c27b0;color:white;border:none;border-radius:3px;cursor:pointer;font-weight:bold;width:100%;">Create Zone (click inside)</button>
@@ -729,23 +729,61 @@
             }
         }
         
-        // Create zone by clicking inside - finds nearest roads in all directions
+        // Create zone by clicking inside - ONLY if surrounded by red roads
         function createZoneAtPoint(lat, lng) {
             if (majorRoadSegments.length === 0) {
                 cacheMajorRoads();
             }
             
             if (majorRoadSegments.length === 0) {
-                showToast('No major roads found! Load roads and set min width.', '#ff9800');
+                showToast('No RED roads found! Load roads first.', '#ff9800');
                 return;
             }
             
-            console.log('Creating zone at', lat, lng, 'with', majorRoadSegments.length, 'road segments');
+            // Check 8 directions for red roads
+            const directions = [
+                { name: 'N', dx: 0, dy: 1 },
+                { name: 'NE', dx: 0.707, dy: 0.707 },
+                { name: 'E', dx: 1, dy: 0 },
+                { name: 'SE', dx: 0.707, dy: -0.707 },
+                { name: 'S', dx: 0, dy: -1 },
+                { name: 'SW', dx: -0.707, dy: -0.707 },
+                { name: 'W', dx: -1, dy: 0 },
+                { name: 'NW', dx: -0.707, dy: 0.707 }
+            ];
             
-            // Cast many rays to find boundary
-            const numRays = 72; // Every 5 degrees
+            const maxDist = 0.008; // ~800m max search
+            const foundRoads = [];
+            const missingDirs = [];
+            
+            directions.forEach(dir => {
+                let nearest = null;
+                let nearestDist = maxDist;
+                
+                for (const seg of majorRoadSegments) {
+                    const hit = rayLineIntersect(lng, lat, dir.dx, dir.dy, seg.x1, seg.y1, seg.x2, seg.y2);
+                    if (hit && hit.t > 0.0001 && hit.t < nearestDist) {
+                        nearestDist = hit.t;
+                        nearest = { lng: hit.x, lat: hit.y, dir: dir.name };
+                    }
+                }
+                
+                if (nearest) {
+                    foundRoads.push(nearest);
+                } else {
+                    missingDirs.push(dir.name);
+                }
+            });
+            
+            // Must have roads in at least 6 of 8 directions
+            if (foundRoads.length < 6) {
+                showToast('NOT surrounded by red roads! Missing: ' + missingDirs.join(', '), '#d32f2f');
+                return;
+            }
+            
+            // Now trace detailed boundary with more rays
+            const numRays = 60;
             const boundaryPoints = [];
-            const maxDist = 0.015; // ~1.5km max
             
             for (let i = 0; i < numRays; i++) {
                 const angle = (i / numRays) * 2 * Math.PI;
@@ -755,7 +793,6 @@
                 let nearestDist = maxDist;
                 let nearestPoint = null;
                 
-                // Check all road segments
                 for (const seg of majorRoadSegments) {
                     const hit = rayLineIntersect(lng, lat, dx, dy, seg.x1, seg.y1, seg.x2, seg.y2);
                     if (hit && hit.t > 0.0001 && hit.t < nearestDist) {
@@ -766,30 +803,23 @@
                 
                 if (nearestPoint) {
                     boundaryPoints.push(nearestPoint);
-                } else {
-                    // If no road found, use max distance point
-                    boundaryPoints.push({
-                        lng: lng + dx * maxDist,
-                        lat: lat + dy * maxDist
-                    });
                 }
             }
             
-            // Simplify polygon - remove points too close together
+            if (boundaryPoints.length < 8) {
+                showToast('Could not trace boundary. Click closer to center of area.', '#ff9800');
+                return;
+            }
+            
+            // Simplify
             const simplified = [boundaryPoints[0]];
-            const minSpacing = 0.0002;
             for (let i = 1; i < boundaryPoints.length; i++) {
                 const last = simplified[simplified.length - 1];
                 const curr = boundaryPoints[i];
                 const dist = Math.sqrt(Math.pow(curr.lat - last.lat, 2) + Math.pow(curr.lng - last.lng, 2));
-                if (dist > minSpacing) {
+                if (dist > 0.00015) {
                     simplified.push(curr);
                 }
-            }
-            
-            if (simplified.length < 4) {
-                showToast('Could not create polygon. Try different location.', '#ff9800');
-                return;
             }
             
             const coords = simplified.map(p => [p.lng, p.lat]);
@@ -818,7 +848,7 @@
             `);
             
             document.getElementById('polygonCount').textContent = drawnPolygons.length;
-            showToast('Zone ' + zoneNum + ' created!', '#9c27b0');
+            showToast('Zone ' + zoneNum + ' created! Surrounded by red roads.', '#4caf50');
         }
         
         // Ray-line segment intersection
