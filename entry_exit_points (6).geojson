@@ -1,0 +1,230 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.648314777218104,
+          24.734646934151744
+        ]
+      },
+      "properties": {
+        "name_ar": "أدم بن ربيعة",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.644145838168505,
+          24.734907715644983
+        ]
+      },
+      "properties": {
+        "name_ar": "السكب",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64725949565856,
+          24.732127426253676
+        ]
+      },
+      "properties": {
+        "name_ar": "جعفر المسلمي",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64883408358772,
+          24.733485202790767
+        ]
+      },
+      "properties": {
+        "name_ar": "رأس السر",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64565383952843,
+          24.73210909482674
+        ]
+      },
+      "properties": {
+        "name_ar": "ضباء",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64611087397892,
+          24.73649236798685
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي المنصور",
+        "width_m": 15,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64800131864425,
+          24.73244476943604
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي محمد بن سفيان",
+        "width_m": 15,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64772188903606,
+          24.735996826506927
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق التخصصي",
+        "width_m": 14,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64835917534308,
+          24.734686614622255
+        ]
+      },
+      "properties": {
+        "name_ar": "طريق التخصصي",
+        "width_m": 14,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.645640075744915,
+          24.732136507269846
+        ]
+      },
+      "properties": {
+        "name_ar": "Diba",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64414493558128,
+          24.734909429725942
+        ]
+      },
+      "properties": {
+        "name_ar": "Al Sakab",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64883452486408,
+          24.73348417651125
+        ]
+      },
+      "properties": {
+        "name_ar": "Ras Al Sirr",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64612940602627,
+          24.736496944995547
+        ]
+      },
+      "properties": {
+        "name_ar": "Abi Al Mansour",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.647690321927875,
+          24.736031842307295
+        ]
+      },
+      "properties": {
+        "name_ar": "Road",
+        "width_m": 6,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64749496120606,
+          24.736248546098935
+        ]
+      },
+      "properties": {
+        "name_ar": "Road",
+        "width_m": 6,
+        "road_class": "Other"
+      }
+    }
+  ]
+}

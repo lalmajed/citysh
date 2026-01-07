@@ -1,0 +1,215 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64067383830623,
+          24.73447296894682
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي الحسن السلمي",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63927272650174,
+          24.737216383580524
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي الحسن السلمي",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64228503870788,
+          24.737215932807572
+        ]
+      },
+      "properties": {
+        "name_ar": "الثمامية",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.640695526358456,
+          24.73773551609165
+        ]
+      },
+      "properties": {
+        "name_ar": "ابن رشيد",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64275364072073,
+          24.735481379433722
+        ]
+      },
+      "properties": {
+        "name_ar": "رغدان",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.640001968294186,
+          24.73748245974095
+        ]
+      },
+      "properties": {
+        "name_ar": "البراري",
+        "width_m": 15,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64207437887098,
+          24.73789599667519
+        ]
+      },
+      "properties": {
+        "name_ar": "حسين البوري",
+        "width_m": 15,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64069184536856,
+          24.737734173020435
+        ]
+      },
+      "properties": {
+        "name_ar": "Ibn Rasheed",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63925064879516,
+          24.737208328157127
+        ]
+      },
+      "properties": {
+        "name_ar": "Abi Al-Hasan As-Salmi",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64273883866661,
+          24.73547420252764
+        ]
+      },
+      "properties": {
+        "name_ar": "Raghdan",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64207714771088,
+          24.737888033315624
+        ]
+      },
+      "properties": {
+        "name_ar": "حسين البوري",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63578666020654,
+          24.73583272135955
+        ]
+      },
+      "properties": {
+        "name_ar": "Road",
+        "width_m": 6,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64084366334517,
+          24.73778956636832
+        ]
+      },
+      "properties": {
+        "name_ar": "Road",
+        "width_m": 6,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.640986681605725,
+          24.737855301888228
+        ]
+      },
+      "properties": {
+        "name_ar": "Road",
+        "width_m": 6,
+        "road_class": "Other"
+      }
+    }
+  ]
+}

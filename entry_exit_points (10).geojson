@@ -1,0 +1,290 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.642431668071104,
+          24.733059208857394
+        ]
+      },
+      "properties": {
+        "name_ar": "خزاعة",
+        "width_m": 25,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64173978276961,
+          24.734433656080697
+        ]
+      },
+      "properties": {
+        "name_ar": "خزاعة",
+        "width_m": 25,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.641130795241594,
+          24.731949680417262
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي الحسن بن المبارك",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.63959743199084,
+          24.73319728079376
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي الحسن بن المبارك",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.641699463863674,
+          24.732464831685355
+        ]
+      },
+      "properties": {
+        "name_ar": "البترا",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64020315767325,
+          24.733724788365677
+        ]
+      },
+      "properties": {
+        "name_ar": "البترا",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6437412298514,
+          24.733528183665484
+        ]
+      },
+      "properties": {
+        "name_ar": "رغدان",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64298986195423,
+          24.73500355338741
+        ]
+      },
+      "properties": {
+        "name_ar": "رغدان",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.638751589493886,
+          24.73227866132941
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي العباس اللخمي",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.640176936371226,
+          24.731090594749098
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي العباس اللخمي",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.640960943147604,
+          24.73421136176452
+        ]
+      },
+      "properties": {
+        "name_ar": "البارقة",
+        "width_m": 15,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.641146803397675,
+          24.731964182047186
+        ]
+      },
+      "properties": {
+        "name_ar": "Abi Al-Hasan Bin Mubarak",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.640948627849546,
+          24.734204478394222
+        ]
+      },
+      "properties": {
+        "name_ar": "البارقة",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64168413688866,
+          24.732450947130605
+        ]
+      },
+      "properties": {
+        "name_ar": "Al Battra",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64016770165284,
+          24.733704392900453
+        ]
+      },
+      "properties": {
+        "name_ar": "Al Battra",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64295641473506,
+          24.734985062089088
+        ]
+      },
+      "properties": {
+        "name_ar": "Raghdan",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64373188939949,
+          24.73352483870176
+        ]
+      },
+      "properties": {
+        "name_ar": "Raghdan",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64241752366576,
+          24.73305414352189
+        ]
+      },
+      "properties": {
+        "name_ar": "Khozaah",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64171836875094,
+          24.73442858231771
+        ]
+      },
+      "properties": {
+        "name_ar": "Khozaah",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    }
+  ]
+}
