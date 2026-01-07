@@ -463,60 +463,10 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
-        // Try Google Maps first, fallback to Leaflet
-        let useLeaflet = false;
+        // Start with Leaflet immediately (always works)
+        let useLeaflet = true;
         let leafletMap = null;
         let googleMap = null;
-        let gmapsAttempts = 0;
-        const MAX_GMAPS_ATTEMPTS = 100; // 10 seconds
-        
-        function tryGoogleMaps() {
-            gmapsAttempts++;
-            document.getElementById('loadingStatus').textContent = 'Loading Google Maps... (' + gmapsAttempts + ')';
-            
-            if (typeof google !== 'undefined' && google.maps && google.maps.Map) {
-                console.log('Google Maps loaded after', gmapsAttempts, 'attempts');
-                initGoogleMap();
-            } else if (gmapsAttempts < MAX_GMAPS_ATTEMPTS) {
-                setTimeout(tryGoogleMaps, 100);
-            } else {
-                console.log('Google Maps failed, using Leaflet');
-                useLeaflet = true;
-                initLeafletMap();
-            }
-        }
-        
-        function initGoogleMap() {
-            document.getElementById('loadingStatus').textContent = 'Initializing Google Maps...';
-            
-            try {
-                googleMap = new google.maps.Map(document.getElementById('map'), {
-                    center: { lat: 24.7136, lng: 46.6753 },
-                    zoom: 11,
-                    mapTypeControl: true,
-                    gestureHandling: 'greedy'
-                });
-                
-                map = googleMap;
-                
-                googleMap.addListener('idle', render);
-                googleMap.addListener('click', (e) => handleMapClick({
-                    latLng: e.latLng,
-                    pixel: { x: e.pixel?.x || 0, y: e.pixel?.y || 0 }
-                }));
-                
-                // Initialize zone polygons array for Google Maps
-                zonePolygonsLayer = { polygons: [] };
-                
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                document.getElementById('mapTypeLabel').textContent = 'Google Maps';
-                console.log('Google Maps ready!');
-            } catch (err) {
-                console.error('Google Maps init error:', err);
-                useLeaflet = true;
-                initLeafletMap();
-            }
-        }
         
         function initLeafletMap() {
             document.getElementById('loadingStatus').textContent = 'Initializing OpenStreetMap...';
@@ -620,11 +570,11 @@
             console.log('Leaflet map ready!');
         }
         
-        // Try Google Maps first, fallback to Leaflet
+        // Start with Leaflet immediately (always works)
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', tryGoogleMaps);
+            document.addEventListener('DOMContentLoaded', initLeafletMap);
         } else {
-            tryGoogleMaps();
+            initLeafletMap();
         }
         
         // POI Colors by layer
@@ -2740,15 +2690,8 @@
             }
         }
         
-        // Expose initMap for Google Maps callback
-        window.initMap = function() {
-            if (!map) {
-                console.log('initMap called by Google Maps');
-                initGoogleMap();
-            }
-        };
+        // Google Maps not used - Leaflet/OpenStreetMap is more reliable
+        window.initMap = function() { console.log('Using Leaflet instead of Google Maps'); };
     </script>
-    <!-- Google Maps Keyless API v7.1 - CDN version -->
-    <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
 </body>
 </html>
