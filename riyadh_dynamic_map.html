@@ -7,6 +7,8 @@
     <!-- Leaflet as fallback -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Google Maps Keyless API -->
+    <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; }
@@ -486,7 +488,6 @@
     </div>
 
     <script>
-        let map;
         let buildings = [];    // GeoJSON features with polygon coordinates
         let parcels = [];      // {lat, lng, type: 'apt'|'villa'|'other', ...}
         let poiData = [];      // {lat, lng, layer, name_ar, name_en}
@@ -524,13 +525,56 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
-        // Start with Leaflet immediately (always works)
-        let useLeaflet = true;
+        // Map variables
+        let useLeaflet = false;
         let leafletMap = null;
         let googleMap = null;
+        let map = null;
+        
+        // Try Google Maps first, fallback to Leaflet
+        function initGoogleMap() {
+            document.getElementById('loadingStatus').textContent = 'Initializing Google Maps...';
+            
+            try {
+                googleMap = new google.maps.Map(document.getElementById('map'), {
+                    center: { lat: 24.7136, lng: 46.6753 },
+                    zoom: 11,
+                    mapTypeId: 'roadmap',
+                    gestureHandling: 'greedy'
+                });
+                
+                map = googleMap;
+                useLeaflet = false;
+                document.getElementById('mapTypeLabel').textContent = 'Google Maps';
+                
+                // Wait for map to be ready
+                google.maps.event.addListenerOnce(googleMap, 'idle', function() {
+                    // Initialize zone polygons layer for Google Maps
+                    zonePolygonsLayer = { polygons: [] };
+                    zoneEntryExitMarkers = { markers: [] };
+                    
+                    google.maps.event.addListener(googleMap, 'idle', render);
+                    google.maps.event.addListener(googleMap, 'click', function(e) {
+                        handleMapClick({
+                            latLng: e.latLng,
+                            pixel: { x: e.pixel?.x || 0, y: e.pixel?.y || 0 }
+                        });
+                    });
+                    
+                    window.addEventListener('resize', render);
+                    document.getElementById('loadingOverlay').classList.add('hidden');
+                    console.log('Google Maps ready!');
+                    render();
+                });
+            } catch(err) {
+                console.error('Google Maps init error:', err);
+                initLeafletMap();
+            }
+        }
         
         function initLeafletMap() {
             document.getElementById('loadingStatus').textContent = 'Initializing OpenStreetMap...';
+            useLeaflet = true;
             
             leafletMap = L.map('map', {
                 center: [24.7136, 46.6753],
@@ -543,77 +587,8 @@
                 maxZoom: 19
             }).addTo(leafletMap);
             
+            map = leafletMap;
             document.getElementById('mapTypeLabel').textContent = 'OpenStreetMap';
-            
-            // Create Google Maps compatible shim
-            window.google = window.google || {};
-            window.google.maps = window.google.maps || {};
-            window.google.maps.LatLng = function(lat, lng) { 
-                return { 
-                    lat: () => lat, 
-                    lng: () => lng,
-                    _lat: lat,
-                    _lng: lng
-                }; 
-            };
-            window.google.maps.LatLngBounds = function(sw, ne) { 
-                return { 
-                    getNorthEast: () => ne, 
-                    getSouthWest: () => sw 
-                }; 
-            };
-            window.google.maps.Map = function() { return map; };
-            
-            // Shim for map object
-            map = {
-                _leaflet: leafletMap,
-                getCenter: () => {
-                    const c = leafletMap.getCenter();
-                    return { lat: () => c.lat, lng: () => c.lng };
-                },
-                getBounds: () => {
-                    const b = leafletMap.getBounds();
-                    return {
-                        getNorthEast: () => ({ lat: () => b.getNorth(), lng: () => b.getEast() }),
-                        getSouthWest: () => ({ lat: () => b.getSouth(), lng: () => b.getWest() })
-                    };
-                },
-                getZoom: () => leafletMap.getZoom(),
-                setCenter: (c) => leafletMap.setView([c.lat, c.lng], leafletMap.getZoom()),
-                setZoom: (z) => leafletMap.setZoom(z),
-                fitBounds: (b) => {
-                    const sw = b.getSouthWest();
-                    const ne = b.getNorthEast();
-                    leafletMap.fitBounds([[sw.lat(), sw.lng()], [ne.lat(), ne.lng()]]);
-                },
-                getProjection: () => ({
-                    fromLatLngToPoint: (ll) => {
-                        let lat, lng;
-                        if (typeof ll.lat === 'function') {
-                            lat = ll.lat();
-                            lng = ll.lng();
-                        } else if (ll._lat !== undefined) {
-                            lat = ll._lat;
-                            lng = ll._lng;
-                        } else {
-                            lat = ll.lat;
-                            lng = ll.lng;
-                        }
-                        // Use Leaflet's projection (returns point at current zoom)
-                        const zoom = leafletMap.getZoom();
-                        const p = leafletMap.project([lat, lng], zoom);
-                        // Scale to world coordinates like Google Maps does
-                        const scale = Math.pow(2, zoom);
-                        return { x: p.x / scale, y: p.y / scale };
-                    }
-                }),
-                addListener: (event, fn) => {
-                    if (event === 'idle') leafletMap.on('moveend', fn);
-                    else if (event === 'click') leafletMap.on('click', (e) => fn({ latLng: { lat: () => e.latlng.lat, lng: () => e.latlng.lng }}));
-                    else if (event === 'bounds_changed') leafletMap.on('move', fn);
-                    else if (event === 'zoom_changed') leafletMap.on('zoom', fn);
-                }
-            };
             
             leafletMap.on('moveend', render);
             leafletMap.on('click', (e) => handleMapClick({ 
@@ -623,19 +598,42 @@
             
             // Initialize zone polygons layer
             zonePolygonsLayer = L.layerGroup().addTo(leafletMap);
+            zoneEntryExitMarkers = L.layerGroup().addTo(leafletMap);
             
             window.addEventListener('resize', render);
-            
-            // Hide loading
             document.getElementById('loadingOverlay').classList.add('hidden');
             console.log('Leaflet map ready!');
         }
         
-        // Start with Leaflet immediately (always works)
+        // Wait for Google Maps API to load
+        function waitForGoogleMaps() {
+            document.getElementById('loadingStatus').textContent = 'Loading Google Maps...';
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds
+            
+            const checkGoogle = setInterval(function() {
+                attempts++;
+                if (window.google && window.google.maps && window.google.maps.Map) {
+                    clearInterval(checkGoogle);
+                    initGoogleMap();
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(checkGoogle);
+                    console.log('Google Maps timeout, using Leaflet');
+                    initLeafletMap();
+                }
+            }, 100);
+        }
+        
+        // Initialize map callback for Google Maps
+        window.initMap = function() {
+            initGoogleMap();
+        };
+        
+        // Start initialization
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initLeafletMap);
+            document.addEventListener('DOMContentLoaded', waitForGoogleMaps);
         } else {
-            initLeafletMap();
+            waitForGoogleMaps();
         }
         
         // POI Colors by layer
@@ -855,10 +853,15 @@
             }
             
             // Zoom to zone
-            if (leafletMap && zone.coordinates && zone.coordinates.length > 0) {
-                const latlngs = zone.coordinates.map(c => [c[1], c[0]]);
-                const bounds = L.latLngBounds(latlngs);
-                leafletMap.fitBounds(bounds, { padding: [50, 50] });
+            if (zone.coordinates && zone.coordinates.length > 0) {
+                let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+                zone.coordinates.forEach(c => {
+                    minLng = Math.min(minLng, c[0]);
+                    maxLng = Math.max(maxLng, c[0]);
+                    minLat = Math.min(minLat, c[1]);
+                    maxLat = Math.max(maxLat, c[1]);
+                });
+                fitMapBounds(maxLat, minLat, maxLng, minLng, 50);
             }
             
             // Update zones list to show selection
@@ -940,10 +943,17 @@
         // Render zone entry/exit points on map
         function renderZoneEntryExits() {
             // Clear existing markers
-            if (zoneEntryExitMarkers) {
-                zoneEntryExitMarkers.clearLayers();
-            } else if (leafletMap) {
-                zoneEntryExitMarkers = L.layerGroup().addTo(leafletMap);
+            if (useLeaflet && leafletMap) {
+                if (zoneEntryExitMarkers && zoneEntryExitMarkers.clearLayers) {
+                    zoneEntryExitMarkers.clearLayers();
+                } else {
+                    zoneEntryExitMarkers = L.layerGroup().addTo(leafletMap);
+                }
+            } else if (googleMap) {
+                if (zoneEntryExitMarkers && zoneEntryExitMarkers.markers) {
+                    zoneEntryExitMarkers.markers.forEach(m => m.setMap(null));
+                }
+                zoneEntryExitMarkers = { markers: [] };
             }
             
             if (selectedZoneIndex < 0 || !drawnPolygons[selectedZoneIndex]) return;
@@ -956,19 +966,32 @@
                 const color = isMajor ? '#d32f2f' : '#e91e63';
                 const radius = isMajor ? 10 : 7;
                 
-                const marker = L.circleMarker([point.lat, point.lng], {
-                    radius: radius,
-                    fillColor: color,
-                    color: '#fff',
-                    weight: 2,
-                    fillOpacity: 0.9
-                }).addTo(zoneEntryExitMarkers);
-                
-                marker.bindPopup(`
-                    <b>${point.roadName}</b><br>
-                    Width: ${point.width}m<br>
-                    <button onclick="deleteZoneEntryPoint(${idx})" style="background:#d32f2f;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:3px;margin-top:5px;">Delete</button>
-                `);
+                if (useLeaflet && leafletMap) {
+                    const marker = L.circleMarker([point.lat, point.lng], {
+                        radius: radius,
+                        fillColor: color,
+                        color: '#fff',
+                        weight: 2,
+                        fillOpacity: 0.9
+                    }).addTo(zoneEntryExitMarkers);
+                    
+                    marker.bindPopup(`
+                        <b>${point.roadName}</b><br>
+                        Width: ${point.width}m<br>
+                        <button onclick="deleteZoneEntryPoint(${idx})" style="background:#d32f2f;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:3px;margin-top:5px;">Delete</button>
+                    `);
+                } else if (googleMap) {
+                    const marker = new google.maps.Circle({
+                        center: { lat: point.lat, lng: point.lng },
+                        radius: radius * 5,
+                        fillColor: color,
+                        fillOpacity: 0.9,
+                        strokeColor: '#fff',
+                        strokeWeight: 2,
+                        map: googleMap
+                    });
+                    zoneEntryExitMarkers.markers.push(marker);
+                }
             });
         }
         
@@ -1668,6 +1691,81 @@
         });
         
         let renderPending = false;
+        // Helper functions that work with both Google Maps and Leaflet
+        function getMapBounds() {
+            if (useLeaflet && leafletMap) {
+                const b = leafletMap.getBounds();
+                return {
+                    north: b.getNorth(),
+                    south: b.getSouth(),
+                    east: b.getEast(),
+                    west: b.getWest()
+                };
+            } else if (googleMap) {
+                const b = googleMap.getBounds();
+                if (!b) return null;
+                return {
+                    north: b.getNorthEast().lat(),
+                    south: b.getSouthWest().lat(),
+                    east: b.getNorthEast().lng(),
+                    west: b.getSouthWest().lng()
+                };
+            }
+            return null;
+        }
+        
+        function getMapZoom() {
+            if (useLeaflet && leafletMap) return leafletMap.getZoom();
+            if (googleMap) return googleMap.getZoom();
+            return 11;
+        }
+        
+        function latLngToPixel(lat, lng) {
+            if (useLeaflet && leafletMap) {
+                const point = leafletMap.latLngToContainerPoint([lat, lng]);
+                return { x: point.x, y: point.y };
+            } else if (googleMap) {
+                const proj = googleMap.getProjection();
+                if (!proj) return { x: 0, y: 0 };
+                const bounds = googleMap.getBounds();
+                if (!bounds) return { x: 0, y: 0 };
+                
+                const ne = bounds.getNorthEast();
+                const sw = bounds.getSouthWest();
+                const topRight = proj.fromLatLngToPoint(ne);
+                const bottomLeft = proj.fromLatLngToPoint(sw);
+                const scale = Math.pow(2, googleMap.getZoom());
+                const worldPoint = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
+                
+                return {
+                    x: (worldPoint.x - bottomLeft.x) * scale,
+                    y: (worldPoint.y - topRight.y) * scale
+                };
+            }
+            return { x: 0, y: 0 };
+        }
+        
+        function setMapCenter(lat, lng, zoom) {
+            if (useLeaflet && leafletMap) {
+                leafletMap.setView([lat, lng], zoom || leafletMap.getZoom());
+            } else if (googleMap) {
+                googleMap.setCenter({ lat: lat, lng: lng });
+                if (zoom) googleMap.setZoom(zoom);
+            }
+        }
+        
+        function fitMapBounds(north, south, east, west, padding) {
+            if (useLeaflet && leafletMap) {
+                leafletMap.fitBounds([[south, west], [north, east]], { padding: [padding || 30, padding || 30] });
+            } else if (googleMap) {
+                const bounds = new google.maps.LatLngBounds(
+                    new google.maps.LatLng(south, west),
+                    new google.maps.LatLng(north, east)
+                );
+                googleMap.fitBounds(bounds);
+            }
+        }
+        
         function render() {
             if (renderPending) return;
             renderPending = true;
@@ -1676,24 +1774,17 @@
         
         function doRender() {
             renderPending = false;
-            if (!map) return;
-            const bounds = map.getBounds();
+            
+            const bounds = getMapBounds();
             if (!bounds) return;
             
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            const proj = map.getProjection();
-            if (!proj) return;
-            
-            const zoom = map.getZoom();
+            const zoom = getMapZoom();
             document.getElementById('zoomLevel').textContent = zoom.toFixed(1);
             
-            const ne = bounds.getNorthEast();
-            const sw = bounds.getSouthWest();
-            const tr = proj.fromLatLngToPoint(ne);
-            const bl = proj.fromLatLngToPoint(sw);
             const scale = Math.pow(2, zoom);
             const baseSize = Math.max(1, zoom - 10);
             
@@ -1730,8 +1821,7 @@
                         ctx.globalAlpha = 0.4;
                         ctx.beginPath();
                         coords.forEach(([lon, lat], i) => {
-                            const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                            const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                            const {x, y} = latLngToPixel(lat, lon);
                             i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
                         });
                         ctx.closePath();
@@ -1751,8 +1841,7 @@
                             ctx.fillStyle = 'rgba(255, 87, 34, 0.15)';
                             ctx.beginPath();
                             coords.forEach(([lon, lat], i) => {
-                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                                const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                                const {x, y} = latLngToPixel(lat, lon);
                                 i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
                             });
                             ctx.closePath();
@@ -1764,8 +1853,7 @@
                             ctx.setLineDash([]);
                             ctx.beginPath();
                             coords.forEach(([lon, lat], i) => {
-                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                                const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                                const {x, y} = latLngToPixel(lat, lon);
                                 i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
                             });
                             ctx.closePath();
@@ -1776,8 +1864,7 @@
                             ctx.lineWidth = 2;
                             ctx.beginPath();
                             coords.forEach(([lon, lat], i) => {
-                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                                const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                                const {x, y} = latLngToPixel(lat, lon);
                                 i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
                             });
                             ctx.closePath();
@@ -1794,7 +1881,6 @@
             const majorRoadThick = parseFloat(document.getElementById('majorRoadThick')?.value || 3);
             const showRoadLabels = document.getElementById('showRoadLabels').checked;
             const roadWidthScale = parseFloat(document.getElementById('roadWidth')?.value || 1);
-            const swLat = sw.lat(), neLat = ne.lat(), swLng = sw.lng(), neLng = ne.lng();
             
             let majorRoadCount = 0;
             
@@ -1839,7 +1925,7 @@
                         let inView = false;
                         for (let i = 0; i < coords.length; i++) {
                             const [lon, lat] = coords[i];
-                            if (lat >= swLat - 0.01 && lat <= neLat + 0.01 && lon >= swLng - 0.01 && lon <= neLng + 0.01) {
+                            if (lat >= bounds.south - 0.01 && lat <= bounds.north + 0.01 && lon >= bounds.west - 0.01 && lon <= bounds.east + 0.01) {
                                 inView = true;
                                 break;
                             }
@@ -1852,9 +1938,7 @@
                         let midX, midY;
                         
                         coords.forEach(([lon, lat], i) => {
-                            const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                            const x = (w.x - bl.x) * scale;
-                            const y = (w.y - tr.y) * scale;
+                            const {x, y} = latLngToPixel(lat, lon);
                             
                             if (i === 0) ctx.moveTo(x, y);
                             else ctx.lineTo(x, y);
@@ -1869,9 +1953,7 @@
                             ctx.lineWidth = lineWidth + 2;
                             ctx.beginPath();
                             coords.forEach(([lon, lat], i) => {
-                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                                const x = (w.x - bl.x) * scale;
-                                const y = (w.y - tr.y) * scale;
+                                const {x, y} = latLngToPixel(lat, lon);
                                 if (i === 0) ctx.moveTo(x, y);
                                 else ctx.lineTo(x, y);
                             });
@@ -1882,9 +1964,7 @@
                             ctx.lineWidth = lineWidth;
                             ctx.beginPath();
                             coords.forEach(([lon, lat], i) => {
-                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                                const x = (w.x - bl.x) * scale;
-                                const y = (w.y - tr.y) * scale;
+                                const {x, y} = latLngToPixel(lat, lon);
                                 if (i === 0) ctx.moveTo(x, y);
                                 else ctx.lineTo(x, y);
                             });
@@ -1925,12 +2005,10 @@
             
             if (showEntryExit && entryExitPoints.length) {
                 entryExitPoints.forEach((point, idx) => {
-                    if (point.lat < swLat - 0.01 || point.lat > neLat + 0.01 || 
-                        point.lng < swLng - 0.01 || point.lng > neLng + 0.01) return;
+                    if (point.lat < bounds.south - 0.01 || point.lat > bounds.north + 0.01 || 
+                        point.lng < bounds.west - 0.01 || point.lng > bounds.east + 0.01) return;
                     
-                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(point.lat, point.lng));
-                    const x = (w.x - bl.x) * scale;
-                    const y = (w.y - tr.y) * scale;
+                    const {x, y} = latLngToPixel(point.lat, point.lng);
                     
                     // Size based on road width
                     const size = point.width >= 60 ? entryExitSize * 1.8 :
@@ -1996,12 +2074,12 @@
                     // Fast check: is it a simple [lat, lng] array?
                     if (Array.isArray(b) && typeof b[0] === 'number') {
                         const lat = b[0], lng = b[1];
-                        if (lat < swLat || lat > neLat || lng < swLng || lng > neLng) continue;
+                        if (lat < bounds.south || lat > bounds.north || lng < bounds.west || lng > bounds.east) continue;
                         
                         viewBldg++;
-                        const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
+                        const {x, y} = latLngToPixel(lat, lng);
                         ctx.beginPath();
-                        ctx.arc((w.x - bl.x) * scale, (w.y - tr.y) * scale, bldgSize, 0, 6.28);
+                        ctx.arc(x, y, bldgSize, 0, 6.28);
                         ctx.fill();
                         continue;
                     }
@@ -2011,13 +2089,12 @@
                     if (!coords || coords.length < 3) continue;
                     
                     const firstLat = coords[0][1];
-                    if (firstLat < swLat - 0.01 || firstLat > neLat + 0.01) continue;
+                    if (firstLat < bounds.south - 0.01 || firstLat > bounds.north + 0.01) continue;
                     
                     viewBldg++;
                     ctx.beginPath();
                     for (let j = 0; j < coords.length; j++) {
-                        const w = proj.fromLatLngToPoint(new google.maps.LatLng(coords[j][1], coords[j][0]));
-                        const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                        const {x, y} = latLngToPixel(coords[j][1], coords[j][0]);
                         j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
                     }
                     ctx.closePath();
@@ -2033,10 +2110,9 @@
             
             for (let i = 0; i < parcels.length; i++) {
                 const p = parcels[i];
-                if (p.lat < swLat || p.lat > neLat || p.lng < swLng || p.lng > neLng) continue;
+                if (p.lat < bounds.south || p.lat > bounds.north || p.lng < bounds.west || p.lng > bounds.east) continue;
                 
-                const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
-                const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                const {x, y} = latLngToPixel(p.lat, p.lng);
                 
                 if (p.type === 'apt' && showApt) { aptPts.push(x, y); viewApt++; }
                 else if (p.type === 'villa' && showVilla) { villaPts.push(x, y); viewVilla++; }
@@ -2056,14 +2132,14 @@
                 const poiByColor = {};
                 for (let i = 0; i < poiData.length; i++) {
                     const p = poiData[i];
-                    if (p.lat < swLat || p.lat > neLat || p.lng < swLng || p.lng > neLng) continue;
+                    if (p.lat < bounds.south || p.lat > bounds.north || p.lng < bounds.west || p.lng > bounds.east) continue;
                     if (activePoiCategories.size > 0 && !activePoiCategories.has(p.layer)) continue;
                     
                     const color = poiColors[p.layer] || poiColors['default'];
                     if (!poiByColor[color]) poiByColor[color] = [];
                     
-                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
-                    poiByColor[color].push((w.x - bl.x) * scale, (w.y - tr.y) * scale);
+                    const {x, y} = latLngToPixel(p.lat, p.lng);
+                    poiByColor[color].push(x, y);
                     viewPoi++;
                 }
                 
@@ -2812,30 +2888,60 @@
         
         // Redraw all zone polygons (needed after loading multiple files)
         function redrawAllZonePolygons() {
-            if (!zonePolygonsLayer) return;
-            zonePolygonsLayer.clearLayers();
-            
             const colors = ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#009688', '#4caf50', '#ff9800', '#ff5722', '#795548', '#607d8b'];
             
-            drawnPolygons.forEach((zone, idx) => {
-                zone.color = colors[idx % colors.length];
-                const latlngs = zone.coordinates.map(c => [c[1], c[0]]);
+            if (useLeaflet && leafletMap) {
+                if (zonePolygonsLayer && zonePolygonsLayer.clearLayers) {
+                    zonePolygonsLayer.clearLayers();
+                }
                 
-                const polygon = L.polygon(latlngs, {
-                    color: zone.color,
-                    weight: 3,
-                    fillColor: zone.color,
-                    fillOpacity: 0.25
-                }).addTo(zonePolygonsLayer);
+                drawnPolygons.forEach((zone, idx) => {
+                    zone.color = colors[idx % colors.length];
+                    const latlngs = zone.coordinates.map(c => [c[1], c[0]]);
+                    
+                    const polygon = L.polygon(latlngs, {
+                        color: zone.color,
+                        weight: 3,
+                        fillColor: zone.color,
+                        fillOpacity: 0.25
+                    }).addTo(zonePolygonsLayer);
+                    
+                    const entryCount = zone.entryExitPoints ? zone.entryExitPoints.length : 0;
+                    polygon.bindPopup(`
+                        <b>${zone.name}</b><br>
+                        Entry/Exit: ${entryCount}<br>
+                        <button onclick="selectZone(${idx})" style="background:#9c27b0;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:4px;margin-top:5px;margin-right:4px;">Select</button>
+                        <button onclick="deleteZone(${idx})" style="background:#d32f2f;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete</button>
+                    `);
+                });
+            } else if (googleMap) {
+                // Clear existing polygons
+                if (zonePolygonsLayer && zonePolygonsLayer.polygons) {
+                    zonePolygonsLayer.polygons.forEach(p => p.setMap(null));
+                }
+                zonePolygonsLayer = { polygons: [] };
                 
-                const entryCount = zone.entryExitPoints ? zone.entryExitPoints.length : 0;
-                polygon.bindPopup(`
-                    <b>${zone.name}</b><br>
-                    Entry/Exit: ${entryCount}<br>
-                    <button onclick="selectZone(${idx})" style="background:#9c27b0;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:4px;margin-top:5px;margin-right:4px;">Select</button>
-                    <button onclick="deleteZone(${idx})" style="background:#d32f2f;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete</button>
-                `);
-            });
+                drawnPolygons.forEach((zone, idx) => {
+                    zone.color = colors[idx % colors.length];
+                    const paths = zone.coordinates.map(c => ({ lat: c[1], lng: c[0] }));
+                    
+                    const polygon = new google.maps.Polygon({
+                        paths: paths,
+                        strokeColor: zone.color,
+                        strokeWeight: 3,
+                        fillColor: zone.color,
+                        fillOpacity: 0.25,
+                        map: googleMap
+                    });
+                    
+                    zonePolygonsLayer.polygons.push(polygon);
+                    
+                    const entryCount = zone.entryExitPoints ? zone.entryExitPoints.length : 0;
+                    google.maps.event.addListener(polygon, 'click', function(e) {
+                        selectZone(idx);
+                    });
+                });
+            }
         }
         
         function getDistrictName(d) {
@@ -2953,9 +3059,9 @@
         }
         
         function exportVisibleParcels() {
-            const bounds = map.getBounds();
-            const ne = bounds.getNorthEast(), sw = bounds.getSouthWest();
-            const visible = parcels.filter(p => p.lat >= sw.lat() && p.lat <= ne.lat() && p.lng >= sw.lng() && p.lng <= ne.lng());
+            const bounds = getMapBounds();
+            if (!bounds) return;
+            const visible = parcels.filter(p => p.lat >= bounds.south && p.lat <= bounds.north && p.lng >= bounds.west && p.lng <= bounds.east);
             downloadCSV(visible, 'visible_parcels.csv');
         }
         
