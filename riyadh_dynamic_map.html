@@ -778,6 +778,15 @@
                 // Zone coordinates are [lng, lat] arrays - use directly for pointInPolygon
                 const zonePolygon = zone.coordinates;
                 
+                // Calculate bounds for faster filtering
+                let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+                zonePolygon.forEach(([lng, lat]) => {
+                    if (lat < minLat) minLat = lat;
+                    if (lat > maxLat) maxLat = lat;
+                    if (lng < minLng) minLng = lng;
+                    if (lng > maxLng) maxLng = lng;
+                });
+                
                 // Count buildings inside zone
                 if (buildings && buildings.length > 0) {
                     buildings.forEach(b => {
@@ -795,8 +804,11 @@
                         } else if (b.lat !== undefined) {
                             lat = b.lat; lng = b.lng || b.lon;
                         }
-                        if (lat && lng && pointInPolygon(lat, lng, zonePolygon)) {
-                            zoneBldgCount++;
+                        // Bounds check first for speed
+                        if (lat && lng && lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng) {
+                            if (pointInPolygon(lat, lng, zonePolygon)) {
+                                zoneBldgCount++;
+                            }
                         }
                     });
                 }
@@ -804,21 +816,29 @@
                 // Count parcels inside zone
                 if (parcels && parcels.length > 0) {
                     parcels.forEach(p => {
-                        if (p.lat && p.lng && pointInPolygon(p.lat, p.lng, zonePolygon)) {
-                            if (p.type === 'apt') zoneAptCount++;
-                            else if (p.type === 'villa') zoneVillaCount++;
-                            else zoneOtherCount++;
+                        if (!p || !p.lat || !p.lng) return;
+                        // Bounds check first for speed
+                        if (p.lat >= minLat && p.lat <= maxLat && p.lng >= minLng && p.lng <= maxLng) {
+                            if (pointInPolygon(p.lat, p.lng, zonePolygon)) {
+                                if (p.type === 'apt') zoneAptCount++;
+                                else if (p.type === 'villa') zoneVillaCount++;
+                                else zoneOtherCount++;
+                            }
                         }
                     });
                 }
                 
                 // Count POIs inside zone
-                if (pois && pois.length > 0) {
-                    pois.forEach(poi => {
+                if (poiData && poiData.length > 0) {
+                    poiData.forEach(poi => {
+                        if (!poi) return;
                         const lat = poi.lat || poi.latitude;
                         const lng = poi.lng || poi.lon || poi.longitude;
-                        if (lat && lng && pointInPolygon(lat, lng, zonePolygon)) {
-                            zonePOICount++;
+                        // Bounds check first for speed
+                        if (lat && lng && lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng) {
+                            if (pointInPolygon(lat, lng, zonePolygon)) {
+                                zonePOICount++;
+                            }
                         }
                     });
                 }
@@ -893,6 +913,29 @@
             
             // Render zone entry/exit points on map
             renderZoneEntryExits();
+            
+            // Update main district stats panel with zone stats
+            document.getElementById('districtStats').classList.add('active');
+            document.getElementById('districtStatsTitle').textContent = 'ZONE: ' + zone.name;
+            document.getElementById('distBldg').textContent = zoneBldgCount.toLocaleString();
+            document.getElementById('distApt').textContent = zoneAptCount.toLocaleString();
+            document.getElementById('distVilla').textContent = zoneVillaCount.toLocaleString();
+            document.getElementById('distOther').textContent = zoneOtherCount.toLocaleString();
+            document.getElementById('distTotal').textContent = (zoneAptCount + zoneVillaCount + zoneOtherCount).toLocaleString();
+            document.getElementById('distPoi').textContent = zonePOICount.toLocaleString();
+            
+            // Calculate percentages
+            const totalParcels = zoneAptCount + zoneVillaCount + zoneOtherCount;
+            const villaPct = totalParcels > 0 ? Math.round((zoneVillaCount / totalParcels) * 100) : 0;
+            const aptPct = totalParcels > 0 ? Math.round((zoneAptCount / totalParcels) * 100) : 0;
+            document.getElementById('distVillaPct').textContent = villaPct + '%';
+            document.getElementById('distAptPct').textContent = aptPct + '%';
+            
+            // Update road stats in main panel
+            document.getElementById('distEntryExit').textContent = totalEntries;
+            document.getElementById('distMajorCrossings').textContent = majorRoads;
+            document.getElementById('distSecCrossings').textContent = secondaryRoads;
+            document.getElementById('distLocalCrossings').textContent = entries.filter(e => e.width < 15).length;
             
             showToast(zone.name + ': ' + totalEntries + ' exits (' + majorRoads + ' major)', '#9c27b0');
         }
