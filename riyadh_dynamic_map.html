@@ -4,9 +4,6 @@
     <title>Riyadh Map - Dynamic Counts</title>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1.0, width=device-width">
-    <!-- Leaflet as fallback -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Google Maps Keyless API -->
     <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
     <style>
@@ -525,101 +522,59 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         
-        // Map variables
-        let useLeaflet = false;
-        let leafletMap = null;
+        // Map variables - Google Maps only
         let googleMap = null;
-        let map = null;
         
-        // Try Google Maps first, fallback to Leaflet
+        // Initialize Google Maps
         function initGoogleMap() {
             document.getElementById('loadingStatus').textContent = 'Initializing Google Maps...';
             
-            try {
-                googleMap = new google.maps.Map(document.getElementById('map'), {
-                    center: { lat: 24.7136, lng: 46.6753 },
-                    zoom: 11,
-                    mapTypeId: 'roadmap',
-                    gestureHandling: 'greedy'
-                });
-                
-                map = googleMap;
-                useLeaflet = false;
-                document.getElementById('mapTypeLabel').textContent = 'Google Maps';
-                
-                // Wait for map to be ready
-                google.maps.event.addListenerOnce(googleMap, 'idle', function() {
-                    // Initialize zone polygons layer for Google Maps
-                    zonePolygonsLayer = { polygons: [] };
-                    zoneEntryExitMarkers = { markers: [] };
-                    
-                    google.maps.event.addListener(googleMap, 'idle', render);
-                    google.maps.event.addListener(googleMap, 'click', function(e) {
-                        handleMapClick({
-                            latLng: e.latLng,
-                            pixel: { x: e.pixel?.x || 0, y: e.pixel?.y || 0 }
-                        });
-                    });
-                    
-                    window.addEventListener('resize', render);
-                    document.getElementById('loadingOverlay').classList.add('hidden');
-                    console.log('Google Maps ready!');
-                    render();
-                });
-            } catch(err) {
-                console.error('Google Maps init error:', err);
-                initLeafletMap();
-            }
-        }
-        
-        function initLeafletMap() {
-            document.getElementById('loadingStatus').textContent = 'Initializing OpenStreetMap...';
-            useLeaflet = true;
-            
-            leafletMap = L.map('map', {
-                center: [24.7136, 46.6753],
+            googleMap = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 24.7136, lng: 46.6753 },
                 zoom: 11,
-                zoomControl: true
+                mapTypeId: 'roadmap',
+                gestureHandling: 'greedy'
             });
             
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: 'OpenStreetMap',
-                maxZoom: 19
-            }).addTo(leafletMap);
+            document.getElementById('mapTypeLabel').textContent = 'Google Maps';
             
-            map = leafletMap;
-            document.getElementById('mapTypeLabel').textContent = 'OpenStreetMap';
-            
-            leafletMap.on('moveend', render);
-            leafletMap.on('click', (e) => handleMapClick({ 
-                latLng: { lat: () => e.latlng.lat, lng: () => e.latlng.lng },
-                pixel: { x: e.containerPoint.x, y: e.containerPoint.y }
-            }));
-            
-            // Initialize zone polygons layer
-            zonePolygonsLayer = L.layerGroup().addTo(leafletMap);
-            zoneEntryExitMarkers = L.layerGroup().addTo(leafletMap);
-            
-            window.addEventListener('resize', render);
-            document.getElementById('loadingOverlay').classList.add('hidden');
-            console.log('Leaflet map ready!');
+            // Wait for map to be ready
+            google.maps.event.addListenerOnce(googleMap, 'idle', function() {
+                // Initialize zone polygons layer for Google Maps
+                zonePolygonsLayer = { polygons: [] };
+                zoneEntryExitMarkers = { markers: [] };
+                
+                google.maps.event.addListener(googleMap, 'idle', render);
+                google.maps.event.addListener(googleMap, 'click', function(e) {
+                    handleMapClick({
+                        latLng: e.latLng,
+                        pixel: { x: e.pixel?.x || 0, y: e.pixel?.y || 0 }
+                    });
+                });
+                
+                window.addEventListener('resize', render);
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                console.log('Google Maps ready!');
+                render();
+            });
         }
         
         // Wait for Google Maps API to load
         function waitForGoogleMaps() {
             document.getElementById('loadingStatus').textContent = 'Loading Google Maps...';
             let attempts = 0;
-            const maxAttempts = 50; // 5 seconds
+            const maxAttempts = 100; // 10 seconds
             
             const checkGoogle = setInterval(function() {
                 attempts++;
+                document.getElementById('loadingStatus').textContent = 'Loading Google Maps... (' + attempts + ')';
                 if (window.google && window.google.maps && window.google.maps.Map) {
                     clearInterval(checkGoogle);
                     initGoogleMap();
                 } else if (attempts >= maxAttempts) {
                     clearInterval(checkGoogle);
-                    console.log('Google Maps timeout, using Leaflet');
-                    initLeafletMap();
+                    document.getElementById('loadingStatus').textContent = 'Google Maps failed to load. Please refresh.';
+                    console.error('Google Maps failed to load after 10 seconds');
                 }
             }, 100);
         }
@@ -941,19 +896,13 @@
         
         // Render zone entry/exit points on map
         function renderZoneEntryExits() {
+            if (!googleMap) return;
+            
             // Clear existing markers
-            if (useLeaflet && leafletMap) {
-                if (zoneEntryExitMarkers && zoneEntryExitMarkers.clearLayers) {
-                    zoneEntryExitMarkers.clearLayers();
-                } else {
-                    zoneEntryExitMarkers = L.layerGroup().addTo(leafletMap);
-                }
-            } else if (googleMap) {
-                if (zoneEntryExitMarkers && zoneEntryExitMarkers.markers) {
-                    zoneEntryExitMarkers.markers.forEach(m => m.setMap(null));
-                }
-                zoneEntryExitMarkers = { markers: [] };
+            if (zoneEntryExitMarkers && zoneEntryExitMarkers.markers) {
+                zoneEntryExitMarkers.markers.forEach(m => m.setMap(null));
             }
+            zoneEntryExitMarkers = { markers: [] };
             
             if (selectedZoneIndex < 0 || !drawnPolygons[selectedZoneIndex]) return;
             
@@ -965,32 +914,16 @@
                 const color = isMajor ? '#d32f2f' : '#e91e63';
                 const radius = isMajor ? 10 : 7;
                 
-                if (useLeaflet && leafletMap) {
-                    const marker = L.circleMarker([point.lat, point.lng], {
-                        radius: radius,
-                        fillColor: color,
-                        color: '#fff',
-                        weight: 2,
-                        fillOpacity: 0.9
-                    }).addTo(zoneEntryExitMarkers);
-                    
-                    marker.bindPopup(`
-                        <b>${point.roadName}</b><br>
-                        Width: ${point.width}m<br>
-                        <button onclick="deleteZoneEntryPoint(${idx})" style="background:#d32f2f;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:3px;margin-top:5px;">Delete</button>
-                    `);
-                } else if (googleMap) {
-                    const marker = new google.maps.Circle({
-                        center: { lat: point.lat, lng: point.lng },
-                        radius: radius * 5,
-                        fillColor: color,
-                        fillOpacity: 0.9,
-                        strokeColor: '#fff',
-                        strokeWeight: 2,
-                        map: googleMap
-                    });
-                    zoneEntryExitMarkers.markers.push(marker);
-                }
+                const marker = new google.maps.Circle({
+                    center: { lat: point.lat, lng: point.lng },
+                    radius: radius * 5,
+                    fillColor: color,
+                    fillOpacity: 0.9,
+                    strokeColor: '#fff',
+                    strokeWeight: 2,
+                    map: googleMap
+                });
+                zoneEntryExitMarkers.markers.push(marker);
             });
         }
         
@@ -1324,21 +1257,8 @@
                 color: color
             });
             
-            // Draw polygon on map (works with both Google Maps and Leaflet)
-            if (useLeaflet && leafletMap) {
-                const polygon = L.polygon(latlngs, {
-                    color: color,
-                    weight: 3,
-                    fillColor: color,
-                    fillOpacity: 0.25
-                }).addTo(zonePolygonsLayer);
-                
-                polygon.bindPopup(`
-                    <b>Zone ${zoneNum}</b><br>
-                    <button onclick="selectZone(${zoneNum - 1})" style="background:#9c27b0;color:white;border:none;padding:6px 12px;cursor:pointer;border-radius:4px;margin-top:5px;margin-right:4px;">Select</button>
-                    <button onclick="deleteZone(${zoneNum - 1})" style="background:#d32f2f;color:white;border:none;padding:6px 12px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete</button>
-                `);
-            } else if (googleMap) {
+            // Draw polygon on Google Maps
+            if (googleMap) {
                 const polygon = new google.maps.Polygon({
                     paths: latlngs.map(p => ({ lat: p[0], lng: p[1] })),
                     strokeColor: color,
@@ -1347,14 +1267,11 @@
                     fillOpacity: 0.25,
                     map: googleMap
                 });
+                if (!zonePolygonsLayer) zonePolygonsLayer = { polygons: [] };
                 zonePolygonsLayer.polygons.push(polygon);
                 
                 google.maps.event.addListener(polygon, 'click', function() {
-                    const infoWindow = new google.maps.InfoWindow({
-                        content: `<b>Zone ${zoneNum}</b><br><button onclick="deleteZone(${zoneNum - 1})" style="background:#d32f2f;color:white;border:none;padding:8px 15px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete</button>`,
-                        position: { lat: latlngs[0][0], lng: latlngs[0][1] }
-                    });
-                    infoWindow.open(googleMap);
+                    selectZone(zoneNum - 1);
                 });
             }
             
@@ -1403,41 +1320,8 @@
                 selectedZoneIndex--;
             }
             
-            // Clear and redraw all zones
-            if (useLeaflet && zonePolygonsLayer && zonePolygonsLayer.clearLayers) {
-                zonePolygonsLayer.clearLayers();
-                drawnPolygons.forEach((zone, i) => {
-                    const latlngs = zone.coordinates.map(c => [c[1], c[0]]);
-                    const polygon = L.polygon(latlngs, {
-                        color: zone.color,
-                        weight: 3,
-                        fillColor: zone.color,
-                        fillOpacity: 0.25
-                    }).addTo(zonePolygonsLayer);
-                    polygon.bindPopup(`
-                        <b>${zone.name}</b><br>
-                        Entries: ${zone.entryExitPoints ? zone.entryExitPoints.length : 0}<br>
-                        <button onclick="selectZone(${i})" style="background:#9c27b0;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:4px;margin-top:5px;margin-right:4px;">Select</button>
-                        <button onclick="deleteZone(${i})" style="background:#d32f2f;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete</button>
-                    `);
-                });
-            } else if (zonePolygonsLayer && zonePolygonsLayer.polygons) {
-                // Google Maps - clear and redraw
-                zonePolygonsLayer.polygons.forEach(p => p.setMap(null));
-                zonePolygonsLayer.polygons = [];
-                drawnPolygons.forEach((zone, i) => {
-                    const latlngs = zone.coordinates.map(c => [c[1], c[0]]);
-                    const polygon = new google.maps.Polygon({
-                        paths: latlngs.map(p => ({ lat: p[0], lng: p[1] })),
-                        strokeColor: zone.color,
-                        strokeWeight: 3,
-                        fillColor: zone.color,
-                        fillOpacity: 0.25,
-                        map: googleMap
-                    });
-                    zonePolygonsLayer.polygons.push(polygon);
-                });
-            }
+            // Clear and redraw all zones on Google Maps
+            redrawAllZonePolygons();
             
             updateZonesList();
             showToast('Zone deleted', '#757575');
@@ -1446,20 +1330,16 @@
         function clearAllPolygons() {
             if (drawnPolygons.length && !confirm('Delete all zones?')) return;
             
-            if (useLeaflet && zonePolygonsLayer && zonePolygonsLayer.clearLayers) {
-                zonePolygonsLayer.clearLayers();
-            } else if (zonePolygonsLayer && zonePolygonsLayer.polygons) {
+            // Clear zone polygons
+            if (zonePolygonsLayer && zonePolygonsLayer.polygons) {
                 zonePolygonsLayer.polygons.forEach(p => p.setMap(null));
                 zonePolygonsLayer.polygons = [];
             }
             
             // Clear zone entry markers
-            if (zoneEntryExitMarkers) {
-                if (zoneEntryExitMarkers.clearLayers) zoneEntryExitMarkers.clearLayers();
-                else if (zoneEntryExitMarkers.markers) {
-                    zoneEntryExitMarkers.markers.forEach(m => m.setMap(null));
-                    zoneEntryExitMarkers.markers = [];
-                }
+            if (zoneEntryExitMarkers && zoneEntryExitMarkers.markers) {
+                zoneEntryExitMarkers.markers.forEach(m => m.setMap(null));
+                zoneEntryExitMarkers.markers = [];
             }
             
             drawnPolygons = [];
@@ -1566,19 +1446,33 @@
                     color: '#9c27b0'
                 });
                 
-                // Draw on map
-                if (leafletMap && zonePolygonsLayer) {
-                    const polygon = L.polygon(latlngs, {
-                        color: '#9c27b0',
-                        weight: 3,
+                // Draw on Google Maps
+                if (googleMap) {
+                    const polygon = new google.maps.Polygon({
+                        paths: latlngs.map(p => ({ lat: p[0], lng: p[1] })),
+                        strokeColor: '#9c27b0',
+                        strokeWeight: 3,
                         fillColor: '#9c27b0',
-                        fillOpacity: 0.3
-                    }).addTo(zonePolygonsLayer);
+                        fillOpacity: 0.3,
+                        map: googleMap
+                    });
                     
-                    polygon.bindPopup('<b>Merged Zone</b><br><button onclick="selectZone(0)" style="background:#9c27b0;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:3px;margin-right:4px;">Select</button><button onclick="clearAllPolygons()" style="background:#d32f2f;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:3px;">Delete</button>');
+                    if (!zonePolygonsLayer) zonePolygonsLayer = { polygons: [] };
+                    zonePolygonsLayer.polygons.push(polygon);
+                    
+                    google.maps.event.addListener(polygon, 'click', function() {
+                        selectZone(0);
+                    });
                     
                     // Zoom to merged zone
-                    leafletMap.fitBounds(polygon.getBounds(), { padding: [50, 50] });
+                    let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+                    hull.forEach(p => {
+                        minLat = Math.min(minLat, p.lat);
+                        maxLat = Math.max(maxLat, p.lat);
+                        minLng = Math.min(minLng, p.lng);
+                        maxLng = Math.max(maxLng, p.lng);
+                    });
+                    fitMapBounds(maxLat, minLat, maxLng, minLng, 50);
                     
                     console.log('Merged polygon drawn with ' + hull.length + ' vertices');
                 }
@@ -1586,12 +1480,9 @@
                 document.getElementById('polygonCount').textContent = 1;
                 selectedZoneIndex = -1;
                 document.getElementById('selectedZoneInfo').style.display = 'none';
-                if (zoneEntryExitMarkers) {
-                    if (zoneEntryExitMarkers.clearLayers) zoneEntryExitMarkers.clearLayers();
-                    else if (zoneEntryExitMarkers.markers) {
-                        zoneEntryExitMarkers.markers.forEach(m => m.setMap(null));
-                        zoneEntryExitMarkers.markers = [];
-                    }
+                if (zoneEntryExitMarkers && zoneEntryExitMarkers.markers) {
+                    zoneEntryExitMarkers.markers.forEach(m => m.setMap(null));
+                    zoneEntryExitMarkers.markers = [];
                 }
                 updateZonesList();
                 showToast('Merged ' + originalCount + ' zones into 1!', '#9c27b0');
@@ -1709,78 +1600,57 @@
         
         let renderPending = false;
         // Helper functions that work with both Google Maps and Leaflet
+        // Google Maps helper functions
         function getMapBounds() {
-            if (useLeaflet && leafletMap) {
-                const b = leafletMap.getBounds();
-                return {
-                    north: b.getNorth(),
-                    south: b.getSouth(),
-                    east: b.getEast(),
-                    west: b.getWest()
-                };
-            } else if (googleMap) {
-                const b = googleMap.getBounds();
-                if (!b) return null;
-                return {
-                    north: b.getNorthEast().lat(),
-                    south: b.getSouthWest().lat(),
-                    east: b.getNorthEast().lng(),
-                    west: b.getSouthWest().lng()
-                };
-            }
-            return null;
+            if (!googleMap) return null;
+            const b = googleMap.getBounds();
+            if (!b) return null;
+            return {
+                north: b.getNorthEast().lat(),
+                south: b.getSouthWest().lat(),
+                east: b.getNorthEast().lng(),
+                west: b.getSouthWest().lng()
+            };
         }
         
         function getMapZoom() {
-            if (useLeaflet && leafletMap) return leafletMap.getZoom();
-            if (googleMap) return googleMap.getZoom();
-            return 11;
+            if (!googleMap) return 11;
+            return googleMap.getZoom();
         }
         
         function latLngToPixel(lat, lng) {
-            if (useLeaflet && leafletMap) {
-                const point = leafletMap.latLngToContainerPoint([lat, lng]);
-                return { x: point.x, y: point.y };
-            } else if (googleMap) {
-                const proj = googleMap.getProjection();
-                if (!proj) return { x: 0, y: 0 };
-                const bounds = googleMap.getBounds();
-                if (!bounds) return { x: 0, y: 0 };
-                
-                const ne = bounds.getNorthEast();
-                const sw = bounds.getSouthWest();
-                const topRight = proj.fromLatLngToPoint(ne);
-                const bottomLeft = proj.fromLatLngToPoint(sw);
-                const scale = Math.pow(2, googleMap.getZoom());
-                const worldPoint = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
-                
-                return {
-                    x: (worldPoint.x - bottomLeft.x) * scale,
-                    y: (worldPoint.y - topRight.y) * scale
-                };
-            }
-            return { x: 0, y: 0 };
+            if (!googleMap) return { x: 0, y: 0 };
+            const proj = googleMap.getProjection();
+            if (!proj) return { x: 0, y: 0 };
+            const bounds = googleMap.getBounds();
+            if (!bounds) return { x: 0, y: 0 };
+            
+            const ne = bounds.getNorthEast();
+            const sw = bounds.getSouthWest();
+            const topRight = proj.fromLatLngToPoint(ne);
+            const bottomLeft = proj.fromLatLngToPoint(sw);
+            const scale = Math.pow(2, googleMap.getZoom());
+            const worldPoint = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
+            
+            return {
+                x: (worldPoint.x - bottomLeft.x) * scale,
+                y: (worldPoint.y - topRight.y) * scale
+            };
         }
         
         function setMapCenter(lat, lng, zoom) {
-            if (useLeaflet && leafletMap) {
-                leafletMap.setView([lat, lng], zoom || leafletMap.getZoom());
-            } else if (googleMap) {
-                googleMap.setCenter({ lat: lat, lng: lng });
-                if (zoom) googleMap.setZoom(zoom);
-            }
+            if (!googleMap) return;
+            googleMap.setCenter({ lat: lat, lng: lng });
+            if (zoom) googleMap.setZoom(zoom);
         }
         
         function fitMapBounds(north, south, east, west, padding) {
-            if (useLeaflet && leafletMap) {
-                leafletMap.fitBounds([[south, west], [north, east]], { padding: [padding || 30, padding || 30] });
-            } else if (googleMap) {
-                const bounds = new google.maps.LatLngBounds(
-                    new google.maps.LatLng(south, west),
-                    new google.maps.LatLng(north, east)
-                );
-                googleMap.fitBounds(bounds);
-            }
+            if (!googleMap) return;
+            const bounds = new google.maps.LatLngBounds(
+                new google.maps.LatLng(south, west),
+                new google.maps.LatLng(north, east)
+            );
+            googleMap.fitBounds(bounds);
         }
         
         function render() {
@@ -2718,9 +2588,9 @@
                     document.getElementById('entryExitCount').textContent = entryExitPoints.length;
                     
                     // Center on first point if exists
-                    if (entryExitPoints.length > 0 && leafletMap) {
+                    if (entryExitPoints.length > 0) {
                         const p = entryExitPoints[0];
-                        leafletMap.setView([p.lat, p.lng], 15);
+                        setMapCenter(p.lat, p.lng, 15);
                     }
                     
                     // Enable entry/exit display
@@ -2897,10 +2767,17 @@
                     updateZonesList();
                     
                     // Zoom to zones
-                    if (drawnPolygons.length > 0 && leafletMap) {
-                        const allCoords = drawnPolygons.flatMap(z => z.coordinates.map(c => [c[1], c[0]]));
-                        const bounds = L.latLngBounds(allCoords);
-                        leafletMap.fitBounds(bounds, { padding: [30, 30] });
+                    if (drawnPolygons.length > 0) {
+                        let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+                        drawnPolygons.forEach(z => {
+                            z.coordinates.forEach(c => {
+                                minLng = Math.min(minLng, c[0]);
+                                maxLng = Math.max(maxLng, c[0]);
+                                minLat = Math.min(minLat, c[1]);
+                                maxLat = Math.max(maxLat, c[1]);
+                            });
+                        });
+                        fitMapBounds(maxLat, minLat, maxLng, minLng, 30);
                     }
                     
                     hideLoading();
@@ -2918,60 +2795,35 @@
         
         // Redraw all zone polygons (needed after loading multiple files)
         function redrawAllZonePolygons() {
+            if (!googleMap) return;
+            
             const colors = ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#009688', '#4caf50', '#ff9800', '#ff5722', '#795548', '#607d8b'];
             
-            if (useLeaflet && leafletMap) {
-                if (zonePolygonsLayer && zonePolygonsLayer.clearLayers) {
-                    zonePolygonsLayer.clearLayers();
-                }
-                
-                drawnPolygons.forEach((zone, idx) => {
-                    zone.color = colors[idx % colors.length];
-                    const latlngs = zone.coordinates.map(c => [c[1], c[0]]);
-                    
-                    const polygon = L.polygon(latlngs, {
-                        color: zone.color,
-                        weight: 3,
-                        fillColor: zone.color,
-                        fillOpacity: 0.25
-                    }).addTo(zonePolygonsLayer);
-                    
-                    const entryCount = zone.entryExitPoints ? zone.entryExitPoints.length : 0;
-                    polygon.bindPopup(`
-                        <b>${zone.name}</b><br>
-                        Entry/Exit: ${entryCount}<br>
-                        <button onclick="selectZone(${idx})" style="background:#9c27b0;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:4px;margin-top:5px;margin-right:4px;">Select</button>
-                        <button onclick="deleteZone(${idx})" style="background:#d32f2f;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete</button>
-                    `);
-                });
-            } else if (googleMap) {
-                // Clear existing polygons
-                if (zonePolygonsLayer && zonePolygonsLayer.polygons) {
-                    zonePolygonsLayer.polygons.forEach(p => p.setMap(null));
-                }
-                zonePolygonsLayer = { polygons: [] };
-                
-                drawnPolygons.forEach((zone, idx) => {
-                    zone.color = colors[idx % colors.length];
-                    const paths = zone.coordinates.map(c => ({ lat: c[1], lng: c[0] }));
-                    
-                    const polygon = new google.maps.Polygon({
-                        paths: paths,
-                        strokeColor: zone.color,
-                        strokeWeight: 3,
-                        fillColor: zone.color,
-                        fillOpacity: 0.25,
-                        map: googleMap
-                    });
-                    
-                    zonePolygonsLayer.polygons.push(polygon);
-                    
-                    const entryCount = zone.entryExitPoints ? zone.entryExitPoints.length : 0;
-                    google.maps.event.addListener(polygon, 'click', function(e) {
-                        selectZone(idx);
-                    });
-                });
+            // Clear existing polygons
+            if (zonePolygonsLayer && zonePolygonsLayer.polygons) {
+                zonePolygonsLayer.polygons.forEach(p => p.setMap(null));
             }
+            zonePolygonsLayer = { polygons: [] };
+            
+            drawnPolygons.forEach((zone, idx) => {
+                zone.color = colors[idx % colors.length];
+                const paths = zone.coordinates.map(c => ({ lat: c[1], lng: c[0] }));
+                
+                const polygon = new google.maps.Polygon({
+                    paths: paths,
+                    strokeColor: zone.color,
+                    strokeWeight: 3,
+                    fillColor: zone.color,
+                    fillOpacity: 0.25,
+                    map: googleMap
+                });
+                
+                zonePolygonsLayer.polygons.push(polygon);
+                
+                google.maps.event.addListener(polygon, 'click', function(e) {
+                    selectZone(idx);
+                });
+            });
         }
         
         function getDistrictName(d) {
@@ -3154,9 +3006,9 @@
         }
         
         function findClickedItem(lat, lng, pixelTolerance) {
-            if (!leafletMap) return null;
+            if (!googleMap) return null;
             
-            const zoom = leafletMap.getZoom();
+            const zoom = googleMap.getZoom();
             // Tolerance in degrees (smaller at higher zoom)
             const tolerance = 0.0005 * Math.pow(2, 15 - zoom);
             
