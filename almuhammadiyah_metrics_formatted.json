@@ -1,0 +1,77 @@
+{
+  "district_name_arabic": "المحمدية",
+  "district_name_english": "Al-Muhammadiyah",
+  "province_arabic": "الرياض",
+  "province_english": "Riyadh",
+  "neighborhood_id": 10100099,
+  "province_id": 101000,
+  "data_period": {
+    "start": "2024-12-31T00:00:00",
+    "end": "2025-12-31T00:00:00"
+  },
+  "overall_metrics": {
+    "total_transactions": 1,
+    "total_value_sar": 1780000.0,
+    "median_price_per_sqm": 12033.666666666666,
+    "transaction_count_growth_pct": 98.76,
+    "transaction_value_growth_pct": 97.11,
+    "count_trend": "DOWN",
+    "value_trend": "DOWN"
+  },
+  "property_types": [
+    {
+      "type_arabic": "أرض تجاري",
+      "type_english": "Commercial Land",
+      "transactions": 0,
+      "total_value_sar": 0.0,
+      "median_price_per_sqm": 9935.0,
+      "last_transaction_date": "2025-10-22T00:00:00",
+      "last_price_per_sqm": 385.0
+    },
+    {
+      "type_arabic": "أرض تجاري سكني",
+      "type_english": "Commercial/Residential Land",
+      "transactions": 0,
+      "total_value_sar": 0.0,
+      "median_price_per_sqm": 12245.0,
+      "last_transaction_date": "2025-03-13T00:00:00",
+      "last_price_per_sqm": 16000.0
+    },
+    {
+      "type_arabic": "أرض سكني",
+      "type_english": "Residential Land",
+      "transactions": 0,
+      "total_value_sar": 0.0,
+      "median_price_per_sqm": 9692.0,
+      "last_transaction_date": "2025-09-04T00:00:00",
+      "last_price_per_sqm": 3005.0
+    },
+    {
+      "type_arabic": "شقق",
+      "type_english": "Apartments",
+      "transactions": 1,
+      "total_value_sar": 1780000.0,
+      "median_price_per_sqm": 14700.0,
+      "last_transaction_date": "2025-12-25T00:00:00",
+      "last_price_per_sqm": 9597.0
+    },
+    {
+      "type_arabic": "فلل",
+      "type_english": "Villas",
+      "transactions": 0,
+      "total_value_sar": 0.0,
+      "median_price_per_sqm": 18772.0,
+      "last_transaction_date": "2025-09-17T00:00:00",
+      "last_price_per_sqm": 11889.0
+    },
+    {
+      "type_arabic": "مرافق",
+      "type_english": "Facilities",
+      "transactions": 0,
+      "total_value_sar": 0.0,
+      "median_price_per_sqm": 6858.0,
+      "last_transaction_date": "2025-07-06T00:00:00",
+      "last_price_per_sqm": 16000.0
+    }
+  ]
+}
