@@ -692,10 +692,17 @@
             const minWidth = parseFloat(document.getElementById('zoneRoadWidth').value) || 25;
             majorRoadSegments = [];
             
+            if (roads.length === 0) {
+                showToast('Load roads GeoJSON first!', '#ff9800');
+                return;
+            }
+            
+            let roadCount = 0;
             roads.forEach(road => {
                 const props = road.properties || {};
                 const width = parseFloat(props.width_m || props.WIDTH || props.width || 0);
                 if (width >= minWidth) {
+                    roadCount++;
                     const geom = road.geometry;
                     if (!geom) return;
                     const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
@@ -712,50 +719,81 @@
                     });
                 }
             });
-            console.log('Cached', majorRoadSegments.length, 'major road segments');
+            
+            console.log('Found', roadCount, 'roads >=', minWidth, 'm with', majorRoadSegments.length, 'segments');
+            
+            if (majorRoadSegments.length === 0) {
+                showToast('No roads >= ' + minWidth + 'm found. Try lower min width.', '#ff9800');
+            } else {
+                showToast('Found ' + roadCount + ' major roads. Click inside to create zone!', '#4caf50');
+            }
         }
         
-        // Create zone by clicking inside - traces boundary using ray casting
+        // Create zone by clicking inside - finds nearest roads in all directions
         function createZoneAtPoint(lat, lng) {
             if (majorRoadSegments.length === 0) {
-                showToast('No major roads found! Load roads first.', '#ff9800');
+                cacheMajorRoads();
+            }
+            
+            if (majorRoadSegments.length === 0) {
+                showToast('No major roads found! Load roads and set min width.', '#ff9800');
                 return;
             }
             
-            // Find boundary by casting rays in multiple directions
-            const directions = 36; // Every 10 degrees
-            const boundaryPoints = [];
+            console.log('Creating zone at', lat, lng, 'with', majorRoadSegments.length, 'road segments');
             
-            for (let i = 0; i < directions; i++) {
-                const angle = (i / directions) * 2 * Math.PI;
+            // Cast many rays to find boundary
+            const numRays = 72; // Every 5 degrees
+            const boundaryPoints = [];
+            const maxDist = 0.015; // ~1.5km max
+            
+            for (let i = 0; i < numRays; i++) {
+                const angle = (i / numRays) * 2 * Math.PI;
                 const dx = Math.cos(angle);
                 const dy = Math.sin(angle);
                 
-                // Find nearest intersection with major road in this direction
-                let nearestDist = Infinity;
+                let nearestDist = maxDist;
                 let nearestPoint = null;
                 
-                majorRoadSegments.forEach(seg => {
-                    const hit = raySegmentIntersect(lng, lat, dx, dy, seg.x1, seg.y1, seg.x2, seg.y2);
-                    if (hit && hit.dist < nearestDist) {
-                        nearestDist = hit.dist;
+                // Check all road segments
+                for (const seg of majorRoadSegments) {
+                    const hit = rayLineIntersect(lng, lat, dx, dy, seg.x1, seg.y1, seg.x2, seg.y2);
+                    if (hit && hit.t > 0.0001 && hit.t < nearestDist) {
+                        nearestDist = hit.t;
                         nearestPoint = { lng: hit.x, lat: hit.y };
                     }
-                });
+                }
                 
-                if (nearestPoint && nearestDist < 0.02) { // Max ~2km
+                if (nearestPoint) {
                     boundaryPoints.push(nearestPoint);
+                } else {
+                    // If no road found, use max distance point
+                    boundaryPoints.push({
+                        lng: lng + dx * maxDist,
+                        lat: lat + dy * maxDist
+                    });
                 }
             }
             
-            if (boundaryPoints.length < 4) {
-                showToast('Could not find enclosing roads. Try clicking in a different spot.', '#ff9800');
+            // Simplify polygon - remove points too close together
+            const simplified = [boundaryPoints[0]];
+            const minSpacing = 0.0002;
+            for (let i = 1; i < boundaryPoints.length; i++) {
+                const last = simplified[simplified.length - 1];
+                const curr = boundaryPoints[i];
+                const dist = Math.sqrt(Math.pow(curr.lat - last.lat, 2) + Math.pow(curr.lng - last.lng, 2));
+                if (dist > minSpacing) {
+                    simplified.push(curr);
+                }
+            }
+            
+            if (simplified.length < 4) {
+                showToast('Could not create polygon. Try different location.', '#ff9800');
                 return;
             }
             
-            // Create polygon from boundary points
-            const coords = boundaryPoints.map(p => [p.lng, p.lat]);
-            const latlngs = boundaryPoints.map(p => [p.lat, p.lng]);
+            const coords = simplified.map(p => [p.lng, p.lat]);
+            const latlngs = simplified.map(p => [p.lat, p.lng]);
             
             const zoneNum = drawnPolygons.length + 1;
             const colors = ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#009688', '#4caf50'];
@@ -780,25 +818,25 @@
             `);
             
             document.getElementById('polygonCount').textContent = drawnPolygons.length;
-            showToast('Zone ' + zoneNum + ' created! Click to delete or create more.', '#9c27b0');
+            showToast('Zone ' + zoneNum + ' created!', '#9c27b0');
         }
         
-        // Ray-segment intersection
-        function raySegmentIntersect(rx, ry, dx, dy, x1, y1, x2, y2) {
-            const sx = x2 - x1;
-            const sy = y2 - y1;
+        // Ray-line segment intersection
+        function rayLineIntersect(rx, ry, dx, dy, x1, y1, x2, y2) {
+            const vx = x2 - x1;
+            const vy = y2 - y1;
             
-            const denom = dx * sy - dy * sx;
-            if (Math.abs(denom) < 1e-10) return null;
+            const denom = dx * vy - dy * vx;
+            if (Math.abs(denom) < 1e-12) return null; // Parallel
             
-            const t = ((x1 - rx) * sy - (y1 - ry) * sx) / denom;
-            const u = ((x1 - rx) * dy - (y1 - ry) * dx) / denom;
+            const t = ((x1 - rx) * vy - (y1 - ry) * vx) / denom;
+            const u = -((rx - x1) * dy - (ry - y1) * dx) / denom;
             
-            if (t > 0.0001 && u >= 0 && u <= 1) {
+            if (t > 0 && u >= 0 && u <= 1) {
                 return {
                     x: rx + t * dx,
                     y: ry + t * dy,
-                    dist: t
+                    t: t
                 };
             }
             return null;
