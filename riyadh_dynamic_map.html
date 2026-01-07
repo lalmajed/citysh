@@ -520,7 +520,10 @@
             };
             
             leafletMap.on('moveend', render);
-            leafletMap.on('click', (e) => handleMapClick({ latLng: { lat: () => e.latlng.lat, lng: () => e.latlng.lng }}));
+            leafletMap.on('click', (e) => handleMapClick({ 
+                latLng: { lat: () => e.latlng.lat, lng: () => e.latlng.lng },
+                pixel: { x: e.containerPoint.x, y: e.containerPoint.y }
+            }));
             
             window.addEventListener('resize', render);
             
@@ -1868,34 +1871,30 @@
         }
         
         function findClickedItem(lat, lng, pixelTolerance) {
-            if (!map) return null;
+            if (!leafletMap) return null;
             
-            const proj = map.getProjection();
-            const zoom = map.getZoom();
-            const scale = Math.pow(2, zoom);
-            const clickPt = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
-            
-            // Tolerance in world coordinates
-            const tolerance = pixelTolerance / scale;
+            const zoom = leafletMap.getZoom();
+            // Tolerance in degrees (smaller at higher zoom)
+            const tolerance = 0.0005 * Math.pow(2, 15 - zoom);
             
             // Check Entry/Exit points first (highest priority)
             for (const p of entryExitPoints) {
-                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
-                if (Math.abs(pt.x - clickPt.x) < tolerance * 1.5 && Math.abs(pt.y - clickPt.y) < tolerance * 1.5) {
+                const dist = Math.sqrt(Math.pow(p.lat - lat, 2) + Math.pow(p.lng - lng, 2));
+                if (dist < tolerance * 2) {
                     return { type: 'entryexit', data: p };
                 }
             }
             
-            // Check POIs first (on top)
+            // Check POIs
             for (const p of poiData) {
                 if (activePoiCategories.size > 0 && !activePoiCategories.has(p.layer)) continue;
-                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
-                if (Math.abs(pt.x - clickPt.x) < tolerance && Math.abs(pt.y - clickPt.y) < tolerance) {
+                const dist = Math.sqrt(Math.pow(p.lat - lat, 2) + Math.pow(p.lng - lng, 2));
+                if (dist < tolerance) {
                     return { type: 'poi', data: p };
                 }
             }
             
-            // Check roads (lines) - check before parcels since roads are more prominent
+            // Check roads (lines)
             if (roads.length > 0) {
                 for (const road of roads) {
                     const geom = road.geometry;
@@ -1906,17 +1905,12 @@
                     for (const coords of lines) {
                         if (!coords || coords.length < 2) continue;
                         
-                        // Check each segment
                         for (let i = 0; i < coords.length - 1; i++) {
                             const [lon1, lat1] = coords[i];
                             const [lon2, lat2] = coords[i + 1];
                             
-                            const pt1 = proj.fromLatLngToPoint(new google.maps.LatLng(lat1, lon1));
-                            const pt2 = proj.fromLatLngToPoint(new google.maps.LatLng(lat2, lon2));
-                            
-                            const dist = pointToLineDistance(clickPt.x, clickPt.y, pt1.x, pt1.y, pt2.x, pt2.y);
-                            
-                            if (dist < tolerance * 2) {
+                            const dist = pointToLineDistance(lng, lat, lon1, lat1, lon2, lat2);
+                            if (dist < tolerance * 3) {
                                 return { type: 'road', data: road };
                             }
                         }
@@ -1926,21 +1920,19 @@
             
             // Check parcels
             for (const p of parcels) {
-                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
-                if (Math.abs(pt.x - clickPt.x) < tolerance && Math.abs(pt.y - clickPt.y) < tolerance) {
+                const dist = Math.sqrt(Math.pow(p.lat - lat, 2) + Math.pow(p.lng - lng, 2));
+                if (dist < tolerance) {
                     return { type: 'parcel', data: p };
                 }
             }
             
-            // Check buildings (polygon click)
+            // Check buildings
             for (const b of buildings) {
                 const coords = b.geometry?.coordinates?.[0];
                 if (!coords || coords.length < 3) continue;
-                
-                // Simple bounds check first
                 const [lon, bLat] = coords[0];
-                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(bLat, lon));
-                if (Math.abs(pt.x - clickPt.x) < tolerance * 3 && Math.abs(pt.y - clickPt.y) < tolerance * 3) {
+                const dist = Math.sqrt(Math.pow(bLat - lat, 2) + Math.pow(lon - lng, 2));
+                if (dist < tolerance * 3) {
                     return { type: 'building', data: { lat: bLat, lng: lon } };
                 }
             }
