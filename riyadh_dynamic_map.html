@@ -4,8 +4,14 @@
     <title>Riyadh Map - Dynamic Counts</title>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1.0, width=device-width">
-    <!-- Google Maps Keyless API -->
-    <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
+    <!-- Google Maps Keyless API - loaded with callback -->
+    <script>
+        // Pre-define initMap for faster callback
+        window.initMap = function() {
+            if (typeof initGoogleMap === 'function') initGoogleMap();
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; }
@@ -525,66 +531,70 @@
         // Map variables - Google Maps only
         let googleMap = null;
         
-        // Initialize Google Maps
+        // Initialize Google Maps - optimized for speed
         function initGoogleMap() {
-            document.getElementById('loadingStatus').textContent = 'Initializing Google Maps...';
+            document.getElementById('loadingStatus').textContent = 'Starting map...';
             
             googleMap = new google.maps.Map(document.getElementById('map'), {
                 center: { lat: 24.7136, lng: 46.6753 },
                 zoom: 11,
                 mapTypeId: 'roadmap',
-                gestureHandling: 'greedy'
+                gestureHandling: 'greedy',
+                disableDefaultUI: false,
+                zoomControl: true,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false
             });
             
             document.getElementById('mapTypeLabel').textContent = 'Google Maps';
             
-            // Wait for map to be ready
-            google.maps.event.addListenerOnce(googleMap, 'idle', function() {
-                // Initialize zone polygons layer for Google Maps
-                zonePolygonsLayer = { polygons: [] };
-                zoneEntryExitMarkers = { markers: [] };
-                
-                google.maps.event.addListener(googleMap, 'idle', render);
-                google.maps.event.addListener(googleMap, 'click', function(e) {
-                    handleMapClick({
-                        latLng: e.latLng,
-                        pixel: { x: e.pixel?.x || 0, y: e.pixel?.y || 0 }
-                    });
+            // Initialize layers immediately
+            zonePolygonsLayer = { polygons: [] };
+            zoneEntryExitMarkers = { markers: [] };
+            
+            // Add listeners
+            google.maps.event.addListener(googleMap, 'idle', render);
+            google.maps.event.addListener(googleMap, 'click', function(e) {
+                handleMapClick({
+                    latLng: e.latLng,
+                    pixel: { x: e.pixel?.x || 0, y: e.pixel?.y || 0 }
                 });
-                
-                window.addEventListener('resize', render);
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                console.log('Google Maps ready!');
-                render();
             });
+            
+            window.addEventListener('resize', render);
+            
+            // Hide loading immediately
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            console.log('Google Maps ready!');
         }
         
-        // Wait for Google Maps API to load
+        // Wait for Google Maps API to load - faster polling
         function waitForGoogleMaps() {
             document.getElementById('loadingStatus').textContent = 'Loading Google Maps...';
+            
+            // Check immediately
+            if (window.google && window.google.maps && window.google.maps.Map) {
+                initGoogleMap();
+                return;
+            }
+            
             let attempts = 0;
-            const maxAttempts = 100; // 10 seconds
+            const maxAttempts = 50; // 5 seconds max
             
             const checkGoogle = setInterval(function() {
                 attempts++;
-                document.getElementById('loadingStatus').textContent = 'Loading Google Maps... (' + attempts + ')';
                 if (window.google && window.google.maps && window.google.maps.Map) {
                     clearInterval(checkGoogle);
                     initGoogleMap();
                 } else if (attempts >= maxAttempts) {
                     clearInterval(checkGoogle);
-                    document.getElementById('loadingStatus').textContent = 'Google Maps failed to load. Please refresh.';
-                    console.error('Google Maps failed to load after 10 seconds');
+                    document.getElementById('loadingStatus').innerHTML = 'Google Maps slow to load. <button onclick="location.reload()" style="padding:5px 10px;cursor:pointer;">Refresh</button>';
                 }
             }, 100);
         }
         
-        // Initialize map callback for Google Maps
-        window.initMap = function() {
-            initGoogleMap();
-        };
-        
-        // Start initialization
+        // Start initialization immediately
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', waitForGoogleMaps);
         } else {
