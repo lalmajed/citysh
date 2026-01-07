@@ -298,22 +298,46 @@
                         <button onclick="exportEntryExitPoints()" style="padding:4px 8px;font-size:9px;background:#2196F3;color:white;border:none;border-radius:3px;cursor:pointer;">Export</button>
                     </div>
                     
+                    <!-- Residential Zones Section -->
                     <div class="layer-toggle" style="background:#f3e5f5;margin-top:8px;padding:8px;border-radius:6px;">
-                        <span class="name" style="color:#7b1fa2;font-weight:bold;">Residential Zones</span>
-                        <span class="count" id="polygonCount" style="background:#9c27b0;">0</span>
-                        <div style="margin-top:6px;">
-                            <label style="font-size:9px;">Min Road Width: <span id="zoneWidthVal">30</span>m <span style="color:#d32f2f;font-weight:bold;">(RED = 30m+)</span></label>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                            <span class="name" style="color:#7b1fa2;font-weight:bold;">Residential Zones</span>
+                            <span class="count" id="polygonCount" style="background:#9c27b0;">0</span>
+                        </div>
+                        
+                        <!-- Zone Creation Controls -->
+                        <div style="margin-bottom:8px;padding:6px;background:#ede7f6;border-radius:4px;">
+                            <label style="font-size:9px;">Min Road Width: <span id="zoneWidthVal">30</span>m</label>
                             <input type="range" id="zoneRoadWidth" min="20" max="50" value="30" step="5" style="width:100%;" oninput="document.getElementById('zoneWidthVal').textContent=this.value">
+                            <button id="createZoneBtn" onclick="toggleCreateZoneMode()" style="padding:5px 8px;font-size:9px;background:#9c27b0;color:white;border:none;border-radius:3px;cursor:pointer;width:100%;margin-top:4px;">Create Zone</button>
                         </div>
-                        <div style="margin-top:6px;">
-                            <button id="createZoneBtn" onclick="toggleCreateZoneMode()" style="padding:6px 10px;font-size:10px;background:#9c27b0;color:white;border:none;border-radius:3px;cursor:pointer;font-weight:bold;width:100%;">Create Zone (click inside)</button>
+                        
+                        <!-- Zones List -->
+                        <div id="zonesList" style="max-height:200px;overflow-y:auto;margin-bottom:8px;">
+                            <div style="font-size:9px;color:#666;padding:8px;text-align:center;">No zones created yet</div>
                         </div>
-                        <div style="margin-top:6px;">
-                            <button onclick="mergeAllZones()" style="padding:4px 8px;font-size:9px;background:#ff9800;color:white;border:none;border-radius:3px;cursor:pointer;margin-right:4px;">Merge All</button>
-                            <button onclick="exportPolygons()" style="padding:4px 8px;font-size:9px;background:#2196F3;color:white;border:none;border-radius:3px;cursor:pointer;margin-right:4px;">Export</button>
-                            <button onclick="clearAllPolygons()" style="padding:4px 8px;font-size:9px;background:#757575;color:white;border:none;border-radius:3px;cursor:pointer;">Clear</button>
+                        
+                        <!-- Selected Zone Info -->
+                        <div id="selectedZoneInfo" style="display:none;background:#e1bee7;padding:8px;border-radius:4px;margin-bottom:8px;">
+                            <div style="font-weight:bold;color:#7b1fa2;font-size:11px;margin-bottom:4px;">
+                                <span id="selectedZoneName">Zone 1</span>
+                                <span id="selectedZoneEntryCount" style="float:right;background:#e91e63;color:white;padding:2px 6px;border-radius:10px;font-size:9px;">0 entries</span>
+                            </div>
+                            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                                <button onclick="calculateZoneEntryExits()" style="padding:3px 6px;font-size:8px;background:#4caf50;color:white;border:none;border-radius:3px;cursor:pointer;">Calculate Entry/Exit</button>
+                                <button id="addZoneEntryBtn" onclick="toggleAddZoneEntryMode()" style="padding:3px 6px;font-size:8px;background:#e94560;color:white;border:none;border-radius:3px;cursor:pointer;">Add Point</button>
+                                <button onclick="exportZoneEntryExits()" style="padding:3px 6px;font-size:8px;background:#2196F3;color:white;border:none;border-radius:3px;cursor:pointer;">Export</button>
+                                <button onclick="clearZoneEntryExits()" style="padding:3px 6px;font-size:8px;background:#757575;color:white;border:none;border-radius:3px;cursor:pointer;">Clear</button>
+                            </div>
                         </div>
-                        <div style="font-size:9px;color:#666;margin-top:4px;">Click inside area bounded by red roads to create zone. Click zone to delete.</div>
+                        
+                        <!-- Zone Actions -->
+                        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                            <button onclick="mergeAllZones()" style="padding:4px 6px;font-size:8px;background:#ff9800;color:white;border:none;border-radius:3px;cursor:pointer;">Merge</button>
+                            <button onclick="exportPolygons()" style="padding:4px 6px;font-size:8px;background:#2196F3;color:white;border:none;border-radius:3px;cursor:pointer;">Export All</button>
+                            <button onclick="exportAllZonesWithEntries()" style="padding:4px 6px;font-size:8px;background:#673ab7;color:white;border:none;border-radius:3px;cursor:pointer;">Export + Entries</button>
+                            <button onclick="clearAllPolygons()" style="padding:4px 6px;font-size:8px;background:#757575;color:white;border:none;border-radius:3px;cursor:pointer;">Clear</button>
+                        </div>
                     </div>
                 </div>
                 <div class="click-toggle">
@@ -688,6 +712,350 @@
         
         let zonePolygonsLayer = null;
         let createZoneMode = false;
+        
+        // Zone-specific entry/exit management
+        let selectedZoneIndex = -1;
+        let addZoneEntryMode = false;
+        let zoneEntryExitMarkers = null; // Leaflet layer for zone entry/exit markers
+        
+        // Update zones list in panel
+        function updateZonesList() {
+            const container = document.getElementById('zonesList');
+            if (!container) return;
+            
+            if (drawnPolygons.length === 0) {
+                container.innerHTML = '<div style="font-size:9px;color:#666;padding:8px;text-align:center;">No zones created yet</div>';
+                document.getElementById('selectedZoneInfo').style.display = 'none';
+                selectedZoneIndex = -1;
+                return;
+            }
+            
+            let html = '';
+            drawnPolygons.forEach((zone, idx) => {
+                const entryCount = zone.entryExitPoints ? zone.entryExitPoints.length : 0;
+                const isSelected = idx === selectedZoneIndex;
+                html += `
+                    <div onclick="selectZone(${idx})" style="
+                        padding:6px 8px;
+                        margin-bottom:4px;
+                        background:${isSelected ? '#ce93d8' : '#ede7f6'};
+                        border-radius:4px;
+                        cursor:pointer;
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        border-left:4px solid ${zone.color || '#9c27b0'};
+                        ${isSelected ? 'box-shadow:0 2px 4px rgba(0,0,0,0.2);' : ''}
+                    ">
+                        <span style="font-size:10px;font-weight:${isSelected ? 'bold' : 'normal'};">${zone.name}</span>
+                        <div style="display:flex;align-items:center;gap:4px;">
+                            <span style="background:#e91e63;color:white;padding:2px 5px;border-radius:8px;font-size:8px;">${entryCount}</span>
+                            <button onclick="event.stopPropagation();deleteZone(${idx})" style="background:#d32f2f;color:white;border:none;padding:2px 5px;border-radius:3px;font-size:8px;cursor:pointer;">X</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            document.getElementById('polygonCount').textContent = drawnPolygons.length;
+        }
+        
+        // Select a zone
+        function selectZone(idx) {
+            selectedZoneIndex = idx;
+            const zone = drawnPolygons[idx];
+            
+            if (!zone) {
+                document.getElementById('selectedZoneInfo').style.display = 'none';
+                return;
+            }
+            
+            // Show selected zone info
+            document.getElementById('selectedZoneInfo').style.display = 'block';
+            document.getElementById('selectedZoneName').textContent = zone.name;
+            const entryCount = zone.entryExitPoints ? zone.entryExitPoints.length : 0;
+            document.getElementById('selectedZoneEntryCount').textContent = entryCount + ' entries';
+            
+            // Zoom to zone
+            if (leafletMap && zone.coordinates && zone.coordinates.length > 0) {
+                const latlngs = zone.coordinates.map(c => [c[1], c[0]]);
+                const bounds = L.latLngBounds(latlngs);
+                leafletMap.fitBounds(bounds, { padding: [30, 30] });
+            }
+            
+            // Update zones list to show selection
+            updateZonesList();
+            
+            // Render zone entry/exit points
+            renderZoneEntryExits();
+        }
+        
+        // Calculate entry/exit points for selected zone
+        function calculateZoneEntryExits() {
+            if (selectedZoneIndex < 0 || !drawnPolygons[selectedZoneIndex]) {
+                showToast('Select a zone first', '#ff9800');
+                return;
+            }
+            
+            const zone = drawnPolygons[selectedZoneIndex];
+            if (!zone.coordinates || zone.coordinates.length < 3) {
+                showToast('Invalid zone boundary', '#d32f2f');
+                return;
+            }
+            
+            if (!roads || roads.length === 0) {
+                showToast('Load roads data first', '#ff9800');
+                return;
+            }
+            
+            const entries = [];
+            const boundary = zone.coordinates;
+            
+            // For each road, check intersections with zone boundary
+            roads.forEach(road => {
+                if (!road.geometry || !road.geometry.coordinates) return;
+                
+                const coords = road.geometry.type === 'MultiLineString' 
+                    ? road.geometry.coordinates.flat() 
+                    : road.geometry.coordinates;
+                
+                for (let i = 0; i < coords.length - 1; i++) {
+                    const [x1, y1] = coords[i];
+                    const [x2, y2] = coords[i + 1];
+                    
+                    // Check against each boundary segment
+                    for (let j = 0; j < boundary.length; j++) {
+                        const [bx1, by1] = boundary[j];
+                        const [bx2, by2] = boundary[(j + 1) % boundary.length];
+                        
+                        const intersection = lineIntersect(x1, y1, x2, y2, bx1, by1, bx2, by2);
+                        if (intersection) {
+                            // Check if this point is not too close to existing entries
+                            const isDuplicate = entries.some(e => {
+                                const dist = Math.sqrt(Math.pow(e.lng - intersection.x, 2) + Math.pow(e.lat - intersection.y, 2));
+                                return dist < 0.0002; // ~20m
+                            });
+                            
+                            if (!isDuplicate) {
+                                entries.push({
+                                    lat: intersection.y,
+                                    lng: intersection.x,
+                                    roadName: road.properties?.name || road.properties?.NAME || 'Unknown Road',
+                                    width: parseFloat(road.properties?.width || road.properties?.WIDTH) || 10,
+                                    zoneIndex: selectedZoneIndex
+                                });
+                            }
+                        }
+                    }
+                }
+            });
+            
+            zone.entryExitPoints = entries;
+            showToast('Found ' + entries.length + ' entry/exit points for ' + zone.name, '#4caf50');
+            
+            updateZonesList();
+            renderZoneEntryExits();
+        }
+        
+        // Render zone entry/exit points on map
+        function renderZoneEntryExits() {
+            // Clear existing markers
+            if (zoneEntryExitMarkers) {
+                zoneEntryExitMarkers.clearLayers();
+            } else if (leafletMap) {
+                zoneEntryExitMarkers = L.layerGroup().addTo(leafletMap);
+            }
+            
+            if (selectedZoneIndex < 0 || !drawnPolygons[selectedZoneIndex]) return;
+            
+            const zone = drawnPolygons[selectedZoneIndex];
+            if (!zone.entryExitPoints || zone.entryExitPoints.length === 0) return;
+            
+            zone.entryExitPoints.forEach((point, idx) => {
+                const isMajor = point.width >= 30;
+                const color = isMajor ? '#d32f2f' : '#e91e63';
+                const radius = isMajor ? 10 : 7;
+                
+                const marker = L.circleMarker([point.lat, point.lng], {
+                    radius: radius,
+                    fillColor: color,
+                    color: '#fff',
+                    weight: 2,
+                    fillOpacity: 0.9
+                }).addTo(zoneEntryExitMarkers);
+                
+                marker.bindPopup(`
+                    <b>${point.roadName}</b><br>
+                    Width: ${point.width}m<br>
+                    <button onclick="deleteZoneEntryPoint(${idx})" style="background:#d32f2f;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:3px;margin-top:5px;">Delete</button>
+                `);
+            });
+        }
+        
+        // Toggle add zone entry mode
+        function toggleAddZoneEntryMode() {
+            if (selectedZoneIndex < 0) {
+                showToast('Select a zone first', '#ff9800');
+                return;
+            }
+            
+            addZoneEntryMode = !addZoneEntryMode;
+            const btn = document.getElementById('addZoneEntryBtn');
+            if (addZoneEntryMode) {
+                btn.style.background = '#4caf50';
+                btn.textContent = 'Click on map...';
+                showToast('Click on map to add entry/exit point', '#4caf50');
+            } else {
+                btn.style.background = '#e94560';
+                btn.textContent = 'Add Point';
+            }
+        }
+        
+        // Add entry point to zone
+        function addZoneEntryPoint(lat, lng) {
+            if (selectedZoneIndex < 0 || !drawnPolygons[selectedZoneIndex]) return;
+            
+            const zone = drawnPolygons[selectedZoneIndex];
+            if (!zone.entryExitPoints) zone.entryExitPoints = [];
+            
+            zone.entryExitPoints.push({
+                lat: lat,
+                lng: lng,
+                roadName: 'Manual Entry',
+                width: 15,
+                zoneIndex: selectedZoneIndex
+            });
+            
+            addZoneEntryMode = false;
+            const btn = document.getElementById('addZoneEntryBtn');
+            btn.style.background = '#e94560';
+            btn.textContent = 'Add Point';
+            
+            updateZonesList();
+            renderZoneEntryExits();
+            showToast('Entry point added', '#4caf50');
+        }
+        
+        // Delete zone entry point
+        function deleteZoneEntryPoint(idx) {
+            if (selectedZoneIndex < 0 || !drawnPolygons[selectedZoneIndex]) return;
+            
+            const zone = drawnPolygons[selectedZoneIndex];
+            if (zone.entryExitPoints && zone.entryExitPoints[idx]) {
+                zone.entryExitPoints.splice(idx, 1);
+                updateZonesList();
+                renderZoneEntryExits();
+                showToast('Entry point deleted', '#757575');
+            }
+        }
+        
+        // Clear zone entry/exit points
+        function clearZoneEntryExits() {
+            if (selectedZoneIndex < 0 || !drawnPolygons[selectedZoneIndex]) return;
+            
+            drawnPolygons[selectedZoneIndex].entryExitPoints = [];
+            updateZonesList();
+            renderZoneEntryExits();
+            showToast('Zone entry points cleared', '#757575');
+        }
+        
+        // Export zone entry/exit points
+        function exportZoneEntryExits() {
+            if (selectedZoneIndex < 0 || !drawnPolygons[selectedZoneIndex]) {
+                showToast('Select a zone first', '#ff9800');
+                return;
+            }
+            
+            const zone = drawnPolygons[selectedZoneIndex];
+            if (!zone.entryExitPoints || zone.entryExitPoints.length === 0) {
+                showToast('No entry points to export', '#ff9800');
+                return;
+            }
+            
+            const geojson = {
+                type: 'FeatureCollection',
+                properties: { zoneName: zone.name },
+                features: zone.entryExitPoints.map((p, i) => ({
+                    type: 'Feature',
+                    properties: {
+                        id: i + 1,
+                        roadName: p.roadName,
+                        width: p.width,
+                        zoneName: zone.name
+                    },
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [p.lng, p.lat]
+                    }
+                }))
+            };
+            
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' }));
+            a.download = zone.name.replace(/\s+/g, '_') + '_entry_exits.geojson';
+            a.click();
+            showToast('Exported ' + zone.entryExitPoints.length + ' points', '#4caf50');
+        }
+        
+        // Export all zones with their entry points
+        function exportAllZonesWithEntries() {
+            if (drawnPolygons.length === 0) {
+                showToast('No zones to export', '#ff9800');
+                return;
+            }
+            
+            const features = [];
+            
+            drawnPolygons.forEach((zone, zoneIdx) => {
+                // Add zone polygon
+                features.push({
+                    type: 'Feature',
+                    properties: {
+                        type: 'zone',
+                        name: zone.name,
+                        id: zoneIdx + 1,
+                        entryCount: zone.entryExitPoints ? zone.entryExitPoints.length : 0
+                    },
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [[...zone.coordinates, zone.coordinates[0]]]
+                    }
+                });
+                
+                // Add entry/exit points
+                if (zone.entryExitPoints) {
+                    zone.entryExitPoints.forEach((p, i) => {
+                        features.push({
+                            type: 'Feature',
+                            properties: {
+                                type: 'entry_exit',
+                                zoneName: zone.name,
+                                zoneId: zoneIdx + 1,
+                                pointId: i + 1,
+                                roadName: p.roadName,
+                                width: p.width
+                            },
+                            geometry: {
+                                type: 'Point',
+                                coordinates: [p.lng, p.lat]
+                            }
+                        });
+                    });
+                }
+            });
+            
+            const geojson = {
+                type: 'FeatureCollection',
+                features: features
+            };
+            
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' }));
+            a.download = 'zones_with_entries.geojson';
+            a.click();
+            
+            const totalEntries = drawnPolygons.reduce((sum, z) => sum + (z.entryExitPoints ? z.entryExitPoints.length : 0), 0);
+            showToast('Exported ' + drawnPolygons.length + ' zones with ' + totalEntries + ' entry points', '#4caf50');
+        }
         let majorRoadSegments = []; // Cached major road segments
         
         // Toggle zone creation mode
@@ -864,7 +1232,8 @@
                 
                 polygon.bindPopup(`
                     <b>Zone ${zoneNum}</b><br>
-                    <button onclick="deleteZone(${zoneNum - 1})" style="background:#d32f2f;color:white;border:none;padding:8px 15px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete This Zone</button>
+                    <button onclick="selectZone(${zoneNum - 1})" style="background:#9c27b0;color:white;border:none;padding:6px 12px;cursor:pointer;border-radius:4px;margin-top:5px;margin-right:4px;">Select</button>
+                    <button onclick="deleteZone(${zoneNum - 1})" style="background:#d32f2f;color:white;border:none;padding:6px 12px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete</button>
                 `);
             } else if (googleMap) {
                 const polygon = new google.maps.Polygon({
@@ -888,7 +1257,8 @@
             
             document.getElementById('polygonCount').textContent = drawnPolygons.length;
             console.log('Zone created! Total zones:', drawnPolygons.length, drawnPolygons);
-            showToast('Zone ' + zoneNum + ' created! Total zones: ' + drawnPolygons.length, '#4caf50');
+            updateZonesList();
+            showToast('Zone ' + zoneNum + ' created!', '#4caf50');
         }
         
         // Ray-line segment intersection
@@ -915,6 +1285,15 @@
         function deleteZone(idx) {
             drawnPolygons.splice(idx, 1);
             
+            // Reset selected zone if it was deleted
+            if (selectedZoneIndex === idx) {
+                selectedZoneIndex = -1;
+                document.getElementById('selectedZoneInfo').style.display = 'none';
+                if (zoneEntryExitMarkers) zoneEntryExitMarkers.clearLayers();
+            } else if (selectedZoneIndex > idx) {
+                selectedZoneIndex--;
+            }
+            
             // Clear and redraw all zones
             if (useLeaflet && zonePolygonsLayer && zonePolygonsLayer.clearLayers) {
                 zonePolygonsLayer.clearLayers();
@@ -928,7 +1307,9 @@
                     }).addTo(zonePolygonsLayer);
                     polygon.bindPopup(`
                         <b>${zone.name}</b><br>
-                        <button onclick="deleteZone(${i})" style="background:#d32f2f;color:white;border:none;padding:8px 15px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete This Zone</button>
+                        Entries: ${zone.entryExitPoints ? zone.entryExitPoints.length : 0}<br>
+                        <button onclick="selectZone(${i})" style="background:#9c27b0;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:4px;margin-top:5px;margin-right:4px;">Select</button>
+                        <button onclick="deleteZone(${i})" style="background:#d32f2f;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:4px;margin-top:5px;">Delete</button>
                     `);
                 });
             } else if (zonePolygonsLayer && zonePolygonsLayer.polygons) {
@@ -949,7 +1330,7 @@
                 });
             }
             
-            document.getElementById('polygonCount').textContent = drawnPolygons.length;
+            updateZonesList();
             showToast('Zone deleted', '#757575');
         }
         
@@ -963,8 +1344,13 @@
                 zonePolygonsLayer.polygons = [];
             }
             
+            // Clear zone entry markers
+            if (zoneEntryExitMarkers) zoneEntryExitMarkers.clearLayers();
+            
             drawnPolygons = [];
-            document.getElementById('polygonCount').textContent = 0;
+            selectedZoneIndex = -1;
+            document.getElementById('selectedZoneInfo').style.display = 'none';
+            updateZonesList();
             showToast('All zones cleared', '#757575');
         }
         
@@ -1074,7 +1460,7 @@
                         fillOpacity: 0.3
                     }).addTo(zonePolygonsLayer);
                     
-                    polygon.bindPopup('<b>Merged Zone</b><br><button onclick="clearAllPolygons()" style="background:#d32f2f;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:3px;">Delete</button>');
+                    polygon.bindPopup('<b>Merged Zone</b><br><button onclick="selectZone(0)" style="background:#9c27b0;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:3px;margin-right:4px;">Select</button><button onclick="clearAllPolygons()" style="background:#d32f2f;color:white;border:none;padding:5px 10px;cursor:pointer;border-radius:3px;">Delete</button>');
                     
                     // Zoom to merged zone
                     leafletMap.fitBounds(polygon.getBounds(), { padding: [50, 50] });
@@ -1083,6 +1469,10 @@
                 }
                 
                 document.getElementById('polygonCount').textContent = 1;
+                selectedZoneIndex = -1;
+                document.getElementById('selectedZoneInfo').style.display = 'none';
+                if (zoneEntryExitMarkers) zoneEntryExitMarkers.clearLayers();
+                updateZonesList();
                 showToast('Merged ' + originalCount + ' zones into 1!', '#9c27b0');
             } catch (err) {
                 console.error('Merge error:', err);
@@ -2451,6 +2841,12 @@
             // Check if in create zone mode
             if (createZoneMode) {
                 createZoneAtPoint(lat, lng);
+                return;
+            }
+            
+            // Check if in add zone entry/exit mode
+            if (addZoneEntryMode) {
+                addZoneEntryPoint(lat, lng);
                 return;
             }
             
