@@ -258,14 +258,28 @@
                 <div class="layer-control" style="background:#e3f2fd;">
                     <div class="header">
                         <input type="checkbox" id="showRoads" checked onchange="render()">
-                        <div class="dot" style="background:#d32f2f;"></div>
-                        <span class="name">Roads</span>
+                        <div class="dot" style="background:#4caf50;"></div>
+                        <span class="name">All Roads</span>
                         <span class="count" id="roadCount">0</span>
                     </div>
                     <div style="font-size:10px;">
                         Width Scale: <span id="roadWidthVal">1</span>x <input type="range" id="roadWidth" min="0.5" max="3" value="1" step="0.25" oninput="updateSlider('road')">
                         <label style="margin-top:5px;display:flex;align-items:center;gap:5px;">
                             <input type="checkbox" id="showRoadLabels" checked onchange="render()"> Show Labels
+                        </label>
+                    </div>
+                </div>
+                <div class="layer-control" style="background:#ffebee;border:2px solid #d32f2f;">
+                    <div class="header">
+                        <input type="checkbox" id="showMajorRoads" checked onchange="render()">
+                        <div class="dot" style="background:#d32f2f;"></div>
+                        <span class="name" style="color:#d32f2f;font-weight:bold;">MAJOR ROADS (30m+)</span>
+                        <span class="count" id="majorRoadCount" style="background:#d32f2f;">0</span>
+                    </div>
+                    <div style="font-size:10px;">
+                        Extra Thickness: <span id="majorRoadThickVal">3</span>x <input type="range" id="majorRoadThick" min="1" max="8" value="3" step="0.5" oninput="document.getElementById('majorRoadThickVal').textContent=this.value;render()">
+                        <label style="margin-top:5px;display:flex;align-items:center;gap:5px;">
+                            <input type="checkbox" id="onlyMajorRoads" onchange="render()"> Show ONLY Major Roads
                         </label>
                     </div>
                 </div>
@@ -1129,11 +1143,16 @@
             
             // Draw roads (lines)
             const showRoads = document.getElementById('showRoads').checked;
+            const showMajorRoads = document.getElementById('showMajorRoads')?.checked ?? true;
+            const onlyMajorRoads = document.getElementById('onlyMajorRoads')?.checked ?? false;
+            const majorRoadThick = parseFloat(document.getElementById('majorRoadThick')?.value || 3);
             const showRoadLabels = document.getElementById('showRoadLabels').checked;
             const roadWidthScale = parseFloat(document.getElementById('roadWidth')?.value || 1);
             const swLat = sw.lat(), neLat = ne.lat(), swLng = sw.lng(), neLng = ne.lng();
             
-            if (showRoads && roads.length) {
+            let majorRoadCount = 0;
+            
+            if ((showRoads || showMajorRoads) && roads.length) {
                 const drawnLabels = new Set(); // Track drawn labels to avoid duplicates
                 
                 roads.forEach(road => {
@@ -1142,8 +1161,22 @@
                     
                     const props = road.properties || {};
                     const width = parseFloat(props.width_m || props.WIDTH || props.width || 10);
+                    const isMajor = width >= 30;
+                    
+                    // Count major roads
+                    if (isMajor) majorRoadCount++;
+                    
+                    // Skip based on filters
+                    if (onlyMajorRoads && !isMajor) return;
+                    if (!showRoads && !isMajor) return;
+                    if (!showMajorRoads && isMajor) return;
+                    
                     const color = getRoadColor(width);
-                    const lineWidth = getRoadLineWidth(width, zoom) * roadWidthScale;
+                    // Major roads get extra thickness
+                    let lineWidth = getRoadLineWidth(width, zoom) * roadWidthScale;
+                    if (isMajor) {
+                        lineWidth = lineWidth * majorRoadThick;
+                    }
                     
                     ctx.strokeStyle = color;
                     ctx.lineWidth = lineWidth;
@@ -1234,6 +1267,10 @@
                         }
                     });
                 });
+                
+                // Update major road count
+                const majorCountEl = document.getElementById('majorRoadCount');
+                if (majorCountEl) majorCountEl.textContent = majorRoadCount;
             }
             
             // Draw Entry/Exit points - RED DOTS at boundary crossings
