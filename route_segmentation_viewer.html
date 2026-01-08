@@ -462,7 +462,9 @@
                             <div class="network-legend-item"><div class="network-legend-color vtype-3"></div> Type 3 (Truck)</div>
                             <div class="network-legend-item" style="margin-left:auto;">Line thickness = vehicle count</div>
                         </div>
-                        <div id="networkMap"></div>
+                        <div id="networkMap" style="background:#f0f0f0;display:flex;align-items:center;justify-content:center;">
+                            <span id="networkMapLoading" style="color:#666;">Click Page 2 tab to load map</span>
+                        </div>
                     </div>
                     
                     <div class="panel">
@@ -525,7 +527,11 @@ let corridorPolyline = null;  // For displaying expected corridor from Google Ma
 let corridorMarkers = [];     // Waypoint markers on the corridor
 
 // ============ INITIALIZATION ============
+// Make initMap globally available
+window.initMap = initMap;
+
 function initMap() {
+    console.log('initMap called');
     map = new google.maps.Map(document.getElementById('map'), {
         center: { lat: 24.7136, lng: 46.6753 },
         zoom: 10,
@@ -3751,6 +3757,8 @@ async function showAllTrips() {
 
 // ============ PAGE SWITCHING ============
 function showPage(pageNum) {
+    console.log('showPage called:', pageNum);
+    
     // Update tabs
     document.querySelectorAll('.page-tab').forEach((tab, idx) => {
         tab.classList.toggle('active', idx === pageNum - 1);
@@ -3762,8 +3770,13 @@ function showPage(pageNum) {
     });
     
     // Initialize network map if switching to page 2
-    if (pageNum === 2 && !networkMap) {
-        initNetworkMap();
+    if (pageNum === 2) {
+        // Wait a bit for the div to be visible, then init map
+        setTimeout(() => {
+            if (!networkMap && typeof google !== 'undefined') {
+                initNetworkMap();
+            }
+        }, 100);
     }
 }
 
@@ -3776,8 +3789,20 @@ let NETWORK_EDGES = {}; // {from_to: {weight, vehicleTypes}}
 
 // Initialize network map
 function initNetworkMap() {
+    console.log('initNetworkMap called');
     const mapDiv = document.getElementById('networkMap');
-    if (!mapDiv || networkMap) return;
+    if (!mapDiv) {
+        console.error('networkMap div not found');
+        return;
+    }
+    if (networkMap) {
+        console.log('networkMap already initialized');
+        return;
+    }
+    
+    // Remove loading message
+    const loadingMsg = document.getElementById('networkMapLoading');
+    if (loadingMsg) loadingMsg.remove();
     
     networkMap = new google.maps.Map(mapDiv, {
         center: { lat: 24.7136, lng: 46.6753 },
