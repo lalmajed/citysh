@@ -83,7 +83,6 @@
         .page-tab { flex: 1; padding: 15px 20px; text-align: center; cursor: pointer; font-weight: 600; color: #666; border: none; background: white; transition: all 0.2s; border-bottom: 3px solid transparent; }
         .page-tab:hover { background: #f5f5f5; }
         .page-tab.active { color: #4285f4; border-bottom-color: #4285f4; background: #e3f2fd; }
-        .page-tab .tab-icon { font-size: 1.2rem; margin-right: 8px; }
         .page-content { display: none; }
         .page-content.active { display: block; }
         
@@ -118,10 +117,10 @@
         <!-- Page Tabs -->
         <div class="page-tabs">
             <button class="page-tab active" onclick="showPage(1)">
-                <span class="tab-icon">&#128663;</span> Vehicle Trips & Routes
+                Page 1: Vehicle Trips and Routes
             </button>
             <button class="page-tab" onclick="showPage(2)">
-                <span class="tab-icon">&#127760;</span> Network Overview
+                Page 2: Network Overview
             </button>
         </div>
         
@@ -387,6 +386,7 @@
                     <div id="tripDetails"></div>
                 </div>
             </div>
+        </div>
         </div>
         <!-- END PAGE 1 -->
         
