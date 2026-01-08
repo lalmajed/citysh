@@ -406,24 +406,25 @@
                         <div id="networkDataStatus" style="font-size:0.8rem;margin-bottom:8px;">
                             <span style="color:#666;">No network data loaded</span>
                         </div>
-                        <input type="file" id="networkPathsUpload" accept=".csv,.parquet,.json" onchange="uploadNetworkPaths(this)" style="display:none;">
+                        <input type="file" id="networkPathsUpload" accept=".json" onchange="uploadNetworkPaths(this)" style="display:none;">
                         <button onclick="document.getElementById('networkPathsUpload').click()" style="font-size:0.75rem;padding:8px 10px;cursor:pointer;background:#00897b;color:#fff;border:none;border-radius:3px;width:100%;">
-                            Upload CSV File
+                            Upload network_visualization.json
                         </button>
-                        <div style="margin-top:8px;">
-                            <button onclick="document.getElementById('csvPasteArea').style.display = document.getElementById('csvPasteArea').style.display === 'none' ? 'block' : 'none'" style="font-size:0.7rem;padding:5px 8px;cursor:pointer;background:#546e7a;color:#fff;border:none;border-radius:3px;">
-                                Or Paste CSV Text
-                            </button>
-                            <div id="csvPasteArea" style="display:none;margin-top:8px;">
-                                <textarea id="csvTextInput" placeholder="Paste CSV content here..." style="width:100%;height:80px;font-size:0.7rem;font-family:monospace;"></textarea>
-                                <button onclick="loadPastedCSV()" style="font-size:0.7rem;padding:5px 10px;cursor:pointer;background:#4caf50;color:#fff;border:none;border-radius:3px;margin-top:4px;">
-                                    Load Pasted Data
-                                </button>
-                            </div>
+                        <div style="margin-top:10px;padding:8px;background:#e3f2fd;border-radius:4px;font-size:0.65rem;">
+                            <strong>For large files, run first:</strong><br>
+                            <code style="background:#fff;padding:2px 4px;border-radius:2px;">python prepare_network_data.py yourfile.csv</code>
                         </div>
-                        <p style="font-size:0.65rem;color:#888;margin-top:5px;">
-                            Columns: vehicle_type, global_path_id, full_path, vehicles
-                        </p>
+                    </div>
+                    
+                    <div class="panel">
+                        <h2>Site Coordinates</h2>
+                        <div id="siteCoordStatus" style="font-size:0.75rem;margin-bottom:6px;">
+                            <span style="color:#666;">Using embedded sites (${Object.keys(SITES).length})</span>
+                        </div>
+                        <input type="file" id="siteCoordUpload" accept=".json,.csv,.parquet" onchange="uploadSiteCoordinates(this)" style="display:none;">
+                        <button onclick="document.getElementById('siteCoordUpload').click()" style="font-size:0.7rem;padding:6px 8px;cursor:pointer;background:#607d8b;color:#fff;border:none;border-radius:3px;">
+                            Upload Site Coords (optional)
+                        </button>
                     </div>
                     
                     <div class="panel">
@@ -3857,6 +3858,9 @@ function loadPastedCSV() {
     }
 }
 
+// Store pre-aggregated data if loaded
+let PRECOMPUTED_NETWORK = null;
+
 async function uploadNetworkPaths(input) {
     const file = input.files[0];
     if (!file) return;
@@ -3865,36 +3869,47 @@ async function uploadNetworkPaths(input) {
     statusDiv.innerHTML = '<span style="color:#2196f3;">Reading file...</span>';
     
     try {
-        let data;
         const fileName = file.name.toLowerCase();
         
-        if (fileName.endsWith('.csv')) {
-            // Use FileReader for better compatibility
-            const text = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = (e) => reject(new Error('Failed to read file. Try re-selecting it.'));
-                reader.readAsText(file);
-            });
+        // Read file content
+        const text = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (e) => reject(new Error('Failed to read file. Try re-selecting it.'));
+            reader.readAsText(file);
+        });
+        
+        if (fileName.endsWith('.json')) {
+            const jsonData = JSON.parse(text);
+            
+            // Check if it's pre-aggregated format (from prepare_network_data.py)
+            if (jsonData.edges && jsonData.meta) {
+                PRECOMPUTED_NETWORK = jsonData;
+                NETWORK_PATHS = jsonData.top_paths || [];
+                loadPrecomputedNetwork();
+                statusDiv.innerHTML = `<span style="color:#4caf50;">Loaded pre-aggregated network</span>
+                    <div style="font-size:0.65rem;color:#666;margin-top:2px;">
+                        ${jsonData.meta.unique_edges.toLocaleString()} edges, 
+                        ${jsonData.meta.total_vehicles.toLocaleString()} vehicles
+                    </div>
+                    <div style="font-size:0.65rem;color:#888;">Source: ${file.name}</div>`;
+                return;
+            }
+            
+            // Regular array of paths
+            NETWORK_PATHS = Array.isArray(jsonData) ? jsonData : (jsonData.data || jsonData.paths || []);
+            
+        } else if (fileName.endsWith('.csv')) {
             console.log('CSV file size:', text.length, 'chars');
-            console.log('First 500 chars:', text.substring(0, 500));
-            data = parseNetworkCSV(text);
+            NETWORK_PATHS = parseNetworkCSV(text);
+            
         } else if (fileName.endsWith('.parquet')) {
-            data = await readNetworkParquet(file);
-        } else if (fileName.endsWith('.json')) {
-            const text = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = (e) => reject(new Error('Failed to read file. Try re-selecting it.'));
-                reader.readAsText(file);
-            });
-            data = JSON.parse(text);
-            if (!Array.isArray(data)) data = data.data || data.paths || [];
+            throw new Error('Parquet not supported in browser. Use: python prepare_network_data.py yourfile.parquet');
         } else {
-            throw new Error('Unsupported format. Use .csv, .parquet, or .json');
+            throw new Error('Use .json (recommended) or .csv');
         }
         
-        NETWORK_PATHS = data;
+        PRECOMPUTED_NETWORK = null;
         
         if (NETWORK_PATHS.length === 0) {
             statusDiv.innerHTML = `<span style="color:#f44336;">Loaded 0 paths</span>
@@ -3913,6 +3928,118 @@ async function uploadNetworkPaths(input) {
     
     // Reset input so same file can be re-selected
     input.value = '';
+}
+
+// Upload site coordinates
+async function uploadSiteCoordinates(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const statusDiv = document.getElementById('siteCoordStatus');
+    statusDiv.innerHTML = '<span style="color:#2196f3;">Loading...</span>';
+    
+    try {
+        const text = await file.text();
+        let sites = {};
+        
+        if (file.name.endsWith('.json')) {
+            const data = JSON.parse(text);
+            // Handle array or object format
+            if (Array.isArray(data)) {
+                data.forEach(s => {
+                    const id = s.site_id || s.camera_id || s.id;
+                    if (id) {
+                        sites[id] = { lat: parseFloat(s.lat || s.latitude), lng: parseFloat(s.lng || s.lon || s.longitude) };
+                    }
+                });
+            } else {
+                sites = data;
+            }
+        } else if (file.name.endsWith('.csv')) {
+            const lines = text.trim().split('\n');
+            const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+            const idIdx = headers.findIndex(h => h.includes('site') || h.includes('camera') || h === 'id');
+            const latIdx = headers.findIndex(h => h.includes('lat'));
+            const lngIdx = headers.findIndex(h => h.includes('lon') || h.includes('lng'));
+            
+            for (let i = 1; i < lines.length; i++) {
+                const vals = lines[i].split(',');
+                const id = vals[idIdx]?.trim();
+                if (id) {
+                    sites[id] = { lat: parseFloat(vals[latIdx]), lng: parseFloat(vals[lngIdx]) };
+                }
+            }
+        }
+        
+        // Merge with existing SITES
+        Object.assign(SITES, sites);
+        
+        statusDiv.innerHTML = `<span style="color:#4caf50;">Loaded ${Object.keys(sites).length} sites</span>
+            <div style="font-size:0.6rem;color:#666;">Total: ${Object.keys(SITES).length}</div>`;
+        
+        // Redraw if network is loaded
+        if (Object.keys(NETWORK_EDGES).length > 0) {
+            filterNetworkByType();
+        }
+        
+    } catch (err) {
+        statusDiv.innerHTML = `<span style="color:#f44336;">Error: ${err.message}</span>`;
+    }
+    
+    input.value = '';
+}
+
+// Load pre-computed network data (from prepare_network_data.py)
+function loadPrecomputedNetwork() {
+    if (!PRECOMPUTED_NETWORK) return;
+    
+    const data = PRECOMPUTED_NETWORK;
+    
+    // Load site coordinates if included
+    if (data.sites && Object.keys(data.sites).length > 0) {
+        Object.assign(SITES, data.sites);
+        document.getElementById('siteCoordStatus').innerHTML = 
+            `<span style="color:#4caf50;">Loaded ${Object.keys(data.sites).length} sites from JSON</span>`;
+    }
+    
+    // Convert edges to NETWORK_EDGES format
+    NETWORK_EDGES = {};
+    data.edges.forEach(edge => {
+        const key = edge.from + '_' + edge.to;
+        NETWORK_EDGES[key] = {
+            from: edge.from,
+            to: edge.to,
+            weight: edge.weight,
+            vehicleTypes: edge.by_vtype || {}
+        };
+    });
+    
+    // Update stats
+    document.getElementById('statNetworkPaths').textContent = data.meta.total_paths.toLocaleString();
+    document.getElementById('statNetworkEdges').textContent = data.meta.unique_edges.toLocaleString();
+    document.getElementById('statNetworkVehicles').textContent = data.meta.total_vehicles.toLocaleString();
+    document.getElementById('statNetworkNodes').textContent = data.meta.unique_nodes.toLocaleString();
+    
+    // Update vehicle type dropdown
+    const vtSelect = document.getElementById('networkVehicleType');
+    vtSelect.innerHTML = '<option value="all">All Types</option>';
+    if (data.meta.vehicle_types) {
+        Object.keys(data.meta.vehicle_types).sort().forEach(vt => {
+            const count = data.meta.vehicle_types[vt];
+            vtSelect.innerHTML += `<option value="${vt}">Type ${vt} (${count.toLocaleString()})</option>`;
+        });
+    }
+    
+    // Update slider max
+    const maxWeight = Math.max(...data.edges.map(e => e.weight));
+    const slider = document.getElementById('networkMinVehicles');
+    slider.max = Math.min(maxWeight, 10000);
+    slider.value = 1;
+    updateNetworkMinLabel();
+    
+    // Draw network
+    filterNetworkByType();
+    updateTopPathsList();
 }
 
 // Parse network CSV - with debug info
@@ -4049,30 +4176,30 @@ function filterNetworkByType() {
     const vType = document.getElementById('networkVehicleType').value;
     const minVehicles = parseInt(document.getElementById('networkMinVehicles').value) || 1;
     
-    // Filter paths
+    // Filter edges directly (much faster than reprocessing paths)
+    const filteredEdges = {};
+    
+    Object.entries(NETWORK_EDGES).forEach(([key, edge]) => {
+        let weight = edge.weight;
+        
+        // If filtering by vehicle type, use that type's weight only
+        if (vType !== 'all') {
+            weight = edge.vehicleTypes[vType] || 0;
+        }
+        
+        if (weight >= minVehicles) {
+            filteredEdges[key] = { ...edge, weight: weight };
+        }
+    });
+    
+    drawNetworkEdges(filteredEdges);
+    
+    // Filter top paths for the list
     let filteredPaths = NETWORK_PATHS;
     if (vType !== 'all') {
         filteredPaths = NETWORK_PATHS.filter(p => String(p.vehicle_type) === vType);
     }
     filteredPaths = filteredPaths.filter(p => (parseInt(p.vehicles) || 0) >= minVehicles);
-    
-    // Rebuild edges for filtered paths
-    const filteredEdges = {};
-    filteredPaths.forEach(path => {
-        const sites = (path.full_path || '').split('>').map(s => s.trim()).filter(s => s);
-        const vehicles = parseInt(path.vehicles) || 0;
-        
-        for (let i = 0; i < sites.length - 1; i++) {
-            const key = sites[i] + '_' + sites[i + 1];
-            if (!filteredEdges[key]) {
-                filteredEdges[key] = { from: sites[i], to: sites[i + 1], weight: 0, vehicleTypes: {} };
-            }
-            filteredEdges[key].weight += vehicles;
-            filteredEdges[key].vehicleTypes[path.vehicle_type] = (filteredEdges[key].vehicleTypes[path.vehicle_type] || 0) + vehicles;
-        }
-    });
-    
-    drawNetworkEdges(filteredEdges);
     updateTopPathsList(filteredPaths);
 }
 
