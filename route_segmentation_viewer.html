@@ -3827,6 +3827,8 @@ async function uploadNetworkPaths(input) {
         
         if (file.name.endsWith('.csv')) {
             const text = await file.text();
+            console.log('CSV file size:', text.length, 'chars');
+            console.log('First 500 chars:', text.substring(0, 500));
             data = parseNetworkCSV(text);
         } else if (file.name.endsWith('.parquet')) {
             data = await readNetworkParquet(file);
@@ -3853,20 +3855,58 @@ async function uploadNetworkPaths(input) {
 // Parse network CSV
 function parseNetworkCSV(text) {
     const lines = text.trim().split('\n');
-    if (lines.length < 2) return [];
+    if (lines.length < 2) {
+        console.error('CSV has less than 2 lines');
+        return [];
+    }
     
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+    // Detect delimiter (comma or tab)
+    const firstLine = lines[0];
+    const delimiter = firstLine.includes('\t') ? '\t' : ',';
+    console.log('CSV delimiter:', delimiter === '\t' ? 'TAB' : 'COMMA');
+    
+    let headers = firstLine.split(delimiter).map(h => h.trim().toLowerCase().replace(/"/g, ''));
+    console.log('CSV headers:', headers);
+    
+    // Handle unnamed index column (empty first header or just numbers)
+    if (headers[0] === '' || headers[0] === 'unnamed: 0' || /^\d+$/.test(headers[0])) {
+        headers = headers.slice(1);
+        console.log('Removed index column, headers now:', headers);
+    }
+    
     const data = [];
     
     for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+        if (!lines[i].trim()) continue; // Skip empty lines
+        
+        let values = lines[i].split(delimiter).map(v => v.trim().replace(/"/g, ''));
+        
+        // If first value looks like row index, skip it
+        if (headers.length === values.length - 1 && /^\d+$/.test(values[0])) {
+            values = values.slice(1);
+        }
+        
         const row = {};
         headers.forEach((h, idx) => {
             let val = values[idx];
-            if (h === 'vehicle_type' || h === 'vehicles') val = parseInt(val) || 0;
+            if (h === 'vehicle_type' || h === 'vehicles') {
+                val = parseInt(val) || 0;
+            }
             row[h] = val;
         });
-        data.push(row);
+        
+        // Only add if has required fields
+        if (row.full_path || row.fullpath || row.path) {
+            // Normalize field names
+            if (row.fullpath) row.full_path = row.fullpath;
+            if (row.path) row.full_path = row.path;
+            data.push(row);
+        }
+    }
+    
+    console.log('Parsed', data.length, 'rows from CSV');
+    if (data.length > 0) {
+        console.log('Sample row:', data[0]);
     }
     
     return data;
