@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-Convert exact_paths parquet to JSON for the Network Overview page.
+Convert exact_paths parquet to CSV or JSON for the Network Overview page.
 
 Usage:
     python3 convert_exact_paths.py exact_paths_ALL_VT.parquet
+    python3 convert_exact_paths.py exact_paths_ALL_VT.parquet --csv
 
 Output:
-    Creates exact_paths.json ready to upload to dashboard Page 2.
+    Creates exact_paths.json (or .csv) ready to upload to dashboard Page 2.
 """
 
 import sys
@@ -15,12 +16,13 @@ import pandas as pd
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 convert_exact_paths.py YOUR_EXACT_PATHS.parquet")
-        print("\nThis will create exact_paths.json to upload to Page 2 (Network Overview)")
+        print("Usage: python3 convert_exact_paths.py YOUR_EXACT_PATHS.parquet [--csv]")
+        print("\nThis will create exact_paths.json (or .csv) to upload to Page 2 (Network Overview)")
         sys.exit(1)
     
     input_file = sys.argv[1]
-    output_file = "exact_paths.json"
+    use_csv = '--csv' in sys.argv
+    output_file = "exact_paths.csv" if use_csv else "exact_paths.json"
     
     print(f"Reading {input_file}...")
     
@@ -37,12 +39,13 @@ def main():
     # Standardize column names
     df.columns = [c.lower() for c in df.columns]
     
-    # Convert to list of dicts
-    records = df.to_dict(orient='records')
-    
-    # Save JSON
-    with open(output_file, 'w') as f:
-        json.dump(records, f)
+    # Save output
+    if use_csv:
+        df.to_csv(output_file, index=False)
+    else:
+        records = df.to_dict(orient='records')
+        with open(output_file, 'w') as f:
+            json.dump(records, f)
     
     # Stats
     vehicle_types = df['vehicle_type'].unique() if 'vehicle_type' in df.columns else []
@@ -52,13 +55,13 @@ def main():
     print("DONE!")
     print(f"{'='*50}")
     print(f"\nCreated: {output_file}")
-    print(f"Paths: {len(records):,}")
-    print(f"Vehicle types: {sorted(vehicle_types.tolist())}")
+    print(f"Paths: {len(df):,}")
+    print(f"Vehicle types: {sorted(vehicle_types.tolist()) if len(vehicle_types) > 0 else 'N/A'}")
     print(f"Total vehicles: {total_vehicles:,}")
     
     print(f"\nNEXT STEPS:")
     print(f"1. Open route_segmentation_viewer.html")
-    print(f"2. Click 'Network Overview' tab")
+    print(f"2. Click 'Page 2: Network Overview' tab")
     print(f"3. Click 'Upload exact_paths CSV/Parquet'")
     print(f"4. Select '{output_file}'")
 

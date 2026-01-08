@@ -3872,39 +3872,9 @@ function parseNetworkCSV(text) {
     return data;
 }
 
-// Read network parquet
+// Read network parquet - browser parquet is unreliable, suggest conversion
 async function readNetworkParquet(file) {
-    try {
-        const parquet = await import('https://cdn.jsdelivr.net/npm/parquet-wasm@0.6.0/esm/parquet_wasm.js');
-        await parquet.default();
-        
-        const arrayBuffer = await file.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
-        const arrowTable = parquet.readParquet(uint8Array);
-        
-        const data = [];
-        const numRows = arrowTable.numRows;
-        const schema = arrowTable.schema;
-        
-        const columns = {};
-        for (let i = 0; i < schema.fields.length; i++) {
-            columns[schema.fields[i].name.toLowerCase()] = arrowTable.getChildAt(i);
-        }
-        
-        for (let row = 0; row < numRows; row++) {
-            const record = {};
-            for (const [name, column] of Object.entries(columns)) {
-                let val = column.get(row);
-                if (typeof val === 'bigint') val = Number(val);
-                record[name] = val;
-            }
-            data.push(record);
-        }
-        
-        return data;
-    } catch (err) {
-        throw new Error('Parquet read failed: ' + err.message);
-    }
+    throw new Error('Browser parquet reading is unreliable. Please convert to CSV first using: python3 convert_exact_paths.py ' + file.name);
 }
 
 // Process network paths into edges
