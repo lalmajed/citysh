@@ -1,0 +1,134 @@
+{
+  "district": "Al-Mumayyidiyah",
+  "district_ar": "المميزية",
+  "timestamp": "2026-01-06T12:50:39.517307",
+  "service_urls": [
+    "https://umaps.balady.gov.sa/newProxyUDP/proxy.ashx?https://umapsudp.momrah.gov.sa/server/rest/services/Umaps/Umaps_Identify_Satatistics/MapServer/28/query?where=IN_PARCELID+%3D+%27${rid}%27&text=&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&returnIdsOnly=true&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=pjson`"
+  ],
+  "api_responses": [
+    {
+      "url": "https://js.arcgis.com/4.21/@arcgis/core/assets/esri/geometry/support/pe-wasm.wasm",
+      "status": 200,
+      "type": "Fetch",
+      "requestId": "4633.135"
+    },
+    {
+      "url": "https://umaps.balady.gov.sa/configs/advanced-search/identify-feature.json?v=314",
+      "status": 200,
+      "type": "XHR",
+      "requestId": "4633.149"
+    },
+    {
+      "url": "https://umaps.balady.gov.sa/UMAPI/api/Identity/GenerateArcGISTokenResponse",
+      "status": 200,
+      "type": "XHR",
+      "requestId": "4633.148"
+    },
+    {
+      "url": "https://umaps.balady.gov.sa/newProxyUDP/proxy.ashx?https://umapsudp.momrah.gov.sa/server/rest/services/Umaps/UMaps_AdministrativeData/MapServer/0?f=json",
+      "status": 200,
+      "type": "Fetch",
+      "requestId": "4633.153"
+    },
+    {
+      "url": "https://umaps.balady.gov.sa/newProxyUDP/proxy.ashx?https://umapsudp.momrah.gov.sa/server/rest/services/Umaps/UMaps_AdministrativeData/MapServer/2/query?f=json&objectIds=&orderByFields=&outFields=*&returnGeometry=false&spatialRel=esriSpatialRelIntersects&where=1%3D1",
+      "status": 200,
+      "type": "Fetch",
+      "requestId": "4633.155"
+    },
+    {
+      "url": "https://umaps.balady.gov.sa/newProxyUDP/proxy.ashx?https://umapsudp.momrah.gov.sa/server/rest/services/Umaps/UMaps_AdministrativeData/MapServer/0/query?f=json&resultOffset=0&resultRecordCount=2000&where=1%3D1&objectIds=&orderByFields=&outFields=*&returnGeometry=false&spatialRel=esriSpatialRelIntersects",
+      "status": 200,
+      "type": "Fetch",
+      "requestId": "4633.156"
+    },
+    {
+      "url": "https://js.arcgis.com/4.21/@arcgis/core/assets/esri/widgets/Popup/t9n/Popup_ar.json",
+      "status": 200,
+      "type": "Fetch",
+      "requestId": "4633.178"
+    },
+    {
+      "url": "https://js.arcgis.com/4.21/@arcgis/core/assets/esri/t9n/common_ar.json",
+      "status": 200,
+      "type": "Fetch",
+      "requestId": "4633.179"
+    },
+    {
+      "url": "https://js.arcgis.com/4.21/@arcgis/core/assets/esri/widgets/Attribution/t9n/Attribution_ar.json",
+      "status": 200,
+      "type": "Fetch",
+      "requestId": "4633.176"
+    },
+    {
+      "url": "https://js.arcgis.com/4.21/@arcgis/core/assets/esri/widgets/ScaleBar/t9n/ScaleBar_ar.json",
+      "status": 200,
+      "type": "Fetch",
+      "requestId": "4633.182"
+    },
+    {
+      "url": "https://js.arcgis.com/4.21/@arcgis/core/assets/esri/widgets/Zoom/t9n/Zoom_ar.json",
+      "status": 200,
+      "type": "Fetch",
+      "requestId": "4633.177"
+    },
+    {
+      "url": "https://js.arcgis.com/4.21/@arcgis/core/assets/esri/widgets/Home/t9n/Home_ar.json",
+      "status": 200,
+      "type": "Fetch",
+      "requestId": "4633.181"
+    },
+    {
+      "url": "https://js.arcgis.com/4.21/@arcgis/core/assets/esri/widgets/Locate/t9n/Locate_ar.json",
+      "status": 200,
+      "type": "Fetch",
+      "requestId": "4633.180"
+    },
+    {
+      "url": "https://js.arcgis.com/4.21/@arcgis/core/assets/esri/widgets/Compass/t9n/Compass_ar.json",
+      "status": 200,
+      "type": "Fetch",
+      "requestId": "4633.183"
+    },
+    {
+      "url": "https://umaps.balady.gov.sa/newProxyUDP/proxy.ashx?https://umapsudp.momrah.gov.sa/server/rest/services/Umaps/UMaps_AdministrativeData/MapServer/0/query?f=json&resultOffset=2000&resultRecordCount=2000&where=1%3D1&objectIds=&orderByFields=&outFields=*&returnGeometry=false&spatialRel=esriSpatialRelIntersects",
+      "status": 200,
+      "type": "Fetch",
+      "requestId": "4633.212"
+    },
+    {
+      "url": "https://umaps.balady.gov.sa/newProxyUDP/proxy.ashx?https://umapsudp.momrah.gov.sa/server/rest/services/Umaps/UMaps_AdministrativeData/MapServer/0/query?f=json&resultOffset=4000&resultRecordCount=2000&where=1%3D1&objectIds=&orderByFields=&outFields=*&returnGeometry=false&spatialRel=esriSpatialRelIntersects",
+      "status": 200,
+      "type": "Fetch",
+      "requestId": "4633.213"
+    },
+    {
+      "url": "https://umaps.balady.gov.sa/Lucene-poi-api/api/SearchIndex/search?query=%D8%A7%D9%84%D9%85%D9%85%D9%8A%D8%B2%D9%8A%D8%A9&limit=150&topNumber=500",
+      "status": 200,
+      "type": "XHR",
+      "requestId": "4633.214"
+    },
+    {
+      "url": "https://umaps.balady.gov.sa/Lucene-poi-api/api/SearchIndex/search?query=&limit=150&topNumber=500",
+      "status": 200,
+      "type": "XHR",
+      "requestId": "4633.215"
+    },
+    {
+      "url": "https://umaps.balady.gov.sa/Lucene-poi-api/api/SearchIndex/search?query=%D8%A7%D9%84%D9%85%D9%85%D9%8A%D8%B2%D9%8A%D8%A9&limit=150&topNumber=500",
+      "status": 200,
+      "type": "XHR",
+      "requestId": "4633.216"
+    },
+    {
+      "url": "https://umaps.balady.gov.sa/Lucene-poi-api/api/SearchIndex/search?query=&limit=150&topNumber=500",
+      "status": 200,
+      "type": "XHR",
+      "requestId": "4633.217"
+    }
+  ],
+  "popup_data": [],
+  "page_text": "language\nview_headline\nبحث عن الموقع\nالصفحة الرئيسية\nتكبير\nتصغير\nإعادة تعيين توجيه البوصلة\nوزارة البلديات والإسكان © 2025",
+  "entries_exits": [],
+  "roads": []
+}

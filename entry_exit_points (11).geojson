@@ -1,0 +1,230 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.643436505069936,
+          24.730436078615494
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي الحسن بن المبارك",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64164876360547,
+          24.731875027259303
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي الحسن بن المبارك",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.642432033115824,
+          24.729466307272972
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي العباس اللخمي",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64057840734867,
+          24.730969977916498
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي العباس اللخمي",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64480552455544,
+          24.7327014708409
+        ]
+      },
+      "properties": {
+        "name_ar": "غزة",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64292353275556,
+          24.729940827505743
+        ]
+      },
+      "properties": {
+        "name_ar": "العارض",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64347700917677,
+          24.730475183462477
+        ]
+      },
+      "properties": {
+        "name_ar": "الروض",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.642488947838906,
+          24.732462985242496
+        ]
+      },
+      "properties": {
+        "name_ar": "الروض",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.645189905230005,
+          24.73197637187346
+        ]
+      },
+      "properties": {
+        "name_ar": "ضباء",
+        "width_m": 20,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64290956167855,
+          24.729927339075275
+        ]
+      },
+      "properties": {
+        "name_ar": "العارض",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.6451914870622,
+          24.731973387891777
+        ]
+      },
+      "properties": {
+        "name_ar": "Diba",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.641706981174075,
+          24.73189360587434
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي الحسن بن المبارك",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.643383082694726,
+          24.73038450177623
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي الحسن بن المبارك",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.642437155288754,
+          24.729471252494687
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي العباس اللخمي",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64059202197322,
+          24.730983606719544
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي العباس اللخمي",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    }
+  ]
+}

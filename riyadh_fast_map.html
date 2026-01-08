@@ -101,6 +101,8 @@
         let villaData = [], aptData = [], bizData = [];
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        let mapsLoadAttempts = 0;
+        const MAX_LOAD_ATTEMPTS = 100;
         
         const URLS = {
             villa: 'https://raw.githubusercontent.com/lalmajed/citysh/main/villas_geo.json',
@@ -112,21 +114,50 @@
             document.getElementById('status').textContent = msg;
         }
         
+        // Wait for Google Maps API to be available
+        function waitForGoogleMaps() {
+            mapsLoadAttempts++;
+            if (typeof google !== 'undefined' && google.maps && google.maps.Map) {
+                console.log('Google Maps API loaded after', mapsLoadAttempts, 'attempts');
+                initMap();
+            } else if (mapsLoadAttempts < MAX_LOAD_ATTEMPTS) {
+                setTimeout(waitForGoogleMaps, 100);
+            } else {
+                status('Error: Google Maps failed to load. Please refresh.');
+            }
+        }
+        
+        // Start checking when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', waitForGoogleMaps);
+        } else {
+            waitForGoogleMaps();
+        }
+        
         function initMap() {
+            if (map) return; // Prevent double initialization
+            
             status('Initializing map...');
             
-            map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: 24.7136, lng: 46.6753 },
-                zoom: 12,
-                mapTypeControl: true,
-                streetViewControl: true
-            });
-            
-            map.addListener('idle', render);
-            window.addEventListener('resize', render);
-            
-            loadData();
+            try {
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: { lat: 24.7136, lng: 46.6753 },
+                    zoom: 12,
+                    mapTypeControl: true,
+                    streetViewControl: true
+                });
+                
+                map.addListener('idle', render);
+                window.addEventListener('resize', render);
+                
+                loadData();
+            } catch (err) {
+                status('Error initializing map: ' + err.message);
+            }
         }
+        
+        // Expose for callback compatibility
+        window.initMap = initMap;
         
         async function loadData() {
             try {

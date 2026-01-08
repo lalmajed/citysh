@@ -226,6 +226,9 @@
         let bizData = [];
         let markers = [];
         let overlay;
+        let mapsLoadAttempts = 0;
+        const MAX_LOAD_ATTEMPTS = 100;
+        let CanvasOverlayClass = null;
         
         // GitHub URLs
         const VILLA_URL = 'https://raw.githubusercontent.com/lalmajed/citysh/main/villas_geo.json';
@@ -249,8 +252,30 @@
             document.getElementById('progress-bar').style.width = percent + '%';
         }
         
-        // Custom overlay for canvas rendering
-        class CanvasOverlay extends google.maps.OverlayView {
+        // Wait for Google Maps API to be available
+        function waitForGoogleMaps() {
+            mapsLoadAttempts++;
+            if (typeof google !== 'undefined' && google.maps && google.maps.Map && google.maps.OverlayView) {
+                console.log('Google Maps API loaded after', mapsLoadAttempts, 'attempts');
+                defineCanvasOverlay();
+                initMap();
+            } else if (mapsLoadAttempts < MAX_LOAD_ATTEMPTS) {
+                setTimeout(waitForGoogleMaps, 100);
+            } else {
+                updateProgress('Error: Google Maps failed to load. Please refresh.', 0);
+            }
+        }
+        
+        // Start checking when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', waitForGoogleMaps);
+        } else {
+            waitForGoogleMaps();
+        }
+        
+        // Define CanvasOverlay class after Google Maps is loaded
+        function defineCanvasOverlay() {
+            CanvasOverlayClass = class extends google.maps.OverlayView {
             constructor() {
                 super();
                 this.canvas = null;
@@ -337,27 +362,31 @@
                 this.canvas.parentNode.removeChild(this.canvas);
                 this.canvas = null;
             }
+        };
         }
         
         function initMap() {
-            updateProgress('Initializing Google Maps...', 5);
+            if (map) return; // Prevent double initialization
             
-            map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: 24.7136, lng: 46.6753 },
-                zoom: 11,
-                mapTypeId: 'roadmap',
-                mapTypeControl: true,
-                mapTypeControlOptions: {
-                    style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
-                    position: google.maps.ControlPosition.TOP_RIGHT
-                },
-                streetViewControl: true,
-                fullscreenControl: true
-            });
-            
-            // Create canvas overlay
-            overlay = new CanvasOverlay();
-            overlay.setMap(map);
+            try {
+                updateProgress('Initializing Google Maps...', 5);
+                
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: { lat: 24.7136, lng: 46.6753 },
+                    zoom: 11,
+                    mapTypeId: 'roadmap',
+                    mapTypeControl: true,
+                    mapTypeControlOptions: {
+                        style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+                        position: google.maps.ControlPosition.TOP_RIGHT
+                    },
+                    streetViewControl: true,
+                    fullscreenControl: true
+                });
+                
+                // Create canvas overlay
+                overlay = new CanvasOverlayClass();
+                overlay.setMap(map);
             
             // Click handler for business info
             map.addListener('click', function(e) {
@@ -394,6 +423,10 @@
             
             // Load data
             loadData();
+            } catch (err) {
+                console.error('Error initializing map:', err);
+                updateProgress('Error initializing map: ' + err.message, 0);
+            }
         }
         
         async function loadData() {
@@ -436,8 +469,11 @@
         // Checkbox events
         ['showVillas', 'showApts', 'showShop', 'showAmenity', 'showOffice', 'showTourism', 'showLeisure', 'showHealthcare']
             .forEach(id => {
-                document.getElementById(id).addEventListener('change', () => overlay.draw());
+                document.getElementById(id).addEventListener('change', () => overlay && overlay.draw());
             });
+        
+        // Expose for callback compatibility
+        window.initMap = initMap;
     </script>
     
     <!-- Keyless Google Maps API -->

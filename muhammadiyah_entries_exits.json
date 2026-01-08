@@ -1,0 +1,26 @@
+{
+  "district": "Al Muhammadiyah",
+  "district_id": "00100001063",
+  "total_road_segments": 216,
+  "unique_roads": 215,
+  "estimated_entry_exits": 430,
+  "by_width": {
+    "36m": 2,
+    "30m": 2,
+    "25m": 1,
+    "20m": 46,
+    "18m": 0,
+    "15m": 42,
+    "12m": 58
+  },
+  "primary_entry_exits": {
+    "count": 5,
+    "roads": [
+      "محمد بن يسار",
+      "خزاعة",
+      "خليفة بن بديع",
+      "الشارقة",
+      "فرسان"
+    ]
+  }
+}

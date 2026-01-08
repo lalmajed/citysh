@@ -1,0 +1,45 @@
+{
+  "district": {
+    "name_ar": "المحمدية",
+    "name_en": "Al Muhammadiyah",
+    "id": "00100001063",
+    "area_km2": 4.25,
+    "population": 20283
+  },
+  "roads": {
+    "total_segments": 216,
+    "total_length_m": 35357,
+    "total_length_km": 35.357,
+    "paved_count": 216,
+    "lighted_count": 0,
+    "widths": {
+      "12": 58,
+      "10": 58,
+      "20": 46,
+      "15": 42,
+      "30": 2,
+      "8": 7,
+      "25": 1,
+      "36": 2
+    },
+    "categories": {
+      "0": 216
+    },
+    "unique_streets": 216
+  },
+  "entries_exits": {
+    "count": 0,
+    "streets": []
+  },
+  "parcels": {
+    "total": 2631,
+    "by_land_use": {
+      "100000": 2060,
+      "1000000": 493,
+      "5555": 12,
+      "400000": 33,
+      "300000": 32,
+      "800000": 1
+    }
+  }
+}

@@ -1,0 +1,185 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.643291847191556,
+          24.739143498457448
+        ]
+      },
+      "properties": {
+        "name_ar": "وادي ذي الرمث",
+        "width_m": 15,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64436741810072,
+          24.73599446376386
+        ]
+      },
+      "properties": {
+        "name_ar": "أبي المعالي الجيلي",
+        "width_m": 15,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.645758578991824,
+          24.73944816511691
+        ]
+      },
+      "properties": {
+        "name_ar": "ريدة",
+        "width_m": 15,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.643884911277624,
+          24.739388447436003
+        ]
+      },
+      "properties": {
+        "name_ar": "صخر",
+        "width_m": 15,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64602535606605,
+          24.73683268629902
+        ]
+      },
+      "properties": {
+        "name_ar": "الشعيبات",
+        "width_m": 15,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64253282412123,
+          24.738072961000388
+        ]
+      },
+      "properties": {
+        "name_ar": "حسين البوري",
+        "width_m": 15,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.643283345555446,
+          24.739138215410744
+        ]
+      },
+      "properties": {
+        "name_ar": "Thi Al Ramath Valley",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64387122484547,
+          24.739382797297814
+        ]
+      },
+      "properties": {
+        "name_ar": "Sakar Street",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.646329947695726,
+          24.738067767980066
+        ]
+      },
+      "properties": {
+        "name_ar": "Hilat Al Asmar",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64601458658986,
+          24.736829206427917
+        ]
+      },
+      "properties": {
+        "name_ar": "Al Shoebat",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64251602943117,
+          24.73810637331799
+        ]
+      },
+      "properties": {
+        "name_ar": "Hussein Al Bouri",
+        "width_m": 12,
+        "road_class": "Other"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          46.64634194282286,
+          24.73806021222864
+        ]
+      },
+      "properties": {
+        "name_ar": "حلة الأسمر",
+        "width_m": 10,
+        "road_class": "Other"
+      }
+    }
+  ]
+}

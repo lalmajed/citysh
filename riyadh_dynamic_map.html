@@ -116,7 +116,7 @@
         <div class="progress-bar"><div id="progressFill" class="progress-fill" style="width: 0%"></div></div>
         <div id="loadingStatus">Please wait...</div>
         <div style="font-size: 12px; color: #aaa; max-width: 400px; text-align: center; margin-top: 10px;">
-            💡 Large files with 900K+ rows may take 5-15 seconds to load
+            Large files with 900K+ rows may take 5-15 seconds to load
         </div>
     </div>
     
@@ -126,46 +126,64 @@
     <!-- Info Popup for clicked items -->
     <div id="infoPopup" class="info-popup">
         <span class="close" onclick="closeInfoPopup()">&times;</span>
-        <h3 id="popupTitle">📍 Details</h3>
+        <h3 id="popupTitle">Details</h3>
         <div id="popupContent"></div>
     </div>
     
     <div class="panel">
-        <h2>Riyadh Map - Dynamic Counts</h2>
+        <h2>Riyadh Map <span id="mapTypeLabel" style="font-size:10px;background:#4caf50;color:white;padding:2px 6px;border-radius:3px;margin-left:5px;">Loading...</span></h2>
         
         <!-- Total Stats -->
         <div class="stats-grid">
-            <div class="stat-box" style="background:#9c27b0;"><div class="num" id="totalBldg">0</div><div class="lbl">🏗️ Buildings</div></div>
+            <div class="stat-box" style="background:#9c27b0;"><div class="num" id="totalBldg">0</div><div class="lbl">Buildings</div></div>
             <div class="stat-box apt"><div class="num" id="totalApt">0</div><div class="lbl">🏢 Apartments</div></div>
             <div class="stat-box villa"><div class="num" id="totalVilla">0</div><div class="lbl">🏠 Villas</div></div>
             <div class="stat-box other"><div class="num" id="totalOther">0</div><div class="lbl">📦 Other</div></div>
         </div>
         <div style="text-align:center; font-size:11px; color:#666; margin-bottom:8px;">
-            Total Parcels: <b id="totalParcels">0</b> | POIs: <b id="totalPoi">0</b>
+            Total Parcels: <b id="totalParcels">0</b> | POIs: <b id="totalPoi">0</b> | Roads: <b id="totalRoads">0</b>
         </div>
         
         <!-- Selected District Stats -->
         <div class="district-stats" id="districtStats">
-            <h3 id="districtStatsTitle">📍 DISTRICT: None</h3>
-            <div class="row" style="color:#9c27b0;"><span>🏗️ Buildings:</span><span id="distBldg">0</span></div>
+            <h3 id="districtStatsTitle">DISTRICT: None</h3>
+            <div class="row" style="color:#9c27b0;"><span>Buildings:</span><span id="distBldg">0</span></div>
             <div class="row" style="color:#2196F3;"><span>🏢 Apartments:</span><span id="distApt">0</span></div>
             <div class="row" style="color:#4CAF50;"><span>🏠 Villas:</span><span id="distVilla">0</span></div>
             <div class="row" style="color:#FF9800;"><span>📦 Other:</span><span id="distOther">0</span></div>
             <div class="row total"><span>Total Parcels:</span><span id="distTotal">0</span></div>
-            <div class="row"><span>📍 POIs:</span><span id="distPoi">0</span></div>
+            <div class="row"><span>POIs:</span><span id="distPoi">0</span></div>
             <div class="row total" style="color:#4CAF50;"><span>Villa %:</span><span id="distVillaPct">0%</span></div>
             <div class="row total" style="color:#2196F3;"><span>Apt %:</span><span id="distAptPct">0%</span></div>
+            
+            <!-- Road Stats -->
+            <div style="border-top:2px solid #2196F3;margin-top:8px;padding-top:8px;">
+                <div class="row" style="color:#2196F3;font-weight:bold;"><span>🛣️ ROADS</span><span></span></div>
+                <div class="row"><span>Total Roads:</span><span id="distRoads">0</span></div>
+                <div class="row"><span>Total Length:</span><span id="distRoadLength">0 km</span></div>
+                <div class="row"><span>Major (20m+):</span><span id="distMajorRoads">0</span></div>
+                <div class="row" style="background:#ffebee;margin:0 -10px;padding:3px 10px;color:#c62828;"><span>Entry/Exit Points:</span><span id="distEntryExit" style="font-weight:bold;">0</span></div>
+                <div class="row"><span style="padding-left:10px;">Major (30m+):</span><span id="distMajorCrossings">0</span></div>
+                <div class="row"><span style="padding-left:10px;">Secondary (15-30m):</span><span id="distSecCrossings">0</span></div>
+                <div class="row"><span style="padding-left:10px;">Local (<15m):</span><span id="distLocalCrossings">0</span></div>
+            </div>
+            
+            <!-- Road Width Breakdown -->
+            <div id="distRoadWidths" style="font-size:9px;margin-top:5px;display:none;">
+                <div style="font-weight:bold;margin-bottom:3px;">By Width:</div>
+                <div id="distWidthBreakdown"></div>
+            </div>
         </div>
         
         <!-- Dynamic Counts (In View) -->
         <div class="dynamic-stats">
-            <h3>📍 IN CURRENT VIEW</h3>
-            <div class="row" style="color:#9c27b0;"><span>🏗️ Buildings:</span><span id="viewBldg">0</span></div>
+            <h3>IN CURRENT VIEW</h3>
+            <div class="row" style="color:#9c27b0;"><span>Buildings:</span><span id="viewBldg">0</span></div>
             <div class="row" style="color:#2196F3;"><span>🏢 Apartments:</span><span id="viewApt">0</span></div>
             <div class="row" style="color:#4CAF50;"><span>🏠 Villas:</span><span id="viewVilla">0</span></div>
             <div class="row" style="color:#FF9800;"><span>📦 Other:</span><span id="viewOther">0</span></div>
             <div class="row total"><span>Total Parcels:</span><span id="viewTotal">0</span></div>
-            <div class="row"><span>📍 POIs:</span><span id="viewPoi">0</span></div>
+            <div class="row"><span>POIs:</span><span id="viewPoi">0</span></div>
             <div class="row total" style="color:#4CAF50;"><span>Villa %:</span><span id="viewVillaPct">0%</span></div>
         </div>
         
@@ -234,8 +252,168 @@
                         <span class="name">Districts</span>
                     </div>
                 </div>
+                <div class="layer-control" style="background:#e3f2fd;">
+                    <div class="header">
+                        <input type="checkbox" id="showRoads" checked onchange="render()">
+                        <div class="dot" style="background:#4caf50;"></div>
+                        <span class="name">All Roads</span>
+                        <span class="count" id="roadCount">0</span>
+                    </div>
+                    <div style="font-size:10px;">
+                        Width Scale: <span id="roadWidthVal">1</span>x <input type="range" id="roadWidth" min="0.5" max="3" value="1" step="0.25" oninput="updateSlider('road')">
+                        <label style="margin-top:5px;display:flex;align-items:center;gap:5px;">
+                            <input type="checkbox" id="showRoadLabels" checked onchange="render()"> Show Labels
+                        </label>
+                    </div>
+                </div>
+                <div class="layer-control" style="background:#ffebee;border:2px solid #d32f2f;">
+                    <div class="header">
+                        <input type="checkbox" id="showMajorRoads" checked onchange="render()">
+                        <div class="dot" style="background:#d32f2f;"></div>
+                        <span class="name" style="color:#d32f2f;font-weight:bold;">MAJOR ROADS (30m+)</span>
+                        <span class="count" id="majorRoadCount" style="background:#d32f2f;">0</span>
+                    </div>
+                    <div style="font-size:10px;">
+                        Extra Thickness: <span id="majorRoadThickVal">3</span>x <input type="range" id="majorRoadThick" min="1" max="8" value="3" step="0.5" oninput="document.getElementById('majorRoadThickVal').textContent=this.value;render()">
+                        <label style="margin-top:5px;display:flex;align-items:center;gap:5px;">
+                            <input type="checkbox" id="onlyMajorRoads" onchange="render()"> Show ONLY Major Roads
+                        </label>
+                    </div>
+                </div>
+                <div class="layer-control" style="background:#fce4ec;">
+                    <div class="header">
+                        <input type="checkbox" id="showEntryExit" checked onchange="render()">
+                        <div class="dot" style="background:#e91e63;"></div>
+                        <span class="name">Entry/Exit Points</span>
+                        <span class="count" id="entryExitCount">0</span>
+                    </div>
+                    <div style="font-size:10px;">
+                        Size: <span id="entryExitSizeVal">12</span> <input type="range" id="entryExitSize" min="6" max="24" value="12" step="1" oninput="document.getElementById('entryExitSizeVal').textContent=this.value;render()">
+                    </div>
+                    <div style="font-size:9px;color:#c2185b;margin-top:3px;">
+                        <button id="addEntryExitBtn" onclick="toggleAddEntryExitMode()" style="padding:4px 8px;font-size:9px;background:#e94560;color:white;border:none;border-radius:3px;cursor:pointer;margin-right:4px;">Add Point</button>
+                        <button onclick="exportEntryExitPoints()" style="padding:4px 8px;font-size:9px;background:#2196F3;color:white;border:none;border-radius:3px;cursor:pointer;">Export</button>
+                    </div>
+                    
+                    <!-- Residential Zones Section -->
+                    <div class="layer-toggle" style="background:#f3e5f5;margin-top:8px;padding:8px;border-radius:6px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                            <span class="name" style="color:#7b1fa2;font-weight:bold;">Residential Zones</span>
+                            <span class="count" id="polygonCount" style="background:#9c27b0;">0</span>
+                        </div>
+                        
+                        <!-- Load Zones Files (multiple) -->
+                        <div style="margin-bottom:8px;padding:6px;background:#e1bee7;border-radius:4px;">
+                            <label style="font-size:9px;font-weight:bold;">Load Zone Files:</label>
+                            <input type="file" id="zonesFile" accept=".json,.geojson,.JSON,.GEOJSON" multiple="multiple" style="font-size:9px;width:100%;margin-top:4px;">
+                            <div id="zonesFileStatus" style="font-size:8px;color:#666;margin-top:2px;">Ctrl+click to select multiple files</div>
+                            <button onclick="document.getElementById('zonesFile').click()" style="width:100%;margin-top:4px;padding:6px;font-size:10px;background:#7b1fa2;color:white;border:none;border-radius:3px;cursor:pointer;font-weight:bold;">Select Zone Files</button>
+                        </div>
+                        
+                        <!-- Zone Creation Controls -->
+                        <div style="margin-bottom:8px;padding:6px;background:#ede7f6;border-radius:4px;">
+                            <label style="font-size:9px;">Or create manually - Min Road Width: <span id="zoneWidthVal">30</span>m</label>
+                            <input type="range" id="zoneRoadWidth" min="20" max="50" value="30" step="5" style="width:100%;" oninput="document.getElementById('zoneWidthVal').textContent=this.value">
+                            <button id="createZoneBtn" onclick="toggleCreateZoneMode()" style="padding:5px 8px;font-size:9px;background:#9c27b0;color:white;border:none;border-radius:3px;cursor:pointer;width:100%;margin-top:4px;">Create Zone</button>
+                        </div>
+                        
+                        <!-- Zones List -->
+                        <div id="zonesList" style="max-height:200px;overflow-y:auto;margin-bottom:8px;">
+                            <div style="font-size:9px;color:#666;padding:8px;text-align:center;">No zones created yet</div>
+                        </div>
+                        
+                        <!-- Selected Zone Info & Stats -->
+                        <div id="selectedZoneInfo" style="display:none;background:#e1bee7;padding:10px;border-radius:6px;margin-bottom:8px;border:2px solid #9c27b0;">
+                            <div style="font-weight:bold;color:#7b1fa2;font-size:12px;margin-bottom:8px;border-bottom:1px solid #ce93d8;padding-bottom:6px;">
+                                <span id="selectedZoneName">Zone 1</span>
+                            </div>
+                            
+                            <!-- Parcel/Building Stats -->
+                            <div style="background:#f3e5f5;padding:8px;border-radius:4px;margin-bottom:8px;">
+                                <div style="font-size:9px;font-weight:bold;color:#7b1fa2;margin-bottom:6px;">Inside Zone:</div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:9px;">
+                                    <div style="background:white;padding:4px;border-radius:4px;text-align:center;">
+                                        <div style="font-size:14px;font-weight:bold;color:#9c27b0;" id="zoneStatBuildings">0</div>
+                                        <div style="color:#666;">Buildings</div>
+                                    </div>
+                                    <div style="background:white;padding:4px;border-radius:4px;text-align:center;">
+                                        <div style="font-size:14px;font-weight:bold;color:#2196F3;" id="zoneStatApts">0</div>
+                                        <div style="color:#666;">Apts</div>
+                                    </div>
+                                    <div style="background:white;padding:4px;border-radius:4px;text-align:center;">
+                                        <div style="font-size:14px;font-weight:bold;color:#4CAF50;" id="zoneStatVillas">0</div>
+                                        <div style="color:#666;">Villas</div>
+                                    </div>
+                                    <div style="background:white;padding:4px;border-radius:4px;text-align:center;">
+                                        <div style="font-size:14px;font-weight:bold;color:#FF9800;" id="zoneStatOther">0</div>
+                                        <div style="color:#666;">Other</div>
+                                    </div>
+                                    <div style="background:white;padding:4px;border-radius:4px;text-align:center;">
+                                        <div style="font-size:14px;font-weight:bold;color:#607d8b;" id="zoneStatParcels">0</div>
+                                        <div style="color:#666;">Parcels</div>
+                                    </div>
+                                    <div style="background:white;padding:4px;border-radius:4px;text-align:center;">
+                                        <div style="font-size:14px;font-weight:bold;color:#e91e63;" id="zoneStatPOIs">0</div>
+                                        <div style="color:#666;">POIs</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Entry/Exit Stats -->
+                            <div id="zoneStats" style="background:#f3e5f5;padding:8px;border-radius:4px;margin-bottom:8px;">
+                                <div style="font-size:9px;font-weight:bold;color:#7b1fa2;margin-bottom:6px;">Entry/Exit Points:</div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:10px;">
+                                    <div style="background:white;padding:6px;border-radius:4px;text-align:center;">
+                                        <div style="font-size:16px;font-weight:bold;color:#e91e63;" id="statTotalEntries">0</div>
+                                        <div style="color:#666;">Total Exits</div>
+                                    </div>
+                                    <div style="background:white;padding:6px;border-radius:4px;text-align:center;">
+                                        <div style="font-size:16px;font-weight:bold;color:#d32f2f;" id="statMajorRoads">0</div>
+                                        <div style="color:#666;">Major (30m+)</div>
+                                    </div>
+                                    <div style="background:white;padding:6px;border-radius:4px;text-align:center;">
+                                        <div style="font-size:16px;font-weight:bold;color:#ff9800;" id="statSecondaryRoads">0</div>
+                                        <div style="color:#666;">Secondary</div>
+                                    </div>
+                                    <div style="background:white;padding:6px;border-radius:4px;text-align:center;">
+                                        <div style="font-size:16px;font-weight:bold;color:#2196f3;" id="statAvgWidth">0</div>
+                                        <div style="color:#666;">Avg Width (m)</div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Road List -->
+                                <div style="margin-top:8px;max-height:100px;overflow-y:auto;background:white;border-radius:4px;padding:6px;">
+                                    <div style="font-size:9px;font-weight:bold;color:#7b1fa2;margin-bottom:4px;">Entry/Exit Roads:</div>
+                                    <div id="zoneRoadList" style="font-size:9px;color:#333;"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Dot Size Slider -->
+                            <div style="margin-bottom:8px;background:white;padding:6px;border-radius:4px;">
+                                <label style="font-size:9px;color:#666;">Entry/Exit Dot Size: <span id="dotSizeVal">12</span></label>
+                                <input type="range" id="dotSizeSlider" min="5" max="25" value="12" style="width:100%;" oninput="document.getElementById('dotSizeVal').textContent=this.value; renderZoneEntryExits();">
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                                <button onclick="calculateZoneEntryExits()" style="padding:4px 8px;font-size:9px;background:#4caf50;color:white;border:none;border-radius:3px;cursor:pointer;">Calculate</button>
+                                <button id="addZoneEntryBtn" onclick="toggleAddZoneEntryMode()" style="padding:4px 8px;font-size:9px;background:#e94560;color:white;border:none;border-radius:3px;cursor:pointer;">Add Point</button>
+                                <button onclick="exportZoneEntryExits()" style="padding:4px 8px;font-size:9px;background:#2196F3;color:white;border:none;border-radius:3px;cursor:pointer;">Export</button>
+                                <button onclick="clearZoneEntryExits()" style="padding:4px 8px;font-size:9px;background:#757575;color:white;border:none;border-radius:3px;cursor:pointer;">Clear</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Zone Actions -->
+                        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                            <button onclick="mergeAllZones()" style="padding:4px 6px;font-size:8px;background:#ff9800;color:white;border:none;border-radius:3px;cursor:pointer;">Merge</button>
+                            <button onclick="exportPolygons()" style="padding:4px 6px;font-size:8px;background:#2196F3;color:white;border:none;border-radius:3px;cursor:pointer;">Export All</button>
+                            <button onclick="exportAllZonesWithEntries()" style="padding:4px 6px;font-size:8px;background:#673ab7;color:white;border:none;border-radius:3px;cursor:pointer;">Export + Entries</button>
+                            <button onclick="clearAllPolygons()" style="padding:4px 6px;font-size:8px;background:#757575;color:white;border:none;border-radius:3px;cursor:pointer;">Clear</button>
+                        </div>
+                    </div>
+                </div>
                 <div class="click-toggle">
-                    <label><input type="checkbox" id="enableClick" checked> 🖱️ Enable click to view details</label>
+                    <label><input type="checkbox" id="enableClick" checked> Enable click to view details</label>
                     <div style="font-size:9px;color:#666;margin-top:3px;margin-left:20px;">
                         Click on POI/Parcel/District to see info. Disable to freely pan/zoom.
                     </div>
@@ -246,28 +424,38 @@
         <!-- Data Files -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                📂 DATA FILES <span>▼</span>
+                DATA FILES <span>▼</span>
             </div>
             <div class="section-content open">
                 <div class="file-input">
-                    <label>🏗️ MS Buildings JSON:</label>
+                    <label>MS Buildings JSON:</label>
                     <input type="file" id="buildingsFile" accept=".json">
                     <div id="buildingsStatus" class="file-status">Upload buildings JSON</div>
                 </div>
                 <div class="file-input">
-                    <label>📊 Parcels CSV:</label>
+                    <label>Parcels CSV:</label>
                     <input type="file" id="parcelsFile" accept=".csv">
                     <div id="parcelsStatus" class="file-status">Use <b>riyadh_parcels_classified.csv</b> for best results</div>
                 </div>
                 <div class="file-input">
-                    <label>📍 POI CSV (riyadh_pois.csv):</label>
+                    <label>POI CSV (riyadh_pois.csv):</label>
                     <input type="file" id="poiFile" accept=".csv">
                     <div id="poiStatus" class="file-status">Upload POI CSV</div>
                 </div>
                 <div class="file-input">
-                    <label>🗺️ Districts GeoJSON:</label>
+                    <label>Districts GeoJSON:</label>
                     <input type="file" id="distFile" accept=".json,.geojson">
                     <div id="distStatus" class="file-status">Upload districts JSON</div>
+                </div>
+                <div class="file-input" style="background:#e3f2fd;padding:8px;border-radius:6px;margin-top:8px;">
+                    <label>Roads GeoJSON:</label>
+                    <input type="file" id="roadsFile" accept=".json,.geojson">
+                    <div id="roadsStatus" class="file-status">Upload roads GeoJSON for visualization</div>
+                </div>
+                <div class="file-input" style="background:#ffe0e0;padding:8px;border-radius:6px;margin-top:8px;">
+                    <label>Entry/Exit Points GeoJSON:</label>
+                    <input type="file" id="entryExitFile" accept=".json,.geojson">
+                    <div id="entryExitStatus" class="file-status">Upload entry_exit_points.geojson</div>
                 </div>
             </div>
         </div>
@@ -275,7 +463,7 @@
         <!-- POI Categories -->
         <div class="section">
             <div class="section-header" onclick="toggleSection(this)">
-                📍 POI CATEGORIES (<span id="poiCatCount">0</span>) <span>▼</span>
+                POI CATEGORIES (<span id="poiCatCount">0</span>) <span>▼</span>
             </div>
             <div class="section-content">
                 <div style="margin-bottom:5px;">
@@ -312,21 +500,108 @@
         <div style="margin-top:8px;font-size:9px;color:#888;text-align:center;">
             Zoom: <span id="zoomLevel">11</span> | <a href="#" onclick="resetView();return false;">Reset View</a>
         </div>
+        
+        <!-- Road Legend (shown when roads loaded) -->
+        <div id="roadLegend" style="display:none;margin-top:10px;padding:8px;background:#e3f2fd;border-radius:6px;">
+            <div style="font-weight:600;font-size:11px;margin-bottom:5px;">Road Width Visualization</div>
+            
+            <!-- Road Toggle Controls -->
+            <div style="margin-bottom:8px;padding:6px;background:white;border-radius:4px;">
+                <label style="display:flex;align-items:center;gap:6px;font-size:10px;cursor:pointer;">
+                    <input type="checkbox" id="showRoadsToggle" checked onchange="toggleRoads()">
+                    Show Roads on Map
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:10px;cursor:pointer;margin-top:4px;">
+                    <input type="checkbox" id="showMajorRoadsOnly" onchange="toggleRoads()">
+                    Major Roads Only (30m+)
+                </label>
+            </div>
+            
+            <!-- Color Legend -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:9px;">
+                <div><span style="display:inline-block;width:20px;height:6px;background:#d32f2f;border-radius:2px;"></span> 40m+ (Highway)</div>
+                <div><span style="display:inline-block;width:20px;height:5px;background:#f44336;border-radius:2px;"></span> 30m+ (Major)</div>
+                <div><span style="display:inline-block;width:20px;height:4px;background:#ff9800;border-radius:2px;"></span> 20m+ (Secondary)</div>
+                <div><span style="display:inline-block;width:20px;height:3px;background:#ffc107;border-radius:2px;"></span> 12m+ (Tertiary)</div>
+                <div><span style="display:inline-block;width:20px;height:2px;background:#9e9e9e;border-radius:2px;"></span> &lt;12m (Local)</div>
+            </div>
+            <div style="margin-top:8px;border-top:1px solid #90caf9;padding-top:8px;">
+                <div style="font-size:10px;"><span style="display:inline-block;width:12px;height:12px;background:#d32f2f;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);vertical-align:middle;"></span> Road Entry/Exit Point</div>
+            </div>
+        </div>
     </div>
 
     <script>
-        let map;
         let buildings = [];    // GeoJSON features with polygon coordinates
         let parcels = [];      // {lat, lng, type: 'apt'|'villa'|'other', ...}
         let poiData = [];      // {lat, lng, layer, name_ar, name_en}
         let districts = [];    // GeoJSON features
+        let roads = [];        // GeoJSON features for roads
+        let entryExitPoints = []; // Entry/Exit boundary crossing points
         let selectedDistrict = null;
         let activePoiCategories = new Set();
         let infoPopup = null;
         let buildingsFileName = '';
+        let mapsLoadAttempts = 0;
+        const MAX_LOAD_ATTEMPTS = 300; // 30 seconds
+        
+        // Road colors by width
+        function getRoadColor(width) {
+            if (width >= 36) return '#d32f2f';  // Major arterial - red
+            if (width >= 30) return '#ff5722';  // Arterial - deep orange
+            if (width >= 25) return '#ff9800';  // Collector - orange
+            if (width >= 20) return '#ffc107';  // Main road - amber
+            if (width >= 15) return '#8bc34a';  // Secondary - light green
+            if (width >= 12) return '#4caf50';  // Local - green
+            if (width >= 10) return '#009688';  // Minor - teal
+            return '#607d8b';                   // Alley - blue grey
+        }
+        
+        function getRoadLineWidth(width, zoom) {
+            const baseWidth = Math.max(1, (zoom - 10) * 0.8);
+            if (width >= 30) return baseWidth * 4;
+            if (width >= 20) return baseWidth * 3;
+            if (width >= 15) return baseWidth * 2.5;
+            if (width >= 10) return baseWidth * 2;
+            return baseWidth * 1.5;
+        }
         
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        
+        // Map variable
+        var googleMap = null;
+        var roadPolylines = []; // Store road polylines for visualization
+        
+        // Initialize Google Maps - MUST be global for keyless API callback
+        window.initMap = function() {
+            console.log('initMap called!');
+            googleMap = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 24.7136, lng: 46.6753 },
+                zoom: 11,
+                mapTypeControl: true,
+                gestureHandling: 'greedy'
+            });
+            
+            document.getElementById('mapTypeLabel').textContent = 'Google Maps';
+            
+            // Initialize zone layers as arrays for Google Maps
+            zonePolygonsLayer = [];
+            zoneEntryExitMarkers = [];
+            
+            // Add listeners
+            googleMap.addListener('idle', render);
+            googleMap.addListener('click', function(e) {
+                handleMapClick({
+                    latLng: { lat: function() { return e.latLng.lat(); }, lng: function() { return e.latLng.lng(); } },
+                    pixel: { x: e.pixel ? e.pixel.x : 0, y: e.pixel ? e.pixel.y : 0 }
+                });
+            });
+            
+            window.addEventListener('resize', render);
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            console.log('Google Maps ready!');
+        };
         
         // POI Colors by layer
         const poiColors = {
@@ -371,16 +646,19 @@
         }
         
         function updateSlider(layer) {
-            document.getElementById(layer + 'SizeVal').textContent = document.getElementById(layer + 'Size').value;
-            const opacityEl = document.getElementById(layer + 'Opacity');
-            const opacityVal = document.getElementById(layer + 'OpacityVal');
-            if (opacityEl && opacityVal) opacityVal.textContent = opacityEl.value;
+            if (layer === 'road') {
+                document.getElementById('roadWidthVal').textContent = document.getElementById('roadWidth').value;
+            } else {
+                document.getElementById(layer + 'SizeVal').textContent = document.getElementById(layer + 'Size').value;
+                const opacityEl = document.getElementById(layer + 'Opacity');
+                const opacityVal = document.getElementById(layer + 'OpacityVal');
+                if (opacityEl && opacityVal) opacityVal.textContent = opacityEl.value;
+            }
             render();
         }
         
         function resetView() {
-            map.setCenter({lat: 24.7136, lng: 46.6753});
-            map.setZoom(11);
+            setMapCenter(24.7136, 46.6753, 11);
         }
         
         // FAST CSV Parser - simple split for speed
@@ -415,7 +693,1114 @@
             return inside;
         }
         
+        // Line intersection for entry/exit detection
+        function lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {
+            const denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+            if (Math.abs(denom) < 1e-10) return null;
+            const ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom;
+            const ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denom;
+            if (ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1) {
+                return { x: x1 + ua * (x2 - x1), y: y1 + ua * (y2 - y1) };
+            }
+            return null;
+        }
+        
+        // Entry/exit points management
+        let addEntryExitMode = false;
+        
+        // Auto-generated zone polygons
+        let drawnPolygons = [];
+        
+        let zonePolygonsLayer = null;
+        let createZoneMode = false;
+        
+        // Zone-specific entry/exit management
+        let selectedZoneIndex = -1;
+        let addZoneEntryMode = false;
+        let zoneEntryExitMarkers = null; // Leaflet layer for zone entry/exit markers
+        
+        // Update zones list in panel
+        function updateZonesList() {
+            const container = document.getElementById('zonesList');
+            if (!container) return;
+            
+            if (drawnPolygons.length === 0) {
+                container.innerHTML = '<div style="font-size:9px;color:#666;padding:8px;text-align:center;">No zones created yet</div>';
+                document.getElementById('selectedZoneInfo').style.display = 'none';
+                selectedZoneIndex = -1;
+                return;
+            }
+            
+            let html = '';
+            drawnPolygons.forEach((zone, idx) => {
+                const entryCount = zone.entryExitPoints ? zone.entryExitPoints.length : 0;
+                const isSelected = idx === selectedZoneIndex;
+                html += `
+                    <div onclick="selectZone(${idx})" style="
+                        padding:6px 8px;
+                        margin-bottom:4px;
+                        background:${isSelected ? '#ce93d8' : '#ede7f6'};
+                        border-radius:4px;
+                        cursor:pointer;
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        border-left:4px solid ${zone.color || '#9c27b0'};
+                        ${isSelected ? 'box-shadow:0 2px 4px rgba(0,0,0,0.2);' : ''}
+                    ">
+                        <span style="font-size:10px;font-weight:${isSelected ? 'bold' : 'normal'};">${zone.name}</span>
+                        <div style="display:flex;align-items:center;gap:4px;">
+                            <span style="background:#e91e63;color:white;padding:2px 5px;border-radius:8px;font-size:8px;">${entryCount}</span>
+                            <button onclick="event.stopPropagation();deleteZone(${idx})" style="background:#d32f2f;color:white;border:none;padding:2px 5px;border-radius:3px;font-size:8px;cursor:pointer;">X</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            document.getElementById('polygonCount').textContent = drawnPolygons.length;
+        }
+        
+        // Select a zone
+        function selectZone(idx) {
+            selectedZoneIndex = idx;
+            const zone = drawnPolygons[idx];
+            
+            if (!zone) {
+                document.getElementById('selectedZoneInfo').style.display = 'none';
+                return;
+            }
+            
+            // Show selected zone info panel
+            document.getElementById('selectedZoneInfo').style.display = 'block';
+            document.getElementById('selectedZoneName').textContent = zone.name;
+            
+            // Calculate parcel/building/POI stats inside zone
+            let zoneBldgCount = 0, zoneAptCount = 0, zoneVillaCount = 0, zoneOtherCount = 0, zonePOICount = 0;
+            
+            if (zone.coordinates && zone.coordinates.length >= 3) {
+                // Zone coordinates are [lng, lat] arrays - use directly for pointInPolygon
+                const zonePolygon = zone.coordinates;
+                
+                // Calculate bounds for faster filtering
+                let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+                zonePolygon.forEach(([lng, lat]) => {
+                    if (lat < minLat) minLat = lat;
+                    if (lat > maxLat) maxLat = lat;
+                    if (lng < minLng) minLng = lng;
+                    if (lng > maxLng) maxLng = lng;
+                });
+                
+                // Count buildings inside zone
+                if (buildings && buildings.length > 0) {
+                    buildings.forEach(b => {
+                        let lat, lng;
+                        if (b.geometry && b.geometry.coordinates) {
+                            // GeoJSON format - get centroid
+                            const coords = b.geometry.type === 'Polygon' ? b.geometry.coordinates[0] : 
+                                          (b.geometry.type === 'Point' ? [b.geometry.coordinates] : null);
+                            if (coords && coords.length > 0) {
+                                lng = coords[0][0];
+                                lat = coords[0][1];
+                            }
+                        } else if (Array.isArray(b)) {
+                            lat = b[0]; lng = b[1];
+                        } else if (b.lat !== undefined) {
+                            lat = b.lat; lng = b.lng || b.lon;
+                        }
+                        // Bounds check first for speed
+                        if (lat && lng && lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng) {
+                            if (pointInPolygon(lat, lng, zonePolygon)) {
+                                zoneBldgCount++;
+                            }
+                        }
+                    });
+                }
+                
+                // Count parcels inside zone
+                if (parcels && parcels.length > 0) {
+                    parcels.forEach(p => {
+                        if (!p || !p.lat || !p.lng) return;
+                        // Bounds check first for speed
+                        if (p.lat >= minLat && p.lat <= maxLat && p.lng >= minLng && p.lng <= maxLng) {
+                            if (pointInPolygon(p.lat, p.lng, zonePolygon)) {
+                                if (p.type === 'apt') zoneAptCount++;
+                                else if (p.type === 'villa') zoneVillaCount++;
+                                else zoneOtherCount++;
+                            }
+                        }
+                    });
+                }
+                
+                // Count POIs inside zone
+                if (poiData && poiData.length > 0) {
+                    poiData.forEach(poi => {
+                        if (!poi) return;
+                        const lat = poi.lat || poi.latitude;
+                        const lng = poi.lng || poi.lon || poi.longitude;
+                        // Bounds check first for speed
+                        if (lat && lng && lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng) {
+                            if (pointInPolygon(lat, lng, zonePolygon)) {
+                                zonePOICount++;
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Update parcel/building stats display
+            document.getElementById('zoneStatBuildings').textContent = zoneBldgCount.toLocaleString();
+            document.getElementById('zoneStatApts').textContent = zoneAptCount.toLocaleString();
+            document.getElementById('zoneStatVillas').textContent = zoneVillaCount.toLocaleString();
+            document.getElementById('zoneStatOther').textContent = zoneOtherCount.toLocaleString();
+            document.getElementById('zoneStatParcels').textContent = (zoneAptCount + zoneVillaCount + zoneOtherCount).toLocaleString();
+            document.getElementById('zoneStatPOIs').textContent = zonePOICount.toLocaleString();
+            
+            // Calculate entry/exit stats
+            const entries = zone.entryExitPoints || [];
+            const totalEntries = entries.length;
+            const majorRoads = entries.filter(e => e.width >= 30).length;
+            const secondaryRoads = totalEntries - majorRoads;
+            const avgWidth = totalEntries > 0 ? Math.round(entries.reduce((sum, e) => sum + (e.width || 0), 0) / totalEntries) : 0;
+            
+            // Update entry/exit stats display
+            document.getElementById('statTotalEntries').textContent = totalEntries;
+            document.getElementById('statMajorRoads').textContent = majorRoads;
+            document.getElementById('statSecondaryRoads').textContent = secondaryRoads;
+            document.getElementById('statAvgWidth').textContent = avgWidth;
+            
+            // Build road list
+            const roadListEl = document.getElementById('zoneRoadList');
+            if (totalEntries === 0) {
+                roadListEl.innerHTML = '<div style="color:#999;">No entry/exit points</div>';
+            } else {
+                // Group by road name and show widths
+                const roadGroups = {};
+                entries.forEach(e => {
+                    const name = e.roadName || 'Unknown';
+                    if (!roadGroups[name]) {
+                        roadGroups[name] = { count: 0, widths: [] };
+                    }
+                    roadGroups[name].count++;
+                    roadGroups[name].widths.push(e.width || 0);
+                });
+                
+                let roadHtml = '';
+                Object.entries(roadGroups)
+                    .sort((a, b) => Math.max(...b[1].widths) - Math.max(...a[1].widths))
+                    .forEach(([name, data]) => {
+                        const maxWidth = Math.max(...data.widths);
+                        const isMajor = maxWidth >= 30;
+                        const color = isMajor ? '#d32f2f' : '#666';
+                        const badge = isMajor ? '<span style="background:#d32f2f;color:white;padding:1px 4px;border-radius:3px;font-size:8px;margin-left:4px;">MAJOR</span>' : '';
+                        roadHtml += `<div style="padding:2px 0;border-bottom:1px solid #eee;color:${color};">
+                            ${name} - ${maxWidth}m ${data.count > 1 ? '(x' + data.count + ')' : ''} ${badge}
+                        </div>`;
+                    });
+                roadListEl.innerHTML = roadHtml;
+            }
+            
+            // Zoom to zone
+            if (zone.coordinates && zone.coordinates.length > 0) {
+                let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+                zone.coordinates.forEach(c => {
+                    minLng = Math.min(minLng, c[0]);
+                    maxLng = Math.max(maxLng, c[0]);
+                    minLat = Math.min(minLat, c[1]);
+                    maxLat = Math.max(maxLat, c[1]);
+                });
+                fitMapBounds(maxLat, minLat, maxLng, minLng, 50);
+            }
+            
+            // Update zones list to show selection
+            updateZonesList();
+            
+            // Render zone entry/exit points on map
+            renderZoneEntryExits();
+            
+            // Update main district stats panel with zone stats
+            document.getElementById('districtStats').classList.add('active');
+            document.getElementById('districtStatsTitle').textContent = 'ZONE: ' + zone.name;
+            document.getElementById('distBldg').textContent = zoneBldgCount.toLocaleString();
+            document.getElementById('distApt').textContent = zoneAptCount.toLocaleString();
+            document.getElementById('distVilla').textContent = zoneVillaCount.toLocaleString();
+            document.getElementById('distOther').textContent = zoneOtherCount.toLocaleString();
+            document.getElementById('distTotal').textContent = (zoneAptCount + zoneVillaCount + zoneOtherCount).toLocaleString();
+            document.getElementById('distPoi').textContent = zonePOICount.toLocaleString();
+            
+            // Calculate percentages
+            const totalParcels = zoneAptCount + zoneVillaCount + zoneOtherCount;
+            const villaPct = totalParcels > 0 ? Math.round((zoneVillaCount / totalParcels) * 100) : 0;
+            const aptPct = totalParcels > 0 ? Math.round((zoneAptCount / totalParcels) * 100) : 0;
+            document.getElementById('distVillaPct').textContent = villaPct + '%';
+            document.getElementById('distAptPct').textContent = aptPct + '%';
+            
+            // Update road stats in main panel
+            document.getElementById('distEntryExit').textContent = totalEntries;
+            document.getElementById('distMajorCrossings').textContent = majorRoads;
+            document.getElementById('distSecCrossings').textContent = secondaryRoads;
+            document.getElementById('distLocalCrossings').textContent = entries.filter(e => e.width < 15).length;
+            
+            showToast(zone.name + ': ' + totalEntries + ' exits (' + majorRoads + ' major)', '#9c27b0');
+        }
+        
+        // Calculate entry/exit points for selected zone
+        function calculateZoneEntryExits() {
+            if (selectedZoneIndex < 0 || !drawnPolygons[selectedZoneIndex]) {
+                showToast('Select a zone first', '#ff9800');
+                return;
+            }
+            
+            const zone = drawnPolygons[selectedZoneIndex];
+            if (!zone.coordinates || zone.coordinates.length < 3) {
+                showToast('Invalid zone boundary', '#d32f2f');
+                return;
+            }
+            
+            if (!roads || roads.length === 0) {
+                showToast('Load roads data first', '#ff9800');
+                return;
+            }
+            
+            const entries = [];
+            const boundary = zone.coordinates;
+            
+            // For each road, check intersections with zone boundary
+            roads.forEach(road => {
+                if (!road.geometry || !road.geometry.coordinates) return;
+                
+                const coords = road.geometry.type === 'MultiLineString' 
+                    ? road.geometry.coordinates.flat() 
+                    : road.geometry.coordinates;
+                
+                for (let i = 0; i < coords.length - 1; i++) {
+                    const [x1, y1] = coords[i];
+                    const [x2, y2] = coords[i + 1];
+                    
+                    // Check against each boundary segment
+                    for (let j = 0; j < boundary.length; j++) {
+                        const [bx1, by1] = boundary[j];
+                        const [bx2, by2] = boundary[(j + 1) % boundary.length];
+                        
+                        const intersection = lineIntersect(x1, y1, x2, y2, bx1, by1, bx2, by2);
+                        if (intersection) {
+                            // Check if this point is not too close to existing entries
+                            const isDuplicate = entries.some(e => {
+                                const dist = Math.sqrt(Math.pow(e.lng - intersection.x, 2) + Math.pow(e.lat - intersection.y, 2));
+                                return dist < 0.0002; // ~20m
+                            });
+                            
+                            if (!isDuplicate) {
+                                entries.push({
+                                    lat: intersection.y,
+                                    lng: intersection.x,
+                                    roadName: road.properties?.name || road.properties?.NAME || 'Unknown Road',
+                                    width: parseFloat(road.properties?.width || road.properties?.WIDTH) || 10,
+                                    zoneIndex: selectedZoneIndex
+                                });
+                            }
+                        }
+                    }
+                }
+            });
+            
+            zone.entryExitPoints = entries;
+            showToast('Found ' + entries.length + ' entry/exit points for ' + zone.name, '#4caf50');
+            
+            updateZonesList();
+            renderZoneEntryExits();
+        }
+        
+        // Render zone entry/exit points on map
+        function renderZoneEntryExits() {
+            if (!googleMap) return;
+            
+            // Clear existing markers
+            if (Array.isArray(zoneEntryExitMarkers)) {
+                zoneEntryExitMarkers.forEach(m => m.setMap(null));
+                zoneEntryExitMarkers = [];
+            }
+            
+            if (selectedZoneIndex < 0 || !drawnPolygons[selectedZoneIndex]) return;
+            
+            const zone = drawnPolygons[selectedZoneIndex];
+            if (!zone.entryExitPoints || zone.entryExitPoints.length === 0) return;
+            
+            // Get dot size from slider
+            const baseSize = parseInt(document.getElementById('dotSizeSlider')?.value || 12);
+            
+            zone.entryExitPoints.forEach((point, idx) => {
+                const isMajor = point.width >= 30;
+                const color = isMajor ? '#d32f2f' : '#e91e63';
+                const scale = isMajor ? baseSize / 10 : (baseSize * 0.7) / 10;
+                
+                const marker = new google.maps.Marker({
+                    position: { lat: point.lat, lng: point.lng },
+                    map: googleMap,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: scale * 2,
+                        fillColor: color,
+                        fillOpacity: 0.9,
+                        strokeColor: '#fff',
+                        strokeWeight: 2
+                    }
+                });
+                
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `
+                        <div style="min-width:150px;">
+                            <b style="color:${color};">${point.roadName || 'Entry/Exit'}</b><br>
+                            Width: ${point.width || 'N/A'}m<br>
+                            Zone: ${zone.name}<br>
+                            <button onclick="deleteZoneEntryPoint(${idx})" style="margin-top:8px;padding:6px 12px;background:#d32f2f;color:white;border:none;border-radius:4px;cursor:pointer;">Delete</button>
+                        </div>
+                    `
+                });
+                
+                marker.addListener('click', () => infoWindow.open(googleMap, marker));
+                zoneEntryExitMarkers.push(marker);
+            });
+        }
+        
+        // Toggle add zone entry mode
+        function toggleAddZoneEntryMode() {
+            if (selectedZoneIndex < 0) {
+                showToast('Select a zone first', '#ff9800');
+                return;
+            }
+            
+            addZoneEntryMode = !addZoneEntryMode;
+            const btn = document.getElementById('addZoneEntryBtn');
+            if (addZoneEntryMode) {
+                btn.style.background = '#4caf50';
+                btn.textContent = 'Click on map...';
+                showToast('Click on map to add entry/exit point', '#4caf50');
+            } else {
+                btn.style.background = '#e94560';
+                btn.textContent = 'Add Point';
+            }
+        }
+        
+        // Add entry point to zone
+        function addZoneEntryPoint(lat, lng) {
+            if (selectedZoneIndex < 0 || !drawnPolygons[selectedZoneIndex]) return;
+            
+            const zone = drawnPolygons[selectedZoneIndex];
+            if (!zone.entryExitPoints) zone.entryExitPoints = [];
+            
+            // Prompt for road name and width
+            const roadName = prompt('Road name:', 'Entry/Exit') || 'Entry/Exit';
+            const widthStr = prompt('Road width (m):', '15');
+            const width = parseFloat(widthStr) || 15;
+            
+            zone.entryExitPoints.push({
+                lat: lat,
+                lng: lng,
+                roadName: roadName,
+                width: width,
+                zoneIndex: selectedZoneIndex
+            });
+            
+            addZoneEntryMode = false;
+            const btn = document.getElementById('addZoneEntryBtn');
+            btn.style.background = '#e94560';
+            btn.textContent = 'Add Point';
+            
+            updateZonesList();
+            renderZoneEntryExits();
+            
+            // Update stats display
+            selectZone(selectedZoneIndex);
+            
+            showToast('Entry point added: ' + roadName, '#4caf50');
+        }
+        
+        // Delete zone entry point
+        function deleteZoneEntryPoint(idx) {
+            if (selectedZoneIndex < 0 || !drawnPolygons[selectedZoneIndex]) return;
+            
+            const zone = drawnPolygons[selectedZoneIndex];
+            if (zone.entryExitPoints && zone.entryExitPoints[idx]) {
+                // Close info window
+                if (currentInfoWindow) currentInfoWindow.close();
+                
+                zone.entryExitPoints.splice(idx, 1);
+                updateZonesList();
+                renderZoneEntryExits();
+                
+                // Update stats display
+                selectZone(selectedZoneIndex);
+                
+                showToast('Entry point deleted', '#757575');
+            }
+        }
+        
+        // Clear zone entry/exit points
+        function clearZoneEntryExits() {
+            if (selectedZoneIndex < 0 || !drawnPolygons[selectedZoneIndex]) return;
+            
+            drawnPolygons[selectedZoneIndex].entryExitPoints = [];
+            updateZonesList();
+            renderZoneEntryExits();
+            showToast('Zone entry points cleared', '#757575');
+        }
+        
+        // Export zone entry/exit points
+        function exportZoneEntryExits() {
+            if (selectedZoneIndex < 0 || !drawnPolygons[selectedZoneIndex]) {
+                showToast('Select a zone first', '#ff9800');
+                return;
+            }
+            
+            const zone = drawnPolygons[selectedZoneIndex];
+            if (!zone.entryExitPoints || zone.entryExitPoints.length === 0) {
+                showToast('No entry points to export', '#ff9800');
+                return;
+            }
+            
+            const geojson = {
+                type: 'FeatureCollection',
+                properties: { zoneName: zone.name },
+                features: zone.entryExitPoints.map((p, i) => ({
+                    type: 'Feature',
+                    properties: {
+                        id: i + 1,
+                        roadName: p.roadName,
+                        width: p.width,
+                        zoneName: zone.name
+                    },
+                    geometry: {
+                        type: 'Point',
+                        coordinates: [p.lng, p.lat]
+                    }
+                }))
+            };
+            
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' }));
+            a.download = zone.name.replace(/\s+/g, '_') + '_entry_exits.geojson';
+            a.click();
+            showToast('Exported ' + zone.entryExitPoints.length + ' points', '#4caf50');
+        }
+        
+        // Export all zones with their entry points
+        function exportAllZonesWithEntries() {
+            if (drawnPolygons.length === 0) {
+                showToast('No zones to export', '#ff9800');
+                return;
+            }
+            
+            const features = [];
+            
+            drawnPolygons.forEach((zone, zoneIdx) => {
+                // Add zone polygon
+                features.push({
+                    type: 'Feature',
+                    properties: {
+                        type: 'zone',
+                        name: zone.name,
+                        id: zoneIdx + 1,
+                        entryCount: zone.entryExitPoints ? zone.entryExitPoints.length : 0
+                    },
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [[...zone.coordinates, zone.coordinates[0]]]
+                    }
+                });
+                
+                // Add entry/exit points
+                if (zone.entryExitPoints) {
+                    zone.entryExitPoints.forEach((p, i) => {
+                        features.push({
+                            type: 'Feature',
+                            properties: {
+                                type: 'entry_exit',
+                                zoneName: zone.name,
+                                zoneId: zoneIdx + 1,
+                                pointId: i + 1,
+                                roadName: p.roadName,
+                                width: p.width
+                            },
+                            geometry: {
+                                type: 'Point',
+                                coordinates: [p.lng, p.lat]
+                            }
+                        });
+                    });
+                }
+            });
+            
+            const geojson = {
+                type: 'FeatureCollection',
+                features: features
+            };
+            
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' }));
+            a.download = 'zones_with_entries.geojson';
+            a.click();
+            
+            const totalEntries = drawnPolygons.reduce((sum, z) => sum + (z.entryExitPoints ? z.entryExitPoints.length : 0), 0);
+            showToast('Exported ' + drawnPolygons.length + ' zones with ' + totalEntries + ' entry points', '#4caf50');
+        }
+        let majorRoadSegments = []; // Cached major road segments
+        
+        // Toggle zone creation mode
+        function toggleCreateZoneMode() {
+            createZoneMode = !createZoneMode;
+            const btn = document.getElementById('createZoneBtn');
+            if (createZoneMode) {
+                btn.style.background = '#4caf50';
+                btn.textContent = 'Click inside area bounded by red roads';
+                cacheMajorRoads();
+                showToast('Click inside an area surrounded by major (red) roads!', '#4caf50');
+            } else {
+                btn.style.background = '#9c27b0';
+                btn.textContent = 'Create Zone (click inside)';
+            }
+        }
+        
+        // Cache major road segments for faster lookup
+        function cacheMajorRoads() {
+            const minWidth = parseFloat(document.getElementById('zoneRoadWidth').value) || 25;
+            majorRoadSegments = [];
+            
+            if (roads.length === 0) {
+                showToast('Load roads GeoJSON first!', '#ff9800');
+                return;
+            }
+            
+            let roadCount = 0;
+            roads.forEach(road => {
+                const props = road.properties || {};
+                const width = parseFloat(props.width_m || props.WIDTH || props.width || 0);
+                if (width >= minWidth) {
+                    roadCount++;
+                    const geom = road.geometry;
+                    if (!geom) return;
+                    const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
+                    lines.forEach(coords => {
+                        if (coords && coords.length >= 2) {
+                            for (let i = 0; i < coords.length - 1; i++) {
+                                majorRoadSegments.push({
+                                    x1: coords[i][0], y1: coords[i][1],
+                                    x2: coords[i+1][0], y2: coords[i+1][1],
+                                    name: props.name_ar || props.name_en || 'Road'
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+            
+            console.log('Found', roadCount, 'roads >=', minWidth, 'm with', majorRoadSegments.length, 'segments');
+            
+            if (majorRoadSegments.length === 0) {
+                showToast('No roads >= ' + minWidth + 'm found. Try lower min width.', '#ff9800');
+            } else {
+                showToast('Found ' + roadCount + ' major roads. Click inside to create zone!', '#4caf50');
+            }
+        }
+        
+        // Create zone by clicking inside - ONLY if surrounded by red roads
+        function createZoneAtPoint(lat, lng) {
+            if (majorRoadSegments.length === 0) {
+                cacheMajorRoads();
+            }
+            
+            if (majorRoadSegments.length === 0) {
+                showToast('No RED roads found! Load roads first.', '#ff9800');
+                return;
+            }
+            
+            // Check 8 directions for red roads
+            const directions = [
+                { name: 'N', dx: 0, dy: 1 },
+                { name: 'NE', dx: 0.707, dy: 0.707 },
+                { name: 'E', dx: 1, dy: 0 },
+                { name: 'SE', dx: 0.707, dy: -0.707 },
+                { name: 'S', dx: 0, dy: -1 },
+                { name: 'SW', dx: -0.707, dy: -0.707 },
+                { name: 'W', dx: -1, dy: 0 },
+                { name: 'NW', dx: -0.707, dy: 0.707 }
+            ];
+            
+            const maxDist = 0.008; // ~800m max search
+            const foundRoads = [];
+            const missingDirs = [];
+            
+            directions.forEach(dir => {
+                let nearest = null;
+                let nearestDist = maxDist;
+                
+                for (const seg of majorRoadSegments) {
+                    const hit = rayLineIntersect(lng, lat, dir.dx, dir.dy, seg.x1, seg.y1, seg.x2, seg.y2);
+                    if (hit && hit.t > 0.0001 && hit.t < nearestDist) {
+                        nearestDist = hit.t;
+                        nearest = { lng: hit.x, lat: hit.y, dir: dir.name };
+                    }
+                }
+                
+                if (nearest) {
+                    foundRoads.push(nearest);
+                } else {
+                    missingDirs.push(dir.name);
+                }
+            });
+            
+            // Must have roads in at least 6 of 8 directions
+            if (foundRoads.length < 6) {
+                showToast('NOT surrounded by red roads! Missing: ' + missingDirs.join(', '), '#d32f2f');
+                return;
+            }
+            
+            // Now trace detailed boundary with more rays
+            const numRays = 60;
+            const boundaryPoints = [];
+            
+            for (let i = 0; i < numRays; i++) {
+                const angle = (i / numRays) * 2 * Math.PI;
+                const dx = Math.cos(angle);
+                const dy = Math.sin(angle);
+                
+                let nearestDist = maxDist;
+                let nearestPoint = null;
+                
+                for (const seg of majorRoadSegments) {
+                    const hit = rayLineIntersect(lng, lat, dx, dy, seg.x1, seg.y1, seg.x2, seg.y2);
+                    if (hit && hit.t > 0.0001 && hit.t < nearestDist) {
+                        nearestDist = hit.t;
+                        nearestPoint = { lng: hit.x, lat: hit.y };
+                    }
+                }
+                
+                if (nearestPoint) {
+                    boundaryPoints.push(nearestPoint);
+                }
+            }
+            
+            if (boundaryPoints.length < 8) {
+                showToast('Could not trace boundary. Click closer to center of area.', '#ff9800');
+                return;
+            }
+            
+            // Simplify
+            const simplified = [boundaryPoints[0]];
+            for (let i = 1; i < boundaryPoints.length; i++) {
+                const last = simplified[simplified.length - 1];
+                const curr = boundaryPoints[i];
+                const dist = Math.sqrt(Math.pow(curr.lat - last.lat, 2) + Math.pow(curr.lng - last.lng, 2));
+                if (dist > 0.00015) {
+                    simplified.push(curr);
+                }
+            }
+            
+            const coords = simplified.map(p => [p.lng, p.lat]);
+            const latlngs = simplified.map(p => [p.lat, p.lng]);
+            
+            const zoneNum = drawnPolygons.length + 1;
+            const colors = ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#009688', '#4caf50'];
+            const color = colors[zoneNum % colors.length];
+            
+            drawnPolygons.push({
+                name: 'Zone ' + zoneNum,
+                coordinates: coords,
+                color: color
+            });
+            
+            // Draw polygon on map
+            if (googleMap) {
+                const paths = simplified.map(p => ({ lat: p.lat, lng: p.lng }));
+                const polygon = new google.maps.Polygon({
+                    paths: paths,
+                    strokeColor: color,
+                    strokeWeight: 3,
+                    fillColor: color,
+                    fillOpacity: 0.25,
+                    map: googleMap
+                });
+                
+                polygon.addListener('click', function() {
+                    selectZone(zoneNum - 1);
+                });
+                
+                if (Array.isArray(zonePolygonsLayer)) {
+                    zonePolygonsLayer.push(polygon);
+                }
+            }
+            
+            document.getElementById('polygonCount').textContent = drawnPolygons.length;
+            console.log('Zone created! Total zones:', drawnPolygons.length, drawnPolygons);
+            updateZonesList();
+            showToast('Zone ' + zoneNum + ' created!', '#4caf50');
+        }
+        
+        // Ray-line segment intersection
+        function rayLineIntersect(rx, ry, dx, dy, x1, y1, x2, y2) {
+            const vx = x2 - x1;
+            const vy = y2 - y1;
+            
+            const denom = dx * vy - dy * vx;
+            if (Math.abs(denom) < 1e-12) return null; // Parallel
+            
+            const t = ((x1 - rx) * vy - (y1 - ry) * vx) / denom;
+            const u = -((rx - x1) * dy - (ry - y1) * dx) / denom;
+            
+            if (t > 0 && u >= 0 && u <= 1) {
+                return {
+                    x: rx + t * dx,
+                    y: ry + t * dy,
+                    t: t
+                };
+            }
+            return null;
+        }
+        
+        function deleteZone(idx) {
+            drawnPolygons.splice(idx, 1);
+            
+            // Reset selected zone if it was deleted
+            if (selectedZoneIndex === idx) {
+                selectedZoneIndex = -1;
+                document.getElementById('selectedZoneInfo').style.display = 'none';
+                if (Array.isArray(zoneEntryExitMarkers)) {
+                    zoneEntryExitMarkers.forEach(m => m.setMap(null));
+                    zoneEntryExitMarkers = [];
+                }
+            } else if (selectedZoneIndex > idx) {
+                selectedZoneIndex--;
+            }
+            
+            // Clear and redraw all zones
+            redrawAllZonePolygons();
+            
+            updateZonesList();
+            showToast('Zone deleted', '#757575');
+        }
+        
+        function clearAllPolygons() {
+            if (drawnPolygons.length && !confirm('Delete all zones?')) return;
+            
+            // Clear zone polygons
+            if (Array.isArray(zonePolygonsLayer)) {
+                zonePolygonsLayer.forEach(p => p.setMap(null));
+                zonePolygonsLayer = [];
+            }
+            
+            // Clear zone entry markers
+            if (Array.isArray(zoneEntryExitMarkers)) {
+                zoneEntryExitMarkers.forEach(m => m.setMap(null));
+                zoneEntryExitMarkers = [];
+            }
+            
+            drawnPolygons = [];
+            selectedZoneIndex = -1;
+            document.getElementById('selectedZoneInfo').style.display = 'none';
+            updateZonesList();
+            showToast('All zones cleared', '#757575');
+        }
+        
+        function mergeAllZones() {
+            console.log('Merge called. drawnPolygons:', drawnPolygons.length);
+            
+            if (!drawnPolygons || drawnPolygons.length < 2) {
+                showToast('Need at least 2 zones to merge (you have ' + (drawnPolygons ? drawnPolygons.length : 0) + ' zones)', '#ff9800');
+                return;
+            }
+            
+            try {
+                // Collect all points from all polygons
+                const allPoints = [];
+                drawnPolygons.forEach((zone, idx) => {
+                    console.log('Zone ' + idx + ' has ' + (zone.coordinates ? zone.coordinates.length : 0) + ' points');
+                    if (zone.coordinates && zone.coordinates.length > 0) {
+                        zone.coordinates.forEach(coord => {
+                            allPoints.push({ lng: coord[0], lat: coord[1] });
+                        });
+                    }
+                });
+                
+                console.log('Total points collected:', allPoints.length);
+                
+                if (allPoints.length < 3) {
+                    showToast('Not enough points to merge (' + allPoints.length + ' found)', '#ff9800');
+                    return;
+                }
+                
+                // Calculate centroid
+                let sumLat = 0, sumLng = 0;
+                allPoints.forEach(p => { sumLat += p.lat; sumLng += p.lng; });
+                const centerLat = sumLat / allPoints.length;
+                const centerLng = sumLng / allPoints.length;
+                
+                // Sort by angle from centroid (creates outer boundary)
+                allPoints.sort((a, b) => {
+                    const angleA = Math.atan2(a.lat - centerLat, a.lng - centerLng);
+                    const angleB = Math.atan2(b.lat - centerLat, b.lng - centerLng);
+                    return angleA - angleB;
+                });
+                
+                // Convex Hull algorithm (Gift wrapping)
+                function cross(o, a, b) {
+                    return (a.lng - o.lng) * (b.lat - o.lat) - (a.lat - o.lat) * (b.lng - o.lng);
+                }
+                
+                // Find leftmost point
+                let leftmost = allPoints[0];
+                for (const p of allPoints) {
+                    if (p.lng < leftmost.lng) leftmost = p;
+                }
+                
+                const hull = [];
+                let current = leftmost;
+                let iterations = 0;
+                const maxIter = allPoints.length * 2;
+                
+                do {
+                    hull.push(current);
+                    let next = allPoints[0];
+                    
+                    for (const candidate of allPoints) {
+                        if (next === current || cross(current, next, candidate) < 0) {
+                            next = candidate;
+                        }
+                    }
+                    
+                    current = next;
+                    iterations++;
+                    if (iterations > maxIter) break;
+                } while (current !== leftmost && hull.length < allPoints.length);
+                
+                console.log('Hull points:', hull.length);
+                
+                if (hull.length < 3) {
+                    showToast('Could not create merged polygon', '#d32f2f');
+                    return;
+                }
+                
+                // Store original count
+                const originalCount = drawnPolygons.length;
+                
+                // Clear existing zones from map
+                if (Array.isArray(zonePolygonsLayer)) {
+                    zonePolygonsLayer.forEach(p => p.setMap(null));
+                    zonePolygonsLayer = [];
+                }
+                drawnPolygons = [];
+                
+                // Create merged zone
+                const coords = hull.map(p => [p.lng, p.lat]);
+                const latlngs = hull.map(p => [p.lat, p.lng]);
+                
+                drawnPolygons.push({
+                    name: 'Merged Zone',
+                    coordinates: coords,
+                    color: '#9c27b0'
+                });
+                
+                // Draw on map
+                if (googleMap) {
+                    const paths = hull.map(p => ({ lat: p.lat, lng: p.lng }));
+                    const polygon = new google.maps.Polygon({
+                        paths: paths,
+                        strokeColor: '#9c27b0',
+                        strokeWeight: 3,
+                        fillColor: '#9c27b0',
+                        fillOpacity: 0.3,
+                        map: googleMap
+                    });
+                    
+                    polygon.addListener('click', function() {
+                        selectZone(0);
+                    });
+                    
+                    if (Array.isArray(zonePolygonsLayer)) {
+                        zonePolygonsLayer.push(polygon);
+                    }
+                    
+                    // Zoom to merged zone
+                    let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+                    hull.forEach(p => {
+                        minLat = Math.min(minLat, p.lat);
+                        maxLat = Math.max(maxLat, p.lat);
+                        minLng = Math.min(minLng, p.lng);
+                        maxLng = Math.max(maxLng, p.lng);
+                    });
+                    fitMapBounds(maxLat, minLat, maxLng, minLng, 50);
+                    
+                    console.log('Merged polygon drawn with ' + hull.length + ' vertices');
+                }
+                
+                document.getElementById('polygonCount').textContent = 1;
+                selectedZoneIndex = -1;
+                document.getElementById('selectedZoneInfo').style.display = 'none';
+                if (zoneEntryExitMarkers && zoneEntryExitMarkers.clearLayers) {
+                    zoneEntryExitMarkers.clearLayers();
+                }
+                updateZonesList();
+                showToast('Merged ' + originalCount + ' zones into 1!', '#9c27b0');
+            } catch (err) {
+                console.error('Merge error:', err);
+                showToast('Error: ' + err.message, '#d32f2f');
+            }
+        }
+        
+        function exportPolygons() {
+            if (!drawnPolygons.length) {
+                showToast('No zones to export', '#ff9800');
+                return;
+            }
+            const geojson = {
+                type: 'FeatureCollection',
+                features: drawnPolygons.map((p, i) => ({
+                    type: 'Feature',
+                    properties: { name: p.name, id: i + 1 },
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [[...p.coordinates, p.coordinates[0]]]
+                    }
+                }))
+            };
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' }));
+            a.download = 'residential_zones.geojson';
+            a.click();
+            showToast('Exported ' + drawnPolygons.length + ' zones!', '#4caf50');
+        }
+        
+        function getEntryExitStats() {
+            const major = entryExitPoints.filter(p => p.width >= 30).length;
+            const secondary = entryExitPoints.filter(p => p.width >= 15 && p.width < 30).length;
+            const local = entryExitPoints.filter(p => p.width < 15).length;
+            return { total: entryExitPoints.length, major, secondary, local };
+        }
+        
+        function deleteEntryExitPoint(idx) {
+            if (idx >= 0 && idx < entryExitPoints.length) {
+                entryExitPoints.splice(idx, 1);
+                document.getElementById('entryExitCount').textContent = entryExitPoints.length;
+                closeInfoPopup();
+                render();
+                showToast('Entry/exit point deleted', '#d32f2f');
+            }
+        }
+        
+        function toggleAddEntryExitMode() {
+            addEntryExitMode = !addEntryExitMode;
+            const btn = document.getElementById('addEntryExitBtn');
+            if (addEntryExitMode) {
+                btn.style.background = '#4caf50';
+                btn.textContent = 'Click map to add point (ESC to cancel)';
+                showToast('Click on map to add entry/exit point', '#4caf50');
+            } else {
+                btn.style.background = '#e94560';
+                btn.textContent = 'Add Entry/Exit Point';
+            }
+        }
+        
+        function addEntryExitPoint(lat, lng) {
+            const name = prompt('Enter road name (Arabic or English):', 'Road');
+            if (!name) return;
+            
+            const widthStr = prompt('Enter road width in meters:', '15');
+            const width = parseFloat(widthStr) || 15;
+            
+            entryExitPoints.push({
+                lat: lat,
+                lng: lng,
+                name: name,
+                width: width,
+                roadClass: width >= 30 ? 'Major' : 'Other'
+            });
+            
+            document.getElementById('entryExitCount').textContent = entryExitPoints.length;
+            addEntryExitMode = false;
+            document.getElementById('addEntryExitBtn').style.background = '#e94560';
+            document.getElementById('addEntryExitBtn').textContent = 'Add Entry/Exit Point';
+            render();
+            showToast('Entry/exit point added!', '#4caf50');
+        }
+        
+        function exportEntryExitPoints() {
+            if (!entryExitPoints.length) {
+                showToast('No entry/exit points to export', '#ff9800');
+                return;
+            }
+            const geojson = {
+                type: 'FeatureCollection',
+                features: entryExitPoints.map(p => ({
+                    type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
+                    properties: { name_ar: p.name, width_m: p.width, road_class: p.width >= 30 ? 'Major' : 'Other' }
+                }))
+            };
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' }));
+            a.download = 'entry_exit_points.geojson';
+            a.click();
+            showToast('Exported ' + entryExitPoints.length + ' points!', '#4caf50');
+        }
+        
+        // ESC key to cancel add mode
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && addEntryExitMode) {
+                addEntryExitMode = false;
+                document.getElementById('addEntryExitBtn').style.background = '#e94560';
+                document.getElementById('addEntryExitBtn').textContent = 'Add Entry/Exit Point';
+                showToast('Add mode cancelled', '#ff9800');
+            }
+        });
+        
         let renderPending = false;
+        // Map helper functions (Google Maps)
+        function getMapBounds() {
+            if (!googleMap) return null;
+            const b = googleMap.getBounds();
+            if (!b) return null;
+            return {
+                north: b.getNorthEast().lat(),
+                south: b.getSouthWest().lat(),
+                east: b.getNorthEast().lng(),
+                west: b.getSouthWest().lng()
+            };
+        }
+        
+        function getMapZoom() {
+            if (!googleMap) return 11;
+            return googleMap.getZoom();
+        }
+        
+        function latLngToPixel(lat, lng) {
+            if (!googleMap) return { x: 0, y: 0 };
+            const scale = Math.pow(2, googleMap.getZoom());
+            const proj = googleMap.getProjection();
+            if (!proj) return { x: 0, y: 0 };
+            const bounds = googleMap.getBounds();
+            if (!bounds) return { x: 0, y: 0 };
+            const nw = proj.fromLatLngToPoint(bounds.getNorthEast());
+            const se = proj.fromLatLngToPoint(bounds.getSouthWest());
+            const point = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
+            return {
+                x: (point.x - se.x) * scale,
+                y: (point.y - nw.y) * scale
+            };
+        }
+        
+        function setMapCenter(lat, lng, zoom) {
+            if (!googleMap) return;
+            googleMap.setCenter({ lat: lat, lng: lng });
+            if (zoom) googleMap.setZoom(zoom);
+        }
+        
+        function fitMapBounds(north, south, east, west, padding) {
+            if (!googleMap) return;
+            const bounds = new google.maps.LatLngBounds(
+                { lat: south, lng: west },
+                { lat: north, lng: east }
+            );
+            googleMap.fitBounds(bounds, padding || 30);
+        }
+        
         function render() {
             if (renderPending) return;
             renderPending = true;
@@ -424,24 +1809,17 @@
         
         function doRender() {
             renderPending = false;
-            if (!map) return;
-            const bounds = map.getBounds();
+            
+            const bounds = getMapBounds();
             if (!bounds) return;
             
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            const proj = map.getProjection();
-            if (!proj) return;
-            
-            const zoom = map.getZoom();
+            const zoom = getMapZoom();
             document.getElementById('zoomLevel').textContent = zoom.toFixed(1);
             
-            const ne = bounds.getNorthEast();
-            const sw = bounds.getSouthWest();
-            const tr = proj.fromLatLngToPoint(ne);
-            const bl = proj.fromLatLngToPoint(sw);
             const scale = Math.pow(2, zoom);
             const baseSize = Math.max(1, zoom - 10);
             
@@ -478,8 +1856,7 @@
                         ctx.globalAlpha = 0.4;
                         ctx.beginPath();
                         coords.forEach(([lon, lat], i) => {
-                            const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                            const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                            const {x, y} = latLngToPixel(lat, lon);
                             i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
                         });
                         ctx.closePath();
@@ -499,8 +1876,7 @@
                             ctx.fillStyle = 'rgba(255, 87, 34, 0.15)';
                             ctx.beginPath();
                             coords.forEach(([lon, lat], i) => {
-                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                                const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                                const {x, y} = latLngToPixel(lat, lon);
                                 i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
                             });
                             ctx.closePath();
@@ -512,8 +1888,7 @@
                             ctx.setLineDash([]);
                             ctx.beginPath();
                             coords.forEach(([lon, lat], i) => {
-                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                                const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                                const {x, y} = latLngToPixel(lat, lon);
                                 i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
                             });
                             ctx.closePath();
@@ -524,8 +1899,7 @@
                             ctx.lineWidth = 2;
                             ctx.beginPath();
                             coords.forEach(([lon, lat], i) => {
-                                const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                                const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                                const {x, y} = latLngToPixel(lat, lon);
                                 i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
                             });
                             ctx.closePath();
@@ -535,6 +1909,193 @@
                 }
             }
             
+            // Draw roads (lines)
+            const showRoads = document.getElementById('showRoads').checked;
+            const showMajorRoads = document.getElementById('showMajorRoads')?.checked ?? true;
+            const onlyMajorRoads = document.getElementById('onlyMajorRoads')?.checked ?? false;
+            const majorRoadThick = parseFloat(document.getElementById('majorRoadThick')?.value || 3);
+            const showRoadLabels = document.getElementById('showRoadLabels').checked;
+            const roadWidthScale = parseFloat(document.getElementById('roadWidth')?.value || 1);
+            
+            let majorRoadCount = 0;
+            
+            if ((showRoads || showMajorRoads) && roads.length) {
+                const drawnLabels = new Set(); // Track drawn labels to avoid duplicates
+                
+                roads.forEach(road => {
+                    const geom = road.geometry;
+                    if (!geom) return;
+                    
+                    const props = road.properties || {};
+                    const width = parseFloat(props.width_m || props.WIDTH || props.width || 10);
+                    const isMajor = width >= 30;
+                    
+                    // Count major roads
+                    if (isMajor) majorRoadCount++;
+                    
+                    // Skip based on filters
+                    if (onlyMajorRoads && !isMajor) return;
+                    if (!showRoads && !isMajor) return;
+                    if (!showMajorRoads && isMajor) return;
+                    
+                    const color = getRoadColor(width);
+                    // Major roads get extra thickness
+                    let lineWidth = getRoadLineWidth(width, zoom) * roadWidthScale;
+                    if (isMajor) {
+                        lineWidth = lineWidth * majorRoadThick;
+                    }
+                    
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = lineWidth;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    
+                    // Handle LineString and MultiLineString
+                    const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
+                    
+                    lines.forEach(coords => {
+                        if (!coords || coords.length < 2) return;
+                        
+                        // Check if any point is in view
+                        let inView = false;
+                        for (let i = 0; i < coords.length; i++) {
+                            const [lon, lat] = coords[i];
+                            if (lat >= bounds.south - 0.01 && lat <= bounds.north + 0.01 && lon >= bounds.west - 0.01 && lon <= bounds.east + 0.01) {
+                                inView = true;
+                                break;
+                            }
+                        }
+                        if (!inView) return;
+                        
+                        // Draw the line
+                        ctx.beginPath();
+                        let midIdx = Math.floor(coords.length / 2);
+                        let midX, midY;
+                        
+                        coords.forEach(([lon, lat], i) => {
+                            const {x, y} = latLngToPixel(lat, lon);
+                            
+                            if (i === 0) ctx.moveTo(x, y);
+                            else ctx.lineTo(x, y);
+                            
+                            if (i === midIdx) { midX = x; midY = y; }
+                        });
+                        ctx.stroke();
+                        
+                        // Draw outline for major roads
+                        if (width >= 20) {
+                            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+                            ctx.lineWidth = lineWidth + 2;
+                            ctx.beginPath();
+                            coords.forEach(([lon, lat], i) => {
+                                const {x, y} = latLngToPixel(lat, lon);
+                                if (i === 0) ctx.moveTo(x, y);
+                                else ctx.lineTo(x, y);
+                            });
+                            ctx.stroke();
+                            
+                            // Redraw the road on top
+                            ctx.strokeStyle = color;
+                            ctx.lineWidth = lineWidth;
+                            ctx.beginPath();
+                            coords.forEach(([lon, lat], i) => {
+                                const {x, y} = latLngToPixel(lat, lon);
+                                if (i === 0) ctx.moveTo(x, y);
+                                else ctx.lineTo(x, y);
+                            });
+                            ctx.stroke();
+                        }
+                        
+                        // Draw label for major roads
+                        if (showRoadLabels && width >= 15 && zoom >= 14 && midX && midY) {
+                            const name = props.name_ar || props.ROADCENTERLINENAME_AR || props.name_en || '';
+                            if (name && !drawnLabels.has(name)) {
+                                drawnLabels.add(name);
+                                
+                                ctx.font = width >= 20 ? 'bold 11px Arial' : '10px Arial';
+                                ctx.fillStyle = '#333';
+                                ctx.strokeStyle = 'white';
+                                ctx.lineWidth = 3;
+                                ctx.textAlign = 'center';
+                                ctx.strokeText(name, midX, midY - 5);
+                                ctx.fillText(name, midX, midY - 5);
+                                
+                                // Width badge
+                                ctx.font = '9px Arial';
+                                ctx.fillStyle = color;
+                                ctx.fillText(width + 'm', midX, midY + 8);
+                            }
+                        }
+                    });
+                });
+                
+                // Update major road count
+                const majorCountEl = document.getElementById('majorRoadCount');
+                if (majorCountEl) majorCountEl.textContent = majorRoadCount;
+            }
+            
+            // Draw Entry/Exit points - RED DOTS at boundary crossings
+            const showEntryExit = document.getElementById('showEntryExit').checked;
+            const entryExitSize = parseFloat(document.getElementById('entryExitSize').value);
+            
+            if (showEntryExit && entryExitPoints.length) {
+                entryExitPoints.forEach((point, idx) => {
+                    if (point.lat < bounds.south - 0.01 || point.lat > bounds.north + 0.01 || 
+                        point.lng < bounds.west - 0.01 || point.lng > bounds.east + 0.01) return;
+                    
+                    const {x, y} = latLngToPixel(point.lat, point.lng);
+                    
+                    // Size based on road width
+                    const size = point.width >= 60 ? entryExitSize * 1.8 :
+                                 point.width >= 40 ? entryExitSize * 1.5 : 
+                                 point.width >= 30 ? entryExitSize * 1.3 : 
+                                 point.width >= 20 ? entryExitSize * 1.1 : entryExitSize * 0.9;
+                    
+                    // Outer glow (pink)
+                    ctx.beginPath();
+                    ctx.arc(x, y, size + 4, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(244, 67, 54, 0.3)';
+                    ctx.fill();
+                    
+                    // RED DOT
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fillStyle = '#d32f2f';
+                    ctx.fill();
+                    
+                    // White border
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    
+                    // Width number inside
+                    if (size >= 8) {
+                        ctx.font = 'bold ' + Math.max(9, size * 0.75) + 'px Arial';
+                        ctx.fillStyle = 'white';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(Math.round(point.width), x, y);
+                    }
+                    
+                    // Road name label at higher zoom
+                    if (zoom >= 15 && point.width >= 20) {
+                        ctx.font = 'bold 9px Arial';
+                        ctx.fillStyle = '#333';
+                        ctx.strokeStyle = 'white';
+                        ctx.lineWidth = 2;
+                        ctx.textAlign = 'center';
+                        
+                        let displayName = point.name;
+                        if (displayName.length > 15) {
+                            displayName = displayName.substring(0, 13) + '...';
+                        }
+                        
+                        ctx.strokeText(displayName, x, y + size + 10);
+                        ctx.fillText(displayName, x, y + size + 10);
+                    }
+                });
+            }
+            
             // Draw buildings (polygons or points) - OPTIMIZED
             if (showBldg && buildings.length) {
                 ctx.globalAlpha = bldgOpacity;
@@ -542,20 +2103,18 @@
                 ctx.strokeStyle = '#9c27b0';
                 ctx.lineWidth = Math.max(1, bldgSize / 2);
                 
-                const swLat = sw.lat(), neLat = ne.lat(), swLng = sw.lng(), neLng = ne.lng();
-                
                 for (let i = 0; i < buildings.length; i++) {
                     const b = buildings[i];
                     
                     // Fast check: is it a simple [lat, lng] array?
                     if (Array.isArray(b) && typeof b[0] === 'number') {
                         const lat = b[0], lng = b[1];
-                        if (lat < swLat || lat > neLat || lng < swLng || lng > neLng) continue;
+                        if (lat < bounds.south || lat > bounds.north || lng < bounds.west || lng > bounds.east) continue;
                         
                         viewBldg++;
-                        const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
+                        const {x, y} = latLngToPixel(lat, lng);
                         ctx.beginPath();
-                        ctx.arc((w.x - bl.x) * scale, (w.y - tr.y) * scale, bldgSize, 0, 6.28);
+                        ctx.arc(x, y, bldgSize, 0, 6.28);
                         ctx.fill();
                         continue;
                     }
@@ -565,13 +2124,12 @@
                     if (!coords || coords.length < 3) continue;
                     
                     const firstLat = coords[0][1];
-                    if (firstLat < swLat - 0.01 || firstLat > neLat + 0.01) continue;
+                    if (firstLat < bounds.south - 0.01 || firstLat > bounds.north + 0.01) continue;
                     
                     viewBldg++;
                     ctx.beginPath();
                     for (let j = 0; j < coords.length; j++) {
-                        const w = proj.fromLatLngToPoint(new google.maps.LatLng(coords[j][1], coords[j][0]));
-                        const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                        const {x, y} = latLngToPixel(coords[j][1], coords[j][0]);
                         j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
                     }
                     ctx.closePath();
@@ -582,16 +2140,14 @@
             }
             
             // Draw parcels - OPTIMIZED (batch by color to minimize state changes)
-            const swLat = sw.lat(), neLat = ne.lat(), swLng = sw.lng(), neLng = ne.lng();
             const aptPts = [], villaPts = [], otherPts = [];
             const pi2 = 6.28;
             
             for (let i = 0; i < parcels.length; i++) {
                 const p = parcels[i];
-                if (p.lat < swLat || p.lat > neLat || p.lng < swLng || p.lng > neLng) continue;
+                if (p.lat < bounds.south || p.lat > bounds.north || p.lng < bounds.west || p.lng > bounds.east) continue;
                 
-                const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
-                const x = (w.x - bl.x) * scale, y = (w.y - tr.y) * scale;
+                const {x, y} = latLngToPixel(p.lat, p.lng);
                 
                 if (p.type === 'apt' && showApt) { aptPts.push(x, y); viewApt++; }
                 else if (p.type === 'villa' && showVilla) { villaPts.push(x, y); viewVilla++; }
@@ -611,14 +2167,14 @@
                 const poiByColor = {};
                 for (let i = 0; i < poiData.length; i++) {
                     const p = poiData[i];
-                    if (p.lat < swLat || p.lat > neLat || p.lng < swLng || p.lng > neLng) continue;
+                    if (p.lat < bounds.south || p.lat > bounds.north || p.lng < bounds.west || p.lng > bounds.east) continue;
                     if (activePoiCategories.size > 0 && !activePoiCategories.has(p.layer)) continue;
                     
                     const color = poiColors[p.layer] || poiColors['default'];
                     if (!poiByColor[color]) poiByColor[color] = [];
                     
-                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
-                    poiByColor[color].push((w.x - bl.x) * scale, (w.y - tr.y) * scale);
+                    const {x, y} = latLngToPixel(p.lat, p.lng);
+                    poiByColor[color].push(x, y);
                     viewPoi++;
                 }
                 
@@ -672,17 +2228,27 @@
             // Convert to [lon, lat] for pointInPolygon
             const poly = coords.map(([lon, lat]) => [lon, lat]);
             
+            // Get district bounds for faster filtering
+            let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+            coords.forEach(([lon, lat]) => {
+                if (lat < minLat) minLat = lat;
+                if (lat > maxLat) maxLat = lat;
+                if (lon < minLng) minLng = lon;
+                if (lon > maxLng) maxLng = lon;
+            });
+            
             let bldg = 0, apt = 0, villa = 0, other = 0, poi = 0;
             
             buildings.forEach(b => {
-                const coords = b.geometry?.coordinates?.[0];
-                if (!coords || coords.length === 0) return;
-                // Use first coordinate of building polygon for point-in-polygon check
-                const [lon, lat] = coords[0];
+                const bCoords = b.geometry?.coordinates?.[0];
+                if (!bCoords || bCoords.length === 0) return;
+                const [lon, lat] = bCoords[0];
+                if (lat < minLat || lat > maxLat || lon < minLng || lon > maxLng) return;
                 if (pointInPolygon(lat, lon, poly)) bldg++;
             });
             
             parcels.forEach(p => {
+                if (p.lat < minLat || p.lat > maxLat || p.lng < minLng || p.lng > maxLng) return;
                 if (pointInPolygon(p.lat, p.lng, poly)) {
                     if (p.type === 'apt') apt++;
                     else if (p.type === 'villa') villa++;
@@ -691,14 +2257,62 @@
             });
             
             poiData.forEach(p => {
+                if (p.lat < minLat || p.lat > maxLat || p.lng < minLng || p.lng > maxLng) return;
                 if (pointInPolygon(p.lat, p.lng, poly)) poi++;
             });
+            
+            // Calculate road stats
+            let roadCount = 0, totalRoadLength = 0, majorRoads = 0;
+            const widthCounts = {};
+            const uniqueRoadNames = new Set();
+            
+            roads.forEach(road => {
+                const roadGeom = road.geometry;
+                if (!roadGeom) return;
+                
+                const props = road.properties || {};
+                const width = parseFloat(props.width_m || props.WIDTH || props.width || 0);
+                const length = parseFloat(props.length_m || props.LENGTH || props.length || 0);
+                const nameAr = props.name_ar || props.ROADCENTERLINENAME_AR || '';
+                
+                // Check if road intersects with district
+                const lines = roadGeom.type === 'LineString' ? [roadGeom.coordinates] : roadGeom.coordinates;
+                
+                let roadInDistrict = false;
+                for (const lineCoords of lines) {
+                    if (!lineCoords || lineCoords.length === 0) continue;
+                    
+                    // Check if any point of the road is in the district
+                    for (const [lon, lat] of lineCoords) {
+                        if (lat >= minLat && lat <= maxLat && lon >= minLng && lon <= maxLng) {
+                            if (pointInPolygon(lat, lon, poly)) {
+                                roadInDistrict = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (roadInDistrict) break;
+                }
+                
+                if (roadInDistrict) {
+                    roadCount++;
+                    totalRoadLength += length;
+                    if (width >= 20) majorRoads++;
+                    if (width > 0) {
+                        widthCounts[width] = (widthCounts[width] || 0) + 1;
+                    }
+                    if (nameAr) uniqueRoadNames.add(nameAr);
+                }
+            });
+            
+            // Get entry/exit stats (points loaded from file)
+            const entryExitStats = getEntryExitStats();
             
             const total = apt + villa + other;
             const villaPct = total > 0 ? (villa / total * 100).toFixed(1) : 0;
             const aptPct = total > 0 ? (apt / total * 100).toFixed(1) : 0;
             
-            document.getElementById('districtStatsTitle').textContent = '📍 DISTRICT: ' + selectedDistrict;
+            document.getElementById('districtStatsTitle').textContent = 'DISTRICT: ' + selectedDistrict;
             document.getElementById('distBldg').textContent = bldg.toLocaleString();
             document.getElementById('distApt').textContent = apt.toLocaleString();
             document.getElementById('distVilla').textContent = villa.toLocaleString();
@@ -707,6 +2321,32 @@
             document.getElementById('distPoi').textContent = poi.toLocaleString();
             document.getElementById('distVillaPct').textContent = villaPct + '%';
             document.getElementById('distAptPct').textContent = aptPct + '%';
+            
+            // Update road stats
+            document.getElementById('distRoads').textContent = roadCount.toLocaleString();
+            document.getElementById('distRoadLength').textContent = (totalRoadLength / 1000).toFixed(2) + ' km';
+            document.getElementById('distMajorRoads').textContent = majorRoads.toLocaleString();
+            document.getElementById('distEntryExit').textContent = entryExitStats.total;
+            document.getElementById('distMajorCrossings').textContent = entryExitStats.major;
+            document.getElementById('distSecCrossings').textContent = entryExitStats.secondary;
+            document.getElementById('distLocalCrossings').textContent = entryExitStats.local;
+            
+            // Show road width breakdown
+            const widthBreakdown = document.getElementById('distWidthBreakdown');
+            const widthContainer = document.getElementById('distRoadWidths');
+            
+            if (Object.keys(widthCounts).length > 0) {
+                widthContainer.style.display = 'block';
+                widthBreakdown.innerHTML = Object.entries(widthCounts)
+                    .sort((a, b) => parseFloat(b[0]) - parseFloat(a[0]))
+                    .map(([w, c]) => {
+                        const color = getRoadColor(parseFloat(w));
+                        return `<span style="display:inline-block;margin:1px 3px;padding:1px 5px;background:${color};color:white;border-radius:3px;">${w}m: ${c}</span>`;
+                    }).join('');
+            } else {
+                widthContainer.style.display = 'none';
+            }
+            
             document.getElementById('districtStats').classList.add('active');
         }
         
@@ -750,7 +2390,7 @@
                         document.getElementById('buildingsStatus').classList.add('loaded');
                         
                         hideLoading();
-                        showToast(`🏗️ ${buildings.length.toLocaleString()} buildings!`, '#9c27b0');
+                        showToast(`${buildings.length.toLocaleString()} buildings!`, '#9c27b0');
                         render();
                     } catch(err) {
                         hideLoading();
@@ -853,7 +2493,7 @@
                     document.getElementById('totalOther').textContent = otherCount.toLocaleString();
                     
                     hideLoading();
-                    showToast(`📊 ${parcels.length.toLocaleString()} parcels loaded!`, '#4CAF50');
+                    showToast(`${parcels.length.toLocaleString()} parcels loaded!`, '#4CAF50');
                     render();
                 }, 10);
             };
@@ -924,7 +2564,7 @@
                     });
                     
                     hideLoading();
-                    showToast(`📍 ${poiData.length.toLocaleString()} POIs!`, '#9C27B0');
+                    showToast(`${poiData.length.toLocaleString()} POIs!`, '#9C27B0');
                     render();
                 }, 10);
             };
@@ -974,7 +2614,7 @@
                     } else {
                         document.getElementById('distStatus').innerHTML = `✓ <b>${file.name}</b><br>${districts.length} districts loaded`;
                         document.getElementById('distStatus').classList.add('loaded');
-                        showToast(`🗺️ Loaded ${districts.length} districts`, '#607D8B');
+                        showToast(`Loaded ${districts.length} districts`, '#607D8B');
                     }
                     document.getElementById('districtCount').textContent = districts.length;
                     
@@ -987,6 +2627,449 @@
             };
             reader.readAsText(file);
         });
+        
+        // Roads GeoJSON file handler
+        document.getElementById('roadsFile').addEventListener('change', function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            showLoading('Loading Roads...');
+            setLoadingStatus(`Reading ${(file.size/1024/1024).toFixed(1)} MB...`, 10);
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                setLoadingStatus('Parsing JSON...', 30);
+                
+                setTimeout(() => {
+                    try {
+                        const data = JSON.parse(evt.target.result);
+                        
+                        // Handle different formats
+                        if (data.type === 'FeatureCollection' && data.features) {
+                            roads = data.features;
+                        } else if (Array.isArray(data) && data[0]?.geometry) {
+                            roads = data;
+                        } else if (Array.isArray(data)) {
+                            roads = data;
+                        } else {
+                            roads = [];
+                        }
+                        
+                        console.log('Roads loaded:', roads.length, 'Sample:', roads[0]);
+                        
+                        // Calculate total length and width distribution
+                        let totalLength = 0;
+                        const widthDist = {};
+                        roads.forEach(r => {
+                            const props = r.properties || {};
+                            const width = parseFloat(props.width_m || props.WIDTH || props.width || 0);
+                            const length = parseFloat(props.length_m || props.LENGTH || props.length || 0);
+                            totalLength += length;
+                            if (width > 0) {
+                                widthDist[width] = (widthDist[width] || 0) + 1;
+                            }
+                        });
+                        
+                        document.getElementById('roadsStatus').innerHTML = `✓ <b>${file.name}</b><br>${roads.length} roads (${(totalLength/1000).toFixed(2)} km)`;
+                        document.getElementById('roadsStatus').classList.add('loaded');
+                        document.getElementById('roadCount').textContent = roads.length;
+                        document.getElementById('totalRoads').textContent = roads.length;
+                        document.getElementById('roadLegend').style.display = 'block';
+                        
+                        // Draw roads on map
+                        drawRoadsOnMap();
+                        
+                        // Zoom to roads if they exist
+                        if (roads.length > 0) {
+                            const firstRoad = roads[0];
+                            if (firstRoad.geometry && firstRoad.geometry.coordinates) {
+                                const coords = firstRoad.geometry.type === 'LineString' 
+                                    ? firstRoad.geometry.coordinates 
+                                    : firstRoad.geometry.coordinates[0];
+                                if (coords && coords.length > 0) {
+                                    const [lng, lat] = coords[0];
+                                    setMapCenter(lat, lng, 14);
+                                }
+                            }
+                        }
+                        
+                        hideLoading();
+                        showToast(`🛣️ ${roads.length} roads loaded!`, '#2196F3');
+                        render();
+                    } catch(err) {
+                        hideLoading();
+                        console.error('Roads load error:', err);
+                        document.getElementById('roadsStatus').innerHTML = `❌ Error: ${err.message}`;
+                    }
+                }, 10);
+            };
+            reader.readAsText(file);
+        });
+        
+        // Entry/Exit Points GeoJSON file handler
+        document.getElementById('entryExitFile').addEventListener('change', function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            showLoading('Loading Entry/Exit Points...');
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = JSON.parse(evt.target.result);
+                    const features = data.features || [data];
+                    
+                    // Convert to entryExitPoints format
+                    entryExitPoints = features.map(f => {
+                        const props = f.properties || {};
+                        const coords = f.geometry.coordinates;
+                        return {
+                            lat: coords[1],
+                            lng: coords[0],
+                            name: props.name_ar || props.name || props.name_en || 'Entry/Exit',
+                            width: parseFloat(props.width_m || props.width || 10),
+                            roadClass: props.road_class || (props.width_m >= 30 ? 'Major' : 'Other')
+                        };
+                    });
+                    
+                    // Count by type
+                    const major = entryExitPoints.filter(p => p.width >= 30).length;
+                    const other = entryExitPoints.length - major;
+                    
+                    document.getElementById('entryExitStatus').innerHTML = `<b>${entryExitPoints.length}</b> points loaded (${major} major, ${other} other)`;
+                    document.getElementById('entryExitStatus').classList.add('loaded');
+                    document.getElementById('entryExitCount').textContent = entryExitPoints.length;
+                    
+                    // Center on first point if exists
+                    if (entryExitPoints.length > 0) {
+                        const p = entryExitPoints[0];
+                        setMapCenter(p.lat, p.lng, 15);
+                    }
+                    
+                    // Enable entry/exit display
+                    const toggle = document.getElementById('toggleEntryExit');
+                    if (toggle) toggle.checked = true;
+                    showEntryExit = true;
+                    
+                    hideLoading();
+                    showToast(`Loaded ${entryExitPoints.length} entry/exit points!`, '#e94560');
+                    render();
+                } catch(err) {
+                    hideLoading();
+                    console.error('Entry/Exit load error:', err);
+                    document.getElementById('entryExitStatus').innerHTML = `Error: ${err.message}`;
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        // Residential Zones GeoJSON file handler (handles combined file or single zone files)
+        document.getElementById('zonesFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            console.log('Loading zone file:', file.name);
+            showLoading('Loading zones...');
+            
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = JSON.parse(evt.target.result);
+                    const features = data.features || [data];
+                    
+                    // Clear existing zones
+                    if (Array.isArray(zonePolygonsLayer)) {
+                        zonePolygonsLayer.forEach(p => p.setMap(null));
+                        zonePolygonsLayer = [];
+                    }
+                    if (Array.isArray(zoneEntryExitMarkers)) {
+                        zoneEntryExitMarkers.forEach(m => m.setMap(null));
+                        zoneEntryExitMarkers = [];
+                    }
+                    drawnPolygons = [];
+                    selectedZoneIndex = -1;
+                    
+                    // Colors for zones
+                    const colors = ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#009688', '#4caf50', '#ff9800', '#ff5722', '#795548', '#607d8b'];
+                    
+                    // Check if this is a COMBINED file (has type: 'zone' and type: 'entry_exit')
+                    const isCombinedFormat = features.some(f => f.properties?.type === 'zone' || f.properties?.type === 'entry_exit');
+                    
+                    if (isCombinedFormat) {
+                        console.log('Detected COMBINED format');
+                        
+                        // First pass: collect all zones
+                        const zonesMap = {};
+                        features.forEach(f => {
+                            if (f.properties?.type === 'zone' && f.geometry) {
+                                let coords = [];
+                                if (f.geometry.type === 'Polygon') {
+                                    coords = f.geometry.coordinates[0].map(c => [c[0], c[1]]);
+                                } else if (f.geometry.type === 'MultiPolygon') {
+                                    coords = f.geometry.coordinates[0][0].map(c => [c[0], c[1]]);
+                                }
+                                
+                                // Remove closing point
+                                if (coords.length > 1) {
+                                    const first = coords[0];
+                                    const last = coords[coords.length - 1];
+                                    if (Math.abs(first[0] - last[0]) < 0.0001 && Math.abs(first[1] - last[1]) < 0.0001) {
+                                        coords.pop();
+                                    }
+                                }
+                                
+                                const zoneId = f.properties.id || f.properties.zoneId || Object.keys(zonesMap).length + 1;
+                                zonesMap[zoneId] = {
+                                    name: f.properties.name || `Zone ${zoneId}`,
+                                    coordinates: coords,
+                                    color: f.properties.color || colors[(zoneId - 1) % colors.length],
+                                    entryExitPoints: []
+                                };
+                            }
+                        });
+                        
+                        // Second pass: collect entry/exit points and assign to zones
+                        features.forEach(f => {
+                            if (f.properties?.type === 'entry_exit' && f.geometry?.type === 'Point') {
+                                const zoneId = f.properties.zoneId || 1;
+                                const point = {
+                                    lat: f.geometry.coordinates[1],
+                                    lng: f.geometry.coordinates[0],
+                                    roadName: f.properties.roadName || f.properties.name || 'Entry/Exit',
+                                    width: parseFloat(f.properties.width || 15)
+                                };
+                                
+                                if (zonesMap[zoneId]) {
+                                    zonesMap[zoneId].entryExitPoints.push(point);
+                                }
+                            }
+                        });
+                        
+                        // Convert to array
+                        drawnPolygons = Object.values(zonesMap);
+                        
+                    } else {
+                        console.log('Detected SINGLE zone format');
+                        
+                        // Single zone file with polygon + points
+                        let zonePolygon = null;
+                        let entryExits = [];
+                        
+                        features.forEach(f => {
+                            if (!f.geometry) return;
+                            
+                            if (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon') {
+                                let coords = [];
+                                if (f.geometry.type === 'Polygon') {
+                                    coords = f.geometry.coordinates[0].map(c => [c[0], c[1]]);
+                                } else {
+                                    coords = f.geometry.coordinates[0][0].map(c => [c[0], c[1]]);
+                                }
+                                
+                                if (coords.length > 1) {
+                                    const first = coords[0];
+                                    const last = coords[coords.length - 1];
+                                    if (Math.abs(first[0] - last[0]) < 0.0001 && Math.abs(first[1] - last[1]) < 0.0001) {
+                                        coords.pop();
+                                    }
+                                }
+                                
+                                zonePolygon = {
+                                    coords: coords,
+                                    name: f.properties?.name || f.properties?.NAME || null
+                                };
+                            } else if (f.geometry.type === 'Point') {
+                                const props = f.properties || {};
+                                entryExits.push({
+                                    lat: f.geometry.coordinates[1],
+                                    lng: f.geometry.coordinates[0],
+                                    roadName: props.roadName || props.road_name || props.name || 'Entry/Exit',
+                                    width: parseFloat(props.width || props.width_m || 15)
+                                });
+                            }
+                        });
+                        
+                        if (zonePolygon) {
+                            drawnPolygons.push({
+                                name: zonePolygon.name || file.name.replace(/\.(geo)?json$/i, '') || 'Zone 1',
+                                coordinates: zonePolygon.coords,
+                                color: colors[0],
+                                entryExitPoints: entryExits
+                            });
+                        }
+                    }
+                    
+                    // Count totals
+                    const totalEntryPoints = drawnPolygons.reduce((sum, z) => sum + (z.entryExitPoints?.length || 0), 0);
+                    
+                    // Draw all zones
+                    redrawAllZonePolygons();
+                    
+                    // Update UI
+                    document.getElementById('zonesFileStatus').innerHTML = `<b>${drawnPolygons.length}</b> zones, <b>${totalEntryPoints}</b> entry points`;
+                    document.getElementById('zonesFileStatus').style.color = '#4caf50';
+                    document.getElementById('polygonCount').textContent = drawnPolygons.length;
+                    updateZonesList();
+                    
+                    // Zoom to zones
+                    if (drawnPolygons.length > 0) {
+                        let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+                        drawnPolygons.forEach(z => {
+                            z.coordinates.forEach(c => {
+                                minLng = Math.min(minLng, c[0]);
+                                maxLng = Math.max(maxLng, c[0]);
+                                minLat = Math.min(minLat, c[1]);
+                                maxLat = Math.max(maxLat, c[1]);
+                            });
+                        });
+                        fitMapBounds(maxLat, minLat, maxLng, minLng, 30);
+                    }
+                    
+                    hideLoading();
+                    showToast(`Loaded ${drawnPolygons.length} zones with ${totalEntryPoints} entry points!`, '#9c27b0');
+                    
+                } catch(err) {
+                    hideLoading();
+                    console.error('Zones load error:', err);
+                    document.getElementById('zonesFileStatus').innerHTML = `Error: ${err.message}`;
+                    document.getElementById('zonesFileStatus').style.color = '#d32f2f';
+                }
+            };
+            reader.readAsText(file);
+        });
+        
+        // Redraw all zone polygons (needed after loading multiple files)
+        function redrawAllZonePolygons() {
+            if (!googleMap) return;
+            
+            const colors = ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#009688', '#4caf50', '#ff9800', '#ff5722', '#795548', '#607d8b'];
+            
+            // Clear existing polygons
+            if (Array.isArray(zonePolygonsLayer)) {
+                zonePolygonsLayer.forEach(p => p.setMap(null));
+                zonePolygonsLayer = [];
+            }
+            
+            drawnPolygons.forEach((zone, idx) => {
+                zone.color = colors[idx % colors.length];
+                const paths = zone.coordinates.map(c => ({ lat: c[1], lng: c[0] }));
+                
+                const polygon = new google.maps.Polygon({
+                    paths: paths,
+                    strokeColor: zone.color,
+                    strokeWeight: 3,
+                    fillColor: zone.color,
+                    fillOpacity: 0.25,
+                    map: googleMap
+                });
+                
+                polygon.addListener('click', function() {
+                    selectZone(idx);
+                });
+                
+                zonePolygonsLayer.push(polygon);
+            });
+        }
+        
+        // Draw roads on map with width-based styling
+        function drawRoadsOnMap() {
+            if (!googleMap || !roads || roads.length === 0) return;
+            
+            // Clear existing road polylines
+            if (roadPolylines && roadPolylines.length > 0) {
+                roadPolylines.forEach(p => p.setMap(null));
+            }
+            roadPolylines = [];
+            
+            // Check if roads should be shown
+            const showRoads = document.getElementById('showRoadsToggle')?.checked !== false;
+            const showMajorOnly = document.getElementById('showMajorRoadsOnly')?.checked || false;
+            
+            if (!showRoads) return;
+            
+            roads.forEach(road => {
+                if (!road.geometry) return;
+                
+                const props = road.properties || {};
+                const width = parseFloat(props.width_m || props.WIDTH || props.width || 10);
+                
+                // Skip non-major roads if filter is enabled
+                if (showMajorOnly && width < 30) return;
+                
+                // Get coordinates
+                let coordsList = [];
+                if (road.geometry.type === 'LineString') {
+                    coordsList = [road.geometry.coordinates];
+                } else if (road.geometry.type === 'MultiLineString') {
+                    coordsList = road.geometry.coordinates;
+                }
+                
+                // Color based on width
+                let strokeColor = '#888888'; // Default gray
+                let strokeWeight = 2;
+                let zIndex = 1;
+                
+                if (width >= 40) {
+                    strokeColor = '#d32f2f'; // Red - Highway
+                    strokeWeight = 6;
+                    zIndex = 5;
+                } else if (width >= 30) {
+                    strokeColor = '#f44336'; // Light red - Major
+                    strokeWeight = 5;
+                    zIndex = 4;
+                } else if (width >= 20) {
+                    strokeColor = '#ff9800'; // Orange - Secondary
+                    strokeWeight = 4;
+                    zIndex = 3;
+                } else if (width >= 12) {
+                    strokeColor = '#ffc107'; // Yellow - Tertiary
+                    strokeWeight = 3;
+                    zIndex = 2;
+                } else {
+                    strokeColor = '#9e9e9e'; // Gray - Local
+                    strokeWeight = 2;
+                    zIndex = 1;
+                }
+                
+                coordsList.forEach(coords => {
+                    const path = coords.map(c => ({ lat: c[1], lng: c[0] }));
+                    
+                    const polyline = new google.maps.Polyline({
+                        path: path,
+                        strokeColor: strokeColor,
+                        strokeWeight: strokeWeight,
+                        strokeOpacity: 0.8,
+                        zIndex: zIndex,
+                        map: googleMap
+                    });
+                    
+                    // Add click listener for road info
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: `
+                            <div style="min-width:200px;font-family:Arial,sans-serif;">
+                                <h4 style="margin:0 0 8px;color:${strokeColor};">${props.name_en || props.name_ar || 'Unnamed Road'}</h4>
+                                <div style="font-size:12px;line-height:1.6;">
+                                    <b>Width:</b> ${width}m<br>
+                                    <b>Length:</b> ${props.length_m ? (props.length_m/1000).toFixed(2) + ' km' : 'N/A'}<br>
+                                    <b>Lanes:</b> ${props.num_lanes || 'N/A'}<br>
+                                    <b>Source:</b> ${props.source || 'OSM'}
+                                </div>
+                            </div>
+                        `
+                    });
+                    
+                    polyline.addListener('click', function(e) {
+                        infoWindow.setPosition(e.latLng);
+                        infoWindow.open(googleMap);
+                    });
+                    
+                    roadPolylines.push(polyline);
+                });
+            });
+            
+            console.log('Drew', roadPolylines.length, 'road segments');
+        }
+        
+        // Toggle road visibility
+        function toggleRoads() {
+            drawRoadsOnMap();
+        }
         
         function getDistrictName(d) {
             if (d.properties) {
@@ -1047,6 +3130,7 @@
                     zoomToDistrict(selectedDistrictObj);
                 }
             }
+            // Entry/exit points only come from file upload - never auto-generated
             updateDistrictList();
             calculateDistrictStats();
             render();
@@ -1070,11 +3154,7 @@
             });
             
             // Fit bounds with padding
-            const bounds = new google.maps.LatLngBounds(
-                new google.maps.LatLng(minLat, minLng),
-                new google.maps.LatLng(maxLat, maxLng)
-            );
-            map.fitBounds(bounds, { top: 50, right: 50, bottom: 50, left: 400 });
+            fitMapBounds(maxLat, minLat, maxLng, minLng, 50);
         }
         
         let selectedDistrictObj = null;
@@ -1086,8 +3166,7 @@
             calculateDistrictStats();
             render();
             // Reset view to all Riyadh
-            map.setCenter({ lat: 24.7136, lng: 46.6753 });
-            map.setZoom(11);
+            setMapCenter(24.7136, 46.6753, 11);
         }
         
         function selectAllPoi() {
@@ -1102,9 +3181,9 @@
         }
         
         function exportVisibleParcels() {
-            const bounds = map.getBounds();
-            const ne = bounds.getNorthEast(), sw = bounds.getSouthWest();
-            const visible = parcels.filter(p => p.lat >= sw.lat() && p.lat <= ne.lat() && p.lng >= sw.lng() && p.lng <= ne.lng());
+            const bounds = getMapBounds();
+            if (!bounds) return;
+            const visible = parcels.filter(p => p.lat >= bounds.south && p.lat <= bounds.north && p.lng >= bounds.west && p.lng <= bounds.east);
             downloadCSV(visible, 'visible_parcels.csv');
         }
         
@@ -1148,57 +3227,102 @@
             document.getElementById('infoPopup').classList.remove('show');
         }
         
+        // Check if a point is near a line segment
+        function pointToLineDistance(px, py, x1, y1, x2, y2) {
+            const A = px - x1;
+            const B = py - y1;
+            const C = x2 - x1;
+            const D = y2 - y1;
+            
+            const dot = A * C + B * D;
+            const lenSq = C * C + D * D;
+            let param = -1;
+            
+            if (lenSq !== 0) param = dot / lenSq;
+            
+            let xx, yy;
+            if (param < 0) { xx = x1; yy = y1; }
+            else if (param > 1) { xx = x2; yy = y2; }
+            else { xx = x1 + param * C; yy = y1 + param * D; }
+            
+            const dx = px - xx;
+            const dy = py - yy;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
         function findClickedItem(lat, lng, pixelTolerance) {
-            if (!map) return null;
+            if (!googleMap) return null;
             
-            const proj = map.getProjection();
-            const zoom = map.getZoom();
-            const scale = Math.pow(2, zoom);
-            const clickPt = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
+            const zoom = googleMap.getZoom();
+            // Tolerance in degrees (smaller at higher zoom)
+            const tolerance = 0.0005 * Math.pow(2, 15 - zoom);
             
-            // Tolerance in world coordinates
-            const tolerance = pixelTolerance / scale;
+            // Check Entry/Exit points first (highest priority)
+            for (const p of entryExitPoints) {
+                const dist = Math.sqrt(Math.pow(p.lat - lat, 2) + Math.pow(p.lng - lng, 2));
+                if (dist < tolerance * 2) {
+                    return { type: 'entryexit', data: p };
+                }
+            }
             
-            // Check POIs first (on top)
+            // Check POIs
             for (const p of poiData) {
                 if (activePoiCategories.size > 0 && !activePoiCategories.has(p.layer)) continue;
-                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
-                if (Math.abs(pt.x - clickPt.x) < tolerance && Math.abs(pt.y - clickPt.y) < tolerance) {
+                const dist = Math.sqrt(Math.pow(p.lat - lat, 2) + Math.pow(p.lng - lng, 2));
+                if (dist < tolerance) {
                     return { type: 'poi', data: p };
+                }
+            }
+            
+            // Check roads (lines)
+            if (roads.length > 0) {
+                for (const road of roads) {
+                    const geom = road.geometry;
+                    if (!geom) continue;
+                    
+                    const lines = geom.type === 'LineString' ? [geom.coordinates] : geom.coordinates;
+                    
+                    for (const coords of lines) {
+                        if (!coords || coords.length < 2) continue;
+                        
+                        for (let i = 0; i < coords.length - 1; i++) {
+                            const [lon1, lat1] = coords[i];
+                            const [lon2, lat2] = coords[i + 1];
+                            
+                            const dist = pointToLineDistance(lng, lat, lon1, lat1, lon2, lat2);
+                            if (dist < tolerance * 3) {
+                                return { type: 'road', data: road };
+                            }
+                        }
+                    }
                 }
             }
             
             // Check parcels
             for (const p of parcels) {
-                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(p.lat, p.lng));
-                if (Math.abs(pt.x - clickPt.x) < tolerance && Math.abs(pt.y - clickPt.y) < tolerance) {
+                const dist = Math.sqrt(Math.pow(p.lat - lat, 2) + Math.pow(p.lng - lng, 2));
+                if (dist < tolerance) {
                     return { type: 'parcel', data: p };
                 }
             }
             
-            // Check buildings (polygon click)
+            // Check buildings
             for (const b of buildings) {
                 const coords = b.geometry?.coordinates?.[0];
                 if (!coords || coords.length < 3) continue;
-                
-                // Convert building polygon to screen coordinates
-                const screenPoly = coords.map(([lon, lat]) => {
-                    const w = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                    return { x: (w.x - bounds.getSouthWest().lng) * scale, y: (w.y - bounds.getNorthEast().lat) * scale };
-                });
-                
-                // Simple bounds check first
-                const [lon, lat] = coords[0];
-                const pt = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lon));
-                if (Math.abs(pt.x - clickPt.x) < tolerance * 3 && Math.abs(pt.y - clickPt.y) < tolerance * 3) {
-                    return { type: 'building', data: { lat: lat, lng: lon } };
+                const [lon, bLat] = coords[0];
+                const dist = Math.sqrt(Math.pow(bLat - lat, 2) + Math.pow(lon - lng, 2));
+                if (dist < tolerance * 3) {
+                    return { type: 'building', data: { lat: bLat, lng: lon } };
                 }
             }
             
             // Check districts
             for (const d of districts) {
-                const coords = d.geometry.type === 'Polygon' ? d.geometry.coordinates[0] : 
-                               d.geometry.type === 'MultiPolygon' ? d.geometry.coordinates[0][0] : null;
+                const geom = getDistrictGeometry(d);
+                if (!geom) continue;
+                const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
+                               geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
                 if (!coords) continue;
                 const poly = coords.map(([lon, lat]) => [lon, lat]);
                 if (pointInPolygon(lat, lng, poly)) {
@@ -1210,12 +3334,31 @@
         }
         
         function handleMapClick(e) {
+            const lat = e.latLng.lat();
+            const lng = e.latLng.lng();
+            
+            // Check if in create zone mode
+            if (createZoneMode) {
+                createZoneAtPoint(lat, lng);
+                return;
+            }
+            
+            // Check if in add zone entry/exit mode
+            if (addZoneEntryMode) {
+                addZoneEntryPoint(lat, lng);
+                return;
+            }
+            
+            // Check if in add entry/exit mode
+            if (addEntryExitMode) {
+                addEntryExitPoint(lat, lng);
+                return;
+            }
+            
             if (!document.getElementById('enableClick').checked) return;
             
             closeInfoPopup();
             
-            const lat = e.latLng.lat();
-            const lng = e.latLng.lng();
             const item = findClickedItem(lat, lng, 15);
             
             if (!item) return;
@@ -1223,7 +3366,55 @@
             const pixelX = e.pixel.x;
             const pixelY = e.pixel.y;
             
-            if (item.type === 'poi') {
+            if (item.type === 'entryexit') {
+                const p = item.data;
+                const idx = entryExitPoints.indexOf(p);
+                showInfoPopup(pixelX, pixelY,
+                    `<span class="type-badge" style="background:#d32f2f;">Entry/Exit</span> Road Crossing Point`,
+                    `<div style="direction:rtl;text-align:right;font-size:14px;font-weight:bold;margin-bottom:8px;">${p.name}</div>
+                    <table>
+                        <tr><td>Road Width</td><td><b>${p.width}m</b></td></tr>
+                        <tr><td>Road Class</td><td>${p.width >= 30 ? 'Major Highway' : p.width >= 15 ? 'Arterial' : 'Local Road'}</td></tr>
+                        <tr><td>Location</td><td>${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</td></tr>
+                    </table>
+                    <button onclick="deleteEntryExitPoint(${idx})" style="width:100%;margin-top:10px;padding:8px;background:#d32f2f;color:white;border:none;border-radius:4px;cursor:pointer;font-weight:bold;">Delete This Point</button>`
+                );
+            } else if (item.type === 'road') {
+                const r = item.data;
+                const props = r.properties || {};
+                const width = props.width_m || props.WIDTH || props.width || 'N/A';
+                const length = props.length_m || props.LENGTH || props.length || 'N/A';
+                const nameAr = props.name_ar || props.ROADCENTERLINENAME_AR || '-';
+                const nameEn = props.name_en || props.ROADCENTERLINENAME_EN || '-';
+                const lanes = props.num_lanes || props.NOOFLANES || props.lanes || '-';
+                const paved = props.paved || props.PAVED || '-';
+                const category = props.category || props.ROADCATEGORY || '-';
+                const condition = props.condition || props.ROADCONDITION || '-';
+                const surfaceType = props.surface_type || props.SURFACETYPE || '-';
+                const speedLimit = props.speed_limit || props.SPEEDLIMIT || '-';
+                const direction = props.road_direction || props.ROADDIRECTION || '-';
+                const streetId = props.street_id || props.STREET_ID || '-';
+                
+                const color = getRoadColor(parseFloat(width) || 10);
+                
+                showInfoPopup(pixelX, pixelY,
+                    `<span class="type-badge" style="background:${color};">🛣️ Road</span> ${width}m`,
+                    `<div style="direction:rtl;text-align:right;font-size:16px;font-weight:bold;margin-bottom:8px;">${nameAr}</div>
+                    <div style="color:#666;margin-bottom:10px;">${nameEn}</div>
+                    <table>
+                        <tr><td>📏 Width</td><td><b>${width}m</b></td></tr>
+                        <tr><td>📐 Length</td><td>${typeof length === 'number' ? length.toFixed(0) + 'm' : length}</td></tr>
+                        <tr><td>🚗 Lanes</td><td>${lanes}</td></tr>
+                        <tr><td>🛤️ Paved</td><td>${paved}</td></tr>
+                        <tr><td>Category</td><td>${category}</td></tr>
+                        <tr><td>🔧 Condition</td><td>${condition}</td></tr>
+                        <tr><td>Surface</td><td>${surfaceType}</td></tr>
+                        <tr><td>⚡ Speed Limit</td><td>${speedLimit}</td></tr>
+                        <tr><td>↔️ Direction</td><td>${direction}</td></tr>
+                        <tr><td>🆔 Street ID</td><td style="font-size:9px;">${streetId}</td></tr>
+                    </table>`
+                );
+            } else if (item.type === 'poi') {
                 const p = item.data;
                 const color = poiColors[p.layer] || poiColors['default'];
                 showInfoPopup(pixelX, pixelY, 
@@ -1258,29 +3449,139 @@
                 );
             } else if (item.type === 'district') {
                 const d = item.data;
-                const name = d.properties.name || d.properties.NAME || 'Unknown';
-                selectDistrict(name);
+                const name = getDistrictName(d);
+                
+                // Calculate quick stats for popup
+                const geom = getDistrictGeometry(d);
+                let distStats = { parcels: 0, apt: 0, villa: 0, other: 0, roads: 0, roadLength: 0, majorRoads: 0, poi: 0, entryExit: 0, majorCrossings: 0, secCrossings: 0, localCrossings: 0 };
+                
+                if (geom) {
+                    const coords = geom.type === 'Polygon' ? geom.coordinates[0] : 
+                                   geom.type === 'MultiPolygon' ? geom.coordinates[0][0] : null;
+                    if (coords) {
+                        const poly = coords.map(([lon, lat]) => [lon, lat]);
+                        let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
+                        coords.forEach(([lon, lat]) => {
+                            if (lat < minLat) minLat = lat;
+                            if (lat > maxLat) maxLat = lat;
+                            if (lon < minLng) minLng = lon;
+                            if (lon > maxLng) maxLng = lon;
+                        });
+                        
+                        // Count parcels
+                        parcels.forEach(p => {
+                            if (p.lat < minLat || p.lat > maxLat || p.lng < minLng || p.lng > maxLng) return;
+                            if (pointInPolygon(p.lat, p.lng, poly)) {
+                                distStats.parcels++;
+                                if (p.type === 'apt') distStats.apt++;
+                                else if (p.type === 'villa') distStats.villa++;
+                                else distStats.other++;
+                            }
+                        });
+                        
+                        // Count POIs
+                        poiData.forEach(p => {
+                            if (p.lat < minLat || p.lat > maxLat || p.lng < minLng || p.lng > maxLng) return;
+                            if (pointInPolygon(p.lat, p.lng, poly)) distStats.poi++;
+                        });
+                        
+                        // Count roads
+                        const uniqueRoads = new Set();
+                        roads.forEach(road => {
+                            const roadGeom = road.geometry;
+                            if (!roadGeom) return;
+                            const props = road.properties || {};
+                            const width = parseFloat(props.width_m || props.WIDTH || 0);
+                            const length = parseFloat(props.length_m || props.LENGTH || 0);
+                            const nameAr = props.name_ar || props.ROADCENTERLINENAME_AR || '';
+                            
+                            const lines = roadGeom.type === 'LineString' ? [roadGeom.coordinates] : roadGeom.coordinates;
+                            for (const lineCoords of lines) {
+                                for (const [lon, rLat] of lineCoords) {
+                                    if (rLat >= minLat && rLat <= maxLat && lon >= minLng && lon <= maxLng) {
+                                        if (pointInPolygon(rLat, lon, poly)) {
+                                            distStats.roads++;
+                                            distStats.roadLength += length;
+                                            if (width >= 20) distStats.majorRoads++;
+                                            if (nameAr) uniqueRoads.add(nameAr);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        distStats.uniqueRoads = uniqueRoads.size;
+                        
+                        // Calculate actual entry/exit boundary crossings
+                        const boundary = coords;
+                        let majorCrossings = 0, secCrossings = 0, localCrossings = 0;
+                        roads.forEach(road => {
+                            const props = road.properties || {};
+                            const width = parseFloat(props.width_m || props.WIDTH || 0);
+                            const roadGeom = road.geometry;
+                            if (!roadGeom) return;
+                            
+                            const lines = roadGeom.type === 'LineString' ? [roadGeom.coordinates] : roadGeom.coordinates;
+                            lines.forEach(rCoords => {
+                                if (!rCoords || rCoords.length < 2) return;
+                                for (let i = 0; i < rCoords.length - 1; i++) {
+                                    const [x1, y1] = rCoords[i];
+                                    const [x2, y2] = rCoords[i + 1];
+                                    for (let j = 0; j < boundary.length - 1; j++) {
+                                        const [x3, y3] = boundary[j];
+                                        const [x4, y4] = boundary[j + 1];
+                                        const denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+                                        if (Math.abs(denom) < 1e-10) continue;
+                                        const ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom;
+                                        const ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denom;
+                                        if (ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1) {
+                                            distStats.entryExit++;
+                                            if (width >= 20) majorCrossings++;
+                                            else if (width >= 15) secCrossings++;
+                                            else localCrossings++;
+                                        }
+                                    }
+                                }
+                            });
+                        });
+                        distStats.majorCrossings = majorCrossings;
+                        distStats.secCrossings = secCrossings;
+                        distStats.localCrossings = localCrossings;
+                    }
+                }
+                
+                showInfoPopup(pixelX, pixelY,
+                    `<span class="type-badge" style="background:#607D8B;">🏘️ District</span>`,
+                    `<div style="font-size:16px;font-weight:bold;margin-bottom:10px;">${name}</div>
+                    <table>
+                        <tr style="background:#e3f2fd;"><td colspan="2" style="font-weight:bold;color:#1976D2;">PARCELS</td></tr>
+                        <tr><td>Total Parcels</td><td><b>${distStats.parcels.toLocaleString()}</b></td></tr>
+                        <tr><td>🏢 Apartments</td><td>${distStats.apt.toLocaleString()}</td></tr>
+                        <tr><td>🏠 Villas</td><td>${distStats.villa.toLocaleString()}</td></tr>
+                        <tr><td>📦 Other</td><td>${distStats.other.toLocaleString()}</td></tr>
+                        <tr><td>POIs</td><td>${distStats.poi.toLocaleString()}</td></tr>
+                        
+                        <tr style="background:#e8f5e9;"><td colspan="2" style="font-weight:bold;color:#2E7D32;">🛣️ ROADS</td></tr>
+                        <tr><td>Road Segments</td><td><b>${distStats.roads.toLocaleString()}</b></td></tr>
+                        <tr><td>Total Length</td><td>${(distStats.roadLength/1000).toFixed(2)} km</td></tr>
+                        <tr><td>Major Roads (20m+)</td><td>${distStats.majorRoads}</td></tr>
+                        <tr><td>Unique Roads</td><td>${distStats.uniqueRoads || 0}</td></tr>
+                        
+                        <tr style="background:#fce4ec;"><td colspan="2" style="font-weight:bold;color:#C2185B;">ENTRY/EXIT (Boundary Crossings)</td></tr>
+                        <tr><td>Total Crossings</td><td><b>${distStats.entryExit || 0}</b></td></tr>
+                        <tr><td>Major (20m+)</td><td>${distStats.majorCrossings || 0}</td></tr>
+                        <tr><td>Secondary (15-20m)</td><td>${distStats.secCrossings || 0}</td></tr>
+                        <tr><td>Local (<15m)</td><td>${distStats.localCrossings || 0}</td></tr>
+                    </table>
+                    <div style="margin-top:10px;text-align:center;">
+                        <button onclick="selectDistrict('${name.replace(/'/g, "\\'")}');closeInfoPopup();" style="padding:5px 15px;background:#1a73e8;color:white;border:none;border-radius:4px;cursor:pointer;">Select District & Show Entry/Exit</button>
+                    </div>`
+                );
             }
         }
         
-        window.initMap = function() {
-            map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: 24.7136, lng: 46.6753 },
-                zoom: 11,
-                mapTypeControl: true,
-                gestureHandling: 'greedy'
-            });
-            
-            map.addListener('idle', render);
-            map.addListener('click', handleMapClick);
-            
-            window.addEventListener('resize', () => {
-                render();
-            });
-            
-            console.log('Map ready. Upload your data files.');
-        }
     </script>
-    <script src="https://somanchiu.github.io/Keyless-Google-Maps-API/mapsJavaScriptAPI.js?callback=initMap" async defer></script>
+    <!-- Keyless Google Maps API - MUST be at end of body -->
+    <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
 </body>
 </html>

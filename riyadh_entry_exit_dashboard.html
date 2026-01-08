@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Entry/Exit Dashboard</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; }
+        
+        #sidebar {
+            position: fixed; left: 0; top: 0; width: 300px; height: 100vh;
+            background: rgba(22, 33, 62, 0.97); padding: 12px; overflow-y: auto; z-index: 1000; color: white;
+        }
+        
+        h1 { font-size: 14px; color: #e94560; margin-bottom: 10px; }
+        h3 { font-size: 10px; background: #e94560; padding: 4px 8px; margin: 10px 0 6px 0; border-radius: 3px; }
+        
+        .box { background: #0f3460; padding: 10px; border-radius: 5px; margin-bottom: 8px; }
+        .box-title { font-size: 11px; font-weight: bold; margin-bottom: 6px; }
+        .box input[type="file"] { width: 100%; padding: 6px; background: #1a1a2e; border: 1px dashed #e94560; color: white; border-radius: 3px; font-size: 10px; }
+        .status { font-size: 10px; color: #4caf50; margin-top: 4px; }
+        .status.wait { color: #666; }
+        
+        .slider-row { margin: 6px 0; }
+        .slider-row label { font-size: 10px; display: block; margin-bottom: 3px; }
+        .slider-row input[type="range"] { width: 100%; }
+        .slider-row .val { float: right; color: #e94560; font-weight: bold; }
+        
+        .color-row { margin: 8px 0; display: flex; align-items: center; gap: 8px; }
+        .color-row label { font-size: 11px; flex: 1; }
+        .color-row input[type="color"] { width: 50px; height: 28px; border: none; cursor: pointer; border-radius: 4px; }
+        
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+        .stat { background: #0f3460; padding: 8px; border-radius: 4px; text-align: center; }
+        .stat .n { font-size: 20px; font-weight: bold; color: #e94560; }
+        .stat .l { font-size: 9px; color: #888; }
+        .stat.main { grid-column: span 2; background: #e94560; }
+        .stat.main .n { color: white; font-size: 26px; }
+        .stat.main .l { color: #fcc; }
+        
+        button { width: 100%; padding: 10px; background: #e94560; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 3px 0; font-size: 11px; }
+        button:disabled { background: #444; }
+        
+        .list { max-height: 100px; overflow-y: auto; font-size: 10px; }
+        .item { display: flex; align-items: center; padding: 4px; background: #0f3460; margin: 2px 0; border-radius: 3px; cursor: pointer; }
+        .item:hover { background: #1a4a7a; }
+        .item .dot { width: 20px; height: 20px; background: #e94560; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: bold; margin-right: 6px; border: 2px solid white; }
+        .item .name { flex: 1; direction: rtl; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+        
+        #map { position: fixed; left: 300px; top: 0; right: 0; bottom: 0; z-index: 1; }
+        
+        .leaflet-popup-content { direction: rtl; }
+        
+        .vertex-handle {
+            width: 22px !important;
+            height: 22px !important;
+            background: #00ff00 !important;
+            border: 4px solid #000 !important;
+            border-radius: 50% !important;
+            cursor: move !important;
+            box-shadow: 0 0 12px #00ff00, 0 0 20px rgba(0,255,0,0.5);
+        }
+        .vertex-handle:hover {
+            background: #fff !important;
+            transform: scale(1.4);
+            box-shadow: 0 0 20px #fff, 0 0 30px rgba(255,255,255,0.8);
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h1>Entry/Exit Dashboard</h1>
+        
+        <div class="box">
+            <div class="box-title">1. Load Roads GeoJSON</div>
+            <input type="file" id="fileRoads" accept=".geojson,.json">
+            <div class="status wait" id="statusRoads">No roads loaded</div>
+        </div>
+        
+        <div class="box">
+            <div class="box-title">2. Load District Boundary</div>
+            <input type="file" id="fileDistrict" accept=".geojson,.json">
+            <div class="status wait" id="statusDistrict">No district loaded</div>
+        </div>
+        
+        <h3>BOUNDARY (drag yellow dots!)</h3>
+        <div class="box">
+            <button onclick="resetBoundary()">Reset to Original</button>
+            <div class="color-row" style="margin-top:8px;">
+                <label>Color</label>
+                <input type="color" id="colorDistrict" value="#e94560">
+            </div>
+            <div class="slider-row">
+                <label>Fill Opacity <span class="val" id="valOpacity">20%</span></label>
+                <input type="range" id="sliderOpacity" min="0" max="80" value="20" step="5">
+            </div>
+        </div>
+        
+        <h3>ROADS</h3>
+        <div class="box">
+            <div class="slider-row">
+                <label>Road Extension <span class="val" id="valExt">300m</span></label>
+                <input type="range" id="sliderExt" min="0" max="1500" value="300" step="50">
+            </div>
+            <div class="slider-row">
+                <label>Min Road Width <span class="val" id="valWidth">0m</span></label>
+                <input type="range" id="sliderWidth" min="0" max="40" value="0" step="2">
+            </div>
+            <div class="slider-row">
+                <label>Dot Size <span class="val" id="valDot">12</span></label>
+                <input type="range" id="sliderDot" min="6" max="25" value="12">
+            </div>
+        </div>
+        
+        <h3>RESULTS</h3>
+        <div class="stats">
+            <div class="stat main"><div class="n" id="sTotal">0</div><div class="l">ENTRY/EXIT POINTS</div></div>
+            <div class="stat"><div class="n" id="sMajor">0</div><div class="l">Major 30m+</div></div>
+            <div class="stat"><div class="n" id="sOther">0</div><div class="l">Other</div></div>
+        </div>
+        
+        <h3>ENTRY/EXIT POINTS</h3>
+        <div class="box">
+            <div class="box-title">Load Saved Points</div>
+            <input type="file" id="filePoints" accept=".geojson,.json">
+            <div class="status wait" id="statusPoints">No points loaded</div>
+        </div>
+        
+        <h3>EXPORT</h3>
+        <button id="btnExport" onclick="exportData()" disabled>Download Entry/Exit GeoJSON</button>
+        <button onclick="exportBoundary()">Download Modified Boundary</button>
+        
+        <h3>POINT LIST</h3>
+        <div class="list" id="list"><div style="color:#666;text-align:center;padding:15px;">Load roads + district</div></div>
+    </div>
+    
+    <div id="map"></div>
+
+    <script>
+        // Initialize map
+        const map = L.map('map', {
+            center: [24.73, 46.65],
+            zoom: 14,
+            zoomControl: true
+        });
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'OpenStreetMap',
+            maxZoom: 19
+        }).addTo(map);
+        
+        // Data
+        let roads = [];
+        let originalBoundary = [];
+        let boundary = [];
+        let entryExits = [];
+        let vertexMarkers = [];
+        
+        // Layers
+        let roadsLayer = L.layerGroup().addTo(map);
+        let boundaryLayer = L.layerGroup().addTo(map);
+        let pointsLayer = L.layerGroup().addTo(map);
+        let vertexLayer = L.layerGroup().addTo(map);
+        
+        // Create draggable vertex markers
+        function createVertexMarkers() {
+            vertexLayer.clearLayers();
+            vertexMarkers = [];
+            
+            const vertexIcon = L.divIcon({
+                className: 'vertex-handle',
+                iconSize: [22, 22],
+                iconAnchor: [11, 11]
+            });
+            
+            // Skip last point if it's same as first (closed polygon)
+            const numPoints = boundary.length;
+            const skipLast = (numPoints > 1 && 
+                Math.abs(boundary[0][0] - boundary[numPoints-1][0]) < 0.00001 && 
+                Math.abs(boundary[0][1] - boundary[numPoints-1][1]) < 0.00001);
+            
+            const count = skipLast ? numPoints - 1 : numPoints;
+            
+            for (let i = 0; i < count; i++) {
+                const coord = boundary[i];
+                const marker = L.marker([coord[1], coord[0]], {
+                    icon: vertexIcon,
+                    draggable: true
+                }).addTo(vertexLayer);
+                
+                // Store index
+                marker._vertexIndex = i;
+                
+                marker.on('drag', function(e) {
+                    const idx = this._vertexIndex;
+                    boundary[idx] = [e.latlng.lng, e.latlng.lat];
+                    
+                    // If this is first point and polygon is closed, update last point too
+                    if (idx === 0 && skipLast) {
+                        boundary[numPoints - 1] = [e.latlng.lng, e.latlng.lat];
+                    }
+                    
+                    renderBoundaryOnly();
+                });
+                
+                marker.on('dragend', function() {
+                    findCrossings();
+                });
+                
+                vertexMarkers.push(marker);
+            }
+        }
+        
+        function resetBoundary() {
+            if (!originalBoundary.length) return;
+            boundary = JSON.parse(JSON.stringify(originalBoundary));
+            createVertexMarkers();
+            findCrossings();
+        }
+        
+        // Get lines from geometry
+        function getLines(geometry) {
+            if (!geometry) return [];
+            if (geometry.type === 'LineString') return [geometry.coordinates];
+            if (geometry.type === 'MultiLineString') return geometry.coordinates;
+            return [];
+        }
+        
+        // Line intersection
+        function lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {
+            const d = (y4-y3)*(x2-x1) - (x4-x3)*(y2-y1);
+            if (Math.abs(d) < 1e-12) return null;
+            const u = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3)) / d;
+            const v = ((x2-x1)*(y1-y3) - (y2-y1)*(x1-x3)) / d;
+            if (u >= 0 && u <= 1 && v >= 0 && v <= 1) {
+                return [x1 + u*(x2-x1), y1 + u*(y2-y1)];
+            }
+            return null;
+        }
+        
+        // Extend line
+        function extendLine(x1, y1, x2, y2, meters) {
+            const deg = meters / 111000;
+            const dx = x2 - x1, dy = y2 - y1;
+            const len = Math.sqrt(dx*dx + dy*dy);
+            if (len < 1e-8) return { x1, y1, x2, y2 };
+            const ux = dx/len, uy = dy/len;
+            return { x1: x1 - ux*deg, y1: y1 - uy*deg, x2: x2 + ux*deg, y2: y2 + uy*deg };
+        }
+        
+        // Find crossings
+        function findCrossings() {
+            entryExits = [];
+            if (!boundary.length || !roads.length) { updateUI(); render(); return; }
+            
+            const ext = parseInt(document.getElementById('sliderExt').value);
+            const minW = parseInt(document.getElementById('sliderWidth').value);
+            const seen = {};
+            
+            roads.forEach(road => {
+                const props = road.properties || {};
+                const w = parseFloat(props.width_m || props.WIDTH || props.width || 8);
+                const name = props.name_ar || props.ROADCENTERLINENAME_AR || props.name_en || props.name || 'Road';
+                
+                if (w < minW) return;
+                
+                const lines = getLines(road.geometry);
+                
+                lines.forEach(coords => {
+                    if (!coords || coords.length < 2) return;
+                    
+                    const extStart = extendLine(coords[1][0], coords[1][1], coords[0][0], coords[0][1], ext);
+                    const last = coords.length - 1;
+                    const extEnd = extendLine(coords[last-1][0], coords[last-1][1], coords[last][0], coords[last][1], ext);
+                    
+                    const extCoords = [[extStart.x2, extStart.y2], ...coords, [extEnd.x2, extEnd.y2]];
+                    
+                    for (let i = 0; i < extCoords.length - 1; i++) {
+                        const [rx1, ry1] = extCoords[i];
+                        const [rx2, ry2] = extCoords[i + 1];
+                        
+                        for (let j = 0; j < boundary.length - 1; j++) {
+                            const [bx1, by1] = boundary[j];
+                            const [bx2, by2] = boundary[j + 1];
+                            
+                            const hit = lineIntersect(rx1, ry1, rx2, ry2, bx1, by1, bx2, by2);
+                            if (hit) {
+                                const key = hit[0].toFixed(5) + '_' + hit[1].toFixed(5);
+                                if (!seen[key]) {
+                                    seen[key] = true;
+                                    entryExits.push({ lng: hit[0], lat: hit[1], name, width: w });
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+            
+            entryExits.sort((a, b) => b.width - a.width);
+            updateUI();
+            render();
+        }
+        
+        function updateUI() {
+            document.getElementById('sTotal').textContent = entryExits.length;
+            document.getElementById('sMajor').textContent = entryExits.filter(p => p.width >= 30).length;
+            document.getElementById('sOther').textContent = entryExits.filter(p => p.width < 30).length;
+            document.getElementById('btnExport').disabled = !entryExits.length;
+            
+            const list = document.getElementById('list');
+            if (!entryExits.length) {
+                list.innerHTML = '<div style="color:#666;text-align:center;padding:15px;">Drag boundary or adjust sliders</div>';
+                return;
+            }
+            
+            let html = '';
+            const max = Math.min(30, entryExits.length);
+            for (let i = 0; i < max; i++) {
+                const p = entryExits[i];
+                html += `<div class="item" onclick="gotoPoint(${i})"><div class="dot">${Math.round(p.width)}</div><div class="name">${p.name}</div></div>`;
+            }
+            if (entryExits.length > 30) html += `<div style="color:#888;text-align:center;padding:5px;">+${entryExits.length - 30} more</div>`;
+            list.innerHTML = html;
+        }
+        
+        function gotoPoint(i) {
+            const p = entryExits[i];
+            if (p) map.setView([p.lat, p.lng], 17);
+        }
+        
+        // Render just boundary (for smooth dragging)
+        function renderBoundaryOnly() {
+            boundaryLayer.clearLayers();
+            const districtColor = document.getElementById('colorDistrict').value;
+            const fillOpacity = parseInt(document.getElementById('sliderOpacity').value) / 100;
+            
+            if (boundary.length) {
+                const latlngs = boundary.map(c => [c[1], c[0]]);
+                L.polygon(latlngs, {
+                    color: districtColor,
+                    weight: 3,
+                    fillColor: districtColor,
+                    fillOpacity: fillOpacity
+                }).addTo(boundaryLayer);
+            }
+        }
+        
+        function render() {
+            roadsLayer.clearLayers();
+            boundaryLayer.clearLayers();
+            pointsLayer.clearLayers();
+            
+            const ext = parseInt(document.getElementById('sliderExt').value);
+            const minW = parseInt(document.getElementById('sliderWidth').value);
+            const dotSize = parseInt(document.getElementById('sliderDot').value);
+            const districtColor = document.getElementById('colorDistrict').value;
+            const fillOpacity = parseInt(document.getElementById('sliderOpacity').value) / 100;
+            
+            // Draw roads
+            roads.forEach(road => {
+                const props = road.properties || {};
+                const w = parseFloat(props.width_m || props.WIDTH || props.width || 8);
+                if (w < minW) return;
+                
+                const lines = getLines(road.geometry);
+                const color = w >= 30 ? '#e94560' : w >= 15 ? '#ff9800' : '#4caf50';
+                const weight = w >= 30 ? 4 : w >= 15 ? 3 : 2;
+                
+                lines.forEach(coords => {
+                    if (!coords || coords.length < 2) return;
+                    
+                    const extStart = extendLine(coords[1][0], coords[1][1], coords[0][0], coords[0][1], ext);
+                    const last = coords.length - 1;
+                    const extEnd = extendLine(coords[last-1][0], coords[last-1][1], coords[last][0], coords[last][1], ext);
+                    
+                    const extCoords = [[extStart.x2, extStart.y2], ...coords, [extEnd.x2, extEnd.y2]];
+                    const latlngs = extCoords.map(c => [c[1], c[0]]);
+                    
+                    const line = L.polyline(latlngs, { color, weight, opacity: 0.8 });
+                    line.bindPopup(`<b>${props.name_ar || props.name_en || 'Road'}</b><br>Width: ${w}m`);
+                    line.addTo(roadsLayer);
+                });
+            });
+            
+            // Draw boundary polygon
+            if (boundary.length) {
+                const latlngs = boundary.map(c => [c[1], c[0]]);
+                L.polygon(latlngs, {
+                    color: districtColor,
+                    weight: 3,
+                    fillColor: districtColor,
+                    fillOpacity: fillOpacity
+                }).addTo(boundaryLayer);
+            }
+            
+            // Draw entry/exit points
+            entryExits.forEach((p) => {
+                const r = p.width >= 40 ? dotSize * 1.3 : p.width >= 20 ? dotSize : dotSize * 0.8;
+                
+                L.circleMarker([p.lat, p.lng], {
+                    radius: r,
+                    fillColor: '#e94560',
+                    color: 'white',
+                    weight: 2,
+                    fillOpacity: 1
+                }).bindPopup(`<b>${p.name}</b><br>Width: ${p.width}m`).addTo(pointsLayer);
+                
+                const icon = L.divIcon({
+                    className: 'width-label',
+                    html: `<div style="background:#e94560;color:white;border-radius:50%;width:${r*2}px;height:${r*2}px;display:flex;align-items:center;justify-content:center;font-size:${Math.max(8,r*0.7)}px;font-weight:bold;border:2px solid white;">${Math.round(p.width)}</div>`,
+                    iconSize: [r*2, r*2],
+                    iconAnchor: [r, r]
+                });
+                L.marker([p.lat, p.lng], { icon }).addTo(pointsLayer);
+            });
+        }
+        
+        // File handlers
+        document.getElementById('fileRoads').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                roads = (data.features || [data]).filter(r => r.geometry && (r.geometry.type === 'LineString' || r.geometry.type === 'MultiLineString'));
+                
+                document.getElementById('statusRoads').textContent = roads.length + ' roads loaded';
+                document.getElementById('statusRoads').className = 'status';
+                
+                if (roads.length > 0) {
+                    let sumLat = 0, sumLng = 0, count = 0;
+                    roads.slice(0, 100).forEach(r => {
+                        getLines(r.geometry).forEach(coords => {
+                            if (coords && coords.length > 0) {
+                                const mid = coords[Math.floor(coords.length / 2)];
+                                if (mid) { sumLng += mid[0]; sumLat += mid[1]; count++; }
+                            }
+                        });
+                    });
+                    if (count > 0) map.setView([sumLat / count, sumLng / count], 14);
+                }
+                
+                findCrossings();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        });
+        
+        document.getElementById('fileDistrict').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                const feat = data.features ? data.features[0] : data;
+                const geom = feat.geometry;
+                
+                originalBoundary = geom.type === 'Polygon' ? geom.coordinates[0] : geom.coordinates[0][0];
+                boundary = JSON.parse(JSON.stringify(originalBoundary));
+                
+                document.getElementById('statusDistrict').textContent = 'Loaded - drag yellow dots to edit!';
+                document.getElementById('statusDistrict').className = 'status';
+                
+                // Center on district
+                let sumLng = 0, sumLat = 0;
+                boundary.forEach(c => { sumLng += c[0]; sumLat += c[1]; });
+                map.setView([sumLat / boundary.length, sumLng / boundary.length], 14);
+                
+                createVertexMarkers();
+                findCrossings();
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        });
+        
+        // Sliders
+        document.getElementById('sliderExt').addEventListener('input', function() {
+            document.getElementById('valExt').textContent = this.value + 'm';
+            findCrossings();
+        });
+        document.getElementById('sliderWidth').addEventListener('input', function() {
+            document.getElementById('valWidth').textContent = this.value + 'm';
+            findCrossings();
+        });
+        document.getElementById('sliderDot').addEventListener('input', function() {
+            document.getElementById('valDot').textContent = this.value;
+            render();
+        });
+        document.getElementById('sliderOpacity').addEventListener('input', function() {
+            document.getElementById('valOpacity').textContent = this.value + '%';
+            render();
+        });
+        document.getElementById('colorDistrict').addEventListener('input', render);
+        
+        // Export entry/exit points
+        function exportData() {
+            if (!entryExits.length) return;
+            const geojson = {
+                type: 'FeatureCollection',
+                features: entryExits.map(p => ({
+                    type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
+                    properties: { name_ar: p.name, width_m: p.width, road_class: p.width >= 30 ? 'Major' : 'Other' }
+                }))
+            };
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' }));
+            a.download = 'entry_exit_points.geojson';
+            a.click();
+        }
+        
+        // Export modified boundary
+        function exportBoundary() {
+            if (!boundary.length) return;
+            const geojson = {
+                type: 'FeatureCollection',
+                features: [{
+                    type: 'Feature',
+                    geometry: { type: 'Polygon', coordinates: [boundary] },
+                    properties: { name: 'Modified District Boundary' }
+                }]
+            };
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' }));
+            a.download = 'modified_boundary.geojson';
+            a.click();
+        }
+    </script>
+</body>
+</html>
