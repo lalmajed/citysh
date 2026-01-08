@@ -77,12 +77,56 @@
         .timeline-path-label { background: #e3f2fd; color: #1565C0; padding: 2px 6px; border-radius: 3px; font-size: 0.65rem; font-weight: bold; margin-left: 5px; }
         .normal-band-inputs { display: flex; gap: 10px; }
         .normal-band-inputs input { width: 70px; padding: 5px; text-align: center; }
+        
+        /* Page Tabs */
+        .page-tabs { display: flex; gap: 0; margin-bottom: 20px; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .page-tab { flex: 1; padding: 15px 20px; text-align: center; cursor: pointer; font-weight: 600; color: #666; border: none; background: white; transition: all 0.2s; border-bottom: 3px solid transparent; }
+        .page-tab:hover { background: #f5f5f5; }
+        .page-tab.active { color: #4285f4; border-bottom-color: #4285f4; background: #e3f2fd; }
+        .page-tab .tab-icon { font-size: 1.2rem; margin-right: 8px; }
+        .page-content { display: none; }
+        .page-content.active { display: block; }
+        
+        /* Page 2 Network styles */
+        .network-controls { display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 15px; }
+        .network-control { flex: 1; min-width: 150px; }
+        .network-control label { display: block; font-size: 0.75rem; color: #666; margin-bottom: 4px; }
+        .network-control select, .network-control input { width: 100%; padding: 8px; border: 2px solid #ddd; border-radius: 6px; }
+        .path-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .path-table th, .path-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eee; }
+        .path-table th { background: #f5f5f5; font-weight: 600; color: #666; position: sticky; top: 0; }
+        .path-table tr:hover { background: #f8f9fa; }
+        .path-table .path-cell { font-family: monospace; font-size: 0.75rem; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .vtype-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; color: white; margin-right: 5px; }
+        .vtype-0 { background: #4285f4; }
+        .vtype-1 { background: #34a853; }
+        .vtype-2 { background: #fbbc05; }
+        .vtype-3 { background: #ea4335; }
+        .vtype-4 { background: #9c27b0; }
+        .edge-weight { display: inline-block; min-width: 50px; text-align: right; font-weight: bold; }
+        #networkMap { height: 500px; border-radius: 10px; }
+        .network-legend { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 6px; }
+        .network-legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; }
+        .network-legend-color { width: 30px; height: 4px; border-radius: 2px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Route Segmentation Viewer</h1>
         <p class="subtitle">Visualize vehicle trips with path segmentation (temporal + spatial checks)</p>
+        
+        <!-- Page Tabs -->
+        <div class="page-tabs">
+            <button class="page-tab active" onclick="showPage(1)">
+                <span class="tab-icon">&#128663;</span> Vehicle Trips & Routes
+            </button>
+            <button class="page-tab" onclick="showPage(2)">
+                <span class="tab-icon">&#127760;</span> Network Overview
+            </button>
+        </div>
+        
+        <!-- PAGE 1: Vehicle Trips (existing content) -->
+        <div id="page1" class="page-content active">
         
         <div class="stat-row">
             <div class="stat"><div class="stat-value" id="statVehicles">50</div><div class="stat-label">Vehicles</div></div>
@@ -344,6 +388,95 @@
                 </div>
             </div>
         </div>
+        <!-- END PAGE 1 -->
+        
+        <!-- PAGE 2: Network Overview -->
+        <div id="page2" class="page-content">
+            <div class="stat-row">
+                <div class="stat"><div class="stat-value" id="statNetworkPaths">0</div><div class="stat-label">Unique Paths</div></div>
+                <div class="stat"><div class="stat-value" id="statNetworkEdges">0</div><div class="stat-label">Network Edges</div></div>
+                <div class="stat"><div class="stat-value green" id="statNetworkVehicles">0</div><div class="stat-label">Total Vehicles</div></div>
+                <div class="stat"><div class="stat-value" id="statNetworkNodes">0</div><div class="stat-label">Camera Nodes</div></div>
+            </div>
+            
+            <div class="grid">
+                <div class="sidebar">
+                    <div class="panel">
+                        <h2>Network Data</h2>
+                        <div id="networkDataStatus" style="font-size:0.8rem;margin-bottom:8px;">
+                            <span style="color:#666;">No network data loaded</span>
+                        </div>
+                        <input type="file" id="networkPathsUpload" accept=".csv,.parquet,.json" onchange="uploadNetworkPaths(this)" style="display:none;">
+                        <button onclick="document.getElementById('networkPathsUpload').click()" style="font-size:0.75rem;padding:8px 10px;cursor:pointer;background:#00897b;color:#fff;border:none;border-radius:3px;width:100%;">
+                            Upload exact_paths CSV/Parquet
+                        </button>
+                        <p style="font-size:0.65rem;color:#888;margin-top:5px;">
+                            Columns: vehicle_type, global_path_id, full_path, vehicles
+                        </p>
+                    </div>
+                    
+                    <div class="panel">
+                        <h2>Filters</h2>
+                        <label style="font-size:0.8rem;color:#666;">Vehicle Type</label>
+                        <select id="networkVehicleType" onchange="filterNetworkByType()">
+                            <option value="all">All Vehicle Types</option>
+                            <option value="0">Type 0 - Car</option>
+                            <option value="1">Type 1 - Car</option>
+                            <option value="2">Type 2</option>
+                            <option value="3">Type 3 - Heavy Truck</option>
+                            <option value="4">Type 4</option>
+                        </select>
+                        
+                        <label style="font-size:0.8rem;color:#666;margin-top:10px;display:block;">Min Vehicles (frequency)</label>
+                        <input type="range" id="networkMinVehicles" min="1" max="500" value="1" oninput="updateNetworkMinLabel(); filterNetworkByType();" style="width:100%;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:#666;">
+                            <span>1</span>
+                            <span id="networkMinLabel">1</span>
+                            <span>500</span>
+                        </div>
+                        
+                        <div style="margin-top:15px;">
+                            <label style="font-size:0.8rem;color:#666;">Quick Filters</label>
+                            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;">
+                                <button onclick="setNetworkFilter('top10')" style="font-size:0.7rem;padding:4px 8px;cursor:pointer;">Top 10%</button>
+                                <button onclick="setNetworkFilter('top50')" style="font-size:0.7rem;padding:4px 8px;cursor:pointer;">Top 50</button>
+                                <button onclick="setNetworkFilter('all')" style="font-size:0.7rem;padding:4px 8px;cursor:pointer;">All</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel">
+                        <h2>Top Paths</h2>
+                        <div id="topPathsList" style="max-height:300px;overflow-y:auto;">
+                            <div class="no-data">Upload network data to see top paths</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="main-content">
+                    <div class="panel">
+                        <h2>Network Map</h2>
+                        <div class="network-legend" id="networkLegend">
+                            <div class="network-legend-item"><div class="network-legend-color vtype-0"></div> Type 0 (Car)</div>
+                            <div class="network-legend-item"><div class="network-legend-color vtype-1"></div> Type 1</div>
+                            <div class="network-legend-item"><div class="network-legend-color vtype-3"></div> Type 3 (Truck)</div>
+                            <div class="network-legend-item" style="margin-left:auto;">Line thickness = vehicle count</div>
+                        </div>
+                        <div id="networkMap"></div>
+                    </div>
+                    
+                    <div class="panel">
+                        <h2>Path Details</h2>
+                        <div id="pathDetailsPanel" style="display:none;">
+                            <div id="pathDetails"></div>
+                        </div>
+                        <div id="noPathSelected" class="no-data">Click a path in the list or map to see details</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END PAGE 2 -->
+    
     </div>
 
     <script>
@@ -3615,6 +3748,438 @@ async function showAllTrips() {
 }
 
 // Initialize
+
+// ============ PAGE SWITCHING ============
+function showPage(pageNum) {
+    // Update tabs
+    document.querySelectorAll('.page-tab').forEach((tab, idx) => {
+        tab.classList.toggle('active', idx === pageNum - 1);
+    });
+    
+    // Update content
+    document.querySelectorAll('.page-content').forEach((content, idx) => {
+        content.classList.toggle('active', idx === pageNum - 1);
+    });
+    
+    // Initialize network map if switching to page 2
+    if (pageNum === 2 && !networkMap) {
+        initNetworkMap();
+    }
+}
+
+// ============ PAGE 2: NETWORK VIEW ============
+let networkMap = null;
+let networkMarkers = [];
+let networkPolylines = [];
+let NETWORK_PATHS = []; // [{vehicle_type, global_path_id, full_path, vehicles}]
+let NETWORK_EDGES = {}; // {from_to: {weight, vehicleTypes}}
+
+// Initialize network map
+function initNetworkMap() {
+    const mapDiv = document.getElementById('networkMap');
+    if (!mapDiv || networkMap) return;
+    
+    networkMap = new google.maps.Map(mapDiv, {
+        center: { lat: 24.7136, lng: 46.6753 },
+        zoom: 11,
+        styles: [
+            { featureType: "poi", stylers: [{ visibility: "off" }] },
+            { featureType: "transit", stylers: [{ visibility: "off" }] }
+        ]
+    });
+}
+
+// Upload network paths (CSV or Parquet)
+async function uploadNetworkPaths(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const statusDiv = document.getElementById('networkDataStatus');
+    statusDiv.innerHTML = '<span style="color:#2196f3;">Reading file...</span>';
+    
+    try {
+        let data;
+        
+        if (file.name.endsWith('.csv')) {
+            const text = await file.text();
+            data = parseNetworkCSV(text);
+        } else if (file.name.endsWith('.parquet')) {
+            data = await readNetworkParquet(file);
+        } else if (file.name.endsWith('.json')) {
+            const text = await file.text();
+            data = JSON.parse(text);
+            if (!Array.isArray(data)) data = data.data || data.paths || [];
+        } else {
+            throw new Error('Unsupported format. Use .csv, .parquet, or .json');
+        }
+        
+        NETWORK_PATHS = data;
+        processNetworkPaths();
+        
+        statusDiv.innerHTML = `<span style="color:#4caf50;">Loaded ${NETWORK_PATHS.length.toLocaleString()} paths</span>
+            <div style="font-size:0.65rem;color:#666;margin-top:2px;">Source: ${file.name}</div>`;
+        
+    } catch (err) {
+        statusDiv.innerHTML = `<span style="color:#f44336;">Error: ${err.message}</span>`;
+        console.error('Error loading network paths:', err);
+    }
+}
+
+// Parse network CSV
+function parseNetworkCSV(text) {
+    const lines = text.trim().split('\n');
+    if (lines.length < 2) return [];
+    
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+    const data = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+        const row = {};
+        headers.forEach((h, idx) => {
+            let val = values[idx];
+            if (h === 'vehicle_type' || h === 'vehicles') val = parseInt(val) || 0;
+            row[h] = val;
+        });
+        data.push(row);
+    }
+    
+    return data;
+}
+
+// Read network parquet
+async function readNetworkParquet(file) {
+    try {
+        const parquet = await import('https://cdn.jsdelivr.net/npm/parquet-wasm@0.6.0/esm/parquet_wasm.js');
+        await parquet.default();
+        
+        const arrayBuffer = await file.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        const arrowTable = parquet.readParquet(uint8Array);
+        
+        const data = [];
+        const numRows = arrowTable.numRows;
+        const schema = arrowTable.schema;
+        
+        const columns = {};
+        for (let i = 0; i < schema.fields.length; i++) {
+            columns[schema.fields[i].name.toLowerCase()] = arrowTable.getChildAt(i);
+        }
+        
+        for (let row = 0; row < numRows; row++) {
+            const record = {};
+            for (const [name, column] of Object.entries(columns)) {
+                let val = column.get(row);
+                if (typeof val === 'bigint') val = Number(val);
+                record[name] = val;
+            }
+            data.push(record);
+        }
+        
+        return data;
+    } catch (err) {
+        throw new Error('Parquet read failed: ' + err.message);
+    }
+}
+
+// Process network paths into edges
+function processNetworkPaths() {
+    NETWORK_EDGES = {};
+    const nodes = new Set();
+    let totalVehicles = 0;
+    
+    NETWORK_PATHS.forEach(path => {
+        const sites = (path.full_path || '').split('>').map(s => s.trim()).filter(s => s);
+        const vehicles = parseInt(path.vehicles) || 0;
+        const vType = path.vehicle_type;
+        
+        totalVehicles += vehicles;
+        
+        // Create edges
+        for (let i = 0; i < sites.length - 1; i++) {
+            const from = sites[i];
+            const to = sites[i + 1];
+            const key = from + '_' + to;
+            
+            nodes.add(from);
+            nodes.add(to);
+            
+            if (!NETWORK_EDGES[key]) {
+                NETWORK_EDGES[key] = { from, to, weight: 0, vehicleTypes: {} };
+            }
+            NETWORK_EDGES[key].weight += vehicles;
+            NETWORK_EDGES[key].vehicleTypes[vType] = (NETWORK_EDGES[key].vehicleTypes[vType] || 0) + vehicles;
+        }
+        nodes.add(sites[sites.length - 1]);
+    });
+    
+    // Update stats
+    document.getElementById('statNetworkPaths').textContent = NETWORK_PATHS.length.toLocaleString();
+    document.getElementById('statNetworkEdges').textContent = Object.keys(NETWORK_EDGES).length.toLocaleString();
+    document.getElementById('statNetworkVehicles').textContent = totalVehicles.toLocaleString();
+    document.getElementById('statNetworkNodes').textContent = nodes.size.toLocaleString();
+    
+    // Update slider max
+    const maxWeight = Math.max(...Object.values(NETWORK_EDGES).map(e => e.weight));
+    document.getElementById('networkMinVehicles').max = Math.min(maxWeight, 1000);
+    
+    // Draw network
+    filterNetworkByType();
+    updateTopPathsList();
+}
+
+// Filter network by vehicle type
+function filterNetworkByType() {
+    const vType = document.getElementById('networkVehicleType').value;
+    const minVehicles = parseInt(document.getElementById('networkMinVehicles').value) || 1;
+    
+    // Filter paths
+    let filteredPaths = NETWORK_PATHS;
+    if (vType !== 'all') {
+        filteredPaths = NETWORK_PATHS.filter(p => String(p.vehicle_type) === vType);
+    }
+    filteredPaths = filteredPaths.filter(p => (parseInt(p.vehicles) || 0) >= minVehicles);
+    
+    // Rebuild edges for filtered paths
+    const filteredEdges = {};
+    filteredPaths.forEach(path => {
+        const sites = (path.full_path || '').split('>').map(s => s.trim()).filter(s => s);
+        const vehicles = parseInt(path.vehicles) || 0;
+        
+        for (let i = 0; i < sites.length - 1; i++) {
+            const key = sites[i] + '_' + sites[i + 1];
+            if (!filteredEdges[key]) {
+                filteredEdges[key] = { from: sites[i], to: sites[i + 1], weight: 0, vehicleTypes: {} };
+            }
+            filteredEdges[key].weight += vehicles;
+            filteredEdges[key].vehicleTypes[path.vehicle_type] = (filteredEdges[key].vehicleTypes[path.vehicle_type] || 0) + vehicles;
+        }
+    });
+    
+    drawNetworkEdges(filteredEdges);
+    updateTopPathsList(filteredPaths);
+}
+
+// Draw network edges on map
+function drawNetworkEdges(edges) {
+    if (!networkMap) initNetworkMap();
+    
+    // Clear existing
+    networkMarkers.forEach(m => m.setMap(null));
+    networkPolylines.forEach(p => p.setMap(null));
+    networkMarkers = [];
+    networkPolylines = [];
+    
+    const bounds = new google.maps.LatLngBounds();
+    const edgeList = Object.values(edges);
+    if (edgeList.length === 0) return;
+    
+    // Calculate weight range for scaling
+    const weights = edgeList.map(e => e.weight);
+    const maxWeight = Math.max(...weights);
+    const minWeight = Math.min(...weights);
+    
+    // Vehicle type colors
+    const vTypeColors = {
+        '0': '#4285f4',
+        '1': '#34a853',
+        '2': '#fbbc05',
+        '3': '#ea4335',
+        '4': '#9c27b0'
+    };
+    
+    // Draw edges
+    edgeList.forEach(edge => {
+        const fromSite = SITES[edge.from];
+        const toSite = SITES[edge.to];
+        
+        if (!fromSite || !toSite) return;
+        
+        // Scale line weight (2-12 pixels)
+        const normalizedWeight = maxWeight > minWeight ? (edge.weight - minWeight) / (maxWeight - minWeight) : 0.5;
+        const strokeWeight = 2 + normalizedWeight * 10;
+        
+        // Determine dominant vehicle type for color
+        const dominantType = Object.entries(edge.vehicleTypes)
+            .sort((a, b) => b[1] - a[1])[0];
+        const color = vTypeColors[dominantType ? dominantType[0] : '0'] || '#666';
+        
+        const path = [
+            { lat: fromSite.lat, lng: fromSite.lon },
+            { lat: toSite.lat, lng: toSite.lon }
+        ];
+        
+        bounds.extend(path[0]);
+        bounds.extend(path[1]);
+        
+        const polyline = new google.maps.Polyline({
+            path: path,
+            geodesic: true,
+            strokeColor: color,
+            strokeOpacity: 0.7,
+            strokeWeight: strokeWeight,
+            map: networkMap
+        });
+        
+        // Tooltip on hover
+        const infoWindow = new google.maps.InfoWindow({
+            content: `<div style="font-size:12px;"><strong>${edge.from} → ${edge.to}</strong><br>Vehicles: ${edge.weight.toLocaleString()}</div>`
+        });
+        
+        polyline.addListener('mouseover', (e) => {
+            infoWindow.setPosition(e.latLng);
+            infoWindow.open(networkMap);
+        });
+        polyline.addListener('mouseout', () => infoWindow.close());
+        
+        networkPolylines.push(polyline);
+    });
+    
+    // Fit bounds
+    if (networkPolylines.length > 0) {
+        networkMap.fitBounds(bounds, 50);
+    }
+}
+
+// Update top paths list
+function updateTopPathsList(paths) {
+    const list = document.getElementById('topPathsList');
+    const displayPaths = (paths || NETWORK_PATHS)
+        .sort((a, b) => (parseInt(b.vehicles) || 0) - (parseInt(a.vehicles) || 0))
+        .slice(0, 50);
+    
+    if (displayPaths.length === 0) {
+        list.innerHTML = '<div class="no-data">No paths match current filters</div>';
+        return;
+    }
+    
+    let html = '';
+    displayPaths.forEach((path, idx) => {
+        const vType = path.vehicle_type;
+        const vehicles = parseInt(path.vehicles) || 0;
+        const sites = (path.full_path || '').split('>');
+        
+        html += `
+            <div class="trip-item" onclick="selectNetworkPath(${idx})" style="padding:8px;margin:4px 0;">
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span class="vtype-badge vtype-${vType}">VT${vType}</span>
+                    <span class="edge-weight">${vehicles.toLocaleString()}</span>
+                </div>
+                <div class="path-cell" style="margin-top:4px;" title="${path.full_path}">
+                    ${sites[0]} → ... → ${sites[sites.length - 1]}
+                </div>
+                <div style="font-size:0.65rem;color:#666;">${sites.length} nodes</div>
+            </div>
+        `;
+    });
+    
+    list.innerHTML = html;
+}
+
+// Select and highlight a network path
+function selectNetworkPath(idx) {
+    const vType = document.getElementById('networkVehicleType').value;
+    const minVehicles = parseInt(document.getElementById('networkMinVehicles').value) || 1;
+    
+    let paths = NETWORK_PATHS;
+    if (vType !== 'all') {
+        paths = paths.filter(p => String(p.vehicle_type) === vType);
+    }
+    paths = paths.filter(p => (parseInt(p.vehicles) || 0) >= minVehicles)
+        .sort((a, b) => (parseInt(b.vehicles) || 0) - (parseInt(a.vehicles) || 0));
+    
+    const path = paths[idx];
+    if (!path) return;
+    
+    // Show path details
+    const detailsPanel = document.getElementById('pathDetailsPanel');
+    const noSelection = document.getElementById('noPathSelected');
+    const details = document.getElementById('pathDetails');
+    
+    detailsPanel.style.display = 'block';
+    noSelection.style.display = 'none';
+    
+    const sites = (path.full_path || '').split('>');
+    
+    details.innerHTML = `
+        <div style="margin-bottom:10px;">
+            <span class="vtype-badge vtype-${path.vehicle_type}">Vehicle Type ${path.vehicle_type}</span>
+            <span style="font-weight:bold;margin-left:10px;">${parseInt(path.vehicles).toLocaleString()} vehicles</span>
+        </div>
+        <div style="font-family:monospace;background:#f5f5f5;padding:10px;border-radius:4px;word-break:break-all;">
+            ${sites.join(' → ')}
+        </div>
+        <div style="margin-top:10px;font-size:0.8rem;color:#666;">
+            Path ID: ${path.global_path_id || 'N/A'}<br>
+            Nodes: ${sites.length}
+        </div>
+    `;
+    
+    // Highlight path on map
+    highlightNetworkPath(path);
+}
+
+// Highlight specific path on network map
+function highlightNetworkPath(path) {
+    const sites = (path.full_path || '').split('>').map(s => s.trim()).filter(s => s);
+    
+    // Build path coordinates
+    const pathCoords = [];
+    sites.forEach(siteId => {
+        const site = SITES[siteId];
+        if (site) {
+            pathCoords.push({ lat: site.lat, lng: site.lon });
+        }
+    });
+    
+    if (pathCoords.length < 2) return;
+    
+    // Add highlight polyline
+    const highlightLine = new google.maps.Polyline({
+        path: pathCoords,
+        geodesic: true,
+        strokeColor: '#000',
+        strokeOpacity: 1,
+        strokeWeight: 4,
+        zIndex: 1000,
+        map: networkMap
+    });
+    
+    // Remove after 3 seconds
+    setTimeout(() => highlightLine.setMap(null), 3000);
+    
+    // Fit bounds to path
+    const bounds = new google.maps.LatLngBounds();
+    pathCoords.forEach(c => bounds.extend(c));
+    networkMap.fitBounds(bounds, 50);
+}
+
+// Update min vehicles label
+function updateNetworkMinLabel() {
+    const val = document.getElementById('networkMinVehicles').value;
+    document.getElementById('networkMinLabel').textContent = val;
+}
+
+// Quick filter presets
+function setNetworkFilter(preset) {
+    const slider = document.getElementById('networkMinVehicles');
+    
+    if (preset === 'all') {
+        slider.value = 1;
+    } else if (preset === 'top10') {
+        const vehicles = NETWORK_PATHS.map(p => parseInt(p.vehicles) || 0).sort((a, b) => b - a);
+        const top10Threshold = vehicles[Math.floor(vehicles.length * 0.1)] || 1;
+        slider.value = top10Threshold;
+    } else if (preset === 'top50') {
+        const vehicles = NETWORK_PATHS.map(p => parseInt(p.vehicles) || 0).sort((a, b) => b - a);
+        const top50Threshold = vehicles[49] || 1;
+        slider.value = top50Threshold;
+    }
+    
+    updateNetworkMinLabel();
+    filterNetworkByType();
+}
+
 document.getElementById('statVehicles').textContent = VEHICLES.length;
 document.getElementById('embeddedTripCount').textContent = TRIPS.length;
 document.getElementById('embeddedVehicleCount').textContent = VEHICLES.length;
