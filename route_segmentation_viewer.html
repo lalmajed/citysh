@@ -408,8 +408,19 @@
                         </div>
                         <input type="file" id="networkPathsUpload" accept=".csv,.parquet,.json" onchange="uploadNetworkPaths(this)" style="display:none;">
                         <button onclick="document.getElementById('networkPathsUpload').click()" style="font-size:0.75rem;padding:8px 10px;cursor:pointer;background:#00897b;color:#fff;border:none;border-radius:3px;width:100%;">
-                            Upload exact_paths CSV/Parquet
+                            Upload CSV File
                         </button>
+                        <div style="margin-top:8px;">
+                            <button onclick="document.getElementById('csvPasteArea').style.display = document.getElementById('csvPasteArea').style.display === 'none' ? 'block' : 'none'" style="font-size:0.7rem;padding:5px 8px;cursor:pointer;background:#546e7a;color:#fff;border:none;border-radius:3px;">
+                                Or Paste CSV Text
+                            </button>
+                            <div id="csvPasteArea" style="display:none;margin-top:8px;">
+                                <textarea id="csvTextInput" placeholder="Paste CSV content here..." style="width:100%;height:80px;font-size:0.7rem;font-family:monospace;"></textarea>
+                                <button onclick="loadPastedCSV()" style="font-size:0.7rem;padding:5px 10px;cursor:pointer;background:#4caf50;color:#fff;border:none;border-radius:3px;margin-top:4px;">
+                                    Load Pasted Data
+                                </button>
+                            </div>
+                        </div>
                         <p style="font-size:0.65rem;color:#888;margin-top:5px;">
                             Columns: vehicle_type, global_path_id, full_path, vehicles
                         </p>
@@ -3815,6 +3826,32 @@ function initNetworkMap() {
 }
 
 // Upload network paths (CSV or Parquet)
+// Load CSV from pasted text
+function loadPastedCSV() {
+    const text = document.getElementById('csvTextInput').value;
+    if (!text.trim()) {
+        alert('Please paste CSV content first');
+        return;
+    }
+    
+    const statusDiv = document.getElementById('networkDataStatus');
+    statusDiv.innerHTML = '<span style="color:#2196f3;">Parsing...</span>';
+    
+    try {
+        const data = parseNetworkCSV(text);
+        NETWORK_PATHS = data;
+        processNetworkPaths();
+        
+        statusDiv.innerHTML = `<span style="color:#4caf50;">Loaded ${NETWORK_PATHS.length.toLocaleString()} paths</span>
+            <div style="font-size:0.65rem;color:#666;margin-top:2px;">Source: Pasted CSV</div>`;
+        
+        // Hide paste area
+        document.getElementById('csvPasteArea').style.display = 'none';
+    } catch (err) {
+        statusDiv.innerHTML = `<span style="color:#f44336;">Error: ${err.message}</span>`;
+    }
+}
+
 async function uploadNetworkPaths(input) {
     const file = input.files[0];
     if (!file) return;
@@ -3824,16 +3861,28 @@ async function uploadNetworkPaths(input) {
     
     try {
         let data;
+        const fileName = file.name.toLowerCase();
         
-        if (file.name.endsWith('.csv')) {
-            const text = await file.text();
+        if (fileName.endsWith('.csv')) {
+            // Use FileReader for better compatibility
+            const text = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(new Error('Failed to read file. Try re-selecting it.'));
+                reader.readAsText(file);
+            });
             console.log('CSV file size:', text.length, 'chars');
             console.log('First 500 chars:', text.substring(0, 500));
             data = parseNetworkCSV(text);
-        } else if (file.name.endsWith('.parquet')) {
+        } else if (fileName.endsWith('.parquet')) {
             data = await readNetworkParquet(file);
-        } else if (file.name.endsWith('.json')) {
-            const text = await file.text();
+        } else if (fileName.endsWith('.json')) {
+            const text = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(new Error('Failed to read file. Try re-selecting it.'));
+                reader.readAsText(file);
+            });
             data = JSON.parse(text);
             if (!Array.isArray(data)) data = data.data || data.paths || [];
         } else {
@@ -3850,6 +3899,9 @@ async function uploadNetworkPaths(input) {
         statusDiv.innerHTML = `<span style="color:#f44336;">Error: ${err.message}</span>`;
         console.error('Error loading network paths:', err);
     }
+    
+    // Reset input so same file can be re-selected
+    input.value = '';
 }
 
 // Parse network CSV
