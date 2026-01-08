@@ -3854,54 +3854,35 @@ async function uploadNetworkPaths(input) {
 
 // Parse network CSV
 function parseNetworkCSV(text) {
+    // Remove BOM if present
+    if (text.charCodeAt(0) === 0xFEFF) {
+        text = text.substring(1);
+    }
+    
+    // Normalize line endings (Windows \r\n to \n)
+    text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    
     const lines = text.trim().split('\n');
+    console.log('CSV total lines:', lines.length);
+    
     if (lines.length < 2) {
         console.error('CSV has less than 2 lines');
         return [];
     }
     
-    // Detect delimiter (comma, tab, or multiple spaces)
-    const firstLine = lines[0];
-    let delimiter;
-    if (firstLine.includes('\t')) {
-        delimiter = '\t';
-    } else if (firstLine.includes(',')) {
-        delimiter = ',';
-    } else {
-        delimiter = /\s{2,}/; // Multiple spaces
-    }
-    console.log('CSV delimiter detected');
-    
-    // Split header line
-    let headers;
-    if (delimiter instanceof RegExp) {
-        headers = firstLine.split(delimiter).map(h => h.trim().toLowerCase().replace(/"/g, ''));
-    } else {
-        headers = firstLine.split(delimiter).map(h => h.trim().toLowerCase().replace(/"/g, ''));
-    }
+    // Get headers from first line
+    const headerLine = lines[0].trim();
+    const headers = headerLine.split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
     console.log('CSV headers:', headers);
-    
-    // Handle unnamed index column
-    if (headers[0] === '' || headers[0] === 'unnamed: 0' || headers[0] === 'index') {
-        headers = headers.slice(1);
-    }
     
     const data = [];
     
     for (let i = 1; i < lines.length; i++) {
-        if (!lines[i].trim()) continue;
+        const line = lines[i].trim();
+        if (!line) continue;
         
-        let values;
-        if (delimiter instanceof RegExp) {
-            values = lines[i].split(delimiter).map(v => v.trim().replace(/"/g, ''));
-        } else {
-            values = lines[i].split(delimiter).map(v => v.trim().replace(/"/g, ''));
-        }
-        
-        // Skip index column if present
-        if (values.length > headers.length && /^\d+$/.test(values[0])) {
-            values = values.slice(1);
-        }
+        // Split by comma
+        const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
         
         const row = {};
         headers.forEach((h, idx) => {
@@ -3912,7 +3893,7 @@ function parseNetworkCSV(text) {
             row[h] = val;
         });
         
-        // Add row if it has full_path
+        // Add row if it has full_path with path separator
         if (row.full_path && row.full_path.includes('>')) {
             data.push(row);
         }
@@ -3922,7 +3903,12 @@ function parseNetworkCSV(text) {
     if (data.length > 0) {
         console.log('Sample row:', data[0]);
     } else {
-        console.log('No valid rows found. Check that full_path column contains paths like RUHSM001>RUHSM002');
+        console.log('Headers found:', headers);
+        console.log('First data line:', lines[1]);
+        // Show debug info
+        alert('CSV Debug:\nLines: ' + lines.length + 
+              '\nHeaders: ' + headers.join(', ') + 
+              '\nFirst data line: ' + (lines[1] || 'none').substring(0, 100));
     }
     
     return data;
