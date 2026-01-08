@@ -570,11 +570,12 @@
         const ctx = canvas.getContext('2d');
         
         // Map variable
-        let googleMap = null;
-        let roadPolylines = []; // Store road polylines for visualization
+        var googleMap = null;
+        var roadPolylines = []; // Store road polylines for visualization
         
-        // Initialize Google Maps
-        function initMap() {
+        // Initialize Google Maps - MUST be global for keyless API callback
+        window.initMap = function() {
+            console.log('initMap called!');
             googleMap = new google.maps.Map(document.getElementById('map'), {
                 center: { lat: 24.7136, lng: 46.6753 },
                 zoom: 11,
@@ -592,31 +593,15 @@
             googleMap.addListener('idle', render);
             googleMap.addListener('click', function(e) {
                 handleMapClick({
-                    latLng: { lat: () => e.latLng.lat(), lng: () => e.latLng.lng() },
-                    pixel: { x: e.pixel?.x || 0, y: e.pixel?.y || 0 }
+                    latLng: { lat: function() { return e.latLng.lat(); }, lng: function() { return e.latLng.lng(); } },
+                    pixel: { x: e.pixel ? e.pixel.x : 0, y: e.pixel ? e.pixel.y : 0 }
                 });
             });
             
             window.addEventListener('resize', render);
             document.getElementById('loadingOverlay').classList.add('hidden');
             console.log('Google Maps ready!');
-        }
-        
-        // Load Google Maps script
-        function loadGoogleMaps() {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js';
-            script.async = true;
-            script.defer = true;
-            document.head.appendChild(script);
-        }
-        
-        // Start loading
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', loadGoogleMaps);
-        } else {
-            loadGoogleMaps();
-        }
+        };
         
         // POI Colors by layer
         const poiColors = {
@@ -3595,33 +3580,8 @@
             }
         }
         
-        function initMap() {
-            if (map) return; // Prevent double initialization
-            
-            try {
-                map = new google.maps.Map(document.getElementById('map'), {
-                    center: { lat: 24.7136, lng: 46.6753 },
-                    zoom: 11,
-                    mapTypeControl: true,
-                    gestureHandling: 'greedy'
-                });
-                
-                map.addListener('idle', render);
-                map.addListener('click', handleMapClick);
-                
-                window.addEventListener('resize', () => {
-                    render();
-                });
-                
-                console.log('Map ready. Upload your data files.');
-            } catch (err) {
-                console.error('Error initializing map:', err);
-                document.getElementById('loadingTitle').textContent = 'Map initialization error';
-                document.getElementById('loadingStatus').textContent = err.message;
-                document.getElementById('loadingOverlay').classList.remove('hidden');
-            }
-        }
-        
     </script>
+    <!-- Keyless Google Maps API - MUST be at end of body -->
+    <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
 </body>
 </html>
