@@ -3860,46 +3860,60 @@ function parseNetworkCSV(text) {
         return [];
     }
     
-    // Detect delimiter (comma or tab)
+    // Detect delimiter (comma, tab, or multiple spaces)
     const firstLine = lines[0];
-    const delimiter = firstLine.includes('\t') ? '\t' : ',';
-    console.log('CSV delimiter:', delimiter === '\t' ? 'TAB' : 'COMMA');
+    let delimiter;
+    if (firstLine.includes('\t')) {
+        delimiter = '\t';
+    } else if (firstLine.includes(',')) {
+        delimiter = ',';
+    } else {
+        delimiter = /\s{2,}/; // Multiple spaces
+    }
+    console.log('CSV delimiter detected');
     
-    let headers = firstLine.split(delimiter).map(h => h.trim().toLowerCase().replace(/"/g, ''));
+    // Split header line
+    let headers;
+    if (delimiter instanceof RegExp) {
+        headers = firstLine.split(delimiter).map(h => h.trim().toLowerCase().replace(/"/g, ''));
+    } else {
+        headers = firstLine.split(delimiter).map(h => h.trim().toLowerCase().replace(/"/g, ''));
+    }
     console.log('CSV headers:', headers);
     
-    // Handle unnamed index column (empty first header or just numbers)
-    if (headers[0] === '' || headers[0] === 'unnamed: 0' || /^\d+$/.test(headers[0])) {
+    // Handle unnamed index column
+    if (headers[0] === '' || headers[0] === 'unnamed: 0' || headers[0] === 'index') {
         headers = headers.slice(1);
-        console.log('Removed index column, headers now:', headers);
     }
     
     const data = [];
     
     for (let i = 1; i < lines.length; i++) {
-        if (!lines[i].trim()) continue; // Skip empty lines
+        if (!lines[i].trim()) continue;
         
-        let values = lines[i].split(delimiter).map(v => v.trim().replace(/"/g, ''));
+        let values;
+        if (delimiter instanceof RegExp) {
+            values = lines[i].split(delimiter).map(v => v.trim().replace(/"/g, ''));
+        } else {
+            values = lines[i].split(delimiter).map(v => v.trim().replace(/"/g, ''));
+        }
         
-        // If first value looks like row index, skip it
-        if (headers.length === values.length - 1 && /^\d+$/.test(values[0])) {
+        // Skip index column if present
+        if (values.length > headers.length && /^\d+$/.test(values[0])) {
             values = values.slice(1);
         }
         
         const row = {};
         headers.forEach((h, idx) => {
-            let val = values[idx];
+            let val = values[idx] || '';
             if (h === 'vehicle_type' || h === 'vehicles') {
                 val = parseInt(val) || 0;
             }
             row[h] = val;
         });
         
-        // Only add if has required fields
-        if (row.full_path || row.fullpath || row.path) {
-            // Normalize field names
-            if (row.fullpath) row.full_path = row.fullpath;
-            if (row.path) row.full_path = row.path;
+        // Add row if it has full_path
+        if (row.full_path && row.full_path.includes('>')) {
             data.push(row);
         }
     }
@@ -3907,6 +3921,8 @@ function parseNetworkCSV(text) {
     console.log('Parsed', data.length, 'rows from CSV');
     if (data.length > 0) {
         console.log('Sample row:', data[0]);
+    } else {
+        console.log('No valid rows found. Check that full_path column contains paths like RUHSM001>RUHSM002');
     }
     
     return data;
