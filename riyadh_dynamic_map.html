@@ -4,9 +4,6 @@
     <title>Riyadh Map - Dynamic Counts</title>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1.0, width=device-width">
-    <!-- Leaflet CSS & JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; }
@@ -506,16 +503,27 @@
         
         <!-- Road Legend (shown when roads loaded) -->
         <div id="roadLegend" style="display:none;margin-top:10px;padding:8px;background:#e3f2fd;border-radius:6px;">
-            <div style="font-weight:600;font-size:11px;margin-bottom:5px;">🛣️ Road Width Legend</div>
+            <div style="font-weight:600;font-size:11px;margin-bottom:5px;">Road Width Visualization</div>
+            
+            <!-- Road Toggle Controls -->
+            <div style="margin-bottom:8px;padding:6px;background:white;border-radius:4px;">
+                <label style="display:flex;align-items:center;gap:6px;font-size:10px;cursor:pointer;">
+                    <input type="checkbox" id="showRoadsToggle" checked onchange="toggleRoads()">
+                    Show Roads on Map
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:10px;cursor:pointer;margin-top:4px;">
+                    <input type="checkbox" id="showMajorRoadsOnly" onchange="toggleRoads()">
+                    Major Roads Only (30m+)
+                </label>
+            </div>
+            
+            <!-- Color Legend -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:9px;">
-                <div><span style="display:inline-block;width:20px;height:4px;background:#d32f2f;border-radius:2px;"></span> 36m+</div>
-                <div><span style="display:inline-block;width:20px;height:4px;background:#ff5722;border-radius:2px;"></span> 30m</div>
-                <div><span style="display:inline-block;width:20px;height:4px;background:#ff9800;border-radius:2px;"></span> 25m</div>
-                <div><span style="display:inline-block;width:20px;height:4px;background:#ffc107;border-radius:2px;"></span> 20m</div>
-                <div><span style="display:inline-block;width:20px;height:4px;background:#8bc34a;border-radius:2px;"></span> 15m</div>
-                <div><span style="display:inline-block;width:20px;height:4px;background:#4caf50;border-radius:2px;"></span> 12m</div>
-                <div><span style="display:inline-block;width:20px;height:4px;background:#009688;border-radius:2px;"></span> 10m</div>
-                <div><span style="display:inline-block;width:20px;height:4px;background:#607d8b;border-radius:2px;"></span> 8m</div>
+                <div><span style="display:inline-block;width:20px;height:6px;background:#d32f2f;border-radius:2px;"></span> 40m+ (Highway)</div>
+                <div><span style="display:inline-block;width:20px;height:5px;background:#f44336;border-radius:2px;"></span> 30m+ (Major)</div>
+                <div><span style="display:inline-block;width:20px;height:4px;background:#ff9800;border-radius:2px;"></span> 20m+ (Secondary)</div>
+                <div><span style="display:inline-block;width:20px;height:3px;background:#ffc107;border-radius:2px;"></span> 12m+ (Tertiary)</div>
+                <div><span style="display:inline-block;width:20px;height:2px;background:#9e9e9e;border-radius:2px;"></span> &lt;12m (Local)</div>
             </div>
             <div style="margin-top:8px;border-top:1px solid #90caf9;padding-top:8px;">
                 <div style="font-size:10px;"><span style="display:inline-block;width:12px;height:12px;background:#d32f2f;border-radius:50%;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);vertical-align:middle;"></span> Road Entry/Exit Point</div>
@@ -563,41 +571,51 @@
         
         // Map variable
         let googleMap = null;
-        let leafletMap = null;
+        let roadPolylines = []; // Store road polylines for visualization
         
-        // Initialize map immediately with Leaflet/OpenStreetMap
-        function initMapNow() {
-            leafletMap = L.map('map').setView([24.7136, 46.6753], 11);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19
-            }).addTo(leafletMap);
+        // Initialize Google Maps
+        function initMap() {
+            googleMap = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 24.7136, lng: 46.6753 },
+                zoom: 11,
+                mapTypeControl: true,
+                gestureHandling: 'greedy'
+            });
             
-            googleMap = leafletMap; // Use same variable for compatibility
-            document.getElementById('mapTypeLabel').textContent = 'OpenStreetMap';
+            document.getElementById('mapTypeLabel').textContent = 'Google Maps';
             
-            // Initialize layers
-            zonePolygonsLayer = L.layerGroup().addTo(leafletMap);
-            zoneEntryExitMarkers = L.layerGroup().addTo(leafletMap);
+            // Initialize zone layers as arrays for Google Maps
+            zonePolygonsLayer = [];
+            zoneEntryExitMarkers = [];
             
             // Add listeners
-            leafletMap.on('moveend', render);
-            leafletMap.on('click', function(e) {
+            googleMap.addListener('idle', render);
+            googleMap.addListener('click', function(e) {
                 handleMapClick({
-                    latLng: { lat: () => e.latlng.lat, lng: () => e.latlng.lng },
-                    pixel: { x: e.containerPoint.x, y: e.containerPoint.y }
+                    latLng: { lat: () => e.latLng.lat(), lng: () => e.latLng.lng() },
+                    pixel: { x: e.pixel?.x || 0, y: e.pixel?.y || 0 }
                 });
             });
             
             window.addEventListener('resize', render);
             document.getElementById('loadingOverlay').classList.add('hidden');
-            console.log('Map ready!');
+            console.log('Google Maps ready!');
         }
         
-        // Start immediately
+        // Load Google Maps script
+        function loadGoogleMaps() {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js';
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        }
+        
+        // Start loading
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initMapNow);
+            document.addEventListener('DOMContentLoaded', loadGoogleMaps);
         } else {
-            initMapNow();
+            loadGoogleMaps();
         }
         
         // POI Colors by layer
@@ -1009,11 +1027,12 @@
         
         // Render zone entry/exit points on map
         function renderZoneEntryExits() {
-            if (!leafletMap) return;
+            if (!googleMap) return;
             
             // Clear existing markers
-            if (zoneEntryExitMarkers && zoneEntryExitMarkers.clearLayers) {
-                zoneEntryExitMarkers.clearLayers();
+            if (Array.isArray(zoneEntryExitMarkers)) {
+                zoneEntryExitMarkers.forEach(m => m.setMap(null));
+                zoneEntryExitMarkers = [];
             }
             
             if (selectedZoneIndex < 0 || !drawnPolygons[selectedZoneIndex]) return;
@@ -1027,24 +1046,34 @@
             zone.entryExitPoints.forEach((point, idx) => {
                 const isMajor = point.width >= 30;
                 const color = isMajor ? '#d32f2f' : '#e91e63';
-                const radius = isMajor ? baseSize : baseSize * 0.7;
+                const scale = isMajor ? baseSize / 10 : (baseSize * 0.7) / 10;
                 
-                const marker = L.circleMarker([point.lat, point.lng], {
-                    radius: radius,
-                    fillColor: color,
-                    color: '#fff',
-                    weight: 3,
-                    fillOpacity: 0.9
-                }).addTo(zoneEntryExitMarkers);
+                const marker = new google.maps.Marker({
+                    position: { lat: point.lat, lng: point.lng },
+                    map: googleMap,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: scale * 2,
+                        fillColor: color,
+                        fillOpacity: 0.9,
+                        strokeColor: '#fff',
+                        strokeWeight: 2
+                    }
+                });
                 
-                marker.bindPopup(`
-                    <div style="min-width:150px;">
-                        <b style="color:${color};">${point.roadName || 'Entry/Exit'}</b><br>
-                        Width: ${point.width || 'N/A'}m<br>
-                        Zone: ${zone.name}<br>
-                        <button onclick="deleteZoneEntryPoint(${idx})" style="margin-top:8px;padding:6px 12px;background:#d32f2f;color:white;border:none;border-radius:4px;cursor:pointer;">Delete</button>
-                    </div>
-                `);
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `
+                        <div style="min-width:150px;">
+                            <b style="color:${color};">${point.roadName || 'Entry/Exit'}</b><br>
+                            Width: ${point.width || 'N/A'}m<br>
+                            Zone: ${zone.name}<br>
+                            <button onclick="deleteZoneEntryPoint(${idx})" style="margin-top:8px;padding:6px 12px;background:#d32f2f;color:white;border:none;border-radius:4px;cursor:pointer;">Delete</button>
+                        </div>
+                    `
+                });
+                
+                marker.addListener('click', () => infoWindow.open(googleMap, marker));
+                zoneEntryExitMarkers.push(marker);
             });
         }
         
@@ -1395,17 +1424,24 @@
             });
             
             // Draw polygon on map
-            if (leafletMap && zonePolygonsLayer) {
-                const polygon = L.polygon(latlngs, {
-                    color: color,
-                    weight: 3,
+            if (googleMap) {
+                const paths = simplified.map(p => ({ lat: p.lat, lng: p.lng }));
+                const polygon = new google.maps.Polygon({
+                    paths: paths,
+                    strokeColor: color,
+                    strokeWeight: 3,
                     fillColor: color,
-                    fillOpacity: 0.25
-                }).addTo(zonePolygonsLayer);
+                    fillOpacity: 0.25,
+                    map: googleMap
+                });
                 
-                polygon.on('click', function() {
+                polygon.addListener('click', function() {
                     selectZone(zoneNum - 1);
                 });
+                
+                if (Array.isArray(zonePolygonsLayer)) {
+                    zonePolygonsLayer.push(polygon);
+                }
             }
             
             document.getElementById('polygonCount').textContent = drawnPolygons.length;
@@ -1442,8 +1478,9 @@
             if (selectedZoneIndex === idx) {
                 selectedZoneIndex = -1;
                 document.getElementById('selectedZoneInfo').style.display = 'none';
-                if (zoneEntryExitMarkers && zoneEntryExitMarkers.clearLayers) {
-                    zoneEntryExitMarkers.clearLayers();
+                if (Array.isArray(zoneEntryExitMarkers)) {
+                    zoneEntryExitMarkers.forEach(m => m.setMap(null));
+                    zoneEntryExitMarkers = [];
                 }
             } else if (selectedZoneIndex > idx) {
                 selectedZoneIndex--;
@@ -1460,13 +1497,15 @@
             if (drawnPolygons.length && !confirm('Delete all zones?')) return;
             
             // Clear zone polygons
-            if (zonePolygonsLayer && zonePolygonsLayer.clearLayers) {
-                zonePolygonsLayer.clearLayers();
+            if (Array.isArray(zonePolygonsLayer)) {
+                zonePolygonsLayer.forEach(p => p.setMap(null));
+                zonePolygonsLayer = [];
             }
             
             // Clear zone entry markers
-            if (zoneEntryExitMarkers && zoneEntryExitMarkers.clearLayers) {
-                zoneEntryExitMarkers.clearLayers();
+            if (Array.isArray(zoneEntryExitMarkers)) {
+                zoneEntryExitMarkers.forEach(m => m.setMap(null));
+                zoneEntryExitMarkers = [];
             }
             
             drawnPolygons = [];
@@ -1558,8 +1597,9 @@
                 const originalCount = drawnPolygons.length;
                 
                 // Clear existing zones from map
-                if (zonePolygonsLayer && zonePolygonsLayer.clearLayers) {
-                    zonePolygonsLayer.clearLayers();
+                if (Array.isArray(zonePolygonsLayer)) {
+                    zonePolygonsLayer.forEach(p => p.setMap(null));
+                    zonePolygonsLayer = [];
                 }
                 drawnPolygons = [];
                 
@@ -1574,17 +1614,24 @@
                 });
                 
                 // Draw on map
-                if (leafletMap && zonePolygonsLayer) {
-                    const polygon = L.polygon(latlngs, {
-                        color: '#9c27b0',
-                        weight: 3,
+                if (googleMap) {
+                    const paths = hull.map(p => ({ lat: p.lat, lng: p.lng }));
+                    const polygon = new google.maps.Polygon({
+                        paths: paths,
+                        strokeColor: '#9c27b0',
+                        strokeWeight: 3,
                         fillColor: '#9c27b0',
-                        fillOpacity: 0.3
-                    }).addTo(zonePolygonsLayer);
+                        fillOpacity: 0.3,
+                        map: googleMap
+                    });
                     
-                    polygon.on('click', function() {
+                    polygon.addListener('click', function() {
                         selectZone(0);
                     });
+                    
+                    if (Array.isArray(zonePolygonsLayer)) {
+                        zonePolygonsLayer.push(polygon);
+                    }
                     
                     // Zoom to merged zone
                     let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
@@ -1720,38 +1767,53 @@
         });
         
         let renderPending = false;
-        // Helper functions that work with both Google Maps and Leaflet
-        // Map helper functions (Leaflet)
+        // Map helper functions (Google Maps)
         function getMapBounds() {
-            if (!leafletMap) return null;
-            const b = leafletMap.getBounds();
+            if (!googleMap) return null;
+            const b = googleMap.getBounds();
+            if (!b) return null;
             return {
-                north: b.getNorth(),
-                south: b.getSouth(),
-                east: b.getEast(),
-                west: b.getWest()
+                north: b.getNorthEast().lat(),
+                south: b.getSouthWest().lat(),
+                east: b.getNorthEast().lng(),
+                west: b.getSouthWest().lng()
             };
         }
         
         function getMapZoom() {
-            if (!leafletMap) return 11;
-            return leafletMap.getZoom();
+            if (!googleMap) return 11;
+            return googleMap.getZoom();
         }
         
         function latLngToPixel(lat, lng) {
-            if (!leafletMap) return { x: 0, y: 0 };
-            const point = leafletMap.latLngToContainerPoint([lat, lng]);
-            return { x: point.x, y: point.y };
+            if (!googleMap) return { x: 0, y: 0 };
+            const scale = Math.pow(2, googleMap.getZoom());
+            const proj = googleMap.getProjection();
+            if (!proj) return { x: 0, y: 0 };
+            const bounds = googleMap.getBounds();
+            if (!bounds) return { x: 0, y: 0 };
+            const nw = proj.fromLatLngToPoint(bounds.getNorthEast());
+            const se = proj.fromLatLngToPoint(bounds.getSouthWest());
+            const point = proj.fromLatLngToPoint(new google.maps.LatLng(lat, lng));
+            return {
+                x: (point.x - se.x) * scale,
+                y: (point.y - nw.y) * scale
+            };
         }
         
         function setMapCenter(lat, lng, zoom) {
-            if (!leafletMap) return;
-            leafletMap.setView([lat, lng], zoom || leafletMap.getZoom());
+            if (!googleMap) return;
+            googleMap.setCenter({ lat: lat, lng: lng });
+            if (zoom) googleMap.setZoom(zoom);
         }
         
         function fitMapBounds(north, south, east, west, padding) {
-            if (!leafletMap) return;
-            leafletMap.fitBounds([[south, west], [north, east]], { padding: [padding || 30, padding || 30] });
+            if (!googleMap) return;
+            const bounds = new google.maps.LatLngBounds(
+                { lat: south, lng: west },
+                { lat: north, lng: east }
+            );
+            googleMap.fitBounds(bounds, padding || 30);
         }
         
         function render() {
@@ -2627,7 +2689,8 @@
                         document.getElementById('totalRoads').textContent = roads.length;
                         document.getElementById('roadLegend').style.display = 'block';
                         
-                        // Entry/exit points are loaded from file, not calculated
+                        // Draw roads on map
+                        drawRoadsOnMap();
                         
                         // Zoom to roads if they exist
                         if (roads.length > 0) {
@@ -2726,21 +2789,13 @@
                     const features = data.features || [data];
                     
                     // Clear existing zones
-                    if (zonePolygonsLayer) {
-                        if (zonePolygonsLayer.clearLayers) {
-                            zonePolygonsLayer.clearLayers();
-                        } else if (zonePolygonsLayer.polygons) {
-                            zonePolygonsLayer.polygons.forEach(p => p.setMap(null));
-                            zonePolygonsLayer.polygons = [];
-                        }
+                    if (Array.isArray(zonePolygonsLayer)) {
+                        zonePolygonsLayer.forEach(p => p.setMap(null));
+                        zonePolygonsLayer = [];
                     }
-                    if (zoneEntryExitMarkers) {
-                        if (zoneEntryExitMarkers.clearLayers) {
-                            zoneEntryExitMarkers.clearLayers();
-                        } else if (zoneEntryExitMarkers.markers) {
-                            zoneEntryExitMarkers.markers.forEach(m => m.setMap(null));
-                            zoneEntryExitMarkers.markers = [];
-                        }
+                    if (Array.isArray(zoneEntryExitMarkers)) {
+                        zoneEntryExitMarkers.forEach(m => m.setMap(null));
+                        zoneEntryExitMarkers = [];
                     }
                     drawnPolygons = [];
                     selectedZoneIndex = -1;
@@ -2896,30 +2951,139 @@
         
         // Redraw all zone polygons (needed after loading multiple files)
         function redrawAllZonePolygons() {
-            if (!leafletMap) return;
+            if (!googleMap) return;
             
             const colors = ['#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4', '#009688', '#4caf50', '#ff9800', '#ff5722', '#795548', '#607d8b'];
             
             // Clear existing polygons
-            if (zonePolygonsLayer && zonePolygonsLayer.clearLayers) {
-                zonePolygonsLayer.clearLayers();
+            if (Array.isArray(zonePolygonsLayer)) {
+                zonePolygonsLayer.forEach(p => p.setMap(null));
+                zonePolygonsLayer = [];
             }
             
             drawnPolygons.forEach((zone, idx) => {
                 zone.color = colors[idx % colors.length];
-                const latlngs = zone.coordinates.map(c => [c[1], c[0]]);
+                const paths = zone.coordinates.map(c => ({ lat: c[1], lng: c[0] }));
                 
-                const polygon = L.polygon(latlngs, {
-                    color: zone.color,
-                    weight: 3,
+                const polygon = new google.maps.Polygon({
+                    paths: paths,
+                    strokeColor: zone.color,
+                    strokeWeight: 3,
                     fillColor: zone.color,
-                    fillOpacity: 0.25
-                }).addTo(zonePolygonsLayer);
+                    fillOpacity: 0.25,
+                    map: googleMap
+                });
                 
-                polygon.on('click', function() {
+                polygon.addListener('click', function() {
                     selectZone(idx);
                 });
+                
+                zonePolygonsLayer.push(polygon);
             });
+        }
+        
+        // Draw roads on map with width-based styling
+        function drawRoadsOnMap() {
+            if (!googleMap || !roads || roads.length === 0) return;
+            
+            // Clear existing road polylines
+            if (roadPolylines && roadPolylines.length > 0) {
+                roadPolylines.forEach(p => p.setMap(null));
+            }
+            roadPolylines = [];
+            
+            // Check if roads should be shown
+            const showRoads = document.getElementById('showRoadsToggle')?.checked !== false;
+            const showMajorOnly = document.getElementById('showMajorRoadsOnly')?.checked || false;
+            
+            if (!showRoads) return;
+            
+            roads.forEach(road => {
+                if (!road.geometry) return;
+                
+                const props = road.properties || {};
+                const width = parseFloat(props.width_m || props.WIDTH || props.width || 10);
+                
+                // Skip non-major roads if filter is enabled
+                if (showMajorOnly && width < 30) return;
+                
+                // Get coordinates
+                let coordsList = [];
+                if (road.geometry.type === 'LineString') {
+                    coordsList = [road.geometry.coordinates];
+                } else if (road.geometry.type === 'MultiLineString') {
+                    coordsList = road.geometry.coordinates;
+                }
+                
+                // Color based on width
+                let strokeColor = '#888888'; // Default gray
+                let strokeWeight = 2;
+                let zIndex = 1;
+                
+                if (width >= 40) {
+                    strokeColor = '#d32f2f'; // Red - Highway
+                    strokeWeight = 6;
+                    zIndex = 5;
+                } else if (width >= 30) {
+                    strokeColor = '#f44336'; // Light red - Major
+                    strokeWeight = 5;
+                    zIndex = 4;
+                } else if (width >= 20) {
+                    strokeColor = '#ff9800'; // Orange - Secondary
+                    strokeWeight = 4;
+                    zIndex = 3;
+                } else if (width >= 12) {
+                    strokeColor = '#ffc107'; // Yellow - Tertiary
+                    strokeWeight = 3;
+                    zIndex = 2;
+                } else {
+                    strokeColor = '#9e9e9e'; // Gray - Local
+                    strokeWeight = 2;
+                    zIndex = 1;
+                }
+                
+                coordsList.forEach(coords => {
+                    const path = coords.map(c => ({ lat: c[1], lng: c[0] }));
+                    
+                    const polyline = new google.maps.Polyline({
+                        path: path,
+                        strokeColor: strokeColor,
+                        strokeWeight: strokeWeight,
+                        strokeOpacity: 0.8,
+                        zIndex: zIndex,
+                        map: googleMap
+                    });
+                    
+                    // Add click listener for road info
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: `
+                            <div style="min-width:200px;font-family:Arial,sans-serif;">
+                                <h4 style="margin:0 0 8px;color:${strokeColor};">${props.name_en || props.name_ar || 'Unnamed Road'}</h4>
+                                <div style="font-size:12px;line-height:1.6;">
+                                    <b>Width:</b> ${width}m<br>
+                                    <b>Length:</b> ${props.length_m ? (props.length_m/1000).toFixed(2) + ' km' : 'N/A'}<br>
+                                    <b>Lanes:</b> ${props.num_lanes || 'N/A'}<br>
+                                    <b>Source:</b> ${props.source || 'OSM'}
+                                </div>
+                            </div>
+                        `
+                    });
+                    
+                    polyline.addListener('click', function(e) {
+                        infoWindow.setPosition(e.latLng);
+                        infoWindow.open(googleMap);
+                    });
+                    
+                    roadPolylines.push(polyline);
+                });
+            });
+            
+            console.log('Drew', roadPolylines.length, 'road segments');
+        }
+        
+        // Toggle road visibility
+        function toggleRoads() {
+            drawRoadsOnMap();
         }
         
         function getDistrictName(d) {
@@ -3102,9 +3266,9 @@
         }
         
         function findClickedItem(lat, lng, pixelTolerance) {
-            if (!leafletMap) return null;
+            if (!googleMap) return null;
             
-            const zoom = leafletMap.getZoom();
+            const zoom = googleMap.getZoom();
             // Tolerance in degrees (smaller at higher zoom)
             const tolerance = 0.0005 * Math.pow(2, 15 - zoom);
             
