@@ -3840,13 +3840,18 @@ function loadPastedCSV() {
     try {
         const data = parseNetworkCSV(text);
         NETWORK_PATHS = data;
-        processNetworkPaths();
         
-        statusDiv.innerHTML = `<span style="color:#4caf50;">Loaded ${NETWORK_PATHS.length.toLocaleString()} paths</span>
-            <div style="font-size:0.65rem;color:#666;margin-top:2px;">Source: Pasted CSV</div>`;
-        
-        // Hide paste area
-        document.getElementById('csvPasteArea').style.display = 'none';
+        if (NETWORK_PATHS.length === 0) {
+            statusDiv.innerHTML = `<span style="color:#f44336;">Loaded 0 paths</span>
+                <div style="font-size:0.6rem;color:#666;margin-top:4px;word-break:break-all;">${CSV_DEBUG_INFO}</div>
+                <div style="font-size:0.65rem;color:#888;margin-top:2px;">Source: Pasted CSV</div>`;
+        } else {
+            processNetworkPaths();
+            statusDiv.innerHTML = `<span style="color:#4caf50;">Loaded ${NETWORK_PATHS.length.toLocaleString()} paths</span>
+                <div style="font-size:0.65rem;color:#666;margin-top:2px;">Source: Pasted CSV</div>`;
+            // Hide paste area on success
+            document.getElementById('csvPasteArea').style.display = 'none';
+        }
     } catch (err) {
         statusDiv.innerHTML = `<span style="color:#f44336;">Error: ${err.message}</span>`;
     }
@@ -3890,10 +3895,16 @@ async function uploadNetworkPaths(input) {
         }
         
         NETWORK_PATHS = data;
-        processNetworkPaths();
         
-        statusDiv.innerHTML = `<span style="color:#4caf50;">Loaded ${NETWORK_PATHS.length.toLocaleString()} paths</span>
-            <div style="font-size:0.65rem;color:#666;margin-top:2px;">Source: ${file.name}</div>`;
+        if (NETWORK_PATHS.length === 0) {
+            statusDiv.innerHTML = `<span style="color:#f44336;">Loaded 0 paths</span>
+                <div style="font-size:0.6rem;color:#666;margin-top:4px;word-break:break-all;">${CSV_DEBUG_INFO}</div>
+                <div style="font-size:0.65rem;color:#888;margin-top:2px;">Source: ${file.name}</div>`;
+        } else {
+            processNetworkPaths();
+            statusDiv.innerHTML = `<span style="color:#4caf50;">Loaded ${NETWORK_PATHS.length.toLocaleString()} paths</span>
+                <div style="font-size:0.65rem;color:#666;margin-top:2px;">Source: ${file.name}</div>`;
+        }
         
     } catch (err) {
         statusDiv.innerHTML = `<span style="color:#f44336;">Error: ${err.message}</span>`;
@@ -3904,30 +3915,43 @@ async function uploadNetworkPaths(input) {
     input.value = '';
 }
 
-// Parse network CSV
+// Parse network CSV - with debug info
+let CSV_DEBUG_INFO = '';
+
 function parseNetworkCSV(text) {
+    CSV_DEBUG_INFO = '';
+    
     // Remove BOM if present
     if (text.charCodeAt(0) === 0xFEFF) {
         text = text.substring(1);
+        CSV_DEBUG_INFO += 'BOM removed. ';
     }
     
     // Normalize line endings (Windows \r\n to \n)
     text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     
     const lines = text.trim().split('\n');
-    console.log('CSV total lines:', lines.length);
+    CSV_DEBUG_INFO += 'Lines: ' + lines.length + '. ';
     
     if (lines.length < 2) {
-        console.error('CSV has less than 2 lines');
+        CSV_DEBUG_INFO += 'ERROR: Less than 2 lines!';
         return [];
     }
     
     // Get headers from first line
     const headerLine = lines[0].trim();
     const headers = headerLine.split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
-    console.log('CSV headers:', headers);
+    CSV_DEBUG_INFO += 'Headers: [' + headers.join(', ') + ']. ';
+    
+    // Check for full_path column
+    const fullPathIdx = headers.indexOf('full_path');
+    if (fullPathIdx === -1) {
+        CSV_DEBUG_INFO += 'ERROR: No "full_path" column found!';
+        return [];
+    }
     
     const data = [];
+    let skippedNoPath = 0;
     
     for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
@@ -3948,19 +3972,22 @@ function parseNetworkCSV(text) {
         // Add row if it has full_path with path separator
         if (row.full_path && row.full_path.includes('>')) {
             data.push(row);
+        } else {
+            skippedNoPath++;
         }
     }
     
-    console.log('Parsed', data.length, 'rows from CSV');
-    if (data.length > 0) {
-        console.log('Sample row:', data[0]);
-    } else {
-        console.log('Headers found:', headers);
-        console.log('First data line:', lines[1]);
-        // Show debug info
-        alert('CSV Debug:\nLines: ' + lines.length + 
-              '\nHeaders: ' + headers.join(', ') + 
-              '\nFirst data line: ' + (lines[1] || 'none').substring(0, 100));
+    CSV_DEBUG_INFO += 'Parsed: ' + data.length + ' rows. ';
+    if (skippedNoPath > 0) {
+        CSV_DEBUG_INFO += 'Skipped (no ">"): ' + skippedNoPath + '. ';
+    }
+    
+    if (data.length === 0 && lines.length > 1) {
+        // Show what the first data row looks like
+        const firstDataLine = lines[1].trim();
+        const firstValues = firstDataLine.split(',');
+        CSV_DEBUG_INFO += 'First row values: [' + firstValues.slice(0, 5).join(' | ') + ']. ';
+        CSV_DEBUG_INFO += 'full_path value: "' + (firstValues[fullPathIdx] || 'MISSING') + '"';
     }
     
     return data;
