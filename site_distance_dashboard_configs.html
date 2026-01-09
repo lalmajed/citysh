@@ -223,20 +223,31 @@ function loadConfigFile(input) {
             
             log('Processing ' + lines.length + ' lines...');
             
-            // Show first line for debugging
+            // Show first line for debugging (after cleaning)
             if (lines.length > 0) {
-                const firstLine = lines[0].substring(0, 200);
-                log('First line preview: ' + firstLine + (lines[0].length > 200 ? '...' : ''));
+                let testClean = lines[0]
+                    .replace(/:\s*NaN\b/g, ': null')
+                    .replace(/:\s*-?Infinity\b/g, ': null')
+                    .replace(/:\s*nan\b/gi, ': null')
+                    .replace(/:\s*None\b/g, ': null');
+                const hasNaN = lines[0].includes('NaN');
+                log('First line preview: ' + lines[0].substring(0, 200) + (lines[0].length > 200 ? '...' : ''));
+                if (hasNaN) {
+                    log('⚠️ NaN detected in first line - will be cleaned to null');
+                    log('Cleaned preview: ' + testClean.substring(0, 200) + '...');
+                }
             }
             
             lines.forEach((line, idx) => {
                 if (!line.trim()) return;
                 try {
                     // Fix invalid JSON values from Python/pandas export
+                    // Must handle: "osmid": NaN, or "value": NaN}
                     let cleanLine = line
-                        .replace(/:\s*NaN\s*([,}])/g, ': null$1')      // NaN -> null
-                        .replace(/:\s*-?Infinity\s*([,}])/g, ': null$1') // Infinity -> null
-                        .replace(/:\s*nan\s*([,}])/gi, ': null$1');     // nan -> null
+                        .replace(/:\s*NaN\b/g, ': null')           // NaN -> null
+                        .replace(/:\s*-?Infinity\b/g, ': null')    // Infinity -> null  
+                        .replace(/:\s*nan\b/gi, ': null')          // nan -> null
+                        .replace(/:\s*None\b/g, ': null');         // Python None -> null
                     
                     const config = JSON.parse(cleanLine);
                     
