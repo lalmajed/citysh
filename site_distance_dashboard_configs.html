@@ -234,24 +234,51 @@ function loadConfigFile(input) {
                 try {
                     const config = JSON.parse(line);
                     
+                    // Normalize field names - accept common variations
+                    // config_id variations
+                    if (!config.config_id && config.pair_id) config.config_id = config.pair_id;
+                    if (!config.config_id && config.id) config.config_id = config.id;
+                    
+                    // origin/destination variations
+                    if (!config.origin && config.o) config.origin = config.o;
+                    if (!config.origin && config.orig) config.origin = config.orig;
+                    if (!config.origin && config.from) config.origin = config.from;
+                    if (!config.destination && config.d) config.destination = config.d;
+                    if (!config.destination && config.dest) config.destination = config.dest;
+                    if (!config.destination && config.to) config.destination = config.to;
+                    
                     // Validate required fields
                     if (!config.config_id || !config.origin || !config.destination) {
                         errors++;
-                        if (errors <= 5) log('⚠️ Line ' + (idx+1) + ': Missing required fields. Keys found: ' + Object.keys(config).join(', '));
+                        if (errors <= 5) {
+                            const hasConfig = !!config.config_id;
+                            const hasOrigin = !!config.origin;
+                            const hasDest = !!config.destination;
+                            log('⚠️ Line ' + (idx+1) + ': Missing fields - config_id:' + hasConfig + ', origin:' + hasOrigin + ', destination:' + hasDest);
+                            log('   Keys found: ' + Object.keys(config).join(', '));
+                        }
                         return;
+                    }
+                    
+                    // Normalize lon/lng - accept both formats
+                    if (config.origin.lng !== undefined && config.origin.lon === undefined) {
+                        config.origin.lon = config.origin.lng;
+                    }
+                    if (config.destination.lng !== undefined && config.destination.lon === undefined) {
+                        config.destination.lon = config.destination.lng;
                     }
                     
                     // Validate origin has lat/lon
                     if (config.origin.lat === undefined || config.origin.lon === undefined) {
                         errors++;
-                        if (errors <= 5) log('⚠️ Line ' + (idx+1) + ': Origin missing lat/lon');
+                        if (errors <= 5) log('⚠️ Line ' + (idx+1) + ': Origin missing lat/lon. Keys: ' + Object.keys(config.origin).join(', '));
                         return;
                     }
                     
                     // Validate destination has lat/lon
                     if (config.destination.lat === undefined || config.destination.lon === undefined) {
                         errors++;
-                        if (errors <= 5) log('⚠️ Line ' + (idx+1) + ': Destination missing lat/lon');
+                        if (errors <= 5) log('⚠️ Line ' + (idx+1) + ': Destination missing lat/lon. Keys: ' + Object.keys(config.destination).join(', '));
                         return;
                     }
                     
