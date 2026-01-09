@@ -223,35 +223,79 @@ function loadConfigFile(input) {
             
             log('Processing ' + lines.length + ' lines...');
             
-            // Show first line for debugging
+            // Show first line for debugging (after cleaning)
             if (lines.length > 0) {
-                const firstLine = lines[0].substring(0, 200);
-                log('First line preview: ' + firstLine + (lines[0].length > 200 ? '...' : ''));
+                let testClean = lines[0]
+                    .replace(/:\s*NaN\b/g, ': null')
+                    .replace(/:\s*-?Infinity\b/g, ': null')
+                    .replace(/:\s*nan\b/gi, ': null')
+                    .replace(/:\s*None\b/g, ': null');
+                const hasNaN = lines[0].includes('NaN');
+                log('First line preview: ' + lines[0].substring(0, 200) + (lines[0].length > 200 ? '...' : ''));
+                if (hasNaN) {
+                    log('⚠️ NaN detected in first line - will be cleaned to null');
+                    log('Cleaned preview: ' + testClean.substring(0, 200) + '...');
+                }
             }
             
             lines.forEach((line, idx) => {
                 if (!line.trim()) return;
                 try {
-                    const config = JSON.parse(line);
+                    // Fix invalid JSON values from Python/pandas export
+                    // Must handle: "osmid": NaN, or "value": NaN}
+                    let cleanLine = line
+                        .replace(/:\s*NaN\b/g, ': null')           // NaN -> null
+                        .replace(/:\s*-?Infinity\b/g, ': null')    // Infinity -> null  
+                        .replace(/:\s*nan\b/gi, ': null')          // nan -> null
+                        .replace(/:\s*None\b/g, ': null');         // Python None -> null
+                    
+                    const config = JSON.parse(cleanLine);
+                    
+                    // Normalize field names - accept common variations
+                    // config_id variations
+                    if (!config.config_id && config.pair_id) config.config_id = config.pair_id;
+                    if (!config.config_id && config.id) config.config_id = config.id;
+                    
+                    // origin/destination variations
+                    if (!config.origin && config.o) config.origin = config.o;
+                    if (!config.origin && config.orig) config.origin = config.orig;
+                    if (!config.origin && config.from) config.origin = config.from;
+                    if (!config.destination && config.d) config.destination = config.d;
+                    if (!config.destination && config.dest) config.destination = config.dest;
+                    if (!config.destination && config.to) config.destination = config.to;
                     
                     // Validate required fields
                     if (!config.config_id || !config.origin || !config.destination) {
                         errors++;
-                        if (errors <= 5) log('⚠️ Line ' + (idx+1) + ': Missing required fields. Keys found: ' + Object.keys(config).join(', '));
+                        if (errors <= 5) {
+                            const hasConfig = !!config.config_id;
+                            const hasOrigin = !!config.origin;
+                            const hasDest = !!config.destination;
+                            log('⚠️ Line ' + (idx+1) + ': Missing fields - config_id:' + hasConfig + ', origin:' + hasOrigin + ', destination:' + hasDest);
+                            log('   Keys found: ' + Object.keys(config).join(', '));
+                        }
                         return;
+                    }
+                    
+                    // Normalize lon/lng - accept both formats
+                    if (config.origin.lng !== undefined && config.origin.lon === undefined) {
+                        config.origin.lon = config.origin.lng;
+                    }
+                    if (config.destination.lng !== undefined && config.destination.lon === undefined) {
+                        config.destination.lon = config.destination.lng;
                     }
                     
                     // Validate origin has lat/lon
                     if (config.origin.lat === undefined || config.origin.lon === undefined) {
                         errors++;
-                        if (errors <= 5) log('⚠️ Line ' + (idx+1) + ': Origin missing lat/lon');
+                        if (errors <= 5) log('⚠️ Line ' + (idx+1) + ': Origin missing lat/lon. Keys: ' + Object.keys(config.origin).join(', '));
                         return;
                     }
                     
                     // Validate destination has lat/lon
                     if (config.destination.lat === undefined || config.destination.lon === undefined) {
                         errors++;
-                        if (errors <= 5) log('⚠️ Line ' + (idx+1) + ': Destination missing lat/lon');
+                        if (errors <= 5) log('⚠️ Line ' + (idx+1) + ': Destination missing lat/lon. Keys: ' + Object.keys(config.destination).join(', '));
                         return;
                     }
                     
@@ -270,7 +314,16 @@ function loadConfigFile(input) {
                     errors++;
                     if (errors <= 5) {
                         log('⚠️ Line ' + (idx+1) + ': Parse error - ' + parseErr.message);
-                        log('   Content: ' + line.substring(0, 100) + '...');
+                        // Show context around the error position
+                        const match = parseErr.message.match(/column (\d+)/);
+                        if (match) {
+                            const col = parseInt(match[1]);
+                            const start = Math.max(0, col - 30);
+                            const end = Math.min(line.length, col + 30);
+                            log('   Near col ' + col + ': ...' + line.substring(start, end) + '...');
+                        } else {
+                            log('   Content: ' + line.substring(0, 100) + '...');
+                        }
                     }
                 }
             });
