@@ -232,7 +232,13 @@ function loadConfigFile(input) {
             lines.forEach((line, idx) => {
                 if (!line.trim()) return;
                 try {
-                    const config = JSON.parse(line);
+                    // Fix invalid JSON values from Python/pandas export
+                    let cleanLine = line
+                        .replace(/:\s*NaN\s*([,}])/g, ': null$1')      // NaN -> null
+                        .replace(/:\s*-?Infinity\s*([,}])/g, ': null$1') // Infinity -> null
+                        .replace(/:\s*nan\s*([,}])/gi, ': null$1');     // nan -> null
+                    
+                    const config = JSON.parse(cleanLine);
                     
                     // Normalize field names - accept common variations
                     // config_id variations
@@ -297,7 +303,16 @@ function loadConfigFile(input) {
                     errors++;
                     if (errors <= 5) {
                         log('⚠️ Line ' + (idx+1) + ': Parse error - ' + parseErr.message);
-                        log('   Content: ' + line.substring(0, 100) + '...');
+                        // Show context around the error position
+                        const match = parseErr.message.match(/column (\d+)/);
+                        if (match) {
+                            const col = parseInt(match[1]);
+                            const start = Math.max(0, col - 30);
+                            const end = Math.min(line.length, col + 30);
+                            log('   Near col ' + col + ': ...' + line.substring(start, end) + '...');
+                        } else {
+                            log('   Content: ' + line.substring(0, 100) + '...');
+                        }
                     }
                 }
             });
