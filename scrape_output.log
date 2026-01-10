@@ -1,0 +1,896 @@
+======================================================================
+UMAPS Road Scraper - 189 Riyadh Districts (Using Polygons)
+Started at: 2026-01-10 08:37:07
+======================================================================
+
+Loading riyadh_districts.json...
+Loaded 189 districts
+
+[1/189] حي العمل (Al Amal Dist.)
+  District ID: 10100003001
+  Polygon has 60 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[2/189] حي النموذجية (Al Namudhajiyah Dist.)
+  District ID: 10100003002
+  Polygon has 77 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[3/189] حي الجرادية (Al Jarradiyah Dist.)
+  District ID: 10100003003
+  Polygon has 91 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[4/189] حي الصناعية (Al Sinaiyah Dist.)
+  District ID: 10100003004
+  Polygon has 129 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[5/189] حي منفوحة الجديدة (Manfuha Al Jadidah Dist.)
+  District ID: 10100003005
+  Polygon has 83 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[6/189] حي الفاخرية (Al Fakhiriyah Dist.)
+  District ID: 10100003006
+  Polygon has 110 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[7/189] حي الديرة (Al Dirah Dist.)
+  District ID: 10100003007
+  Polygon has 149 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[8/189] حي ام الحمام الشرقي (East Umm Al Hamam Dist.)
+  District ID: 10100003008
+  Polygon has 138 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[9/189] حي الشرفية (Al Sharafiyah Dist.)
+  District ID: 10100003009
+  Polygon has 109 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[10/189] حي الهدا (Al Hada Dist.)
+  District ID: 10100003010
+  Polygon has 430 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+  === PROGRESS: 10/189 districts, 0 total roads ===
+
+[11/189] حي المعذر الشمالي (North Mathar Dist.)
+  District ID: 10100003011
+  Polygon has 90 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[12/189] حي ام الحمام الغربي (West Umm Al Hamam Dist.)
+  District ID: 10100003012
+  Polygon has 116 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[13/189] حي الرحمانية (Ar Rahmaniyah Dist.)
+  District ID: 10100003013
+  Polygon has 44 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[14/189] حي لبن (Laban Dist.)
+  District ID: 10100003014
+  Polygon has 1342 points
+    Attempt 1 failed: Remote end closed connection without response
+    Attempt 2 failed: Remote end closed connection without response
+    Attempt 3 failed: Remote end closed connection without response
+    WARNING: Request failed
+  ✗ No roads found
+
+[15/189] حي الرفيعة (Ar Rafiah Dist.)
+  District ID: 10100003015
+  Polygon has 241 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[16/189] حي الشهداء (Al Shohda Dist.)
+  District ID: 10100003016
+  Polygon has 18 points
+  ✓ Found 199 roads (199 new unique)
+
+[17/189] حي الملك فهد (King Fahd Dist.)
+  District ID: 10100003017
+  Polygon has 9 points
+  ✓ Found 277 roads (276 new unique)
+
+[18/189] حي السويدي (Al Suwaidi Dist.)
+  District ID: 10100003018
+  Polygon has 269 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[19/189] حي الحزم (Al Hazm Dist.)
+  District ID: 10100003019
+  Polygon has 213 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[20/189] حي عتيقة (Utayqah Dist.)
+  District ID: 10100003020
+  Polygon has 132 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+  === PROGRESS: 20/189 districts, 475 total roads ===
+
+[21/189] حي المربع (Al Murabba Dist.)
+  District ID: 10100003021
+  Polygon has 173 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[22/189] حي الفلاح (Al Falah Dist.)
+  District ID: 10100003022
+  Polygon has 15 points
+  ✓ Found 201 roads (200 new unique)
+
+[23/189] حي الندى (Al Nada Dist.)
+  District ID: 10100003023
+  Polygon has 8 points
+  ✓ Found 248 roads (247 new unique)
+
+[24/189] حي المرسلات (Al Mursalat Dist.)
+  District ID: 10100003024
+  Polygon has 10 points
+  ✓ Found 178 roads (171 new unique)
+
+[25/189] حي النزهة (Al Nuzha Dist.)
+  District ID: 10100003025
+  Polygon has 9 points
+  ✓ Found 262 roads (254 new unique)
+
+[26/189] حي الورود (Al Woroud Dist.)
+  District ID: 10100003026
+  Polygon has 22 points
+  ✓ Found 293 roads (289 new unique)
+
+[27/189] حي الملك فيصل (King Faisal Dist.)
+  District ID: 10100003027
+  Polygon has 42 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[28/189] المدينة الصناعية الثانية (2nd Industrial City)
+  District ID: 10100003028
+  Polygon has 378 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[29/189] حي العزيزية (Al Aziziyah Dist.)
+  District ID: 10100003029
+  Polygon has 125 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[30/189] حي المنصورة (Al Mansurah Dist.)
+  District ID: 10100003030
+  Polygon has 75 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+  === PROGRESS: 30/189 districts, 1636 total roads ===
+
+[31/189] حي غبيرة (Ghobairah Dist.)
+  District ID: 10100003031
+  Polygon has 83 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[32/189] حي الفاروق (Al Farooq Dist.)
+  District ID: 10100003032
+  Polygon has 55 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[33/189] حي الفيصلية (Al Faisaliyah Dist.)
+  District ID: 10100003033
+  Polygon has 195 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[34/189] حي الخالدية (Al Khalidiyah Dist.)
+  District ID: 10100003034
+  Polygon has 98 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[35/189] حي الجزيرة (Al Jazeerah Dist.)
+  District ID: 10100003035
+  Polygon has 73 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[36/189] حي السعادة (Al Saadah Dist.)
+  District ID: 10100003036
+  Polygon has 44 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[37/189] حي الناصرية (Al Nasiriyah Dist.)
+  District ID: 10100003037
+  Polygon has 73 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[38/189] حي المناخ (Al Manakh Dist.)
+  District ID: 10100003038
+  Polygon has 314 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[39/189] حي الدفاع (Al Difaa Dist.)
+  District ID: 10100003039
+  Polygon has 158 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[40/189] حي النور (Al Noor Dist.)
+  District ID: 10100003040
+  Polygon has 73 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+  === PROGRESS: 40/189 districts, 1636 total roads ===
+
+[41/189] حي الملك عبدالله (King Abdullah Dist.)
+  District ID: 10100003041
+  Polygon has 259 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[42/189] حي الواحة (Al Wahah Dist.)
+  District ID: 10100003042
+  Polygon has 26 points
+  ✓ Found 216 roads (208 new unique)
+
+[43/189] حي صلاح الدين (Salahuddin Dist.)
+  District ID: 10100003043
+  Polygon has 43 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[44/189] حي الملك عبدالعزيز (King Abdulaziz Dist.)
+  District ID: 10100003044
+  Polygon has 378 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[45/189] حي الوزارات (Al Wizarat Dist.)
+  District ID: 10100003045
+  Polygon has 117 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[46/189] حي سكيرينة (Skirinah Dist.)
+  District ID: 10100003046
+  Polygon has 16 points
+  ✓ Found 78 roads (78 new unique)
+
+[47/189] حي الربوة (Ar Rabwah Dist.)
+  District ID: 10100003047
+  Polygon has 127 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[48/189] حي جرير (Jareer Dist.)
+  District ID: 10100003048
+  Polygon has 87 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[49/189] حي المعذر (Al Mathar Dist.)
+  District ID: 10100003049
+  Polygon has 153 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[50/189] حي الصالحية (As Salhiyah Dist.)
+  District ID: 10100003050
+  Polygon has 48 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+  === PROGRESS: 50/189 districts, 1922 total roads ===
+
+[51/189] حي الملز (Al Malaz Dist.)
+  District ID: 10100003051
+  Polygon has 187 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[52/189] حي منفوحة (Manfuhah Dist.)
+  District ID: 10100003052
+  Polygon has 183 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[53/189] حي عليشة (Olaishah Dist.)
+  District ID: 10100003053
+  Polygon has 76 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[54/189] حي النهضة (Al Nahdah Dist.)
+  District ID: 10100003054
+  Polygon has 29 points
+  ✓ Found 758 roads (758 new unique)
+
+[55/189] حي الخليج (Al Khaleej Dist.)
+  District ID: 10100003055
+  Polygon has 62 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[56/189] حي الضباط (Al Dhubbat Dist.)
+  District ID: 10100003056
+  Polygon has 104 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[57/189] حي السويدي الغربي (West Suwaidi Dist.)
+  District ID: 10100003057
+  Polygon has 73 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[58/189] حي ديراب (Dirab Dist.)
+  District ID: 10100003058
+  Polygon has 404 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[59/189] حي احد (Ohod Dist.)
+  District ID: 10100003059
+  Polygon has 467 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[60/189] حي نمار (Namar Dist.)
+  District ID: 10100003060
+  Polygon has 204 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+  === PROGRESS: 60/189 districts, 2680 total roads ===
+
+[61/189] حي الشفا (Al Shifa Dist.)
+  District ID: 10100003061
+  Polygon has 231 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[62/189] حي المحمدية (Al Muhammadiyah Dist.)
+  District ID: 10100003062
+  Polygon has 32 points
+  ✓ Found 232 roads (229 new unique)
+
+[63/189] حي السليمانية (Al Sulaimaniyah Dist.)
+  District ID: 10100003063
+  Polygon has 141 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[64/189] حي المروة (Al Marwah Dist.)
+  District ID: 10100003064
+  Polygon has 43 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[65/189] حي عكاظ (Okaz Dist.)
+  District ID: 10100003065
+  Polygon has 685 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[66/189] حي شبرا (Shubra Dist.)
+  District ID: 10100003066
+  Polygon has 106 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[67/189] حي الزهرة (Al Zahrah Dist.)
+  District ID: 10100003067
+  Polygon has 22 points
+  ✓ Found 345 roads (345 new unique)
+
+[68/189] حي صياح (Siyah Dist.)
+  District ID: 10100003068
+  Polygon has 79 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[69/189] حي سلطانة (Sultanah Dist.)
+  District ID: 10100003069
+  Polygon has 133 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[70/189] حي اليمامة (Al Yamamah Dist.)
+  District ID: 10100003070
+  Polygon has 147 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+  === PROGRESS: 70/189 districts, 3254 total roads ===
+
+[71/189] حي البديعة (Al Badiah Dist.)
+  District ID: 10100003071
+  Polygon has 262 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[72/189] حي المصانع (Al Masani Dist.)
+  District ID: 10100003072
+  Polygon has 832 points
+    Attempt 1 failed: Remote end closed connection without response
+    Attempt 2 failed: Remote end closed connection without response
+    Attempt 3 failed: Remote end closed connection without response
+    WARNING: Request failed
+  ✗ No roads found
+
+[73/189] حي القادسية (Al Qadisiyah Dist.)
+  District ID: 10100003073
+  Polygon has 86 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[74/189] حي الصفا (Al Safa Dist.)
+  District ID: 10100003074
+  Polygon has 110 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[75/189] حي العليا (Al Olaya Dist.)
+  District ID: 10100003075
+  Polygon has 148 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[76/189] حي الدريهمية (Al Duraihemiyah Dist.)
+  District ID: 10100003076
+  Polygon has 77 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[77/189] حي الاسكان (Al Iskan Dist.)
+  District ID: 10100003077
+  Polygon has 183 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[78/189] حي السلام (Al Salam Dist.)
+  District ID: 10100003078
+  Polygon has 39 points
+  ✓ Found 357 roads (357 new unique)
+
+[79/189] حي المنار (Al Manar Dist.)
+  District ID: 10100003079
+  Polygon has 14 points
+  ✓ Found 283 roads (275 new unique)
+
+[80/189] حي النسيم الشرقي (East Naseem Dist.)
+  District ID: 10100003080
+  Polygon has 91 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+  === PROGRESS: 80/189 districts, 3886 total roads ===
+
+[81/189] حي القدس (Al Quds Dist.)
+  District ID: 10100003081
+  Polygon has 26 points
+  ✓ Found 337 roads (333 new unique)
+
+[82/189] حي الوادي (Al Wadi Dist.)
+  District ID: 10100003082
+  Polygon has 16 points
+  ✓ Found 269 roads (264 new unique)
+
+[83/189] حي النفل (Al Nafel Dist.)
+  District ID: 10100003083
+  Polygon has 10 points
+  ✓ Found 253 roads (249 new unique)
+
+[84/189] حي المصيف (Al Maseef Dist.)
+  District ID: 10100003084
+  Polygon has 7 points
+  ✓ Found 275 roads (267 new unique)
+
+[85/189] حي التعاون (Al Taawun Dist.)
+  District ID: 10100003085
+  Polygon has 14 points
+  ✓ Found 264 roads (250 new unique)
+
+[86/189] حي الازدهار (Al Ezdihar Dist.)
+  District ID: 10100003086
+  Polygon has 16 points
+  ✓ Found 237 roads (229 new unique)
+
+[87/189] حي الاندلس (Al Andalus Dist.)
+  District ID: 10100003087
+  Polygon has 36 points
+  ✓ Found 323 roads (318 new unique)
+
+[88/189] حي الروضة (Al Rawdah Dist.)
+  District ID: 10100003088
+  Polygon has 51 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[89/189] حي الروابي (Al Rawabi Dist.)
+  District ID: 10100003089
+  Polygon has 63 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[90/189] حي الريان (Al Rayan Dist.)
+  District ID: 10100003090
+  Polygon has 37 points
+  ✓ Found 408 roads (403 new unique)
+
+  === PROGRESS: 90/189 districts, 6199 total roads ===
+
+[91/189] حي ظهرة البديعة (Dhahrat Al Badeah Dist.)
+  District ID: 10100003091
+  Polygon has 240 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[92/189] حي النظيم (Al Nadheem Dist.)
+  District ID: 10100003092
+  Polygon has 287 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[93/189] حي الرماية (Al Rimayah Dist.)
+  District ID: 10100003093
+  Polygon has 125 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[94/189] حي البرية (Al Bariyah Dist.)
+  District ID: 10100003094
+  Polygon has 1314 points
+    Attempt 1 failed: Remote end closed connection without response
+    Attempt 2 failed: Remote end closed connection without response
+    Attempt 3 failed: Remote end closed connection without response
+    WARNING: Request failed
+  ✗ No roads found
+
+[95/189] حي طيبة (Taybah Dist.)
+  District ID: 10100003095
+  Polygon has 51 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[96/189] حي المنصورية (Mansuriyah Dist.)
+  District ID: 10100003096
+  Polygon has 227 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[97/189] حي ضاحية نمار (Dahiyat Namar Dist.)
+  District ID: 10100003097
+  Polygon has 4220 points
+    Attempt 1 failed: <urlopen error EOF occurred in violation of protocol (_ssl.c:2406)>
+    Attempt 2 failed: Remote end closed connection without response
+    Attempt 3 failed: Remote end closed connection without response
+    WARNING: Request failed
+  ✗ No roads found
+
+[98/189] حي المصفاة (Al Misfat Dist.)
+  District ID: 10100003098
+  Polygon has 405 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[99/189] حي السفارات (Assafarat Dist.)
+  District ID: 10100003099
+  Polygon has 328 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[100/189] خشم العان (Khashm Al An)
+  District ID: 10100003100
+  Polygon has 699 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+  === PROGRESS: 100/189 districts, 6199 total roads ===
+
+[101/189] حي قرطبة (Qurtubah Dist.)
+  District ID: 10100003101
+  Polygon has 60 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[102/189] حي طويق (Tuwaiq Dist.)
+  District ID: 10100003102
+  Polygon has 1688 points
+    Attempt 1 failed: Remote end closed connection without response
+    Attempt 2 failed: Remote end closed connection without response
+    Attempt 3 failed: Remote end closed connection without response
+    WARNING: Request failed
+  ✗ No roads found
+
+[103/189] حي العوالي (Al Awaly Dist.)
+  District ID: 10100003103
+  Polygon has 890 points
+    Attempt 1 failed: Remote end closed connection without response
+    Attempt 2 failed: Remote end closed connection without response
+    Attempt 3 failed: Remote end closed connection without response
+    WARNING: Request failed
+  ✗ No roads found
+
+[104/189] حي الربيع (Ar Rabie Dist.)
+  District ID: 10100003104
+  Polygon has 21 points
+  ✓ Found 335 roads (326 new unique)
+
+[105/189] حي المغرزات (Al Mughrazat Dist.)
+  District ID: 10100003105
+  Polygon has 26 points
+  ✓ Found 177 roads (163 new unique)
+
+[106/189] حي السلي (Al Sulay Dist.)
+  District ID: 10100003106
+  Polygon has 68 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 3 failed: Expecting value: line 1 column 1 (char 0)
+    WARNING: Request failed
+  ✗ No roads found
+
+[107/189] حي العقيق (Al Aqeeq Dist.)
+  District ID: 10100003107
+  Polygon has 19 points
+  ✓ Found 433 roads (429 new unique)
+
+[108/189] حي النخيل (Al Nakheel Dist.)
+  District ID: 10100003108
+  Polygon has 101 points
+    Attempt 1 failed: Expecting value: line 1 column 1 (char 0)
+    Attempt 2 failed: Expecting value: line 1 column 1 (char 0)
