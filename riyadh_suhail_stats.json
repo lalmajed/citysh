@@ -1,0 +1,12 @@
+{
+  "total_parcels": 2640031,
+  "districts_processed": 189,
+  "stats": {
+    "other": 272409,
+    "vacant_land": 3775,
+    "villa": 1932766,
+    "apartment": 283356,
+    "commercial_land": 146991,
+    "palace": 734
+  }
+}
