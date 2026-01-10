@@ -1,0 +1,571 @@
+{
+  "scraped_at": "2026-01-10T10:26:38.028988",
+  "districts_count": 94,
+  "total_roads": 42453,
+  "districts": [
+    {
+      "district_id": 10100003001,
+      "name_ar": "حي العمل",
+      "name_en": "Al Amal Dist.",
+      "road_count": 255
+    },
+    {
+      "district_id": 10100003002,
+      "name_ar": "حي النموذجية",
+      "name_en": "Al Namudhajiyah Dist.",
+      "road_count": 149
+    },
+    {
+      "district_id": 10100003003,
+      "name_ar": "حي الجرادية",
+      "name_en": "Al Jarradiyah Dist.",
+      "road_count": 569
+    },
+    {
+      "district_id": 10100003004,
+      "name_ar": "حي الصناعية",
+      "name_en": "Al Sinaiyah Dist.",
+      "road_count": 428
+    },
+    {
+      "district_id": 10100003005,
+      "name_ar": "حي منفوحة الجديدة",
+      "name_en": "Manfuha Al Jadidah Dist.",
+      "road_count": 496
+    },
+    {
+      "district_id": 10100003006,
+      "name_ar": "حي الفاخرية",
+      "name_en": "Al Fakhiriyah Dist.",
+      "road_count": 178
+    },
+    {
+      "district_id": 10100003007,
+      "name_ar": "حي الديرة",
+      "name_en": "Al Dirah Dist.",
+      "road_count": 349
+    },
+    {
+      "district_id": 10100003008,
+      "name_ar": "حي ام الحمام الشرقي",
+      "name_en": "East Umm Al Hamam Dist.",
+      "road_count": 369
+    },
+    {
+      "district_id": 10100003009,
+      "name_ar": "حي الشرفية",
+      "name_en": "Al Sharafiyah Dist.",
+      "road_count": 287
+    },
+    {
+      "district_id": 10100003010,
+      "name_ar": "حي الهدا",
+      "name_en": "Al Hada Dist.",
+      "road_count": 361
+    },
+    {
+      "district_id": 10100003011,
+      "name_ar": "حي المعذر الشمالي",
+      "name_en": "North Mathar Dist.",
+      "road_count": 287
+    },
+    {
+      "district_id": 10100003012,
+      "name_ar": "حي ام الحمام الغربي",
+      "name_en": "West Umm Al Hamam Dist.",
+      "road_count": 243
+    },
+    {
+      "district_id": 10100003013,
+      "name_ar": "حي الرحمانية",
+      "name_en": "Ar Rahmaniyah Dist.",
+      "road_count": 262
+    },
+    {
+      "district_id": 10100003014,
+      "name_ar": "حي لبن",
+      "name_en": "Laban Dist.",
+      "road_count": 1379
+    },
+    {
+      "district_id": 10100003015,
+      "name_ar": "حي الرفيعة",
+      "name_en": "Ar Rafiah Dist.",
+      "road_count": 197
+    },
+    {
+      "district_id": 10100003016,
+      "name_ar": "حي الشهداء",
+      "name_en": "Al Shohda Dist.",
+      "road_count": 387
+    },
+    {
+      "district_id": 10100003017,
+      "name_ar": "حي الملك فهد",
+      "name_en": "King Fahd Dist.",
+      "road_count": 506
+    },
+    {
+      "district_id": 10100003018,
+      "name_ar": "حي السويدي",
+      "name_en": "Al Suwaidi Dist.",
+      "road_count": 1223
+    },
+    {
+      "district_id": 10100003019,
+      "name_ar": "حي الحزم",
+      "name_en": "Al Hazm Dist.",
+      "road_count": 1104
+    },
+    {
+      "district_id": 10100003020,
+      "name_ar": "حي عتيقة",
+      "name_en": "Utayqah Dist.",
+      "road_count": 182
+    },
+    {
+      "district_id": 10100003021,
+      "name_ar": "حي المربع",
+      "name_en": "Al Murabba Dist.",
+      "road_count": 489
+    },
+    {
+      "district_id": 10100003022,
+      "name_ar": "حي الفلاح",
+      "name_en": "Al Falah Dist.",
+      "road_count": 341
+    },
+    {
+      "district_id": 10100003023,
+      "name_ar": "حي الندى",
+      "name_en": "Al Nada Dist.",
+      "road_count": 386
+    },
+    {
+      "district_id": 10100003024,
+      "name_ar": "حي المرسلات",
+      "name_en": "Al Mursalat Dist.",
+      "road_count": 282
+    },
+    {
+      "district_id": 10100003025,
+      "name_ar": "حي النزهة",
+      "name_en": "Al Nuzha Dist.",
+      "road_count": 357
+    },
+    {
+      "district_id": 10100003026,
+      "name_ar": "حي الورود",
+      "name_en": "Al Woroud Dist.",
+      "road_count": 311
+    },
+    {
+      "district_id": 10100003027,
+      "name_ar": "حي الملك فيصل",
+      "name_en": "King Faisal Dist.",
+      "road_count": 714
+    },
+    {
+      "district_id": 10100003028,
+      "name_ar": "المدينة الصناعية الثانية",
+      "name_en": "2nd Industrial City",
+      "road_count": 989
+    },
+    {
+      "district_id": 10100003029,
+      "name_ar": "حي العزيزية",
+      "name_en": "Al Aziziyah Dist.",
+      "road_count": 1983
+    },
+    {
+      "district_id": 10100003030,
+      "name_ar": "حي المنصورة",
+      "name_en": "Al Mansurah Dist.",
+      "road_count": 417
+    },
+    {
+      "district_id": 10100003031,
+      "name_ar": "حي غبيرة",
+      "name_en": "Ghobairah Dist.",
+      "road_count": 213
+    },
+    {
+      "district_id": 10100003032,
+      "name_ar": "حي الفاروق",
+      "name_en": "Al Farooq Dist.",
+      "road_count": 563
+    },
+    {
+      "district_id": 10100003033,
+      "name_ar": "حي الفيصلية",
+      "name_en": "Al Faisaliyah Dist.",
+      "road_count": 457
+    },
+    {
+      "district_id": 10100003034,
+      "name_ar": "حي الخالدية",
+      "name_en": "Al Khalidiyah Dist.",
+      "road_count": 42
+    },
+    {
+      "district_id": 10100003035,
+      "name_ar": "حي الجزيرة",
+      "name_en": "Al Jazeerah Dist.",
+      "road_count": 841
+    },
+    {
+      "district_id": 10100003036,
+      "name_ar": "حي السعادة",
+      "name_en": "Al Saadah Dist.",
+      "road_count": 1098
+    },
+    {
+      "district_id": 10100003037,
+      "name_ar": "حي الناصرية",
+      "name_en": "Al Nasiriyah Dist.",
+      "road_count": 15
+    },
+    {
+      "district_id": 10100003038,
+      "name_ar": "حي المناخ",
+      "name_en": "Al Manakh Dist.",
+      "road_count": 587
+    },
+    {
+      "district_id": 10100003039,
+      "name_ar": "حي الدفاع",
+      "name_en": "Al Difaa Dist.",
+      "road_count": 125
+    },
+    {
+      "district_id": 10100003040,
+      "name_ar": "حي النور",
+      "name_en": "Al Noor Dist.",
+      "road_count": 156
+    },
+    {
+      "district_id": 10100003041,
+      "name_ar": "حي الملك عبدالله",
+      "name_en": "King Abdullah Dist.",
+      "road_count": 727
+    },
+    {
+      "district_id": 10100003042,
+      "name_ar": "حي الواحة",
+      "name_en": "Al Wahah Dist.",
+      "road_count": 110
+    },
+    {
+      "district_id": 10100003043,
+      "name_ar": "حي صلاح الدين",
+      "name_en": "Salahuddin Dist.",
+      "road_count": 39
+    },
+    {
+      "district_id": 10100003044,
+      "name_ar": "حي الملك عبدالعزيز",
+      "name_en": "King Abdulaziz Dist.",
+      "road_count": 459
+    },
+    {
+      "district_id": 10100003045,
+      "name_ar": "حي الوزارات",
+      "name_en": "Al Wizarat Dist.",
+      "road_count": 64
+    },
+    {
+      "district_id": 10100003046,
+      "name_ar": "حي سكيرينة",
+      "name_en": "Skirinah Dist.",
+      "road_count": 0
+    },
+    {
+      "district_id": 10100003047,
+      "name_ar": "حي الربوة",
+      "name_en": "Ar Rabwah Dist.",
+      "road_count": 953
+    },
+    {
+      "district_id": 10100003048,
+      "name_ar": "حي جرير",
+      "name_en": "Jareer Dist.",
+      "road_count": 94
+    },
+    {
+      "district_id": 10100003049,
+      "name_ar": "حي المعذر",
+      "name_en": "Al Mathar Dist.",
+      "road_count": 33
+    },
+    {
+      "district_id": 10100003050,
+      "name_ar": "حي الصالحية",
+      "name_en": "As Salhiyah Dist.",
+      "road_count": 116
+    },
+    {
+      "district_id": 10100003051,
+      "name_ar": "حي الملز",
+      "name_en": "Al Malaz Dist.",
+      "road_count": 295
+    },
+    {
+      "district_id": 10100003052,
+      "name_ar": "حي منفوحة",
+      "name_en": "Manfuhah Dist.",
+      "road_count": 209
+    },
+    {
+      "district_id": 10100003053,
+      "name_ar": "حي عليشة",
+      "name_en": "Olaishah Dist.",
+      "road_count": 54
+    },
+    {
+      "district_id": 10100003054,
+      "name_ar": "حي النهضة",
+      "name_en": "Al Nahdah Dist.",
+      "road_count": 1564
+    },
+    {
+      "district_id": 10100003055,
+      "name_ar": "حي الخليج",
+      "name_en": "Al Khaleej Dist.",
+      "road_count": 520
+    },
+    {
+      "district_id": 10100003056,
+      "name_ar": "حي الضباط",
+      "name_en": "Al Dhubbat Dist.",
+      "road_count": 34
+    },
+    {
+      "district_id": 10100003057,
+      "name_ar": "حي السويدي الغربي",
+      "name_en": "West Suwaidi Dist.",
+      "road_count": 886
+    },
+    {
+      "district_id": 10100003058,
+      "name_ar": "حي ديراب",
+      "name_en": "Dirab Dist.",
+      "road_count": 1253
+    },
+    {
+      "district_id": 10100003059,
+      "name_ar": "حي احد",
+      "name_en": "Ohod Dist.",
+      "road_count": 258
+    },
+    {
+      "district_id": 10100003060,
+      "name_ar": "حي نمار",
+      "name_en": "Namar Dist.",
+      "road_count": 799
+    },
+    {
+      "district_id": 10100003061,
+      "name_ar": "حي الشفا",
+      "name_en": "Al Shifa Dist.",
+      "road_count": 541
+    },
+    {
+      "district_id": 10100003062,
+      "name_ar": "حي المحمدية",
+      "name_en": "Al Muhammadiyah Dist.",
+      "road_count": 207
+    },
+    {
+      "district_id": 10100003063,
+      "name_ar": "حي السليمانية",
+      "name_en": "Al Sulaimaniyah Dist.",
+      "road_count": 391
+    },
+    {
+      "district_id": 10100003064,
+      "name_ar": "حي المروة",
+      "name_en": "Al Marwah Dist.",
+      "road_count": 225
+    },
+    {
+      "district_id": 10100003065,
+      "name_ar": "حي عكاظ",
+      "name_en": "Okaz Dist.",
+      "road_count": 417
+    },
+    {
+      "district_id": 10100003066,
+      "name_ar": "حي شبرا",
+      "name_en": "Shubra Dist.",
+      "road_count": 211
+    },
+    {
+      "district_id": 10100003067,
+      "name_ar": "حي الزهرة",
+      "name_en": "Al Zahrah Dist.",
+      "road_count": 40
+    },
+    {
+      "district_id": 10100003068,
+      "name_ar": "حي صياح",
+      "name_en": "Siyah Dist.",
+      "road_count": 19
+    },
+    {
+      "district_id": 10100003069,
+      "name_ar": "حي سلطانة",
+      "name_en": "Sultanah Dist.",
+      "road_count": 186
+    },
+    {
+      "district_id": 10100003070,
+      "name_ar": "حي اليمامة",
+      "name_en": "Al Yamamah Dist.",
+      "road_count": 160
+    },
+    {
+      "district_id": 10100003071,
+      "name_ar": "حي البديعة",
+      "name_en": "Al Badiah Dist.",
+      "road_count": 147
+    },
+    {
+      "district_id": 10100003072,
+      "name_ar": "حي المصانع",
+      "name_en": "Al Masani Dist.",
+      "road_count": 718
+    },
+    {
+      "district_id": 10100003073,
+      "name_ar": "حي القادسية",
+      "name_en": "Al Qadisiyah Dist.",
+      "road_count": 1030
+    },
+    {
+      "district_id": 10100003074,
+      "name_ar": "حي الصفا",
+      "name_en": "Al Safa Dist.",
+      "road_count": 47
+    },
+    {
+      "district_id": 10100003075,
+      "name_ar": "حي العليا",
+      "name_en": "Al Olaya Dist.",
+      "road_count": 92
+    },
+    {
+      "district_id": 10100003076,
+      "name_ar": "حي الدريهمية",
+      "name_en": "Al Duraihemiyah Dist.",
+      "road_count": 0
+    },
+    {
+      "district_id": 10100003077,
+      "name_ar": "حي الاسكان",
+      "name_en": "Al Iskan Dist.",
+      "road_count": 114
+    },
+    {
+      "district_id": 10100003078,
+      "name_ar": "حي السلام",
+      "name_en": "Al Salam Dist.",
+      "road_count": 509
+    },
+    {
+      "district_id": 10100003079,
+      "name_ar": "حي المنار",
+      "name_en": "Al Manar Dist.",
+      "road_count": 431
+    },
+    {
+      "district_id": 10100003080,
+      "name_ar": "حي النسيم الشرقي",
+      "name_en": "East Naseem Dist.",
+      "road_count": 793
+    },
+    {
+      "district_id": 10100003081,
+      "name_ar": "حي القدس",
+      "name_en": "Al Quds Dist.",
+      "road_count": 129
+    },
+    {
+      "district_id": 10100003082,
+      "name_ar": "حي الوادي",
+      "name_en": "Al Wadi Dist.",
+      "road_count": 281
+    },
+    {
+      "district_id": 10100003083,
+      "name_ar": "حي النفل",
+      "name_en": "Al Nafel Dist.",
+      "road_count": 358
+    },
+    {
+      "district_id": 10100003084,
+      "name_ar": "حي المصيف",
+      "name_en": "Al Maseef Dist.",
+      "road_count": 211
+    },
+    {
+      "district_id": 10100003085,
+      "name_ar": "حي التعاون",
+      "name_en": "Al Taawun Dist.",
+      "road_count": 129
+    },
+    {
+      "district_id": 10100003086,
+      "name_ar": "حي الازدهار",
+      "name_en": "Al Ezdihar Dist.",
+      "road_count": 93
+    },
+    {
+      "district_id": 10100003087,
+      "name_ar": "حي الاندلس",
+      "name_en": "Al Andalus Dist.",
+      "road_count": 157
+    },
+    {
+      "district_id": 10100003088,
+      "name_ar": "حي الروضة",
+      "name_en": "Al Rawdah Dist.",
+      "road_count": 266
+    },
+    {
+      "district_id": 10100003089,
+      "name_ar": "حي الروابي",
+      "name_en": "Al Rawabi Dist.",
+      "road_count": 346
+    },
+    {
+      "district_id": 10100003090,
+      "name_ar": "حي الريان",
+      "name_en": "Al Rayan Dist.",
+      "road_count": 4
+    },
+    {
+      "district_id": 10100003091,
+      "name_ar": "حي ظهرة البديعة",
+      "name_en": "Dhahrat Al Badeah Dist.",
+      "road_count": 289
+    },
+    {
+      "district_id": 10100003092,
+      "name_ar": "حي النظيم",
+      "name_en": "Al Nadheem Dist.",
+      "road_count": 5635
+    },
+    {
+      "district_id": 10100003093,
+      "name_ar": "حي الرماية",
+      "name_en": "Al Rimayah Dist.",
+      "road_count": 100
+    },
+    {
+      "district_id": 10100003094,
+      "name_ar": "حي البرية",
+      "name_en": "Al Bariyah Dist.",
+      "road_count": 133
+    }
+  ]
+}
