@@ -1,0 +1,15 @@
+{
+  "name": "riyadh-dynamic-map",
+  "version": "1.0.0",
+  "description": "Riyadh Dynamic Map with React frontend and Node.js backend",
+  "private": true,
+  "scripts": {
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm start",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "dev": "echo 'Run backend and frontend in separate terminals: npm run start:backend && npm run start:frontend'"
+  },
+  "keywords": ["riyadh", "map", "react", "nodejs"],
+  "author": "",
+  "license": "ISC"
+}
