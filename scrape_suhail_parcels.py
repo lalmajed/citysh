@@ -40,10 +40,16 @@ def get_tile_bounds(x, y, zoom):
     return min(lat1, lat2), max(lat1, lat2), min(lon1, lon2), max(lon1, lon2)
 
 def pixel_to_latlon(px, py, tile_x, tile_y, zoom, extent=4096):
-    """Convert pixel coordinates within a tile to lat/lon"""
+    """Convert pixel coordinates within a tile to lat/lon
+    
+    IMPORTANT: In MVT tiles, Y=0 is at the TOP (north), Y increases downward (south).
+    But geographic latitude increases northward. So we must INVERT the Y coordinate:
+    use (extent - py) instead of py.
+    """
     # Calculate the fractional tile position
     tile_frac_x = tile_x + px / extent
-    tile_frac_y = tile_y + py / extent
+    # FIXED: Y-axis is inverted in tile coordinates!
+    tile_frac_y = tile_y + (extent - py) / extent
     
     # Convert to lat/lon
     n = 2 ** zoom
