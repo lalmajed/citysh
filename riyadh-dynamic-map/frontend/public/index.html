@@ -9,6 +9,13 @@
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>Riyadh Dynamic Map</title>
+    <script>
+      // Define global initMap function before Google Maps loads
+      window.initMap = function() {
+        // This will be overwritten by React component
+        console.log('Google Maps API loaded');
+      };
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

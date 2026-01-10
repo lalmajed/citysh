@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import './RiyadhMap.css';
 
-// Marker colors by type
 const typeColors = {
   landmark: '#e74c3c',
   mall: '#3498db',
@@ -15,62 +14,76 @@ function RiyadhMap({ locations, selectedLocation, onLocationClick }) {
   const [map, setMap] = useState(null);
   const [markers, setMarkers] = useState([]);
   const [infoWindow, setInfoWindow] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const initializeMap = useCallback(() => {
+    if (!mapRef.current || map) return;
+
+    try {
+      const googleMap = new window.google.maps.Map(mapRef.current, {
+        center: { lat: 24.7136, lng: 46.6753 },
+        zoom: 12,
+        mapTypeControl: true,
+        streetViewControl: true,
+        fullscreenControl: true,
+        zoomControl: true
+      });
+
+      const iw = new window.google.maps.InfoWindow();
+      setInfoWindow(iw);
+      setMap(googleMap);
+      setIsLoaded(true);
+    } catch (error) {
+      console.error('Error initializing map:', error);
+    }
+  }, [map]);
 
   // Load Google Maps script
   useEffect(() => {
-    // Check if script already loaded
-    if (window.google && window.google.maps) {
-      initMap();
+    // Define global initMap function that Google Maps expects
+    window.initMap = () => {
+      initializeMap();
+    };
+
+    // Check if already loaded
+    if (window.google && window.google.maps && window.google.maps.Map) {
+      initializeMap();
       return;
     }
 
-    // Load the keyless Google Maps API
+    // Check if script already exists
+    const existingScript = document.querySelector('script[src*="Keyless-Google-Maps-API"]');
+    if (existingScript) {
+      const checkReady = setInterval(() => {
+        if (window.google && window.google.maps && window.google.maps.Map) {
+          clearInterval(checkReady);
+          initializeMap();
+        }
+      }, 100);
+      return () => clearInterval(checkReady);
+    }
+
+    // Load the script
     const script = document.createElement('script');
     script.src = 'https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js';
     script.async = true;
     script.defer = true;
     document.head.appendChild(script);
 
-    // Wait for Google Maps to load
     const checkGoogleMaps = setInterval(() => {
-      if (window.google && window.google.maps) {
+      if (window.google && window.google.maps && window.google.maps.Map) {
         clearInterval(checkGoogleMaps);
-        initMap();
+        initializeMap();
       }
-    }, 100);
+    }, 200);
 
     return () => {
       clearInterval(checkGoogleMaps);
     };
-  }, []);
+  }, [initializeMap]);
 
-  // Initialize the map
-  const initMap = () => {
-    if (!mapRef.current || map) return;
-
-    const googleMap = new window.google.maps.Map(mapRef.current, {
-      center: { lat: 24.7136, lng: 46.6753 }, // Riyadh center
-      zoom: 12,
-      styles: [
-        {
-          featureType: 'poi',
-          elementType: 'labels',
-          stylers: [{ visibility: 'off' }]
-        }
-      ],
-      mapTypeControl: true,
-      streetViewControl: true,
-      fullscreenControl: true,
-      zoomControl: true
-    });
-
-    const iw = new window.google.maps.InfoWindow();
-    setInfoWindow(iw);
-    setMap(googleMap);
-  };
-
-  // Create custom marker icon
   const createMarkerIcon = (color) => {
+    if (!window.google || !window.google.maps) return null;
     return {
       path: window.google.maps.SymbolPath.CIRCLE,
       fillColor: color,
@@ -83,22 +96,26 @@ function RiyadhMap({ locations, selectedLocation, onLocationClick }) {
 
   // Update markers when locations or map changes
   useEffect(() => {
-    if (!map || !window.google) return;
+    if (!map || !window.google || !window.google.maps || !isLoaded) return;
 
     // Clear existing markers
-    markers.forEach(marker => marker.setMap(null));
+    markers.forEach(marker => {
+      if (marker && marker.setMap) {
+        marker.setMap(null);
+      }
+    });
 
     // Create new markers
     const newMarkers = locations.map(location => {
+      const icon = createMarkerIcon(typeColors[location.type] || typeColors.custom);
+      
       const marker = new window.google.maps.Marker({
         position: { lat: location.lat, lng: location.lng },
         map: map,
         title: location.name,
-        icon: createMarkerIcon(typeColors[location.type] || typeColors.custom),
-        animation: window.google.maps.Animation.DROP
+        icon: icon
       });
 
-      // Add click listener
       marker.addListener('click', () => {
         if (infoWindow) {
           infoWindow.setContent(`
@@ -120,31 +137,40 @@ function RiyadhMap({ locations, selectedLocation, onLocationClick }) {
     });
 
     setMarkers(newMarkers);
-  }, [map, locations, infoWindow, onLocationClick]);
+  }, [map, locations, infoWindow, onLocationClick, isLoaded]);
 
   // Pan to selected location
   useEffect(() => {
-    if (!map || !selectedLocation) return;
+    if (!map || !selectedLocation || !isLoaded) return;
 
     map.panTo({ lat: selectedLocation.lat, lng: selectedLocation.lng });
     map.setZoom(15);
 
-    // Find and bounce the selected marker
+    // Find and highlight the selected marker
     const selectedMarker = markers.find(marker => 
-      marker.getTitle() === selectedLocation.name
+      marker && marker.getTitle && marker.getTitle() === selectedLocation.name
     );
     
-    if (selectedMarker) {
+    if (selectedMarker && selectedMarker.setAnimation) {
       selectedMarker.setAnimation(window.google.maps.Animation.BOUNCE);
       setTimeout(() => {
-        selectedMarker.setAnimation(null);
+        if (selectedMarker.setAnimation) {
+          selectedMarker.setAnimation(null);
+        }
       }, 2000);
     }
-  }, [selectedLocation, map, markers]);
+  }, [selectedLocation, map, markers, isLoaded]);
 
   return (
     <div className="map-wrapper">
-      <div ref={mapRef} className="map-container"></div>
+      <div ref={mapRef} className="map-container">
+        {!isLoaded && (
+          <div className="map-loading">
+            <div className="loader"></div>
+            <p>Loading Google Maps...</p>
+          </div>
+        )}
+      </div>
       
       <div className="map-legend">
         <h4>Legend</h4>
