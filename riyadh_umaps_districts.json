@@ -1,0 +1,8437 @@
+[
+  {
+    "district_id": "00110008002",
+    "name_ar": "مخطط رقم 258",
+    "name_en": "Subdivision No. 258",
+    "city_id": "00110008",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001004",
+    "name_ar": "الجفيدرية",
+    "name_en": "Al Jufaidariyah",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001011",
+    "name_ar": "الجامعة",
+    "name_en": "Al Jamiah",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00112001002",
+    "name_ar": "الملك عبدالعزيز",
+    "name_en": "King Abdulaziz",
+    "city_id": "00112001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017008",
+    "name_ar": "خضرا و عشيران",
+    "name_en": "Khudra and Ushayran",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001011",
+    "name_ar": "القادسية",
+    "name_en": "Al Qadisiyah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001006",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001007",
+    "name_ar": "الصحنة",
+    "name_en": "Al Sahnah",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001008",
+    "name_ar": "زميقة",
+    "name_en": "Zamiqa",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001016",
+    "name_ar": "القدس",
+    "name_en": "Al Quds",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001017",
+    "name_ar": "المنتزة",
+    "name_en": "Al Muntazah",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001018",
+    "name_ar": "الروضة",
+    "name_en": "Ar Rawdah",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001019",
+    "name_ar": "القطار",
+    "name_en": "Al Qitar",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001013",
+    "name_ar": "المستقبل",
+    "name_en": "Al Mustaqbal",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004017",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001018",
+    "name_ar": "الجزيرة",
+    "name_en": "Al Jazirah",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001015",
+    "name_ar": "الريان",
+    "name_en": "Ar Rayaan",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001016",
+    "name_ar": "الربيع",
+    "name_en": "Ar Rabie",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001017",
+    "name_ar": "السعادة",
+    "name_en": "Al Saadah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105131003",
+    "name_ar": "مخطط رقم 4",
+    "name_en": "Subdivision No. 4",
+    "city_id": "00105131",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001007",
+    "name_ar": "المسميات 2",
+    "name_en": "Al Musamayat 2",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001008",
+    "name_ar": "الحلة",
+    "name_en": "Al Hilah",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001009",
+    "name_ar": "اسفل الباطن الشمالي",
+    "name_en": "Asfil Al Batin North",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001015",
+    "name_ar": "الصحافة",
+    "name_en": "Al Sahafah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004013",
+    "name_ar": "الأندلس",
+    "name_en": "Al Andalus",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004014",
+    "name_ar": "الواحة",
+    "name_en": "Al Wahah",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004015",
+    "name_ar": "غرناطة",
+    "name_en": "Ghirnatah",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001028",
+    "name_ar": "1029 مخطط رقم",
+    "name_en": "Subdivision 1029",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001017",
+    "name_ar": "حطين",
+    "name_en": "Hittin",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004018",
+    "name_ar": "الشبيلية1",
+    "name_en": "Ash Shabilia1",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001020",
+    "name_ar": "الدوائر الحكومية",
+    "name_en": "Goverment Departments",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001021",
+    "name_ar": "الملك عبدالعزيز",
+    "name_en": "King Abdulaziz",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001012",
+    "name_ar": "الحزيمية",
+    "name_en": "Al Hazimia",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001014",
+    "name_ar": "الغدير",
+    "name_en": "Al Ghadir",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104005006",
+    "name_ar": "الملك فهد",
+    "name_en": "King Fahd",
+    "city_id": "00104005",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001009",
+    "name_ar": "النفل",
+    "name_en": "An Nafl",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001018",
+    "name_ar": "الملك عبدالله",
+    "name_en": "King Abdullah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002013",
+    "name_ar": "الرين القديم",
+    "name_en": "Al Riyn Al Qadim",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073006",
+    "name_ar": "مخطط رقم 621",
+    "name_en": "Subdivision No. 621",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110015001",
+    "name_ar": "مخطط رقم 148",
+    "name_en": "Subdivision No. 148",
+    "city_id": "00110015",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001010",
+    "name_ar": "اسفل الباطن",
+    "name_en": "Asfil Al Batin",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101002005",
+    "name_ar": "هجرة بوضة",
+    "name_en": "Hijrat Buda",
+    "city_id": "00101002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222006",
+    "name_ar": "قعضبا",
+    "name_en": "Qaedaba",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104038002",
+    "name_ar": "الريان",
+    "name_en": "Ar Rayaan",
+    "city_id": "00104038",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236014",
+    "name_ar": "مركز الشرارة",
+    "name_en": "Al Sharara Center",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102007004",
+    "name_ar": "المحمدية",
+    "name_en": "Al Muhammadiyah",
+    "city_id": "00102007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236015",
+    "name_ar": "البديعة",
+    "name_en": "Al Badiah",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001016",
+    "name_ar": "سوق الماشية",
+    "name_en": "Suq Al Mashiya",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004016",
+    "name_ar": "النرجس",
+    "name_en": "An Narjis",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001022",
+    "name_ar": "الأمير سلطان بن عبدالعزيز",
+    "name_en": "Prince Sultan bin Abdulaziz",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002023",
+    "name_ar": "الحنو",
+    "name_en": "Al Hunu",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002025",
+    "name_ar": "الرجع",
+    "name_en": "Ar Raja",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236017",
+    "name_ar": "التضامن",
+    "name_en": "Al Tadamun",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102007005",
+    "name_ar": "الديرة",
+    "name_en": "Ad Dirah",
+    "city_id": "00102007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001006",
+    "name_ar": "العاصمة",
+    "name_en": "Al Asemah",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001012",
+    "name_ar": "الفيصلية",
+    "name_en": "Al Faisaliyah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002014",
+    "name_ar": "غرناطة",
+    "name_en": "Ghirnatah",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001019",
+    "name_ar": "حطين",
+    "name_en": "Hittin",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002015",
+    "name_ar": "الرفيعة",
+    "name_en": "Ar Rafiah",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001010",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001013",
+    "name_ar": "الفروسية",
+    "name_en": "Al Frosyah",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001053",
+    "name_ar": "وادي لبن",
+    "name_en": "Wadi Laban",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001054",
+    "name_ar": "الإزدهار",
+    "name_en": "Al Izdihar",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001055",
+    "name_ar": "الأندلس",
+    "name_en": "Al Andalus",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001056",
+    "name_ar": "المشاعل",
+    "name_en": "Al Mishael",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001057",
+    "name_ar": "نمار",
+    "name_en": "Namar",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001058",
+    "name_ar": "عليشة",
+    "name_en": "Olaishah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001060",
+    "name_ar": "السويدي الغربي",
+    "name_en": "Al Suwaidi Al Gharbi",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001017",
+    "name_ar": "العزيزية1",
+    "name_en": "Al Aziziyah1",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024009",
+    "name_ar": "ال راشد وال شايع",
+    "name_en": "Al Rashid and Shaye",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001012",
+    "name_ar": "سحاب",
+    "name_en": "Sahab",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001013",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001014",
+    "name_ar": "الريان",
+    "name_en": "Ar Rayaan",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120016002",
+    "name_ar": "الديرة القديمة",
+    "name_en": "Ad Dirah Al Qadimah",
+    "city_id": "00120016",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104007006",
+    "name_ar": "الفيصلية",
+    "name_en": "Al Faisaliyah",
+    "city_id": "00104007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001018",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001016",
+    "name_ar": "المنتزة",
+    "name_en": "Al Muntazah",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001017",
+    "name_ar": "الادارية غرب",
+    "name_en": "West Administrative",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104005007",
+    "name_ar": "شراف",
+    "name_en": "Sharaf",
+    "city_id": "00104005",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001023",
+    "name_ar": "الخالدية",
+    "name_en": "Al Khalidiyah",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001018",
+    "name_ar": "العيون",
+    "name_en": "Al Uyun",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001085",
+    "name_ar": "العارض",
+    "name_en": "Al Arid",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109018004",
+    "name_ar": "مخطط رقم 822",
+    "name_en": "Subdivision No. 822",
+    "city_id": "00109018",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001013",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001014",
+    "name_ar": "الفيحاء",
+    "name_en": "Al Fayha",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001015",
+    "name_ar": "الملك سلمان",
+    "name_en": "King Salman",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001014",
+    "name_ar": "السلام",
+    "name_en": "As Salam",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002016",
+    "name_ar": "القميش",
+    "name_en": "Al Qumaysh",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109018005",
+    "name_ar": "مخطط رقم725",
+    "name_en": "Subdivision No. 725",
+    "city_id": "00109018",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001062",
+    "name_ar": "الجرادية",
+    "name_en": "Al Jarradiyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001063",
+    "name_ar": "المحمدية",
+    "name_en": "Al Muhammadiyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001064",
+    "name_ar": "الفاخرية",
+    "name_en": "Al Fakhriyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001065",
+    "name_ar": "أحد",
+    "name_en": "Ohod",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001066",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101002006",
+    "name_ar": "العين",
+    "name_en": "Al Ain",
+    "city_id": "00101002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073012",
+    "name_ar": "الشفاء",
+    "name_en": "Ash Shifa",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001019",
+    "name_ar": "الروابي",
+    "name_en": "Ar Rawabi",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001011",
+    "name_ar": "نوارة",
+    "name_en": "Nawara",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024010",
+    "name_ar": "الغويبة",
+    "name_en": "Al Ghuwaiba",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001017",
+    "name_ar": "نزوى",
+    "name_en": "Nazwaa",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001015",
+    "name_ar": "حي ج8",
+    "name_en": "Dst C8",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00112001003",
+    "name_ar": "الشفاء",
+    "name_en": "Ash Shifa",
+    "city_id": "00112001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017014",
+    "name_ar": "المرزوقية",
+    "name_en": "Al Marzoukia",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222012",
+    "name_ar": "آل حمد",
+    "name_en": "Al Hamad",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109006007",
+    "name_ar": "النزهة",
+    "name_en": "An Nuzhah",
+    "city_id": "00109006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001020",
+    "name_ar": "مرخ",
+    "name_en": "Markh ",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001016",
+    "name_ar": "الجامعيين",
+    "name_en": "Al Jamiyin",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001011",
+    "name_ar": "غرناطة",
+    "name_en": "Ghirnatah",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002017",
+    "name_ar": "البدائع",
+    "name_en": "Al Badai'",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002018",
+    "name_ar": "الرواما",
+    "name_en": "Al Rawama",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017009",
+    "name_ar": "الأمير سلطان",
+    "name_en": "Prince Sultan",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001067",
+    "name_ar": "الملز",
+    "name_en": "Al Malaz",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001068",
+    "name_ar": "ديراب",
+    "name_en": "Dirab",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001069",
+    "name_ar": "الدريهمية",
+    "name_en": "Al Duraihemiyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001070",
+    "name_ar": "السعادة",
+    "name_en": "Al Saadah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001071",
+    "name_ar": "الفيحاء",
+    "name_en": "Al Fayha",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001072",
+    "name_ar": "البديعة",
+    "name_en": "Al Badiah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001020",
+    "name_ar": "الملك سلمان1",
+    "name_en": "King Salman1",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001018",
+    "name_ar": "العقيق",
+    "name_en": "Al Aqiq",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001010",
+    "name_ar": "الريان",
+    "name_en": "Ar Rayaan",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104007007",
+    "name_ar": "الخليج",
+    "name_en": "Al Khalij",
+    "city_id": "00104007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001013",
+    "name_ar": "حي ج2",
+    "name_en": "Dst 2C",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001014",
+    "name_ar": "القرينة الجديدة",
+    "name_en": "Al Qarina Al Jadida",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001019",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004011",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004012",
+    "name_ar": "النزهة",
+    "name_en": "An Nuzhah",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001021",
+    "name_ar": "الحمراء",
+    "name_en": "Al Hamra",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001015",
+    "name_ar": "الدوائر الحكومية",
+    "name_en": "Goverment Departments",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001073",
+    "name_ar": "السلي",
+    "name_en": "Al Sulay",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001074",
+    "name_ar": "الزاهر",
+    "name_en": "Az Zahir",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001075",
+    "name_ar": "العلا",
+    "name_en": "Al Ula",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001076",
+    "name_ar": "النخبة",
+    "name_en": "Al Nakhbah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001013",
+    "name_ar": "جفارة السعدان",
+    "name_en": "Jafara Al Saadan",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001014",
+    "name_ar": "منطقة استراحات حمد الجبرين",
+    "name_en": "aistirahat Hamad Al Jibrin",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001012",
+    "name_ar": "حي ج1",
+    "name_en": "Dst C1",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001019",
+    "name_ar": "665 مخطط رقم",
+    "name_en": "Subdivision 665",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001020",
+    "name_ar": "مخطط رقم 1033",
+    "name_en": "Subdivision No. 1033",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001021",
+    "name_ar": "مخطط رقم 985",
+    "name_en": "Subdivision No. 985",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001022",
+    "name_ar": "1077 مخطط رقم",
+    "name_en": "Subdivision 1077",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001027",
+    "name_ar": "الإزدهار",
+    "name_en": "Al Izdihar",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236018",
+    "name_ar": "برزان",
+    "name_en": "Barzan",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004019",
+    "name_ar": "قرطبة",
+    "name_en": "Qurtubah",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001018",
+    "name_ar": "الرمل",
+    "name_en": "Al Raml",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236019",
+    "name_ar": "الأمير سلطان",
+    "name_en": "Prince Sultan",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001022",
+    "name_ar": "المدرجية",
+    "name_en": "Al Midrajia",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001023",
+    "name_ar": "قرطبة",
+    "name_en": "Qurtubah",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111114002",
+    "name_ar": "الإزدهار",
+    "name_en": "Al Izdihar",
+    "city_id": "00111114",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001003",
+    "name_ar": "حي ج17",
+    "name_en": "Dst C17",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024003",
+    "name_ar": "ال قاران",
+    "name_en": "Al Qaran",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024004",
+    "name_ar": "الحلة",
+    "name_en": "Al Hilah",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024005",
+    "name_ar": "ال ظافر",
+    "name_en": "Al Zafer",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001006",
+    "name_ar": "التوباد",
+    "name_en": "Al Tuwbad",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001006",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001006",
+    "name_ar": "العليا",
+    "name_en": "Al Olaya",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110008003",
+    "name_ar": "مخطط رقم 496",
+    "name_en": "Subdivision No. 496",
+    "city_id": "00110008",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001012",
+    "name_ar": "الشفاء",
+    "name_en": "Ash Shifa",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001010",
+    "name_ar": "الفيصلية",
+    "name_en": "Al Faisaliyah",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105131002",
+    "name_ar": "الخرائق",
+    "name_en": "Al Kharayiq",
+    "city_id": "00105131",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001005",
+    "name_ar": "الربيع",
+    "name_en": "Ar Rabie",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001009",
+    "name_ar": "الجزيرة",
+    "name_en": "Al Jazirah",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001010",
+    "name_ar": "الأمير نايف",
+    "name_en": "Prince Naif",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001014",
+    "name_ar": "الصديق",
+    "name_en": "As Sediq",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004006",
+    "name_ar": "الشبيلية2",
+    "name_en": "Ash Shabilia2",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001019",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017010",
+    "name_ar": "البكر",
+    "name_en": "Al Bakr",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001010",
+    "name_ar": "الفلاح",
+    "name_en": "Al Falah",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024011",
+    "name_ar": "مخطط رقم 814",
+    "name_en": "Subdivision No. 814",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001106",
+    "name_ar": "الإسكان",
+    "name_en": "Al Iskan",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004020",
+    "name_ar": "المصيف",
+    "name_en": "Al Masif",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001024",
+    "name_ar": "الديرة القديمة1",
+    "name_en": "Ad Dirah Al Qadimah1",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001012",
+    "name_ar": "مخطط الاراضي الحكومية1",
+    "name_en": "Government Lands Subdivision1",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017012",
+    "name_ar": "ال وحيد",
+    "name_en": "Al Wahid",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001021",
+    "name_ar": "القويز",
+    "name_en": "Al Quayz",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001013",
+    "name_ar": "العزيزية",
+    "name_en": "Al Aziziyah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001013",
+    "name_ar": "المعتلا الجنوبى",
+    "name_en": "Southern Al Muetala",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001007",
+    "name_ar": "الواحة",
+    "name_en": "Al Wahah",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001009",
+    "name_ar": "1051 مخطط رقم",
+    "name_en": "Subdivision 1051",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001006",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001011",
+    "name_ar": "الإسكان",
+    "name_en": "Al Iskan",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001008",
+    "name_ar": "العزيزية",
+    "name_en": "Al Aziziyah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110012001",
+    "name_ar": "مخطط رقم 506",
+    "name_en": "Subdivision No. 506",
+    "city_id": "00110012",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109006006",
+    "name_ar": "الديرة",
+    "name_en": "Ad Dirah",
+    "city_id": "00109006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001011",
+    "name_ar": "الإزدهار",
+    "name_en": "Al Izdihar",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222007",
+    "name_ar": "الزهور",
+    "name_en": "Al Zuhur",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222008",
+    "name_ar": "البجادية",
+    "name_en": "Al Bajadia",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222009",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222010",
+    "name_ar": "القدس",
+    "name_en": "Al Quds",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222011",
+    "name_ar": "البديعة",
+    "name_en": "Al Badiah",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001025",
+    "name_ar": "الصحن",
+    "name_en": "As Sahn",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001013",
+    "name_ar": "المروج",
+    "name_en": "Al Muruj",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001004",
+    "name_ar": "حي ج13",
+    "name_en": "Dst C13",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001005",
+    "name_ar": "الديرة",
+    "name_en": "Ad Dirah",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001010",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001007",
+    "name_ar": "الأندلس",
+    "name_en": "Al Andalus",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001012",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102007003",
+    "name_ar": "الرفيعة",
+    "name_en": "Ar Rafiah",
+    "city_id": "00102007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004007",
+    "name_ar": "الزهور",
+    "name_en": "Al Zuhur",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004008",
+    "name_ar": "أم عنيق",
+    "name_en": "Umm Aneq",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104007004",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00104007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001024",
+    "name_ar": "السعادة",
+    "name_en": "Al Saadah",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001008",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001025",
+    "name_ar": "أم سريحة",
+    "name_en": "Umm Sariha",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001026",
+    "name_ar": "الربوة",
+    "name_en": "Ar Rabwah",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017011",
+    "name_ar": "المصارير",
+    "name_en": "Al Masarir",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002019",
+    "name_ar": "المعتلا",
+    "name_en": "Al Muetala",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107029005",
+    "name_ar": "مخطط 525",
+    "name_en": "Subdivision 525",
+    "city_id": "00107029",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107029006",
+    "name_ar": "مخطط794",
+    "name_en": "Subdivision 794",
+    "city_id": "00107029",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107029001",
+    "name_ar": "مخطط 433",
+    "name_en": "Subdivision 433",
+    "city_id": "00107029",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122104001",
+    "name_ar": "مخطط 331",
+    "name_en": "Subdivision 331",
+    "city_id": "00122104",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073013",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001015",
+    "name_ar": "الجزيرة",
+    "name_en": "Al Jazirah",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017013",
+    "name_ar": "الأندلس",
+    "name_en": "Al Andalus",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001022",
+    "name_ar": "المدرسة العسكرية",
+    "name_en": "Military School",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073014",
+    "name_ar": "الملك عبدالله",
+    "name_en": "King Abdullah",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101002001",
+    "name_ar": "نجد",
+    "name_en": "Najd",
+    "city_id": "00101002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001007",
+    "name_ar": "الشلال",
+    "name_en": "Ash Shalaal",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017004",
+    "name_ar": "الفيحاء",
+    "name_en": "Al Fayha",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001010",
+    "name_ar": "1023 مخطط رقم",
+    "name_en": "Subdivision 1023",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001012",
+    "name_ar": "الفروسية",
+    "name_en": "Al Frosyah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001008",
+    "name_ar": "الإزدهار",
+    "name_en": "Al Izdihar",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001009",
+    "name_ar": "النرجس",
+    "name_en": "An Narjis",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001004",
+    "name_ar": "الوادي",
+    "name_en": "Al Wadi",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001005",
+    "name_ar": "العذار",
+    "name_en": "Al Adhaar",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004009",
+    "name_ar": "الحلة الطالعية",
+    "name_en": "Al Hilah Al Taalieia",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001013",
+    "name_ar": "المنطقة المركزية",
+    "name_en": "Central District",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001023",
+    "name_ar": "مخطط رقم 1039",
+    "name_en": "Subdivision No. 1039",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111172001",
+    "name_ar": "مخطط 749",
+    "name_en": "Subdivision 749",
+    "city_id": "00111172",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001022",
+    "name_ar": "القادسية",
+    "name_en": "Al Qadisiyah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001004",
+    "name_ar": "العلب",
+    "name_en": "Al Olab",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001013",
+    "name_ar": "الغضا",
+    "name_en": "Al Kada",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001009",
+    "name_ar": "الريان",
+    "name_en": "Ar Rayaan",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082008",
+    "name_ar": "مخطط رقم 62",
+    "name_en": "Subdivision No. 62",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001005",
+    "name_ar": "البديع الغربي",
+    "name_en": "Al Badi Al Gharbi",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001006",
+    "name_ar": "العزيزية",
+    "name_en": "Al Aziziyah",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001017",
+    "name_ar": "سوق الماشية",
+    "name_en": "Suq Al Mashiya",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001006",
+    "name_ar": "حي ج16",
+    "name_en": "Dst C16",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017005",
+    "name_ar": "الوداعين",
+    "name_en": "Al Wadaein",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001059",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001093",
+    "name_ar": "ثليم",
+    "name_en": "Thulaim",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001111",
+    "name_ar": "الحمراء",
+    "name_en": "Al Hamra",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001007",
+    "name_ar": "حي ج9",
+    "name_en": "Dst C9",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001008",
+    "name_ar": "الحزم",
+    "name_en": "Al Hazm",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004010",
+    "name_ar": "الرحمانية",
+    "name_en": "Ar Rahmanyah",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017006",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001009",
+    "name_ar": "طيبة",
+    "name_en": "Taibah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104005004",
+    "name_ar": "الوسطة",
+    "name_en": "Al Wasata",
+    "city_id": "00104005",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001020",
+    "name_ar": "النزهة",
+    "name_en": "An Nuzhah",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024012",
+    "name_ar": "المرجع",
+    "name_en": "Al Marja",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001014",
+    "name_ar": "المصيف",
+    "name_en": "Al Masif",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001015",
+    "name_ar": "الجزيرة",
+    "name_en": "Al Jazirah",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001016",
+    "name_ar": "اسفل الباطن الجنوبي",
+    "name_en": "Asfil Al Batin Southern",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001097",
+    "name_ar": "الوادي",
+    "name_en": "Al Wadi",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103264002",
+    "name_ar": "مخطط 144",
+    "name_en": "Subdivision 144",
+    "city_id": "00103264",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103264003",
+    "name_ar": "الفيضة 2",
+    "name_en": "Al Faydah 2",
+    "city_id": "00103264",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111068001",
+    "name_ar": "مخطط فرعة الرميثي",
+    "name_en": "Fireat Al Rumaithi Subdivision",
+    "city_id": "00111068",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001007",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001002",
+    "name_ar": "قريوة",
+    "name_en": "Qaryuh",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109006005",
+    "name_ar": "الشرفية",
+    "name_en": "Ash Sharafiyah",
+    "city_id": "00109006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001007",
+    "name_ar": "مخطط 94",
+    "name_en": "Subdivision 94",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001002",
+    "name_ar": "السلام",
+    "name_en": "As Salam",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001008",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001003",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222005",
+    "name_ar": "الاقرن",
+    "name_en": "Al Aqarn",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111114001",
+    "name_ar": "مخطط 315",
+    "name_en": "Subdivision 315",
+    "city_id": "00111114",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001008",
+    "name_ar": "الإسكان",
+    "name_en": "Al Iskan",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001009",
+    "name_ar": "حي ج19",
+    "name_en": "Dst C19",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001008",
+    "name_ar": "الريف",
+    "name_en": "Ar Rif",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001010",
+    "name_ar": "حي ج3",
+    "name_en": "Dst C3",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073007",
+    "name_ar": "النزهة",
+    "name_en": "An Nuzhah",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073008",
+    "name_ar": "الملك عبدالعزيز",
+    "name_en": "King Abdulaziz",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001014",
+    "name_ar": "الملك فهد",
+    "name_en": "King Fahd",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001009",
+    "name_ar": "المروج",
+    "name_en": "Al Muruj",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101002002",
+    "name_ar": "الكلية الحربية",
+    "name_en": "Military College",
+    "city_id": "00101002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073009",
+    "name_ar": "الفيحاء",
+    "name_en": "Al Fayha",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001020",
+    "name_ar": "السنبلة",
+    "name_en": "As Sunbulah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001099",
+    "name_ar": "المرقب",
+    "name_en": "Al Marqab",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001100",
+    "name_ar": "لبن",
+    "name_en": "Laban",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001101",
+    "name_ar": "عتيقة",
+    "name_en": "Utayqah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001102",
+    "name_ar": "الريان",
+    "name_en": "Ar Rayaan",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001104",
+    "name_ar": "سكيرينة",
+    "name_en": "Skirinah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001105",
+    "name_ar": "الندى",
+    "name_en": "An Nada",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001107",
+    "name_ar": "الغنامية",
+    "name_en": "Al Ghannamiyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001003",
+    "name_ar": "ظهرة العودة شرق",
+    "name_en": "Dhahrat Al Awdat Sharq",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001016",
+    "name_ar": "آل حميضان",
+    "name_en": "Al Humaydan",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024008",
+    "name_ar": "ال طهيف وال هديب",
+    "name_en": "Al Tahyif and Al Hadeeb",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001027",
+    "name_ar": "1041/1043 مخطط رقم",
+    "name_en": "Subdivision 1041/1043",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082009",
+    "name_ar": "مخطط رقم 120",
+    "name_en": "Subdivision No. 120",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120016001",
+    "name_ar": "المحمدية",
+    "name_en": "Al Muhammadiyah",
+    "city_id": "00120016",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001011",
+    "name_ar": "منطقة المستودعات",
+    "name_en": "Warehouse Area",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001096",
+    "name_ar": "بنبان",
+    "name_en": "Banban",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073010",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001011",
+    "name_ar": "حي ج11",
+    "name_en": "Dst C11",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073011",
+    "name_ar": "النسيم",
+    "name_en": "Al Naseem",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101002003",
+    "name_ar": "العدل",
+    "name_en": "Al Adel",
+    "city_id": "00101002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236013",
+    "name_ar": "المثوية",
+    "name_en": "Al Mithawia",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001108",
+    "name_ar": "التعاون",
+    "name_en": "At Taawun",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001109",
+    "name_ar": "الدحو",
+    "name_en": "Al Dahou",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001110",
+    "name_ar": "الخليج",
+    "name_en": "Al Khalij",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001112",
+    "name_ar": "العوالي",
+    "name_en": "Al Awaly",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001113",
+    "name_ar": "الرفيعة",
+    "name_en": "Ar Rafiah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001114",
+    "name_ar": "طيبة",
+    "name_en": "Taibah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001115",
+    "name_ar": "الغدير",
+    "name_en": "Al Ghadir",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001116",
+    "name_ar": "جبرة",
+    "name_en": "Jabrah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001011",
+    "name_ar": "زياد",
+    "name_en": "Ziyad",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001012",
+    "name_ar": "خضار",
+    "name_en": "Khudar",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001077",
+    "name_ar": "الوزارات",
+    "name_en": "Al Wizarat",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001078",
+    "name_ar": "البطحاء",
+    "name_en": "Al Batha",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001079",
+    "name_ar": "القادسية",
+    "name_en": "Al Qadisiyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001080",
+    "name_ar": "الصحافة",
+    "name_en": "Al Sahafah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001081",
+    "name_ar": "الملك فيصل",
+    "name_en": "King Faisal ",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001012",
+    "name_ar": "العواش",
+    "name_en": "Al Awash",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107029002",
+    "name_ar": "مخطط 607",
+    "name_en": "Subdivision 607",
+    "city_id": "00107029",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103264001",
+    "name_ar": "الفيضة 1 ",
+    "name_en": "Al Faydah 1",
+    "city_id": "00103264",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001009",
+    "name_ar": "مخطط رقم 653",
+    "name_en": "Subdivision No. 653",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001010",
+    "name_ar": "الربيع",
+    "name_en": "Ar Rabie",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001011",
+    "name_ar": "اليمامة",
+    "name_en": "Al Yamamah",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001002",
+    "name_ar": "الديرة",
+    "name_en": "Ad Dirah",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001003",
+    "name_ar": "الخزامى",
+    "name_en": "Al Khuzama",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001015",
+    "name_ar": "مخطط رقم 1083",
+    "name_en": "Subdivision No. 1083",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104007005",
+    "name_ar": "الفيحاء",
+    "name_en": "Al Fayha",
+    "city_id": "00104007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001016",
+    "name_ar": "1101 مخطط رقم",
+    "name_en": "Subdivision 1101",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001117",
+    "name_ar": "الجنادرية",
+    "name_en": "Al Janadriyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001118",
+    "name_ar": "الرماية",
+    "name_en": "Al Rimayah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001119",
+    "name_ar": "المرجان",
+    "name_en": "Al Murjan",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001120",
+    "name_ar": "الدانة",
+    "name_en": "Ad Danah ",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001121",
+    "name_ar": "الحائر",
+    "name_en": "Al Haer",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002020",
+    "name_ar": "العمار",
+    "name_en": "Al Amaar",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001082",
+    "name_ar": "المنصورة",
+    "name_en": "Al Mansurah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001083",
+    "name_ar": "الرحمانية",
+    "name_en": "Ar Rahmanyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001084",
+    "name_ar": "غرناطة",
+    "name_en": "Ghirnatah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001086",
+    "name_ar": "النسيم الشرقي",
+    "name_en": "East Naseem",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001088",
+    "name_ar": "جامعة الإمام محمد بن سعود الإسلامية",
+    "name_en": "Imam Muhammed Bin Saud Islamic University",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002024",
+    "name_ar": "الرفايع",
+    "name_en": "Al Rafaye",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001004",
+    "name_ar": "العارض",
+    "name_en": "Al Arid",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001011",
+    "name_ar": "المنار",
+    "name_en": "Al Manar",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001009",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001006",
+    "name_ar": "العطيان",
+    "name_en": "Al Atyan",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024006",
+    "name_ar": "ال هشام",
+    "name_en": "Al Hisham",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024007",
+    "name_ar": "الحزم",
+    "name_en": "Al Hazm",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101002004",
+    "name_ar": "الأمير سلطان",
+    "name_en": "Prince Sultan",
+    "city_id": "00101002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017007",
+    "name_ar": "الملك عبدالله",
+    "name_en": "King Abdullah",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001010",
+    "name_ar": "الروضة",
+    "name_en": "Ar Rawdah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001014",
+    "name_ar": "بهجة",
+    "name_en": "Bahja",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001015",
+    "name_ar": "التقنية",
+    "name_en": "Al Tiqniya",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001008",
+    "name_ar": "الخزامى",
+    "name_en": "Al Khuzama",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001021",
+    "name_ar": "الربوة",
+    "name_en": "Ar Rabwah",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001023",
+    "name_ar": "اليمامة",
+    "name_en": "Al Yamamah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001024",
+    "name_ar": "السيح",
+    "name_en": "As Sih",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236016",
+    "name_ar": "البلد",
+    "name_en": "Al Balad",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002021",
+    "name_ar": "الوسطى",
+    "name_en": "Al Wusta",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002022",
+    "name_ar": "القادسية",
+    "name_en": "Al Qadisiyah",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001025",
+    "name_ar": "طويق",
+    "name_en": "Tuwaiq",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001026",
+    "name_ar": "السلام",
+    "name_en": "As Salam",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001012",
+    "name_ar": "الخزامى",
+    "name_en": "Al Khuzama",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001089",
+    "name_ar": "سلطانة",
+    "name_en": "Sultanah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001090",
+    "name_ar": "القري",
+    "name_en": "Al Qura",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001091",
+    "name_ar": "النموذجية",
+    "name_en": "An Namudhajiyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001092",
+    "name_ar": "النرجس",
+    "name_en": "An Narjis",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001094",
+    "name_ar": "الرسالة",
+    "name_en": "Ar Risalah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001095",
+    "name_ar": "مطار الملك خالد الدولي",
+    "name_en": "King Khalid International Airport",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104005005",
+    "name_ar": "الملك فيصل",
+    "name_en": "King Faisal ",
+    "city_id": "00104005",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001007",
+    "name_ar": "العطيفة",
+    "name_en": "Al Utifa",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001003",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001004",
+    "name_ar": "الفيحانية",
+    "name_en": "Al Fayhaniyah",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001005",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001004",
+    "name_ar": "الرحاب",
+    "name_en": "Ar Rehab",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105040001",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00105040",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111172002",
+    "name_ar": "مخطط المعلق",
+    "name_en": "Al Muealiq Subdivision",
+    "city_id": "00111172",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236009",
+    "name_ar": "الفيصلية",
+    "name_en": "Al Faisaliyah",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236010",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001002",
+    "name_ar": "غبيرا",
+    "name_en": "Ghabira",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001004",
+    "name_ar": "النور",
+    "name_en": "An Noor",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001005",
+    "name_ar": "أم الحمام الغربي",
+    "name_en": "Umm Al Hamam Western",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001006",
+    "name_ar": "المعذر",
+    "name_en": "Al Mathar",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001007",
+    "name_ar": "منفوحة الجديدة",
+    "name_en": "Manfuha Al Jadidah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001010",
+    "name_ar": "الصالحية",
+    "name_en": "As Salhiyah",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222003",
+    "name_ar": "المصبح",
+    "name_en": "Al Msbeh",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222004",
+    "name_ar": "الروضة",
+    "name_en": "Ar Rawdah",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001001",
+    "name_ar": "الناصرية",
+    "name_en": "An Nasriyah",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236011",
+    "name_ar": "الذيابية",
+    "name_en": "Al Dhayabia",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104038001",
+    "name_ar": "الجزيرة",
+    "name_en": "Al Jazirah",
+    "city_id": "00104038",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236012",
+    "name_ar": "الصالحية",
+    "name_en": "As Salhiyah",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004005",
+    "name_ar": "الشفاء",
+    "name_en": "Ash Shifa",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024002",
+    "name_ar": "الحنابجة",
+    "name_en": "Al Hanabija",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001002",
+    "name_ar": "الخالدية",
+    "name_en": "Al Khalidiyah",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001012",
+    "name_ar": "عرقة",
+    "name_en": "Irqah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001013",
+    "name_ar": "الفاروق",
+    "name_en": "Al Farouk",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001014",
+    "name_ar": "اليمامة",
+    "name_en": "Al Yamamah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001015",
+    "name_ar": "الدوبية",
+    "name_en": "Al Dubiyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001016",
+    "name_ar": "الندوة",
+    "name_en": "Al Nadwah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001017",
+    "name_ar": "الشعلة",
+    "name_en": "Al Sholah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001007",
+    "name_ar": "الضريب",
+    "name_en": "Ad Darib",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073004",
+    "name_ar": "الخالدية",
+    "name_en": "Al Khalidiyah",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104005003",
+    "name_ar": "القري",
+    "name_en": "Al Qura",
+    "city_id": "00104005",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001003",
+    "name_ar": "النزهة",
+    "name_en": "An Nuzhah",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073005",
+    "name_ar": "القدس",
+    "name_en": "Al Quds",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001008",
+    "name_ar": "الإسكان الخيري",
+    "name_en": "Al Iskan Al Khairi",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001005",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001024",
+    "name_ar": "جرير",
+    "name_en": "Jareer",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001018",
+    "name_ar": "المشرق",
+    "name_en": "Al Mashriq",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001019",
+    "name_ar": "السفارات",
+    "name_en": "Assafarat",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002001",
+    "name_ar": "الشموع",
+    "name_en": "Ash Shumu",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001011",
+    "name_ar": "الزهراء",
+    "name_en": "Az Zahra",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001032",
+    "name_ar": "الملك فهد",
+    "name_en": "King Fahd",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002005",
+    "name_ar": "الصفاء",
+    "name_en": "As Safa",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002006",
+    "name_ar": "ال هويمل",
+    "name_en": "Al Hoymel",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002007",
+    "name_ar": "الفتح",
+    "name_en": "Al Fath",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107029004",
+    "name_ar": "مخطط 699",
+    "name_en": "Subdivision 699",
+    "city_id": "00107029",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109018001",
+    "name_ar": "مخطط رقم 247",
+    "name_en": "Subdivision No. 247",
+    "city_id": "00109018",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001001",
+    "name_ar": "الخالدية",
+    "name_en": "Al Khalidiyah",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001001",
+    "name_ar": "السلام",
+    "name_en": "As Salam",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001002",
+    "name_ar": "المروج",
+    "name_en": "Al Muruj",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001003",
+    "name_ar": "الخليج",
+    "name_en": "Al Khalij",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001001",
+    "name_ar": "الواحة",
+    "name_en": "Al Wahah",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001001",
+    "name_ar": "الخالدية",
+    "name_en": "Al Khalidiyah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001002",
+    "name_ar": "القدس",
+    "name_en": "Al Quds",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236001",
+    "name_ar": "الملك فهد",
+    "name_en": "King Fahd",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002002",
+    "name_ar": "النور",
+    "name_en": "An Noor",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001001",
+    "name_ar": "الزهور",
+    "name_en": "Al Zuhur",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001004",
+    "name_ar": "الفيصلية",
+    "name_en": "Al Faisaliyah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001001",
+    "name_ar": "الملك",
+    "name_en": "Al Malik",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001011",
+    "name_ar": "العليا",
+    "name_en": "Al Olaya",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017001",
+    "name_ar": "مخطط البلدية",
+    "name_en": "Al Baladiyah Subdivision",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001001",
+    "name_ar": "المستقبل",
+    "name_en": "Al Mustaqbal",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001002",
+    "name_ar": "العرنية",
+    "name_en": "Al Urania",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105190001",
+    "name_ar": "مخطط رقم 1209",
+    "name_en": "Subdivision No. 1209",
+    "city_id": "00105190",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004001",
+    "name_ar": "اليرموك",
+    "name_en": "Al Yarmuk",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001002",
+    "name_ar": "المرقب",
+    "name_en": "Al Marqab",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001003",
+    "name_ar": "الأندلس",
+    "name_en": "Al Andalus",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004002",
+    "name_ar": "القادسية",
+    "name_en": "Al Qadisiyah",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105190002",
+    "name_ar": "مخطط رقم 0832",
+    "name_en": "Subdivision No. 0832",
+    "city_id": "00105190",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001012",
+    "name_ar": "أم سمرة",
+    "name_en": "Umm Samra",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024001",
+    "name_ar": "ال غضاب",
+    "name_en": "Al Ghidab",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001002",
+    "name_ar": "التضامن",
+    "name_en": "Al Tadamun",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001003",
+    "name_ar": "الفرعة الشمالي",
+    "name_en": "Al Farah Al Shamali",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001004",
+    "name_ar": "المجد",
+    "name_en": "Al Majd",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001005",
+    "name_ar": "زمزم",
+    "name_en": "Zamzam",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001021",
+    "name_ar": "الملقا",
+    "name_en": "Al Malqa",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001022",
+    "name_ar": "معكال",
+    "name_en": "Meakal",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001023",
+    "name_ar": "النسيم الغربي",
+    "name_en": "West Naseem",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001002",
+    "name_ar": "اللؤلؤة",
+    "name_en": "Al Luluah",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002003",
+    "name_ar": "الرين الاعلى",
+    "name_en": "Al Riyn Al Aelaa",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122059001",
+    "name_ar": "مخطط 326",
+    "name_en": "Subdivision 326",
+    "city_id": "00122059",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236002",
+    "name_ar": "التسعين",
+    "name_en": "Ninety",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002004",
+    "name_ar": "أحد",
+    "name_en": "Ohod",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102007001",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00102007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001025",
+    "name_ar": "العريجاء",
+    "name_en": "Al Uraija",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001026",
+    "name_ar": "المنصورية",
+    "name_en": "Mansuriyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001027",
+    "name_ar": "الفلاح",
+    "name_en": "Al Falah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001028",
+    "name_ar": "الروابي",
+    "name_en": "Ar Rawabi",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001029",
+    "name_ar": "الملك سلمان",
+    "name_en": "King Salman",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001030",
+    "name_ar": "منفوحة",
+    "name_en": "Manfuhah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001045",
+    "name_ar": "المرسلات",
+    "name_en": "Al Mursalat",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001003",
+    "name_ar": "الروضة",
+    "name_en": "Ar Rawdah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001001",
+    "name_ar": "الواحة",
+    "name_en": "Al Wahah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001001",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236003",
+    "name_ar": "صقرة",
+    "name_en": "Saqra",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001002",
+    "name_ar": "قرطبة",
+    "name_en": "Qurtubah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222001",
+    "name_ar": "السلام",
+    "name_en": "As Salam",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001031",
+    "name_ar": "الصفاء",
+    "name_en": "As Safa",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001033",
+    "name_ar": "الربيع",
+    "name_en": "Ar Rabie",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001034",
+    "name_ar": "العود",
+    "name_en": "Al Oud",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001035",
+    "name_ar": "الحزم",
+    "name_en": "Al Hazm",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001036",
+    "name_ar": "المصانع",
+    "name_en": "Al Masani",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001037",
+    "name_ar": "النزهة",
+    "name_en": "An Nuzhah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001038",
+    "name_ar": "المونسية",
+    "name_en": "Al Munisiyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001039",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082004",
+    "name_ar": "مخطط رقم 232",
+    "name_en": "Subdivision No. 232",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236004",
+    "name_ar": "صحارى",
+    "name_en": "Sahara",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236005",
+    "name_ar": "الزعيبة",
+    "name_en": "Al Zaeiba",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236006",
+    "name_ar": "مشرفة",
+    "name_en": "Mishrifah",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222002",
+    "name_ar": "العيبه",
+    "name_en": "Al Uaybah",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001003",
+    "name_ar": "الجامعة",
+    "name_en": "Al Jamiah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001001",
+    "name_ar": "الدار البيضاء",
+    "name_en": "Al Dar Al Baida",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001003",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001040",
+    "name_ar": "الشفاء",
+    "name_en": "Ash Shifa",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001041",
+    "name_ar": "الجزيرة",
+    "name_en": "Al Jazirah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001042",
+    "name_ar": "المصيف",
+    "name_en": "Al Masif",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001043",
+    "name_ar": "القيروان",
+    "name_en": "Al Qirawan",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001044",
+    "name_ar": "الربوة",
+    "name_en": "Ar Rabwah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001046",
+    "name_ar": "الفرسان",
+    "name_en": "Al Fursan",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001001",
+    "name_ar": "الادارية شرق",
+    "name_en": "East Administrative",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001001",
+    "name_ar": "الشرافا",
+    "name_en": "Al Sharafa",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001002",
+    "name_ar": "الزويراء",
+    "name_en": "Al Zuwayra",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001047",
+    "name_ar": "الراية",
+    "name_en": "Ar Rayah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001049",
+    "name_ar": "السحاب",
+    "name_en": "Al Sahab",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001050",
+    "name_ar": "الرمال",
+    "name_en": "Ar Rimal",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001051",
+    "name_ar": "مدينة الملك عبدالله للطاقة",
+    "name_en": "King Abdullah City for Energy",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001052",
+    "name_ar": "البساتين",
+    "name_en": "Al Basatin",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002008",
+    "name_ar": "المعيزيلة",
+    "name_en": "Al Maizialah",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105131001",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00105131",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104005002",
+    "name_ar": "الصناعية الجديدة",
+    "name_en": "New Industrial",
+    "city_id": "00104005",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001003",
+    "name_ar": "اللدام الجنوبي",
+    "name_en": "Al Lidam Al Janubi",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001001",
+    "name_ar": "المسميات 1",
+    "name_en": "Al Musamayat 1",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001004",
+    "name_ar": "المعتلا",
+    "name_en": "Al Muetala",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073001",
+    "name_ar": "السليمانية",
+    "name_en": "As Sulaymaniyah",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001008",
+    "name_ar": "مزعل",
+    "name_en": "Mazal ",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001005",
+    "name_ar": "الخزامى",
+    "name_en": "Al Khuzama",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001004",
+    "name_ar": "المحمدية",
+    "name_en": "Al Muhammadiyah",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001002",
+    "name_ar": "الخالدية",
+    "name_en": "Al Khalidiyah",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073002",
+    "name_ar": "الخليج",
+    "name_en": "Al Khalij",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073003",
+    "name_ar": "العليا",
+    "name_en": "Al Olaya",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001005",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236007",
+    "name_ar": "فيضة الفوازين",
+    "name_en": "Faydat Al Fawazin",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120013001",
+    "name_ar": "الدانة",
+    "name_en": "Ad Danah ",
+    "city_id": "00120013",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001001",
+    "name_ar": "حي ج5",
+    "name_en": "Dst C5",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001005",
+    "name_ar": "الخماسين الشمالى",
+    "name_en": "The northern fiftieths",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001006",
+    "name_ar": "الدرعية",
+    "name_en": "Al Diriyah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001007",
+    "name_ar": "الفاروق",
+    "name_en": "Al Farouk",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001008",
+    "name_ar": "المنتزة",
+    "name_en": "Al Muntazah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104007001",
+    "name_ar": "الأندلس",
+    "name_en": "Al Andalus",
+    "city_id": "00104007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236008",
+    "name_ar": "الملك فيصل",
+    "name_en": "King Faisal ",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001003",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001002",
+    "name_ar": "حي ج14",
+    "name_en": "Dst C14",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001004",
+    "name_ar": "مخطط رقم 1452",
+    "name_en": "Subdivision No. 1452",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002009",
+    "name_ar": "الرفاع",
+    "name_en": "Ar Rifa",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002010",
+    "name_ar": "نجد",
+    "name_en": "Najd",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002011",
+    "name_ar": "اليرموك",
+    "name_en": "Al Yarmuk",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002012",
+    "name_ar": "المثناه",
+    "name_en": "Al Mathnah ",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001003",
+    "name_ar": "المصيف",
+    "name_en": "Al Masif",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001004",
+    "name_ar": "الصناعية الثانية",
+    "name_en": "second industrial",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001005",
+    "name_ar": "البصيرة",
+    "name_en": "Al Basirah",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001006",
+    "name_ar": "الرفيعة",
+    "name_en": "Ar Rafiah",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001007",
+    "name_ar": "اليرموك",
+    "name_en": "Al Yarmuk",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001009",
+    "name_ar": "علقة",
+    "name_en": "Alkah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001005",
+    "name_ar": "الفيصلية",
+    "name_en": "Al Faisaliyah",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104005001",
+    "name_ar": "البلدة القديمة",
+    "name_en": "Down Town",
+    "city_id": "00104005",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001006",
+    "name_ar": "آل مجلى",
+    "name_en": "Al Mijali",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001004",
+    "name_ar": "638 مخطط رقم",
+    "name_en": "Subdivision 638",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001005",
+    "name_ar": "1075 مخطط رقم",
+    "name_en": "Subdivision 1075",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104007002",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00104007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104007003",
+    "name_ar": "الغدير",
+    "name_en": "Al Ghadir",
+    "city_id": "00104007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001007",
+    "name_ar": "المنتزة",
+    "name_en": "Al Muntazah",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001010",
+    "name_ar": "الندى",
+    "name_en": "An Nada",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001004",
+    "name_ar": "الملك فهد",
+    "name_en": "King Fahd",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001005",
+    "name_ar": "بدر",
+    "name_en": "Badr",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001006",
+    "name_ar": "النزهة",
+    "name_en": "An Nuzhah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004003",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001048",
+    "name_ar": "المجد",
+    "name_en": "Al Majd",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001008",
+    "name_ar": "اللدام الشمالي",
+    "name_en": "Al Lidam Al Shamali",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001009",
+    "name_ar": "صناعية الشرافا",
+    "name_en": "Sinaiyah Al Sharafa",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00112001001",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00112001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004004",
+    "name_ar": "الدوائر الحكومية",
+    "name_en": "Goverment Departments",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001008",
+    "name_ar": "المدينة الجامعية",
+    "name_en": "University City",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001007",
+    "name_ar": "مشرفة",
+    "name_en": "Mishrifah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109018002",
+    "name_ar": "مخطط رقم 980",
+    "name_en": "Subdivision No. 980",
+    "city_id": "00109018",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109018003",
+    "name_ar": "مخطط رقم 250-أ",
+    "name_en": "Subdivision No. 250 A",
+    "city_id": "00109018",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110012003",
+    "name_ar": "مخطط رقم 484",
+    "name_en": "Subdivision No. 484",
+    "city_id": "00110012",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109006001",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00109006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001002",
+    "name_ar": "رماح",
+    "name_en": "Rumah",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001006",
+    "name_ar": "مخطط رقم 913",
+    "name_en": "Subdivision No. 913",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109006002",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00109006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109006003",
+    "name_ar": "العزيزية",
+    "name_en": "Al Aziziyah",
+    "city_id": "00109006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109006004",
+    "name_ar": "الخالدية",
+    "name_en": "Al Khalidiyah",
+    "city_id": "00109006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001011",
+    "name_ar": "الخزامى",
+    "name_en": "Al Khuzama",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017002",
+    "name_ar": "الدوائر الحكومية",
+    "name_en": "Goverment Departments",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017003",
+    "name_ar": "الهلالي",
+    "name_en": "Al Hilali",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001006",
+    "name_ar": "بهدي",
+    "name_en": "Bihady",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102007002",
+    "name_ar": "العسيلة",
+    "name_en": "Al Usaylah",
+    "city_id": "00102007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001001",
+    "name_ar": "الرائد",
+    "name_en": "Al Raed",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002041",
+    "name_ar": "قبيبان",
+    "name_en": "Qubiban",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107029003",
+    "name_ar": "مخطط 802",
+    "name_en": "Subdivision 802",
+    "city_id": "00107029",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105190005",
+    "name_ar": "مخطط رقم 1141",
+    "name_en": "Subdivision No. 1141",
+    "city_id": "00105190",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001021",
+    "name_ar": "الأندلس",
+    "name_en": "Al Andalus",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001046",
+    "name_ar": "الملك سلمان",
+    "name_en": "King Salman",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001047",
+    "name_ar": "عريعرة",
+    "name_en": "Urierah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001017",
+    "name_ar": "الفيصلية",
+    "name_en": "Al Faisaliyah",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001039",
+    "name_ar": "العزيزية",
+    "name_en": "Al Aziziyah",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001040",
+    "name_ar": "آل عويمر",
+    "name_en": "Al Awaimer",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001025",
+    "name_ar": "الحزم",
+    "name_en": "Al Hazm",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024018",
+    "name_ar": "ال سالم",
+    "name_en": "Al Salem",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004030",
+    "name_ar": "الرائد",
+    "name_en": "Al Raed",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001033",
+    "name_ar": "المحمدية",
+    "name_en": "Al Muhammadiyah",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001034",
+    "name_ar": "الفرعة الشرقية",
+    "name_en": "Al Farah Al Sharqia",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001035",
+    "name_ar": "السعودية",
+    "name_en": "As Saudia",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001036",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001037",
+    "name_ar": "الروابي",
+    "name_en": "Ar Rawabi",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001198",
+    "name_ar": "الخير",
+    "name_en": "Al Khair",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120013002",
+    "name_ar": "النزهة",
+    "name_en": "An Nuzhah",
+    "city_id": "00120013",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001039",
+    "name_ar": "الملك عبدالله1",
+    "name_en": "King Abdullah1",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004027",
+    "name_ar": "الوادي",
+    "name_en": "Al Wadi",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104038005",
+    "name_ar": "مدينة الخدمات",
+    "name_en": "Service City",
+    "city_id": "00104038",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102007009",
+    "name_ar": "سلطانة",
+    "name_en": "Sultanah",
+    "city_id": "00102007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102007010",
+    "name_ar": "المسيل",
+    "name_en": "Al Masil",
+    "city_id": "00102007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024017",
+    "name_ar": "المثالية",
+    "name_en": "Al Mithalia",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001045",
+    "name_ar": "الواحة",
+    "name_en": "Al Wahah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111114007",
+    "name_ar": "هجرة سليم",
+    "name_en": "Hijrat Salim",
+    "city_id": "00111114",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105131006",
+    "name_ar": "برق الخيل",
+    "name_en": "Barq Al Khayl",
+    "city_id": "00105131",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004028",
+    "name_ar": "السلام",
+    "name_en": "As Salam",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104007010",
+    "name_ar": "السعادة",
+    "name_en": "Al Saadah",
+    "city_id": "00104007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104007011",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00104007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001022",
+    "name_ar": "الديرة",
+    "name_en": "Ad Dirah",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001023",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004029",
+    "name_ar": "الفتح",
+    "name_en": "Al Fath",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236027",
+    "name_ar": "القسيمة",
+    "name_en": "Al Qasima",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236028",
+    "name_ar": "الرفيعة",
+    "name_en": "Ar Rafiah",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001021",
+    "name_ar": "مخطط 144",
+    "name_en": "Subdivision 144",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001022",
+    "name_ar": "المنار",
+    "name_en": "Al Manar",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017019",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001029",
+    "name_ar": "الملك عبدالله",
+    "name_en": "King Abdullah",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111114008",
+    "name_ar": "السلام ",
+    "name_en": "As Salam",
+    "city_id": "00111114",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111114009",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00111114",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001023",
+    "name_ar": "الهدا",
+    "name_en": "Al Hada",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001040",
+    "name_ar": "1النخيل",
+    "name_en": "Al Nakhil1",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111114010",
+    "name_ar": "المروج",
+    "name_en": "Al Muruj",
+    "city_id": "00111114",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001025",
+    "name_ar": "القرينة القديمة",
+    "name_en": "Al Qarina Al Qadima",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001030",
+    "name_ar": "الاذاعة",
+    "name_en": "Al Idhaah",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001026",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073021",
+    "name_ar": "المصيف",
+    "name_en": "Al Masif",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001024",
+    "name_ar": "الجامعة",
+    "name_en": "Al Jamiah",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001041",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001027",
+    "name_ar": "حي ج10",
+    "name_en": "Dst C10",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073022",
+    "name_ar": "الربوة",
+    "name_en": "Ar Rabwah",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120013003",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00120013",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001028",
+    "name_ar": "حي ج12",
+    "name_en": "Dst C12",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120013004",
+    "name_ar": "الديرة القديمة",
+    "name_en": "Ad Dirah Al Qadimah",
+    "city_id": "00120013",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104007012",
+    "name_ar": "المصيف",
+    "name_en": "Al Masif",
+    "city_id": "00104007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001029",
+    "name_ar": "حي ج15",
+    "name_en": "Dst C15",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002039",
+    "name_ar": "الهفوف",
+    "name_en": "Al Hafuf",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017020",
+    "name_ar": "الفحيل",
+    "name_en": "Al Fahil",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017021",
+    "name_ar": "الإزدهار",
+    "name_en": "Al Izdihar",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001020",
+    "name_ar": "أم الشعال",
+    "name_en": "Umm Al Shaeal",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001037",
+    "name_ar": "المقابل",
+    "name_en": "Al Muqabil",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001038",
+    "name_ar": "المستشفى",
+    "name_en": "The Hospital",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00112001006",
+    "name_ar": "الديرة",
+    "name_en": "Ad Dirah",
+    "city_id": "00112001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017022",
+    "name_ar": "الطرف",
+    "name_en": "Al Taraf",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001023",
+    "name_ar": "مخطط الاراضي الحكومية2",
+    "name_en": "Government Lands Subdivision2",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001024",
+    "name_ar": "مخطط الاراضي الحكومية3",
+    "name_en": "Government Lands Subdivision3",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082003",
+    "name_ar": "مخطط رقم 30",
+    "name_en": "Subdivision No. 30",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082002",
+    "name_ar": "مخطط رقم 242",
+    "name_en": "Subdivision No. 242",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082001",
+    "name_ar": "مخطط رقم 214",
+    "name_en": "Subdivision No. 214",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001024",
+    "name_ar": "مخطط 590",
+    "name_en": "Subdivision 590",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001048",
+    "name_ar": "الديرة",
+    "name_en": "Ad Dirah",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001049",
+    "name_ar": "جفارة الجبيري",
+    "name_en": "Jfara Al Jubeiry",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002040",
+    "name_ar": "الملك فهد",
+    "name_en": "King Fahd",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101002009",
+    "name_ar": "الوادي",
+    "name_en": "Al Wadi",
+    "city_id": "00101002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001028",
+    "name_ar": "المنطقة الصناعية",
+    "name_en": "Industrial Area",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236020",
+    "name_ar": "الشتينية",
+    "name_en": "Al Shatinia",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102007007",
+    "name_ar": "مشرفة",
+    "name_en": "Mishrifah",
+    "city_id": "00102007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236021",
+    "name_ar": "العلوات",
+    "name_en": "Al Ealawat",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001024",
+    "name_ar": "الفردوس",
+    "name_en": "Al Ferdous",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001042",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001029",
+    "name_ar": "الدرع",
+    "name_en": "Ad Dara",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004025",
+    "name_ar": "المروج",
+    "name_en": "Al Muruj",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001140",
+    "name_ar": "العماجية",
+    "name_en": "Al Ammajiyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001141",
+    "name_ar": "العليا",
+    "name_en": "Al Olaya",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001142",
+    "name_ar": "أم سليم",
+    "name_en": "Umm Selim",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001143",
+    "name_ar": "العريجاء الغربي",
+    "name_en": "West Al Uraija",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001144",
+    "name_ar": "الفيصلية",
+    "name_en": "Al Faisaliyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001145",
+    "name_ar": "العقيق",
+    "name_en": "Al Aqiq",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001146",
+    "name_ar": "الخالدية",
+    "name_en": "Al Khalidiyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001147",
+    "name_ar": "الوشام",
+    "name_en": "Al Wisham",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001148",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001030",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001031",
+    "name_ar": "الفيضة",
+    "name_en": "Al Faydah ",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001032",
+    "name_ar": "الحزم",
+    "name_en": "Al Hazm",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002026",
+    "name_ar": "عشيرة",
+    "name_en": "Ushayra",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107029007",
+    "name_ar": "مخطط 739",
+    "name_en": "Subdivision 739",
+    "city_id": "00107029",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107029008",
+    "name_ar": "مخطط541",
+    "name_en": "Subdivision 541",
+    "city_id": "00107029",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001041",
+    "name_ar": "مخطط رقم 1111",
+    "name_en": "Subdivision No. 1111",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001024",
+    "name_ar": "حي ج18",
+    "name_en": "Dst C18",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00112001005",
+    "name_ar": "الروضة",
+    "name_en": "Ar Rawdah",
+    "city_id": "00112001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001020",
+    "name_ar": "مخطط الاراضي الحكومية4",
+    "name_en": "Government Lands Subdivision4",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001042",
+    "name_ar": "مخطط رقم 995",
+    "name_en": "Subdivision No. 995",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001030",
+    "name_ar": "الحرمين",
+    "name_en": "Al Haramain",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001031",
+    "name_ar": "الخالدية",
+    "name_en": "Al Khalidiyah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110008001",
+    "name_ar": "مخطط رقم 430",
+    "name_en": "Subdivision No. 430",
+    "city_id": "00110008",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109018012",
+    "name_ar": "مخطط رقم 603",
+    "name_en": "Subdivision No. 603",
+    "city_id": "00109018",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001043",
+    "name_ar": "إشبيلية",
+    "name_en": "Ishbiliyah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004026",
+    "name_ar": "بدر",
+    "name_en": "Badr",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001022",
+    "name_ar": "الراشدية",
+    "name_en": "Ar Rashidyah",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001044",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236026",
+    "name_ar": "المسلخ",
+    "name_en": "Al Maslakh",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001149",
+    "name_ar": "الدار البيضاء",
+    "name_en": "Al Dar Al Baida",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001150",
+    "name_ar": "الهدا",
+    "name_en": "Al Hada",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001151",
+    "name_ar": "قرطبة",
+    "name_en": "Qurtubah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001152",
+    "name_ar": "السليمانية",
+    "name_en": "As Sulaymaniyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111151001",
+    "name_ar": "مخطط الاشعرية",
+    "name_en": "Ash'ari Subdivision",
+    "city_id": "00111151",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111068002",
+    "name_ar": "مخطط الرميثي",
+    "name_en": "Al Rumaythi Subdivision",
+    "city_id": "00111068",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001010",
+    "name_ar": "الريان",
+    "name_en": "Ar Rayaan",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001011",
+    "name_ar": "البطين",
+    "name_en": "Al Batiyn",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001012",
+    "name_ar": "اليمامة",
+    "name_en": "Al Yamamah",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001013",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001014",
+    "name_ar": "طويق",
+    "name_en": "Tuwaiq",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001015",
+    "name_ar": "المنتزة",
+    "name_en": "Al Muntazah",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001028",
+    "name_ar": "سمنان",
+    "name_en": "Semnan",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109006010",
+    "name_ar": "الشفاء",
+    "name_en": "Ash Shifa",
+    "city_id": "00109006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001043",
+    "name_ar": "مخطط رقم 1037",
+    "name_en": "Subdivision No. 1037",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001019",
+    "name_ar": "العليا",
+    "name_en": "Al Olaya",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222016",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222017",
+    "name_ar": "الهده",
+    "name_en": "Al Hadah",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222019",
+    "name_ar": "الأندلس",
+    "name_en": "Al Andalus",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222020",
+    "name_ar": "ام طلحة",
+    "name_en": "Umm Talha",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082006",
+    "name_ar": "مخطط رقم 32",
+    "name_en": "Subdivision No. 32",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101002012",
+    "name_ar": "الواحة",
+    "name_en": "Al Wahah",
+    "city_id": "00101002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001021",
+    "name_ar": "السليمانية",
+    "name_en": "As Sulaymaniyah",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001155",
+    "name_ar": "الشميسي",
+    "name_en": "Al Shumaisi",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001156",
+    "name_ar": "السدرة",
+    "name_en": "Al Sidrah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001157",
+    "name_ar": "شبرا",
+    "name_en": "Shubra",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001158",
+    "name_ar": "الصالحية",
+    "name_en": "As Salhiyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001160",
+    "name_ar": "صياح",
+    "name_en": "Siyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001161",
+    "name_ar": "العمل",
+    "name_en": "Al Amal",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001162",
+    "name_ar": "المؤتمرات",
+    "name_en": "Al Mutamarat",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001163",
+    "name_ar": "العريجاء الأوسط",
+    "name_en": "Middle Al Uraija",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001164",
+    "name_ar": "الزهور",
+    "name_en": "Al Zuhur",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001165",
+    "name_ar": "التضامن",
+    "name_en": "Al Tadamun",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001166",
+    "name_ar": "المهدية",
+    "name_en": "Al Mahdiyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001167",
+    "name_ar": "البرية",
+    "name_en": "Al Bariyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001007",
+    "name_ar": "السرحية",
+    "name_en": "Al Sarhiyah",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001008",
+    "name_ar": "الملقا",
+    "name_en": "Al Malqa",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001024",
+    "name_ar": "الخماسين الجنوبي",
+    "name_en": "Southern Fifties",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001025",
+    "name_ar": "آل ناهش",
+    "name_en": "Al Nahsh",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001017",
+    "name_ar": "الحلوة",
+    "name_en": "Al Hulwa",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001026",
+    "name_ar": "آل معني",
+    "name_en": "Al Maeni",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001020",
+    "name_ar": "مخطط 1149",
+    "name_en": "Subdivision 1149",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111126001",
+    "name_ar": "مخطط منيفة",
+    "name_en": "Munifa Subdivision",
+    "city_id": "00111126",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001044",
+    "name_ar": "الجفونية",
+    "name_en": "Al Jaffuniyyah",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001045",
+    "name_ar": "الزهور",
+    "name_en": "Al Zuhur",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001017",
+    "name_ar": "الزهور",
+    "name_en": "Al Zuhur",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001018",
+    "name_ar": "الواحة",
+    "name_en": "Al Wahah",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073017",
+    "name_ar": "الفلاح",
+    "name_en": "Al Falah",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001021",
+    "name_ar": "الملك فهد",
+    "name_en": "King Fahd",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024013",
+    "name_ar": "ال دحيم",
+    "name_en": "Al Dahim",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001168",
+    "name_ar": "النظيم",
+    "name_en": "An Nadheem",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001169",
+    "name_ar": "ضاحية نمار",
+    "name_en": "Dahiyat Namar",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001170",
+    "name_ar": "عريض",
+    "name_en": "Oraid",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104005010",
+    "name_ar": "الشعيبة",
+    "name_en": "Al Shueayba",
+    "city_id": "00104005",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101002007",
+    "name_ar": "سلام",
+    "name_en": "Salam",
+    "city_id": "00101002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101002008",
+    "name_ar": "الوصيل",
+    "name_en": "Al Wasil",
+    "city_id": "00101002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001013",
+    "name_ar": "مشيرفة",
+    "name_en": "Mishyrifah",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001019",
+    "name_ar": "السلام",
+    "name_en": "As Salam",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001020",
+    "name_ar": "الصدر",
+    "name_en": "Al Sadr",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109018007",
+    "name_ar": "مخطط رقم 333",
+    "name_en": "Subdivision No. 333",
+    "city_id": "00109018",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002035",
+    "name_ar": "الغريبية",
+    "name_en": "Al Gharibia",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002036",
+    "name_ar": "النقيعه",
+    "name_en": "Al Naqieuh",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001038",
+    "name_ar": "الغدير",
+    "name_en": "Al Ghadir",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111114006",
+    "name_ar": "مخطط 907 مشرفة",
+    "name_en": "Subdivision 907 Musharafa",
+    "city_id": "00111114",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001018",
+    "name_ar": "روافة",
+    "name_en": "Rawafa",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001019",
+    "name_ar": "الشروق",
+    "name_en": "Ash Shrouk",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001020",
+    "name_ar": "الربيع",
+    "name_en": "Ar Rabie",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001159",
+    "name_ar": "الضباط",
+    "name_en": "Al Dhubbat",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001029",
+    "name_ar": "السبخة",
+    "name_en": "Al Sabakhah",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073018",
+    "name_ar": "المروج",
+    "name_en": "Al Muruj",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111114004",
+    "name_ar": "الخليفة",
+    "name_en": "Al Khalifah",
+    "city_id": "00111114",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017016",
+    "name_ar": "القيسية",
+    "name_en": "Al Qaisiya",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001030",
+    "name_ar": "العزيزية",
+    "name_en": "Al Aziziyah",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001015",
+    "name_ar": "الأندلس",
+    "name_en": "Al Andalus",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001022",
+    "name_ar": "التعاون",
+    "name_en": "At Taawun",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001035",
+    "name_ar": "الحديدية",
+    "name_en": "Al Hadidia",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001039",
+    "name_ar": "أبو سليم",
+    "name_en": "Abu Sleem",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104005011",
+    "name_ar": "الجزر",
+    "name_en": "Al Jazur",
+    "city_id": "00104005",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002031",
+    "name_ar": "الوسيطاء",
+    "name_en": "Al Wusayta",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001021",
+    "name_ar": "نتيقة",
+    "name_en": "Netica",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001014",
+    "name_ar": "وسيلة",
+    "name_en": "Wasila",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001123",
+    "name_ar": "اليرموك",
+    "name_en": "Al Yarmuk",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001124",
+    "name_ar": "المناخ",
+    "name_en": "Al Manakh",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001125",
+    "name_ar": "النفل",
+    "name_en": "An Nafl",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001126",
+    "name_ar": "الروضة",
+    "name_en": "Ar Rawdah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001014",
+    "name_ar": "ظهره العودة غرب",
+    "name_en": "Dhahrat Al Awdat Gharb",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001015",
+    "name_ar": "الطريف",
+    "name_en": "Al Turaif",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001016",
+    "name_ar": "الثليما",
+    "name_en": "Al Thilaima ",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001016",
+    "name_ar": "الغطغط",
+    "name_en": "Al Ghataght",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001017",
+    "name_ar": "حضار",
+    "name_en": "Hadar",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001016",
+    "name_ar": "حي ج7",
+    "name_en": "Dst C7",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001030",
+    "name_ar": "النويعمة",
+    "name_en": "Al Nowema",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001018",
+    "name_ar": "غرناطة",
+    "name_en": "Ghirnatah",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001031",
+    "name_ar": "الملك عبدالله",
+    "name_en": "King Abdullah",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001034",
+    "name_ar": "قرطبة",
+    "name_en": "Qurtubah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001016",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105131005",
+    "name_ar": "الزهور",
+    "name_en": "Al Zuhur",
+    "city_id": "00105131",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002032",
+    "name_ar": "الفرعة",
+    "name_en": "Al Farah",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001012",
+    "name_ar": "السليمانية",
+    "name_en": "As Sulaymaniyah",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001029",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001127",
+    "name_ar": "الزهرة",
+    "name_en": "Az Zahrah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001128",
+    "name_ar": "المنار",
+    "name_en": "Al Manar",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001129",
+    "name_ar": "حطين",
+    "name_en": "Hittin",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001130",
+    "name_ar": "المروة",
+    "name_en": "Al Marwah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001131",
+    "name_ar": "عكاظ",
+    "name_en": "Uqaz",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001132",
+    "name_ar": "السلام",
+    "name_en": "As Salam",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001027",
+    "name_ar": "الحزم",
+    "name_en": "Al Hazm",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001028",
+    "name_ar": "الخزامى",
+    "name_en": "Al Khuzama",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024016",
+    "name_ar": "ال وقيان",
+    "name_en": "Al Waqian",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002037",
+    "name_ar": "اليمامة",
+    "name_en": "Al Yamamah",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001019",
+    "name_ar": "الصقورية",
+    "name_en": "As Suquriyyah",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001017",
+    "name_ar": "الخزيمي",
+    "name_en": "Al Khuzimi",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001023",
+    "name_ar": "غصيبة",
+    "name_en": "Ghusaiba",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001024",
+    "name_ar": "الصالحية",
+    "name_en": "As Salhiyah",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001025",
+    "name_ar": "العزيزية",
+    "name_en": "Al Aziziyah",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017017",
+    "name_ar": "أم سريحة",
+    "name_en": "Umm Sariha",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109018008",
+    "name_ar": "مخطط رقم 456",
+    "name_en": "Subdivision No. 456",
+    "city_id": "00109018",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001035",
+    "name_ar": "الفردوس",
+    "name_en": "Al Ferdous",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001017",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105190003",
+    "name_ar": "مخطط رقم 0941",
+    "name_en": "Subdivision No. 0941",
+    "city_id": "00105190",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105190004",
+    "name_ar": "مخطط رقم 0824",
+    "name_en": "Subdivision No. 0824",
+    "city_id": "00105190",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109018009",
+    "name_ar": "مخطط رقم 126",
+    "name_en": "Subdivision No. 126",
+    "city_id": "00109018",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001027",
+    "name_ar": "الملك عبدالله",
+    "name_en": "King Abdullah",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002033",
+    "name_ar": "الشعيفان",
+    "name_en": "Al Shaaifan",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001133",
+    "name_ar": "أم الحمام الشرقي",
+    "name_en": "Umm Al Hamam Eastern",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001134",
+    "name_ar": "مغرزات",
+    "name_en": "Al Mughrazat",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001135",
+    "name_ar": "الملك عبدالعزيز",
+    "name_en": "King Abdulaziz",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001136",
+    "name_ar": "المروج",
+    "name_en": "Al Muruj",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001137",
+    "name_ar": "طويق",
+    "name_en": "Tuwaiq",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001138",
+    "name_ar": "الرحاب",
+    "name_en": "Ar Rehab",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001037",
+    "name_ar": "الملك سلمان",
+    "name_en": "King Salman",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001030",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110015002",
+    "name_ar": "مخطط رقم 522",
+    "name_en": "Subdivision No. 522",
+    "city_id": "00110015",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001031",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001032",
+    "name_ar": "زبدة",
+    "name_en": "Zubada",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001171",
+    "name_ar": "جامعة الملك سعود",
+    "name_en": "King Saud University",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082007",
+    "name_ar": "مخطط رقم 24",
+    "name_en": "Subdivision No. 24",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110012002",
+    "name_ar": "مخطط آل سلطان",
+    "name_en": "Subdivision Al Sultan",
+    "city_id": "00110012",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001031",
+    "name_ar": "الولامين",
+    "name_en": "Al Walamin",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001018",
+    "name_ar": "حي ج6",
+    "name_en": "Dst C6",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109018010",
+    "name_ar": "مخطط رقم 571",
+    "name_en": "Subdivision No. 571",
+    "city_id": "00109018",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001018",
+    "name_ar": "البستان",
+    "name_en": "Al Bustan",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104005008",
+    "name_ar": "السمرية",
+    "name_en": "Al Suwmaria",
+    "city_id": "00104005",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001027",
+    "name_ar": "القيروان",
+    "name_en": "Al Qirawan",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001173",
+    "name_ar": "سلام",
+    "name_en": "Salam",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001175",
+    "name_ar": "المعذر الشمالي",
+    "name_en": "North Mathar",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001176",
+    "name_ar": "المدينة الصناعية الجديدة",
+    "name_en": "New Industrial City",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001177",
+    "name_ar": "الوسيطاء",
+    "name_en": "Al Wusayta",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001178",
+    "name_ar": "ظهرة البديعة",
+    "name_en": "Dhahrat Al Badeah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001179",
+    "name_ar": "الشهداء",
+    "name_en": "Ashuhada",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001018",
+    "name_ar": "القويع",
+    "name_en": "Al Qawye",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001020",
+    "name_ar": "طويق",
+    "name_en": "Tuwaiq",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001034",
+    "name_ar": "517 مخطط رقم",
+    "name_en": "Subdivision 517",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002034",
+    "name_ar": "الريعانية",
+    "name_en": "Al Ra'aniyah",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001016",
+    "name_ar": "بدر",
+    "name_en": "Badr",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104038004",
+    "name_ar": "النفل",
+    "name_en": "An Nafl",
+    "city_id": "00104038",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001032",
+    "name_ar": "المروج",
+    "name_en": "Al Muruj",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001033",
+    "name_ar": "الديرة القديمة",
+    "name_en": "Ad Dirah Al Qadimah",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004023",
+    "name_ar": "العزيزية",
+    "name_en": "Al Aziziyah",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001025",
+    "name_ar": "العليا",
+    "name_en": "Al Olaya",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001028",
+    "name_ar": "الروضة",
+    "name_en": "Ar Rawdah",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001029",
+    "name_ar": "صناعية الحديدية",
+    "name_en": "Sinaiyah Al Hadidia",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104005009",
+    "name_ar": "الشمالية",
+    "name_en": "Ash Shamaliyah",
+    "city_id": "00104005",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001181",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001182",
+    "name_ar": "الملك عبدالله",
+    "name_en": "King Abdullah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001183",
+    "name_ar": "الديرة",
+    "name_en": "Ad Dirah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001184",
+    "name_ar": "إشبيلية",
+    "name_en": "Ishbiliyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001186",
+    "name_ar": "الدفاع",
+    "name_en": "Ad Difa",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001187",
+    "name_ar": "المربع",
+    "name_en": "Al Murabba",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001019",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00112001004",
+    "name_ar": "الزهراء",
+    "name_en": "Az Zahra",
+    "city_id": "00112001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001035",
+    "name_ar": "مخطط رقم 1067",
+    "name_en": "Subdivision No. 1067",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236022",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236023",
+    "name_ar": "صقرة الشمالي",
+    "name_en": "Saqra Al Shamali",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104007008",
+    "name_ar": "الروضة",
+    "name_en": "Ar Rawdah",
+    "city_id": "00104007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001017",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001018",
+    "name_ar": "الخالدية",
+    "name_en": "Al Khalidiyah",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236024",
+    "name_ar": "العقيشية",
+    "name_en": "Al Aqishiya",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001033",
+    "name_ar": "الخالدية",
+    "name_en": "Al Khalidiyah",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001026",
+    "name_ar": "الحزم",
+    "name_en": "Al Hazm",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001029",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001030",
+    "name_ar": "أحد",
+    "name_en": "Ohod",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001188",
+    "name_ar": "القدس",
+    "name_en": "Al Quds",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001189",
+    "name_ar": "بدر",
+    "name_en": "Badr",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001190",
+    "name_ar": "السويدي",
+    "name_en": "Al Suwaidi",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001191",
+    "name_ar": "البيان",
+    "name_en": "Al Bayan",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001192",
+    "name_ar": "الوسام",
+    "name_en": "Al Wasam",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001193",
+    "name_ar": "ظهرة لبن",
+    "name_en": "Dhahrat Laban",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001122",
+    "name_ar": "العزيزية",
+    "name_en": "Al Aziziyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001013",
+    "name_ar": "المزرعة",
+    "name_en": "Al Mazraa",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109006008",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00109006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024014",
+    "name_ar": "مخطط رقم 946",
+    "name_en": "Subdivision No. 946",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109006009",
+    "name_ar": "الفيصلية",
+    "name_en": "Al Faisaliyah",
+    "city_id": "00109006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001014",
+    "name_ar": "سدير",
+    "name_en": "Sudayr",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111114005",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00111114",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004024",
+    "name_ar": "الندى",
+    "name_en": "An Nada",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001034",
+    "name_ar": "العلاوة",
+    "name_en": "Al Allawah",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073019",
+    "name_ar": "الريان",
+    "name_en": "Ar Rayaan",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001026",
+    "name_ar": "الأندلس",
+    "name_en": "Al Andalus",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001026",
+    "name_ar": "اليمامة",
+    "name_en": "Al Yamamah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001020",
+    "name_ar": "الفروسية",
+    "name_en": "Al Frosyah",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001031",
+    "name_ar": "الخليج",
+    "name_en": "Al Khalij",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105131004",
+    "name_ar": "النزهة",
+    "name_en": "An Nuzhah",
+    "city_id": "00105131",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001194",
+    "name_ar": "خشم العان",
+    "name_en": "Khashm Al An",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001195",
+    "name_ar": "هيت",
+    "name_en": "Hyt",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222014",
+    "name_ar": "الضبية",
+    "name_en": "Al Dabih",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222015",
+    "name_ar": "ال فهد",
+    "name_en": "Al Fahd",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082005",
+    "name_ar": "مخطط رقم 18",
+    "name_en": "Subdivision No. 18",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001015",
+    "name_ar": "حي 1156",
+    "name_en": "Dst 1156",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001015",
+    "name_ar": "مخطط 555",
+    "name_en": "Subdivision 555",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001036",
+    "name_ar": "العمدة",
+    "name_en": "Al Umda",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001037",
+    "name_ar": "صناعية مزعل",
+    "name_en": "Sinaiyah Mazal",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001038",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001035",
+    "name_ar": "مانح",
+    "name_en": "Manih",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104007009",
+    "name_ar": "سلطانة",
+    "name_en": "Sultanah",
+    "city_id": "00104007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001032",
+    "name_ar": "الربوة",
+    "name_en": "Ar Rabwah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002027",
+    "name_ar": "الفردوس",
+    "name_en": "Al Ferdous",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109018006",
+    "name_ar": "مخطط رقم 956",
+    "name_en": "Subdivision No. 956",
+    "city_id": "00109018",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001023",
+    "name_ar": "الملك فهد",
+    "name_en": "King Fahd",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001196",
+    "name_ar": "المصفاة",
+    "name_en": "Al Misfat",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001197",
+    "name_ar": "الرابية",
+    "name_en": "Ar Rabiyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222018",
+    "name_ar": "الحمراء",
+    "name_en": "Al Hamra",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002030",
+    "name_ar": "الملك فيصل",
+    "name_en": "King Faisal ",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107029009",
+    "name_ar": "مخطط 679",
+    "name_en": "Subdivision 679",
+    "city_id": "00107029",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001154",
+    "name_ar": "الفوطة",
+    "name_en": "Al Futah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001174",
+    "name_ar": "الناصرية",
+    "name_en": "An Nasriyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001180",
+    "name_ar": "الشرفية",
+    "name_en": "Ash Sharafiyah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104005012",
+    "name_ar": "المرقب",
+    "name_en": "Al Marqab",
+    "city_id": "00104005",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073020",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001020",
+    "name_ar": "الروضة",
+    "name_en": "Ar Rawdah",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001021",
+    "name_ar": "السد",
+    "name_en": "As Sad",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00114001021",
+    "name_ar": "شخيب",
+    "name_en": "Shukhib",
+    "city_id": "00114001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001022",
+    "name_ar": "حي ج4",
+    "name_en": "Dst C4",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001036",
+    "name_ar": "الندى",
+    "name_en": "An Nada",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001019",
+    "name_ar": "طويق",
+    "name_en": "Tuwaiq",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001024",
+    "name_ar": "المطار",
+    "name_en": "Airport",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001025",
+    "name_ar": "المستشفى الجامعي",
+    "name_en": "University Hospital",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104001026",
+    "name_ar": "الصناعية الأولى",
+    "name_en": "1st Industrial",
+    "city_id": "00104001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001021",
+    "name_ar": "الديرة",
+    "name_en": "Ad Dirah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001022",
+    "name_ar": "مصدة",
+    "name_en": "Masida",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001033",
+    "name_ar": "غرناطة",
+    "name_en": "Ghirnatah",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001017",
+    "name_ar": "المعارض",
+    "name_en": "Al Maarid",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001013",
+    "name_ar": "البليدا",
+    "name_en": "Al Blaida",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103236025",
+    "name_ar": "الرديفة",
+    "name_en": "Ar Radifah",
+    "city_id": "00103236",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104005014",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00104005",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001046",
+    "name_ar": "سوق الماشية1",
+    "name_en": "Suq Al Mashiya1",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103264004",
+    "name_ar": "مخطط الفيضة القديم",
+    "name_en": "Al Faydat Al Qadim Subdivision",
+    "city_id": "00103264",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122112001",
+    "name_ar": "مخطط 423",
+    "name_en": "Subdivision 423",
+    "city_id": "00122112",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122053001",
+    "name_ar": "مخطط 303",
+    "name_en": "Subdivision 303",
+    "city_id": "00122053",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001016",
+    "name_ar": "الهدا",
+    "name_en": "Al Hada",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001027",
+    "name_ar": "المبرز",
+    "name_en": "Al Mubarraz",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101002011",
+    "name_ar": "عقرباء",
+    "name_en": "Aqraba'",
+    "city_id": "00101002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001019",
+    "name_ar": "النزهة",
+    "name_en": "An Nuzhah",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001023",
+    "name_ar": "الربوة",
+    "name_en": "Ar Rabwah",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001009",
+    "name_ar": "الشهداء",
+    "name_en": "Ashuhada",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017015",
+    "name_ar": "المصيف",
+    "name_en": "Al Masif",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001047",
+    "name_ar": "البساتين",
+    "name_en": "Al Basatin",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001036",
+    "name_ar": "النفل",
+    "name_en": "An Nafl",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001037",
+    "name_ar": "بدر",
+    "name_en": "Badr",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001038",
+    "name_ar": "النور",
+    "name_en": "An Noor",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001010",
+    "name_ar": "سمحان",
+    "name_en": "Samhan",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001011",
+    "name_ar": "الخالدية",
+    "name_en": "Al Khalidiyah",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001032",
+    "name_ar": "الرويساء",
+    "name_en": "Al Ruwaysa",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001022",
+    "name_ar": "الكريس",
+    "name_en": "Al Kris",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104005013",
+    "name_ar": "النموذجية",
+    "name_en": "An Namudhajiyah",
+    "city_id": "00104005",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001028",
+    "name_ar": "سوق الغنم",
+    "name_en": "Suq Al Ghanam",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001040",
+    "name_ar": "1045 مخطط رقم",
+    "name_en": "Subdivision 1045",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001023",
+    "name_ar": "لبب",
+    "name_en": "Lubib",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001027",
+    "name_ar": "الخليج",
+    "name_en": "Al Khalij",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107017018",
+    "name_ar": "البرقة",
+    "name_en": "Al Barqah",
+    "city_id": "00107017",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001012",
+    "name_ar": "الفيصلية",
+    "name_en": "Al Faisaliyah",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002028",
+    "name_ar": "المعترضة",
+    "name_en": "Al Muutaridah",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002029",
+    "name_ar": "الناصفة",
+    "name_en": "An Nasifah",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004021",
+    "name_ar": "الخليج",
+    "name_en": "Al Khalij",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104038003",
+    "name_ar": "صناعية بعشيرة",
+    "name_en": "Sinaiyah Bieashira",
+    "city_id": "00104038",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103001028",
+    "name_ar": "الريان",
+    "name_en": "Ar Rayaan",
+    "city_id": "00103001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102007008",
+    "name_ar": "أم السلم",
+    "name_en": "Umm Asalam",
+    "city_id": "00102007",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122002038",
+    "name_ar": "عبلية",
+    "name_en": "Eiblia",
+    "city_id": "00122002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001039",
+    "name_ar": "الأندلس",
+    "name_en": "Al Andalus",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00108001040",
+    "name_ar": "اليرموك",
+    "name_en": "Al Yarmuk",
+    "city_id": "00108001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001020",
+    "name_ar": "المنتزة",
+    "name_en": "Al Muntazah",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00119001021",
+    "name_ar": "المروج",
+    "name_en": "Al Muruj",
+    "city_id": "00119001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109018011",
+    "name_ar": "مخطط رقم 928",
+    "name_en": "Subdivision No. 928",
+    "city_id": "00109018",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001036",
+    "name_ar": "الحنابجة",
+    "name_en": "Al Hanabija",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001033",
+    "name_ar": "آل عريمة",
+    "name_en": "Al Arima",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00106001034",
+    "name_ar": "طويق ",
+    "name_en": "Tuwaiq",
+    "city_id": "00106001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107024015",
+    "name_ar": "ال هذال",
+    "name_en": "Al Hadhal",
+    "city_id": "00107024",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101002010",
+    "name_ar": "الشهداء",
+    "name_en": "Ashuhada",
+    "city_id": "00101002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001023",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001024",
+    "name_ar": "الفرعة",
+    "name_en": "Al Farah",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001025",
+    "name_ar": "نجد",
+    "name_en": "Najd",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00110001026",
+    "name_ar": "المنار",
+    "name_en": "Al Manar",
+    "city_id": "00110001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001139",
+    "name_ar": "المعيزيلة",
+    "name_en": "Al Maizialah",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001014",
+    "name_ar": "الجمالين",
+    "name_en": "Jamalin",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105001029",
+    "name_ar": "مخطط رقم 359",
+    "name_en": "Subdivision No. 359",
+    "city_id": "00105001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00107001019",
+    "name_ar": "اليمامة",
+    "name_en": "Al Yamamah",
+    "city_id": "00107001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00122222013",
+    "name_ar": "الاصفير",
+    "name_en": "Al Usfayr",
+    "city_id": "00122222",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113001009",
+    "name_ar": "البديع الشرقى",
+    "name_en": "Al Badi Al Sharqi",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111114003",
+    "name_ar": "قرية بديدة علو غثاة",
+    "name_en": "Village Badida Ealu Ghuthatan",
+    "city_id": "00111114",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00120001027",
+    "name_ar": "كميت",
+    "name_en": "Kumet",
+    "city_id": "00120001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104004022",
+    "name_ar": "الربعة",
+    "name_en": "Al Rubea",
+    "city_id": "00104004",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073015",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00105073016",
+    "name_ar": "الواحة",
+    "name_en": "Al Wahah",
+    "city_id": "00105073",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001015",
+    "name_ar": "التعاون",
+    "name_en": "At Taawun",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00115001016",
+    "name_ar": "السلام",
+    "name_en": "As Salam",
+    "city_id": "00115001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001001",
+    "name_ar": "مخطط الاراض البيضاء1",
+    "name_en": "White Land Organization Subdivision1",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001002",
+    "name_ar": "مخطط الاراض البيضاء2",
+    "name_en": "White Land Organization Subdivision2",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001003",
+    "name_ar": "الفيصلية",
+    "name_en": "Al Faisaliyah",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001004",
+    "name_ar": "الفيصلية1",
+    "name_en": "Al Faisaliyah1",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001005",
+    "name_ar": "المنطقة الصناعية",
+    "name_en": "Industrial Area",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001006",
+    "name_ar": "مخطط1/242",
+    "name_en": "Organizing The Lands Located East of The Subdivision 242 Subdivision",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001007",
+    "name_ar": "مخطط رقم 133 ",
+    "name_en": "Refinement No. 133",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001008",
+    "name_ar": "مخطط رقم 133 ",
+    "name_en": "Refinement No. 133",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001009",
+    "name_ar": "مخطط 87",
+    "name_en": "Subdivision 87",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001010",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001011",
+    "name_ar": "العزيزية",
+    "name_en": "Al Aziziyah",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001012",
+    "name_ar": "العقيق",
+    "name_en": "Al Aqiq",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001013",
+    "name_ar": "الخالدية",
+    "name_en": "Al Khalidiyah",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001014",
+    "name_ar": "الملك عبدالله",
+    "name_en": "King Abdullah",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001015",
+    "name_ar": "الخالدية الشرقي",
+    "name_en": "Al Khalidiyah East",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001016",
+    "name_ar": "المنطقة الصناعية1",
+    "name_en": "Industrial Area1",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001017",
+    "name_ar": "مخطط2/242",
+    "name_en": "Organizing The Lands Located East of The Subdivision 242 Subdivision",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001018",
+    "name_ar": "مخطط الاراضي البيضاء3",
+    "name_en": "White Land Organization Subdivision3",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001019",
+    "name_ar": "اليرموك",
+    "name_en": "Al Yarmuk",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001020",
+    "name_ar": "الجامعة",
+    "name_en": "Al Jamiah",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001021",
+    "name_ar": "الجنادرية",
+    "name_en": "Al Janadriyah",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00116001022",
+    "name_ar": "الوادي",
+    "name_en": "Al Wadi",
+    "city_id": "00116001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001025",
+    "name_ar": "مخطط 557",
+    "name_en": "Subdivision 557",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001026",
+    "name_ar": "مخطط 415",
+    "name_en": "Subdivision 415",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001030",
+    "name_ar": "الضبيعة",
+    "name_en": "Al Dabiea",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001027",
+    "name_ar": "مخطط 923",
+    "name_en": "Subdivision 923",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001028",
+    "name_ar": "مخطط 543",
+    "name_en": "Subdivision 543",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00121001029",
+    "name_ar": "مخطط 476",
+    "name_en": "Subdivision 476",
+    "city_id": "00121001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103043001",
+    "name_ar": "الشهداء",
+    "name_en": "Ashuhada",
+    "city_id": "00103043",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103043002",
+    "name_ar": "مخطط رقم 144",
+    "name_en": "Subdivision No. 144",
+    "city_id": "00103043",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103043003",
+    "name_ar": "الفيحاء",
+    "name_en": "Al Fayha",
+    "city_id": "00103043",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103043004",
+    "name_ar": "مخطط رقم 210",
+    "name_en": "Subdivision No. 210",
+    "city_id": "00103043",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103043005",
+    "name_ar": "الخزان",
+    "name_en": "Al Khazzan",
+    "city_id": "00103043",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103043006",
+    "name_ar": "الشفاء",
+    "name_en": "Ash Shifa",
+    "city_id": "00103043",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103043007",
+    "name_ar": "العزيزية",
+    "name_en": "Al Aziziyah",
+    "city_id": "00103043",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103043008",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00103043",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103043009",
+    "name_ar": "السعادة",
+    "name_en": "Al Saadah",
+    "city_id": "00103043",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103043010",
+    "name_ar": "الشمالي",
+    "name_en": "Ash Shamali",
+    "city_id": "00103043",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002001",
+    "name_ar": "الصافي",
+    "name_en": "As Saafy",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002002",
+    "name_ar": "القطار",
+    "name_en": "Al Qitar",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002003",
+    "name_ar": "الرفاع",
+    "name_en": "Ar Rifa",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002004",
+    "name_ar": "الرفايع",
+    "name_en": "Al Rafaye",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002005",
+    "name_ar": "العفجة",
+    "name_en": "Aleafaja",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002006",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002007",
+    "name_ar": "مشرفة",
+    "name_en": "Mishrifah",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002008",
+    "name_ar": "فرزان",
+    "name_en": "Farzan",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002009",
+    "name_ar": "غياضة",
+    "name_en": "Gheyadah",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002010",
+    "name_ar": "الجامعة",
+    "name_en": "Al Jamiah",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002011",
+    "name_ar": "الملقا",
+    "name_en": "Al Malqa",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002012",
+    "name_ar": "اليمامة",
+    "name_en": "Al Yamamah",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002013",
+    "name_ar": "البدع",
+    "name_en": "Al Bada",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002014",
+    "name_ar": "السلمية",
+    "name_en": "Al Silmia",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002015",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002016",
+    "name_ar": "الناصفة",
+    "name_en": "An Nasifah",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002017",
+    "name_ar": "الهداء",
+    "name_en": "Al Hada",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002018",
+    "name_ar": "الفيصلية",
+    "name_en": "Al Faisaliyah",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002019",
+    "name_ar": "الشرق",
+    "name_en": "Ash Sharq",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002020",
+    "name_ar": "الريف",
+    "name_en": "Ar Rif",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002021",
+    "name_ar": "السهباء",
+    "name_en": "Al Sahba",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002022",
+    "name_ar": "البساتين",
+    "name_en": "Al Basatin",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002023",
+    "name_ar": "الراية",
+    "name_en": "Ar Rayah",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002024",
+    "name_ar": "الشهداء",
+    "name_en": "Ashuhada",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002025",
+    "name_ar": "الريحان",
+    "name_en": "Ar Raihan",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002026",
+    "name_ar": "المجد",
+    "name_en": "Al Majd",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002027",
+    "name_ar": "العارض",
+    "name_en": "Al Arid",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002028",
+    "name_ar": "العقيق",
+    "name_en": "Al Aqiq",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002029",
+    "name_ar": "نجد",
+    "name_en": "Najd",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002030",
+    "name_ar": "الإزدهار",
+    "name_en": "Al Izdihar",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002031",
+    "name_ar": "أحد",
+    "name_en": "Ohod",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002032",
+    "name_ar": "اليرموك",
+    "name_en": "Al Yarmuk",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002033",
+    "name_ar": "العالية",
+    "name_en": "Al Aliyah",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002034",
+    "name_ar": "الزاهر",
+    "name_en": "Az Zahir",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002035",
+    "name_ar": "السيح",
+    "name_en": "As Sih",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002036",
+    "name_ar": "السلام",
+    "name_en": "As Salam",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002037",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002038",
+    "name_ar": "طويق",
+    "name_en": "Tuwaiq",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002039",
+    "name_ar": "النرجس",
+    "name_en": "An Narjis",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002040",
+    "name_ar": "المنار",
+    "name_en": "Al Manar",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002041",
+    "name_ar": "الواحة",
+    "name_en": "Al Wahah",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002042",
+    "name_ar": "النسيم",
+    "name_en": "Al Naseem",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002043",
+    "name_ar": "الثليماء",
+    "name_en": "Althalima'",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002044",
+    "name_ar": "مناطق خاصة",
+    "name_en": "Private Areas",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002045",
+    "name_ar": "العيون",
+    "name_en": "Al Uyun",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002046",
+    "name_ar": "مشرف",
+    "name_en": "Mishrif",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002047",
+    "name_ar": "الخالدية",
+    "name_en": "Al Khalidiyah",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002048",
+    "name_ar": "الرمال",
+    "name_en": "Ar Rimal",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002049",
+    "name_ar": "التعاون",
+    "name_en": "At Taawun",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002050",
+    "name_ar": "الندى",
+    "name_en": "An Nada",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002051",
+    "name_ar": "العدامة",
+    "name_en": "Al Adamah",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002052",
+    "name_ar": "النفل",
+    "name_en": "An Nafl",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002053",
+    "name_ar": "القيروان",
+    "name_en": "Al Qirawan",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002054",
+    "name_ar": "بدر",
+    "name_en": "Badr",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00102002055",
+    "name_ar": "الرحاب",
+    "name_en": "Ar Rehab",
+    "city_id": "00102002",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00100001003",
+    "name_ar": "سدرة",
+    "name_en": "Sedra",
+    "city_id": "00100001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104006001",
+    "name_ar": "الشروق",
+    "name_en": "Ash Shrouk",
+    "city_id": "00104006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104006002",
+    "name_ar": "الشفاء",
+    "name_en": "Ash Shifa",
+    "city_id": "00104006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104006003",
+    "name_ar": "الغدير",
+    "name_en": "Al Ghadir",
+    "city_id": "00104006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104006004",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00104006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104006005",
+    "name_ar": "الحزم",
+    "name_en": "Al Hazm",
+    "city_id": "00104006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104006006",
+    "name_ar": "المنار",
+    "name_en": "Al Manar",
+    "city_id": "00104006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104006007",
+    "name_ar": "المروج",
+    "name_en": "Al Muruj",
+    "city_id": "00104006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104006008",
+    "name_ar": "الفيصلية",
+    "name_en": "Al Faisaliyah",
+    "city_id": "00104006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104006009",
+    "name_ar": "الندى",
+    "name_en": "An Nada",
+    "city_id": "00104006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104006010",
+    "name_ar": "التعاون",
+    "name_en": "At Taawun",
+    "city_id": "00104006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104006011",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00104006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104006012",
+    "name_ar": "اليمامة",
+    "name_en": "Al Yamamah",
+    "city_id": "00104006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104006013",
+    "name_ar": "الغروب",
+    "name_en": "Al Ghurub",
+    "city_id": "00104006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104006014",
+    "name_ar": "الريان",
+    "name_en": "Ar Rayaan",
+    "city_id": "00104006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104021001",
+    "name_ar": "الفيصلية",
+    "name_en": "Al Faisaliyah",
+    "city_id": "00104021",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104021002",
+    "name_ar": "التعاون",
+    "name_en": "At Taawun",
+    "city_id": "00104021",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104021003",
+    "name_ar": "وادي الخليج",
+    "name_en": "Wadi Al Khalij",
+    "city_id": "00104021",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104021004",
+    "name_ar": "المروج",
+    "name_en": "Al Muruj",
+    "city_id": "00104021",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104021005",
+    "name_ar": "الوطن\r\n",
+    "name_en": "Alwatan",
+    "city_id": "00104021",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104021006",
+    "name_ar": "المعارف",
+    "name_en": "Al Maarif",
+    "city_id": "00104021",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104021007",
+    "name_ar": "المصيف",
+    "name_en": "Al Masif",
+    "city_id": "00104021",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104021008",
+    "name_ar": "العزيزية",
+    "name_en": "Al Aziziyah",
+    "city_id": "00104021",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104021009",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00104021",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104021010",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00104021",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104021011",
+    "name_ar": "الخالدية",
+    "name_en": "Al Khalidiyah",
+    "city_id": "00104021",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104021012",
+    "name_ar": "الفلاح",
+    "name_en": "Al Falah",
+    "city_id": "00104021",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00104021013",
+    "name_ar": "النفل",
+    "name_en": "An Nafl",
+    "city_id": "00104021",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023001",
+    "name_ar": "الخليج",
+    "name_en": "Al Khalij",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023002",
+    "name_ar": "الروابي",
+    "name_en": "Ar Rawabi",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023003",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023004",
+    "name_ar": "السلام",
+    "name_en": "As Salam",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023005",
+    "name_ar": "النزهة",
+    "name_en": "An Nuzhah",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023006",
+    "name_ar": "أم سليم",
+    "name_en": "Umm Selim",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023007",
+    "name_ar": "الربوة",
+    "name_en": "Ar Rabwah",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023008",
+    "name_ar": "ام رغل",
+    "name_en": "Om Rughul",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023009",
+    "name_ar": "الحزم",
+    "name_en": "Al Hazm",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023010",
+    "name_ar": "القادسية",
+    "name_en": "Al Qadisiyah",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001001",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001002",
+    "name_ar": "غسلة",
+    "name_en": "Gaslah",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001003",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001004",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001005",
+    "name_ar": "الملقا",
+    "name_en": "Al Malqa",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001006",
+    "name_ar": "الوقف",
+    "name_en": "Al Wakf",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001007",
+    "name_ar": "الخزامى",
+    "name_en": "Al Khuzama",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001008",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001009",
+    "name_ar": "الجامعة",
+    "name_en": "Al Jamiah",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001010",
+    "name_ar": "الشفاء",
+    "name_en": "Ash Shifa",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001011",
+    "name_ar": "الفلاح",
+    "name_en": "Al Falah",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001012",
+    "name_ar": "الصفراء",
+    "name_en": "Al Safra",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001013",
+    "name_ar": "البساتين",
+    "name_en": "Al Basatin",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001014",
+    "name_ar": "الرحبة",
+    "name_en": "Ar Rahbah",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001015",
+    "name_ar": "الريان",
+    "name_en": "Ar Rayaan",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001016",
+    "name_ar": "القرية",
+    "name_en": "Al Qaryah",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001017",
+    "name_ar": "الرحاب",
+    "name_en": "Ar Rehab",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001018",
+    "name_ar": "النرجس",
+    "name_en": "An Narjis",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109001019",
+    "name_ar": "قرطبة",
+    "name_en": "Qurtubah",
+    "city_id": "00109001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023011",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023012",
+    "name_ar": "الروضة",
+    "name_en": "Ar Rawdah",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023013",
+    "name_ar": "الرفيعة",
+    "name_en": "Ar Rafiah",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023014",
+    "name_ar": "المروج",
+    "name_en": "Al Muruj",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023015",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023016",
+    "name_ar": "الأندلس",
+    "name_en": "Al Andalus",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023017",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023018",
+    "name_ar": "الريان",
+    "name_en": "Ar Rayaan",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103023019",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00103023",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001008",
+    "name_ar": "الغدير",
+    "name_en": "Al Ghadir",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001011",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001009",
+    "name_ar": "النخيل",
+    "name_en": "Al Nakhil",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001005",
+    "name_ar": "الصناعية الأولى",
+    "name_en": "1st Industrial",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001003",
+    "name_ar": "إشبيلية",
+    "name_en": "Ishbiliyah",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001012",
+    "name_ar": "اليمامة",
+    "name_en": "Al Yamamah",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001013",
+    "name_ar": "الحزم",
+    "name_en": "Al Hazm",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001017",
+    "name_ar": "العمارية",
+    "name_en": "Al Ammariyah",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001020",
+    "name_ar": "الدانة",
+    "name_en": "Ad Danah ",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001015",
+    "name_ar": "السليمانية",
+    "name_en": "As Sulaymaniyah",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001016",
+    "name_ar": "الروضة",
+    "name_en": "Ar Rawdah",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001001",
+    "name_ar": "الوسام",
+    "name_en": "Al Wasam",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001022",
+    "name_ar": "الريان",
+    "name_en": "Ar Rayaan",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001002",
+    "name_ar": "الشلال",
+    "name_en": "Ash Shalaal",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001004",
+    "name_ar": "الربوة",
+    "name_en": "Ar Rabwah",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001014",
+    "name_ar": "القادسية",
+    "name_en": "Al Qadisiyah",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001010",
+    "name_ar": "غرناطة",
+    "name_en": "Ghirnatah",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001007",
+    "name_ar": "المنتزة",
+    "name_en": "Al Muntazah",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001021",
+    "name_ar": "الضباب",
+    "name_en": "Al Dabab",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001019",
+    "name_ar": "الفاخرية",
+    "name_en": "Al Fakhriyah",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001006",
+    "name_ar": "النهضة",
+    "name_en": "An Nahdah",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111001018",
+    "name_ar": "الجزيرة",
+    "name_en": "Al Jazirah",
+    "city_id": "00111001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082010",
+    "name_ar": "ام رديهة",
+    "name_en": "Umm Radiha",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082011",
+    "name_ar": "أم رضمة",
+    "name_en": "Umm Radhama",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082012",
+    "name_ar": "ام طلحه",
+    "name_en": "Om Talha",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082013",
+    "name_ar": "العلوات",
+    "name_en": "Al Ealawat",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082014",
+    "name_ar": "الرويضة",
+    "name_en": "Al Ruwaydah",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082015",
+    "name_ar": "العمارية",
+    "name_en": "Al Omariya",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082016",
+    "name_ar": "ام عاذر",
+    "name_en": "Om Azer",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082017",
+    "name_ar": "الثمالة",
+    "name_en": "Ath-Thamalah",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082018",
+    "name_ar": "الحلوة",
+    "name_en": "Al Holwah",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082019",
+    "name_ar": "نجخ",
+    "name_en": "Najkh",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082020",
+    "name_ar": "سهلة",
+    "name_en": "Sahla",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082021",
+    "name_ar": "مشرفة",
+    "name_en": "Mushrefah",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082022",
+    "name_ar": "النصايف",
+    "name_en": "Nassayif",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082023",
+    "name_ar": "المغرة",
+    "name_en": "Al Mugharrah",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082024",
+    "name_ar": "فيضة الجمش",
+    "name_en": "Faydet Al Jumsh",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103082025",
+    "name_ar": "مطربة",
+    "name_en": "Mutrebah",
+    "city_id": "00103082",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00113011022",
+    "name_ar": "مركز السيباني (أ)",
+    "name_en": "Al-Sibani Center (a)",
+    "city_id": "00113001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103076002",
+    "name_ar": "الياسمين",
+    "name_en": "Al Yasmin",
+    "city_id": "00103076",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103076001",
+    "name_ar": "الورود",
+    "name_en": "Al Wurud",
+    "city_id": "00103076",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00117001030",
+    "name_ar": "مركز ملهم",
+    "name_en": "Malahum Center",
+    "city_id": "00117001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00109006011",
+    "name_ar": "مركز الحريق (ب)",
+    "name_en": "Harik Center (B)",
+    "city_id": "00109006",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00111160001",
+    "name_ar": "مركز اللنسيات (ب)",
+    "name_en": "Allinsiat Center (B)",
+    "city_id": "00111160",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001017",
+    "name_ar": "المدينة الجديدة",
+    "name_en": "Al Madinah Al Jadidah",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001005",
+    "name_ar": "السويدية",
+    "name_en": "Al Suwaidiah",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001012",
+    "name_ar": "الغابة",
+    "name_en": "Al Ghabah",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001018",
+    "name_ar": "الصناعية",
+    "name_en": "Industrial",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001016",
+    "name_ar": "الهدية",
+    "name_en": "Al Hadia",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001008",
+    "name_ar": "الفلاح",
+    "name_en": "Al Falah",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001006",
+    "name_ar": "البساتين",
+    "name_en": "Al Basatin",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001020",
+    "name_ar": "الطوالع",
+    "name_en": "Altawalie",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001009",
+    "name_ar": "الفردوس",
+    "name_en": "Al Ferdous",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001013",
+    "name_ar": "السلام",
+    "name_en": "As Salam",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001004",
+    "name_ar": "الندى",
+    "name_en": "Al Aqabani",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001019",
+    "name_ar": "الريحان",
+    "name_en": "Al Sharman",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001021",
+    "name_ar": "الربيع",
+    "name_en": "Ar Rabie",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001015",
+    "name_ar": "رميثان",
+    "name_en": "Rumaythan",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001002",
+    "name_ar": "المفيجر",
+    "name_en": "Al Mufijir",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001001",
+    "name_ar": "نعام",
+    "name_en": "Nieam",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001011",
+    "name_ar": "عديبات",
+    "name_en": "Eadibat",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001007",
+    "name_ar": "المثناه",
+    "name_en": "Al Mathnah ",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001014",
+    "name_ar": "الزهرة",
+    "name_en": "Az Zahrah",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001003",
+    "name_ar": "القبالي",
+    "name_en": "Al Qabali",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001022",
+    "name_ar": "الديرة",
+    "name_en": "Ad Dirah",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00118001010",
+    "name_ar": "الواحة",
+    "name_en": "Al Wahah",
+    "city_id": "00118001",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00103385001",
+    "name_ar": "مركز عين الصوينع",
+    "name_en": "Ain Al-Suwaina Center",
+    "city_id": "00103385",
+    "amana_id": "001001"
+  },
+  {
+    "district_id": "00101001005",
+    "name_ar": "الخزامى",
+    "name_en": "Al Khuzama",
+    "city_id": "00101001",
+    "amana_id": "001001"
+  }
+]
