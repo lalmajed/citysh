@@ -217,15 +217,24 @@ def scrape_all_roads():
         else:
             print(f"  No roads found")
         
-        # Save progress every 50 districts
-        if (i + 1) % 50 == 0:
-            print(f"\n  Saving progress ({i+1} districts processed)...")
+        # Save progress every 25 districts
+        if (i + 1) % 25 == 0:
+            print(f"\n  === Saving progress ({i+1} districts processed, {len(all_roads)} roads) ===")
             with open('/workspace/riyadh_roads_progress.json', 'w', encoding='utf-8') as f:
                 json.dump({
                     'last_processed': i + 1,
                     'total_roads': len(all_roads),
-                    'districts_with_roads': len(roads_by_district)
-                }, f)
+                    'districts_with_roads': len(roads_by_district),
+                    'timestamp': datetime.now().isoformat()
+                }, f, indent=2)
+            # Also save incremental roads data
+            with open('/workspace/riyadh_roads_incremental.json', 'w', encoding='utf-8') as f:
+                json.dump({
+                    'scraped_at': datetime.now().isoformat(),
+                    'progress': f"{i+1}/{len(districts)}",
+                    'total_roads': len(all_roads),
+                    'roads_by_district': roads_by_district
+                }, f, ensure_ascii=False)
         
         time.sleep(0.3)  # Be nice to the server
     
