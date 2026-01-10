@@ -1,0 +1,2051 @@
+[
+  {
+    "url": "https://api2.suhail.ai/settings/app",
+    "data": {
+      "AnonUserRestrictionsEnabled": true,
+      "AnonUserSessionTimeSec": 900,
+      "AnonUserParcelClicks": 15,
+      "TransactionsFilterTypes": [
+        {
+          "Display": "الكل",
+          "Value": null
+        },
+        {
+          "Display": "أرض سكني",
+          "Value": "أرض سكني"
+        },
+        {
+          "Display": "فلل",
+          "Value": "فلل"
+        },
+        {
+          "Display": "أرض تجاري",
+          "Value": "أرض تجاري"
+        },
+        {
+          "Display": "شقق",
+          "Value": "شقق"
+        }
+      ],
+      "AuthVerificationCodeTimeoutSeconds": 300,
+      "Reports": {
+        "ParcelReportUrl": "https://reports.suhail.ai/api/report/Parcel",
+        "UnitGroupUrl": "https://reports.suhail.ai/api/report/UnitGroup",
+        "OrderReportUrl": "https://reports.suhail.ai/api/report/Order",
+        "InvoiceReportURL": "https://reports.suhail.ai/api/report/Invoice",
+        "ReportsAuthorizationHeader": "Basic c3VoYWlsYWRtaW46YTVpbzUwNDZNZWVrOU13T1hvZ3VoRGZE"
+      },
+      "ProjectApartmentsZoomLevel": 19,
+      "ProjectUnitsZoomLevel": 17,
+      "EnforceOfferVerification": false,
+      "VerifyAccountDismissHoursTimeout": 24,
+      "Map": {
+        "MaxZoom": 20,
+        "MinZoom": 9.4,
+        "MaxBounds": [
+          [
+            46.136283976881685,
+            24.285527825347828
+          ],
+          [
+            47.48678856414921,
+            25.191409011097292
+          ]
+        ]
+      },
+      "IsUserTrackingEnabled": false,
+      "SegmentWriteKeyAndroid": "UfVKIEDDpKxJ37CXxuFpSsOybierN7HW",
+      "SegmentWriteKeyIOS": "wToqB5JFsnJLNQ1znbFc9xqdq55uAHIQ",
+      "SegmentWriteKeyWeb": "",
+      "NewsFeedFilterMinDate": "2020-08-01",
+      "NeighborhoodZoomLevel": 12,
+      "MetricsZoomLevel": 12,
+      "TransactionsZoomLevel": 15,
+      "StreetZoomLevel": 15.5,
+      "OneParcelZoomLevel": 17,
+      "MyLocationZoomLevel": 16,
+      "ZoomDuration": 1000,
+      "ParcelMinZoom": 15,
+      "ProjectUnitesZoomLevel": 17,
+      "ParcelMaxZoom": 22,
+      "MultiParcelPadding": 150,
+      "LatestTransactionsCount": 5,
+      "whatsAppNumber": "+966115107115",
+      "MetricsGrowthRateTypes": [
+        {
+          "Label": "شهري",
+          "EnumValue": "0"
+        },
+        {
+          "Label": "سنوي",
+          "EnumValue": "1"
+        },
+        {
+          "Label": "ربع سنوي",
+          "EnumValue": "2"
+        },
+        {
+          "Label": "من سنة لاخرى",
+          "EnumValue": "3"
+        }
+      ],
+      "DefaultMetricsGrowthRateType": {
+        "Label": "شهري",
+        "EnumValue": "0"
+      },
+      "SubdivisionZoomLevel": 14,
+      "AddressZoomLevel": 15.5,
+      "SubdivisionMinZoomLevel": 12,
+      "SubdivisionMaxZoomLevel": 15,
+      "EnforceAdNumberVerification": true,
+      "isWehdatEnabled": true,
+      "forceUpdate": true,
+      "UnitStatusColors": [
+        {
+          "BackgroundColor": "#E8F5E9",
+          "Color": "#4EA96F",
+          "Label": "متاحة",
+          "Status": "Available"
+        },
+        {
+          "BackgroundColor": "#FFF3E0",
+          "Color": "#DC9B36",
+          "Label": "محجوزة",
+          "Status": "Booked"
+        },
+        {
+          "BackgroundColor": "#FFF3E0",
+          "Color": "#e63946",
+          "Label": "مباعة",
+          "Status": "Sold"
+        },
+        {
+          "BackgroundColor": "#F2F2F2",
+          "Color": "#556E7A",
+          "Label": "غير متاحة",
+          "Status": "Unavailable"
+        },
+        {
+          "BackgroundColor": "#E8F5E9",
+          "Color": "#4EA96F",
+          "Label": "قريباً",
+          "Status": "Scheduled"
+        }
+      ],
+      "IsUserSessionTrackingEnabled": true,
+      "SoldResidentialUnitWhatsappMessage": "السلام عليكم\n\n أتواصل معك مهتم بخصوص إعلانكم \" مشروع {ProjectName} \" في سوق سهيل الوحدة رقم {UnitNumber} الدور رقم {FloorNumber} المخطط رقم {SubdivisionNumber}",
+      "AvailableResidentialUnitWhatsappMessage": "السلام عليكم\n\n أتواصل معك مهتم بخصوص إعلانكم \" مشروع {ProjectName} \" في سوق سهيل الوحدة رقم {UnitNumber} الدور رقم {FloorNumber} المخطط رقم {SubdivisionNumber}\n أرغب في حجز الوحدة",
+      "AvailableUnitWhatsappMessage": "السلام عليكم\n اتواصل معك مهتم بخصوص إعلانكم \" مشروع {ProjectName}\" في سوق سهيل\nالعقار رقم {ParcelNumber} بلوك {BlockNumber} رقم المخطط {SubdivisionNumber}\nأرغب في حجز العقار",
+      "SoldUnitWhatsappMessage": "السلام عليكم\n اتواصل معك مهتم بخصوص إعلانكم \" مشروع {ProjectName}\" في سوق سهيل\nالعقار رقم {ParcelNumber} بلوك {BlockNumber} رقم المخطط {SubdivisionNumber}",
+      "FalLicenseQRCode": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/QRCODE_FAL.png",
+      "FalRegaLink": "https://eservicesredp.rega.gov.sa/public/OfficesBroker/LicenseDetails/Bml/08db0929-e6d3-4f18-8dd8-39d8265db726",
+      "TrackingForGuestRegistration": {
+        "TrackGuestUserEnabled": true,
+        "MaxAllowedAPIRequests": 2000,
+        "GuestAPIRequestsThreshold": [
+          500,
+          1000,
+          1500
+        ],
+        "GuestWhiteListAPIs": [
+          "/api/v1/Setting",
+          "/settings/app",
+          "/api/parcel/landZoningGroups",
+          "/regions",
+          "/api/v1/KYP/Report/Request",
+          "/modes/",
+          "/api/GPTV/FormDetails",
+          "/accounts/userTracking/SaveSession",
+          "/api/oauth/phone/verify",
+          "/api/oauth/phone/customToken"
+        ]
+      },
+      "Terminologies": {
+        "UpdateOfferReasons": {
+          "NewMarketing": "تسويق جديد",
+          "SoldProperty": "تم بيع العقار",
+          "TransferredProperty": "تم نقل ملكية العقار",
+          "IncorrectAdvertising": "بيانات ترخيص الإعلان العقاري غير صحيحة",
+          "Other": "أخرى"
+        }
+      },
+      "RestrictedParcels": [
+        51011774361
+      ],
+      "RestrictedParcelsMessage": "لا يوجد تفاصيل كافية لهذه القطعة",
+      "NeedToShowKYPCampaign": false,
+      "KYPCampaignId": 1,
+      "NeedToShowSubdivisionCampaign": true,
+      "SubdivisionCampaignId": 2,
+      "BadgeSettings": {
+        "IsBrokerProfileEnabled": false,
+        "IsEnabled": true,
+        "TermOfUseLink": "",
+        "PrivacyLink": ""
+      },
+      "IsOfferEnabled": true,
+      "IsSetFireBaseTokenLogEnabled": false,
+      "IsSubdivisionLayerEnabled": true,
+      "FreeSubdivisionIds": [
+        1010001120
+      ],
+      "freeSubdivision": {
+        "geometry": null,
+        "properties": {
+          "regionId": 10,
+          "subdivisionId": 1010001120,
+          "subdivisionNo": "3776",
+          "subdivisionVersion": null,
+          "provinceId": 101000,
+          "subdivisionTypeName": null,
+          "neighborhoodName": "الملقا",
+          "centroid": {
+            "x": 46.592491,
+            "y": 24.794106
+          },
+          "subdivisionUse": null,
+          "subdivisionStatus": null
+        }
+      },
+      "SubdivisionSupportedProvincies": [
+        {
+          "regionId": 10,
+          "provinceIds": [
+            101000,
+            101001
+          ]
+        }
+      ],
+      "InAppPurchasePackages": [
+        {
+          "EntitlementId": "SubdivisionMetrics",
+          "Packages": [
+            {
+              "IOSProductId": "com.marketMetrics.basicPlan",
+              "AndroidProductId": "market_metrics:com-marketmetrics-basicplan",
+              "SortOrder": "1",
+              "CommingSoon": false,
+              "Enabled": true
+            },
+            {
+              "IOSProductId": "com.marketMetrics.ultimatePlan",
+              "AndroidProductId": "market_metrics:com-marketmetrics-ultimateplan",
+              "SortOrder": "2",
+              "CommingSoon": false,
+              "Enabled": true
+            }
+          ]
+        }
+      ],
+      "freeSubdivisionTrialString": "تجربة مجانية في حي الملقا",
+      "PurchasedPackageTaxHint": "شامل الضريبة",
+      "SubscriptionPackageTaxHint": "شامل الضريبة",
+      "PurchasedPackageTaxHintV2": "شامل الضريبة",
+      "SubscriptionPackageTaxHintV2": "شامل الضريبة",
+      "InfrastructureLayer": {
+        "Regions": [
+          {
+            "RegionId": 10,
+            "metroLayerCentroid": {
+              "x": 46.71980285135908,
+              "y": 24.689138313819754
+            },
+            "megaLayerCentroid": {
+              "x": 46.72524485741724,
+              "y": 24.81371233652898
+            },
+            "busLayerCentriod": {
+              "x": 46.71980285135908,
+              "y": 24.689138313819754
+            },
+            "boulevardLayerCentriod": {
+              "x": 46.72524485741724,
+              "y": 24.81371233652898
+            },
+            "busLayerCentroid": {
+              "x": 46.71980285135908,
+              "y": 24.689138313819754
+            },
+            "boulevardLayerCentroid": {
+              "x": 46.72524485741724,
+              "y": 24.81371233652898
+            },
+            "SupportedLayers": [
+              "Metro",
+              "Bus",
+              "Boulevard",
+              "Mega"
+            ],
+            "tooltipText": "طبقات الرياض الجديدة"
+          }
+        ]
+      },
+      "lowValueTransactionMsgTemplate": "هذه الصفقة لا تمثل السعر الفعلي في السوق، وقد تكون نتيجة مقايضة أو هبة. تم عرض التفاصيل كما وردت من المصدر",
+      "isMixpanelEnabled": true,
+      "isTransactionPriceChangeDescriptionEnabled": false,
+      "BoulevardMinZoomLevel": 10,
+      "MetroMinZoomLevel": 11,
+      "BusMinZoomLevel": 11,
+      "newTransactionDaysThreshold": 2,
+      "ConsolidatedTransactionsZoomLevel": 9,
+      "consolidatedFilter": [
+        {
+          "id": 1,
+          "isDefault": false,
+          "key": "lastWeek",
+          "lookbackType": "weeks",
+          "lookbackValue": 1,
+          "text": "صفقات آخر أسبوع"
+        },
+        {
+          "id": 2,
+          "isDefault": true,
+          "key": "lastMonth",
+          "lookbackType": "months",
+          "lookbackValue": 1,
+          "text": "صفقات آخر شهر"
+        },
+        {
+          "id": 3,
+          "isDefault": false,
+          "key": "lastSixMonths",
+          "lookbackType": "months",
+          "lookbackValue": 6,
+          "text": "صفقات آخر 6 أشهر"
+        },
+        {
+          "id": 4,
+          "isDefault": false,
+          "key": "lastYear",
+          "lookbackType": "years",
+          "lookbackValue": 1,
+          "text": "صفقات آخر سنة"
+        }
+      ],
+      "realEstateWallet": {
+        "isWalletVisibleToGuestUsers": true,
+        "trialAccountExpiredContent": {
+          "title": "انتهت الفترة التجريبية",
+          "subtitle": "نأمل أن تكون المحفظة العقارية قد نالت إعجابك.",
+          "body": "لتستمر في استخدام التطبيق، يُرجى تحديثه للاستفادة من النسخة الجديدة",
+          "mainButtonTitle": "تحديث التطبيق",
+          "dismissButtonTitle": "العودة للرئيسة"
+        },
+        "DefaultDatePeriodSelectedType": {
+          "Label": "شهري",
+          "EnumValue": "2"
+        },
+        "walletIDTypes": [
+          {
+            "id": "National_ID",
+            "title": "الهوية الوطنية",
+            "regex": "^[12]\\d{9}$"
+          },
+          {
+            "id": "CR_NO",
+            "title": "رقم السجل التجاري",
+            "regex": ""
+          }
+        ],
+        "isRealEstateWalletTrialStandardAccountExpired": false,
+        "regions": [
+          10
+        ],
+        "isEnabled": true,
+        "datePeriodTypes": [
+          {
+            "Label": "شهري",
+            "EnumValue": "2"
+          }
+        ]
+      },
+      "consolidatedTransactionsColors": [
+        {
+          "thresholds": 0,
+          "bgColor": "#B0CBB1",
+          "textColor": "#388E3C",
+          "circleRadius": "15"
+        },
+        {
+          "thresholds": 20,
+          "bgColor": "#6B9E6C",
+          "textColor": "#FFFFFF",
+          "circleRadius": "20"
+        },
+        {
+          "thresholds": 50,
+          "bgColor": "#4D7F4F",
+          "textColor": "#FFFFFF",
+          "circleRadius": "25"
+        },
+        {
+          "thresholds": 100,
+          "bgColor": "#345E37",
+          "textColor": "#FFFFFF",
+          "circleRadius": "30"
+        },
+        {
+          "thresholds": 200,
+          "bgColor": "#1B3B1F",
+          "textColor": "#FFFFFF",
+          "circleRadius": "35"
+        }
+      ],
+      "ConsolidatedTransactionsExpansionMaxZoomLevel": 19,
+      "DefaultMapProperties": {
+        "isBoulevardLayerSelected": false,
+        "isBusLayerSelected": false,
+        "isMarketplaceProjectsLayerSelected": true,
+        "isMegaProjectsLayerSelected": false,
+        "isMetroLayerSelected": false,
+        "isOffersLayerSelected": false,
+        "isSubdivisionLayerSelected": true,
+        "isTransactionsLayerSelected": true,
+        "MapStyle": "satellite"
+      },
+      "IsKYPReportFeatureEnabled": true,
+      "isMegaProjectsEnabled": true,
+      "MegaMinZoomLevel": 11,
+      "StrapiBaseUrl": "https://beacon.suhail.ai",
+      "KypSampleReportLink": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/SampleKypReport.pdf",
+      "WhiteListedAccounts": [
+        "+966599999999",
+        "+966511111114",
+        "+966511111112",
+        "+966599111222"
+      ],
+      "isLocalDynamicLinkServiceEnable": true,
+      "IsShowREWTrialTag": true,
+      "KSAMap": {
+        "styleURL": "https://tiles.suhail.ai/gl-styles/ksa.json",
+        "modesURL": "https://tiles.suhail.ai/modes/"
+      },
+      "DefaultRegionId": 10,
+      "DefaultProvinceId": 101000,
+      "isSuhailPortalEnabled": false,
+      "mapLayerNewBadgeMaxOccurrences": 10,
+      "EngagementIntervalTime": 600,
+      "PortalLayers": [
+        {
+          "sectionTitle": "نافذة سهيل",
+          "key": "section_test",
+          "isNewTagEnabled": true,
+          "iconURL": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/map-portal.svg",
+          "items": [
+            {
+              "iconURL": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/Frame%202608845.png",
+              "key": "realestate_achievements",
+              "defaultPinURL": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/Map%20Pin.png",
+              "title": "انجازات عقارية",
+              "isNewTagEnabled": false,
+              "enabled": false,
+              "isSelectedByDefault": false,
+              "version": 1,
+              "enforceSelection": false
+            },
+            {
+              "iconURL": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/Frame%202608845.png",
+              "key": "altwazn_alaqary_layer",
+              "defaultPinURL": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/tawazon-logo.png",
+              "title": "التوازن العقاري",
+              "isNewTagEnabled": true,
+              "enabled": true,
+              "isSelectedByDefault": false,
+              "version": 1,
+              "enforceSelection": false
+            }
+          ]
+        }
+      ],
+      "transactionDataSource": [
+        {
+          "name": "MOJ",
+          "icon": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/mojIcon.png"
+        },
+        {
+          "name": "RER",
+          "icon": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/RERIcon.svg"
+        },
+        {
+          "name": "SREM",
+          "icon": "https://quant-public-web-files.obs.me-east-1.myhuaweicloud.com/logos/SREN.png"
+        }
+      ],
+      "realEstateTaxPercentage": 5
+    }
+  },
+  {
+    "url": "https://api2.suhail.ai/regions",
+    "data": {
+      "data": [
+        {
+          "orderIndex": 1,
+          "id": 10,
+          "key": "Riyadh",
+          "name": "الرياض",
+          "mapStyleUrl": "https://tiles.suhail.ai/riyadh/",
+          "mapZoomLevel": 10,
+          "metricsUrl": "/Riyadh/mobile-metrics",
+          "defaultTransactionsDateRange": "-1/y",
+          "centroid": {
+            "x": 46.6893526894509,
+            "y": 24.6787559510409
+          },
+          "restrictBoundaryBox": {
+            "southwest": {
+              "x": 41.686026,
+              "y": 19.208334
+            },
+            "northeast": {
+              "x": 48.1838,
+              "y": 27.7021
+            }
+          },
+          "provinces": [
+            {
+              "id": 101018,
+              "name": "الحريق",
+              "centroid": {
+                "x": 46.502570981041295,
+                "y": 23.636735246847998
+              }
+            },
+            {
+              "id": 101015,
+              "name": "رمـاح",
+              "centroid": {
+                "x": 47.17701555395518,
+                "y": 25.520706416692203
+              }
+            },
+            {
+              "id": 101009,
+              "name": "شـقراء",
+              "centroid": {
+                "x": 45.24554681390492,
+                "y": 25.20184909171238
+              }
+            },
+            {
+              "id": 101006,
+              "name": "وادي الدواسر",
+              "centroid": {
+                "x": 44.77088060208422,
+                "y": 20.4668318509133
+              }
+            },
+            {
+              "id": 101001,
+              "name": "الدرعية",
+              "centroid": {
+                "x": 46.56910567089585,
+                "y": 24.74693834073349
+              }
+            },
+            {
+              "id": 101011,
+              "name": "عفيف",
+              "centroid": {
+                "x": 42.902788904750615,
+                "y": 23.893567294444367
+              }
+            },
+            {
+              "id": 101020,
+              "name": "مرات",
+              "centroid": {
+                "x": 45.44699751302853,
+                "y": 25.0727180843136
+              }
+            },
+            {
+              "id": 101012,
+              "name": "السـليل",
+              "centroid": {
+                "x": 45.59169373166689,
+                "y": 20.45582409087714
+              }
+            },
+            {
+              "id": 101010,
+              "name": "حوطة بني تميم",
+              "centroid": {
+                "x": 46.862398717238506,
+                "y": 23.458690676328878
+              }
+            },
+            {
+              "id": 101003,
+              "name": "الدوادمي",
+              "centroid": {
+                "x": 44.397866882388435,
+                "y": 24.538975871157785
+              }
+            },
+            {
+              "id": 101002,
+              "name": "الخرج",
+              "centroid": {
+                "x": 47.34136889971158,
+                "y": 23.995710471370597
+              }
+            },
+            {
+              "id": 101013,
+              "name": "ضـرما",
+              "centroid": {
+                "x": 46.12354756720016,
+                "y": 24.595259960213333
+              }
+            },
+            {
+              "id": 101005,
+              "name": "القويعـية",
+              "centroid": {
+                "x": 45.2874711392253,
+                "y": 24.082317945487265
+              }
+            },
+            {
+              "id": 101007,
+              "name": "الأفـلاج",
+              "centroid": {
+                "x": 46.715444267115785,
+                "y": 22.295073722206904
+              }
+            },
+            {
+              "id": 101016,
+              "name": "ثـادق",
+              "centroid": {
+                "x": 45.86409457237059,
+                "y": 25.276020650951917
+              }
+            },
+            {
+              "id": 101021,
+              "name": "الدلم",
+              "centroid": {
+                "x": 47.112904782275336,
+                "y": 24.01763887722338
+              }
+            },
+            {
+              "id": 101022,
+              "name": "الرين",
+              "centroid": {
+                "x": 45.511691182826006,
+                "y": 23.54122232345389
+              }
+            },
+            {
+              "id": 101019,
+              "name": "الغـاط",
+              "centroid": {
+                "x": 44.937938596442095,
+                "y": 26.0301475625097
+              }
+            },
+            {
+              "id": 101014,
+              "name": "المزاحمـية",
+              "centroid": {
+                "x": 46.27978313722945,
+                "y": 24.46778261162726
+              }
+            },
+            {
+              "id": 101000,
+              "name": "الرياض",
+              "centroid": {
+                "x": 46.688852973932114,
+                "y": 24.67893932829408
+              }
+            },
+            {
+              "id": 101008,
+              "name": "الزلفي",
+              "centroid": {
+                "x": 44.814681416938626,
+                "y": 26.313379655035813
+              }
+            },
+            {
+              "id": 101004,
+              "name": "المجمـعة",
+              "centroid": {
+                "x": 45.37596291402336,
+                "y": 25.90337465924469
+              }
+            },
+            {
+              "id": 101017,
+              "name": "حـريملاء",
+              "centroid": {
+                "x": 46.19546673984374,
+                "y": 25.1036160175749
+              }
+            }
+          ],
+          "image": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/region_riyadh.png",
+          "mapKey": "riyadh"
+        },
+        {
+          "orderIndex": 2,
+          "id": 13,
+          "key": "Madinah",
+          "name": "المدينة المنورة",
+          "mapStyleUrl": "https://tiles.suhail.ai/al_madenieh/",
+          "mapZoomLevel": 10,
+          "metricsUrl": "/Madinah/mobile-metrics",
+          "defaultTransactionsDateRange": "-1/y",
+          "centroid": {
+            "x": 39.609449138409516,
+            "y": 24.4802585936543
+          },
+          "restrictBoundaryBox": {
+            "southwest": {
+              "x": 37.084,
+              "y": 22.51971
+            },
+            "northeast": {
+              "x": 42.1566,
+              "y": 27.46665
+            }
+          },
+          "provinces": [
+            {
+              "id": 131007,
+              "name": "وادي الفرع",
+              "centroid": {
+                "x": 39.851506676633186,
+                "y": 23.485539728709643
+              }
+            },
+            {
+              "id": 131001,
+              "name": "ينبع",
+              "centroid": {
+                "x": 38.05797682625832,
+                "y": 24.079794141492023
+              }
+            },
+            {
+              "id": 131002,
+              "name": "العلا",
+              "centroid": {
+                "x": 37.94356087702908,
+                "y": 26.5861347459765
+              }
+            },
+            {
+              "id": 131005,
+              "name": "خيبر",
+              "centroid": {
+                "x": 39.290025992756604,
+                "y": 25.659775349708003
+              }
+            },
+            {
+              "id": 131006,
+              "name": "الحناكية",
+              "centroid": {
+                "x": 40.51657831063046,
+                "y": 24.8642071449309
+              }
+            },
+            {
+              "id": 131003,
+              "name": "المهد",
+              "centroid": {
+                "x": 40.889122019456664,
+                "y": 23.49353891879711
+              }
+            },
+            {
+              "id": 131008,
+              "name": "العيص",
+              "centroid": {
+                "x": 38.131109968316636,
+                "y": 25.06525120683267
+              }
+            },
+            {
+              "id": 131004,
+              "name": "بدر",
+              "centroid": {
+                "x": 38.779041415508075,
+                "y": 23.787342410568133
+              }
+            },
+            {
+              "id": 131000,
+              "name": "المدينة المنورة",
+              "centroid": {
+                "x": 39.609449138409516,
+                "y": 24.4802585936543
+              }
+            }
+          ],
+          "image": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/region_al_madenieh.png",
+          "mapKey": "al_madenieh"
+        },
+        {
+          "orderIndex": 3,
+          "id": 5,
+          "key": "Eastern",
+          "name": "الشرقية",
+          "mapStyleUrl": "https://tiles.suhail.ai/eastern_region/",
+          "mapZoomLevel": 10,
+          "metricsUrl": "/Eastern/mobile-metrics",
+          "defaultTransactionsDateRange": "-1/y",
+          "centroid": {
+            "x": 50.0826958589995,
+            "y": 26.3891891271042
+          },
+          "restrictBoundaryBox": {
+            "southwest": {
+              "x": 44.670664,
+              "y": 19.000517
+            },
+            "northeast": {
+              "x": 55.666667,
+              "y": 29.141386
+            }
+          },
+          "provinces": [
+            {
+              "id": 51002,
+              "name": "حفر الباطن",
+              "centroid": {
+                "x": 45.97727327000438,
+                "y": 28.420220242112197
+              }
+            },
+            {
+              "id": 51009,
+              "name": "النعيرية",
+              "centroid": {
+                "x": 48.4829118711081,
+                "y": 27.477683589204393
+              }
+            },
+            {
+              "id": 51000,
+              "name": "الدمام",
+              "centroid": {
+                "x": 50.10442741114076,
+                "y": 26.429026459390794
+              }
+            },
+            {
+              "id": 51004,
+              "name": "القطيف",
+              "centroid": {
+                "x": 49.99630637603599,
+                "y": 26.565806082113713
+              }
+            },
+            {
+              "id": 51006,
+              "name": "الخفجي",
+              "centroid": {
+                "x": 48.48192522796914,
+                "y": 28.463416934809995
+              }
+            },
+            {
+              "id": 51007,
+              "name": "راس تنورة",
+              "centroid": {
+                "x": 50.060378872778955,
+                "y": 26.705245012675014
+              }
+            },
+            {
+              "id": 51001,
+              "name": "الاحساء",
+              "centroid": {
+                "x": 49.59577107516184,
+                "y": 25.383500231099365
+              }
+            },
+            {
+              "id": 51008,
+              "name": "بقيق",
+              "centroid": {
+                "x": 49.4284287303845,
+                "y": 25.938832776755888
+              }
+            },
+            {
+              "id": 51011,
+              "name": "العديد",
+              "centroid": {
+                "x": 50.75181025047487,
+                "y": 24.749502958660766
+              }
+            },
+            {
+              "id": 51003,
+              "name": "الجبيل",
+              "centroid": {
+                "x": 49.65606510275657,
+                "y": 26.982316570147656
+              }
+            },
+            {
+              "id": 51005,
+              "name": "الخبر",
+              "centroid": {
+                "x": 50.211115516864645,
+                "y": 26.30970252185347
+              }
+            },
+            {
+              "id": 51010,
+              "name": "قرية العليا",
+              "centroid": {
+                "x": 47.69984164367187,
+                "y": 27.562538732841663
+              }
+            }
+          ],
+          "image": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/region_eastern.png",
+          "mapKey": "eastern_region"
+        },
+        {
+          "orderIndex": 4,
+          "id": 2,
+          "key": "Makkah",
+          "name": "مكة المكرمة",
+          "mapStyleUrl": "https://tiles.suhail.ai/makkah_region/",
+          "mapZoomLevel": 10,
+          "metricsUrl": "/Makkah/mobile-metrics",
+          "defaultTransactionsDateRange": "-1/y",
+          "centroid": {
+            "x": 39.85532681763745,
+            "y": 21.416090070987288
+          },
+          "restrictBoundaryBox": {
+            "southwest": {
+              "x": 38.61693,
+              "y": 18.564691
+            },
+            "northeast": {
+              "x": 43.83016,
+              "y": 23.6952
+            }
+          },
+          "provinces": [
+            {
+              "id": 21006,
+              "name": "الجموم",
+              "centroid": {
+                "x": 39.26189264188951,
+                "y": 21.53022290317747
+              }
+            },
+            {
+              "id": 21010,
+              "name": "رنية",
+              "centroid": {
+                "x": 42.852642292507795,
+                "y": 21.223368906820063
+              }
+            },
+            {
+              "id": 21005,
+              "name": "رابغ",
+              "centroid": {
+                "x": 39.05236175347281,
+                "y": 22.777604071985326
+              }
+            },
+            {
+              "id": 21004,
+              "name": "الليث",
+              "centroid": {
+                "x": 40.27025241468968,
+                "y": 20.1411886486247
+              }
+            },
+            {
+              "id": 21011,
+              "name": "تربة",
+              "centroid": {
+                "x": 41.596702748629845,
+                "y": 21.192246328487087
+              }
+            },
+            {
+              "id": 21009,
+              "name": "الخرمة",
+              "centroid": {
+                "x": 42.02270023593635,
+                "y": 21.91973368982235
+              }
+            },
+            {
+              "id": 21015,
+              "name": "العرضيات",
+              "centroid": {
+                "x": 41.833888013401214,
+                "y": 19.44621834918492
+              }
+            },
+            {
+              "id": 21014,
+              "name": "ميسان",
+              "centroid": {
+                "x": 41.04610880762626,
+                "y": 20.598715729130458
+              }
+            },
+            {
+              "id": 21008,
+              "name": "الكامل",
+              "centroid": {
+                "x": 39.79048612455639,
+                "y": 22.259311778939438
+              }
+            },
+            {
+              "id": 21007,
+              "name": "خليص",
+              "centroid": {
+                "x": 39.28891822888672,
+                "y": 22.187204718011646
+              }
+            },
+            {
+              "id": 21016,
+              "name": "اضم",
+              "centroid": {
+                "x": 40.8573604331748,
+                "y": 20.405927014059944
+              }
+            },
+            {
+              "id": 21012,
+              "name": "بحرة",
+              "centroid": {
+                "x": 39.1724994666939,
+                "y": 21.307587867592186
+              }
+            },
+            {
+              "id": 21013,
+              "name": "المويه",
+              "centroid": {
+                "x": 41.76826356431981,
+                "y": 22.439923604335213
+              }
+            },
+            {
+              "id": 21003,
+              "name": "القنفذة",
+              "centroid": {
+                "x": 41.07147201876349,
+                "y": 19.148772315311973
+              }
+            },
+            {
+              "id": 21000,
+              "name": "مكة المكرمة",
+              "centroid": {
+                "x": 39.85532681763745,
+                "y": 21.416090070987288
+              }
+            },
+            {
+              "id": 21001,
+              "name": "جدة",
+              "centroid": {
+                "x": 39.183720837472364,
+                "y": 21.571800029722173
+              }
+            },
+            {
+              "id": 21002,
+              "name": "الطائف",
+              "centroid": {
+                "x": 40.42346015605826,
+                "y": 21.296458731062103
+              }
+            }
+          ],
+          "image": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/region_makkah.png",
+          "mapKey": "makkah_region"
+        },
+        {
+          "orderIndex": 5,
+          "id": 4,
+          "key": "Al_Qassim",
+          "name": "القصيم",
+          "mapStyleUrl": "https://tiles.suhail.ai/al_qassim/",
+          "mapZoomLevel": 10,
+          "metricsUrl": "/Al_Qassim/mobile-metrics",
+          "defaultTransactionsDateRange": "-1/y",
+          "centroid": {
+            "x": 43.957183957099915,
+            "y": 26.364278487136083
+          },
+          "restrictBoundaryBox": {
+            "southwest": {
+              "x": 40.16052246093751,
+              "y": 24.647017162630366
+            },
+            "northeast": {
+              "x": 47.83447265625001,
+              "y": 28.420391085674304
+            }
+          },
+          "provinces": [
+            {
+              "id": 41001,
+              "name": "عنيزة",
+              "centroid": {
+                "x": 43.971238464222424,
+                "y": 26.097600227672075
+              }
+            },
+            {
+              "id": 41009,
+              "name": "رياض الخبراء",
+              "centroid": {
+                "x": 43.57888091087288,
+                "y": 26.058804533476547
+              }
+            },
+            {
+              "id": 41008,
+              "name": "عيون الجواء",
+              "centroid": {
+                "x": 43.4611711451123,
+                "y": 26.793640979998035
+              }
+            },
+            {
+              "id": 41011,
+              "name": "عقلة الصقور",
+              "centroid": {
+                "x": 42.18389411280304,
+                "y": 25.831244484930647
+              }
+            },
+            {
+              "id": 41004,
+              "name": "البكيرية",
+              "centroid": {
+                "x": 43.267442642223976,
+                "y": 26.446151972145547
+              }
+            },
+            {
+              "id": 41010,
+              "name": "الشماسية",
+              "centroid": {
+                "x": 44.235965710446244,
+                "y": 26.324440867307686
+              }
+            },
+            {
+              "id": 41005,
+              "name": "البدائع",
+              "centroid": {
+                "x": 43.73896131460193,
+                "y": 26.012161858095755
+              }
+            },
+            {
+              "id": 41006,
+              "name": "الاسياح",
+              "centroid": {
+                "x": 44.19411596528751,
+                "y": 26.796570778782762
+              }
+            },
+            {
+              "id": 41007,
+              "name": "النبهانية",
+              "centroid": {
+                "x": 43.08124616814241,
+                "y": 25.86463411301878
+              }
+            },
+            {
+              "id": 41003,
+              "name": "المذنب",
+              "centroid": {
+                "x": 44.19926481864793,
+                "y": 25.833157147038733
+              }
+            },
+            {
+              "id": 41000,
+              "name": "بريدة",
+              "centroid": {
+                "x": 43.921643932903464,
+                "y": 26.34492808551673
+              }
+            },
+            {
+              "id": 41012,
+              "name": "ضرية",
+              "centroid": {
+                "x": 42.91905836426816,
+                "y": 24.706010474581884
+              }
+            },
+            {
+              "id": 41002,
+              "name": "الرس",
+              "centroid": {
+                "x": 43.510488338771516,
+                "y": 25.828780295055964
+              }
+            }
+          ],
+          "image": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/al_qassim.png",
+          "mapKey": "al_qassim"
+        },
+        {
+          "orderIndex": 6,
+          "id": 6,
+          "key": "Asir",
+          "name": "عسير",
+          "mapStyleUrl": "https://tiles.suhail.ai/asir_region/",
+          "mapZoomLevel": 10,
+          "metricsUrl": "/Asir/mobile-metrics",
+          "defaultTransactionsDateRange": "-1/y",
+          "centroid": {
+            "x": 42.751242220401764,
+            "y": 18.312010011422437
+          },
+          "restrictBoundaryBox": {
+            "southwest": {
+              "x": 41.214223,
+              "y": 17.366667
+            },
+            "northeast": {
+              "x": 44.440789,
+              "y": 20.80266
+            }
+          },
+          "provinces": [
+            {
+              "id": 61012,
+              "name": "طريب",
+              "centroid": {
+                "x": 43.278227244781945,
+                "y": 18.8262092658174
+              }
+            },
+            {
+              "id": 61009,
+              "name": "ظهران الجنوب",
+              "centroid": {
+                "x": 43.51838292745236,
+                "y": 17.6977735812593
+              }
+            },
+            {
+              "id": 61010,
+              "name": "بلقرن",
+              "centroid": {
+                "x": 41.91800746530642,
+                "y": 19.75900691740014
+              }
+            },
+            {
+              "id": 61005,
+              "name": "سراة عبيدة",
+              "centroid": {
+                "x": 43.13902343975601,
+                "y": 18.0760491458154
+              }
+            },
+            {
+              "id": 61011,
+              "name": "المجاردة",
+              "centroid": {
+                "x": 41.865993579176184,
+                "y": 19.121714104804187
+              }
+            },
+            {
+              "id": 61015,
+              "name": "تنومة",
+              "centroid": {
+                "x": 42.22089826469791,
+                "y": 18.94781809757498
+              }
+            },
+            {
+              "id": 61001,
+              "name": "خميس مشيط",
+              "centroid": {
+                "x": 42.6975358196979,
+                "y": 18.291703604360137
+              }
+            },
+            {
+              "id": 61002,
+              "name": "بيشة",
+              "centroid": {
+                "x": 42.602690648252754,
+                "y": 19.995273313792758
+              }
+            },
+            {
+              "id": 61004,
+              "name": "محايل",
+              "centroid": {
+                "x": 41.68044981211372,
+                "y": 18.00469926392769
+              }
+            },
+            {
+              "id": 61003,
+              "name": "النماص",
+              "centroid": {
+                "x": 42.11433535166822,
+                "y": 19.03914373344304
+              }
+            },
+            {
+              "id": 61017,
+              "name": "الأمواه",
+              "centroid": {
+                "x": 43.87514642512652,
+                "y": 18.740495129997793
+              }
+            },
+            {
+              "id": 61014,
+              "name": "بارق",
+              "centroid": {
+                "x": 41.9988836819683,
+                "y": 18.86004591072215
+              }
+            },
+            {
+              "id": 61008,
+              "name": "احد رفيدة",
+              "centroid": {
+                "x": 42.82098314283127,
+                "y": 18.177092982976824
+              }
+            },
+            {
+              "id": 61013,
+              "name": "البرك",
+              "centroid": {
+                "x": 41.536570923666375,
+                "y": 18.213246458034526
+              }
+            },
+            {
+              "id": 61000,
+              "name": "أبها",
+              "centroid": {
+                "x": 42.549664742783314,
+                "y": 18.307064008976994
+              }
+            },
+            {
+              "id": 61016,
+              "name": "الحرجة",
+              "centroid": {
+                "x": 43.50889141359282,
+                "y": 18.020403160695604
+              }
+            },
+            {
+              "id": 61006,
+              "name": "تثليث",
+              "centroid": {
+                "x": 43.54107035892252,
+                "y": 19.525144076905562
+              }
+            },
+            {
+              "id": 61007,
+              "name": "رجال المع",
+              "centroid": {
+                "x": 42.21967966192891,
+                "y": 18.08920475088153
+              }
+            }
+          ],
+          "image": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/region_asir.png",
+          "mapKey": "asir_region"
+        },
+        {
+          "orderIndex": 7,
+          "id": 7,
+          "key": "Tabuk",
+          "name": "تبوك",
+          "mapStyleUrl": "https://tiles.suhail.ai/tabuk/",
+          "mapZoomLevel": 10,
+          "metricsUrl": "/Tabuk/mobile-metrics",
+          "defaultTransactionsDateRange": "-1/y",
+          "centroid": {
+            "x": 36.511958188017736,
+            "y": 28.42458682342848
+          },
+          "restrictBoundaryBox": {
+            "southwest": {
+              "x": 34.571234,
+              "y": 24.560854
+            },
+            "northeast": {
+              "x": 39.923088,
+              "y": 29.976269
+            }
+          },
+          "provinces": [
+            {
+              "id": 71001,
+              "name": "الوجه",
+              "centroid": {
+                "x": 36.46032229508487,
+                "y": 26.250400062144085
+              }
+            },
+            {
+              "id": 71003,
+              "name": "تيماء",
+              "centroid": {
+                "x": 38.535876904844095,
+                "y": 27.630984950384846
+              }
+            },
+            {
+              "id": 71002,
+              "name": "ضباء",
+              "centroid": {
+                "x": 35.70859108962764,
+                "y": 27.34335564622256
+              }
+            },
+            {
+              "id": 71005,
+              "name": "حقل",
+              "centroid": {
+                "x": 34.9462924874948,
+                "y": 29.285138949073385
+              }
+            },
+            {
+              "id": 71000,
+              "name": "تبوك",
+              "centroid": {
+                "x": 36.53308641826973,
+                "y": 28.449591716298567
+              }
+            },
+            {
+              "id": 71004,
+              "name": "املج",
+              "centroid": {
+                "x": 37.261712825672056,
+                "y": 25.1730070755383
+              }
+            },
+            {
+              "id": 71006,
+              "name": "البدع",
+              "centroid": {
+                "x": 35.007850585097515,
+                "y": 28.410698964086606
+              }
+            }
+          ],
+          "image": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/region_asir.png",
+          "mapKey": "tabuk"
+        },
+        {
+          "orderIndex": 8,
+          "id": 8,
+          "key": "Hail",
+          "name": "حائل",
+          "mapStyleUrl": "https://tiles.suhail.ai/hail/",
+          "mapZoomLevel": 10,
+          "metricsUrl": "/Hail/mobile-metrics",
+          "defaultTransactionsDateRange": "-1/y",
+          "centroid": {
+            "x": 41.689419447347575,
+            "y": 27.491964102762882
+          },
+          "restrictBoundaryBox": {
+            "southwest": {
+              "x": 39.11418,
+              "y": 25.25439
+            },
+            "northeast": {
+              "x": 44.367661,
+              "y": 29.207876
+            }
+          },
+          "provinces": [
+            {
+              "id": 81004,
+              "name": "الشملي",
+              "centroid": {
+                "x": 40.33697319222971,
+                "y": 26.862396498652146
+              }
+            },
+            {
+              "id": 81006,
+              "name": "سميراء",
+              "centroid": {
+                "x": 42.12425968543399,
+                "y": 26.492506484338392
+              }
+            },
+            {
+              "id": 81003,
+              "name": "الشنان",
+              "centroid": {
+                "x": 43.013260630692415,
+                "y": 27.059496932904498
+              }
+            },
+            {
+              "id": 81005,
+              "name": "موقق",
+              "centroid": {
+                "x": 41.19453402172998,
+                "y": 27.37549978942258
+              }
+            },
+            {
+              "id": 81007,
+              "name": "الحائط",
+              "centroid": {
+                "x": 40.46578242082372,
+                "y": 25.98703710916808
+              }
+            },
+            {
+              "id": 81002,
+              "name": "الغزالة",
+              "centroid": {
+                "x": 41.3265875,
+                "y": 26.835137
+              }
+            },
+            {
+              "id": 81008,
+              "name": "السليمي",
+              "centroid": {
+                "x": 41.34244654660869,
+                "y": 26.29308308387064
+              }
+            },
+            {
+              "id": 81001,
+              "name": "بقعاء",
+              "centroid": {
+                "x": 42.38492247535399,
+                "y": 27.900037626621263
+              }
+            },
+            {
+              "id": 81000,
+              "name": "حائل",
+              "centroid": {
+                "x": 41.673729167023005,
+                "y": 27.521521476888704
+              }
+            }
+          ],
+          "image": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/region_asir.png",
+          "mapKey": "hail"
+        },
+        {
+          "orderIndex": 9,
+          "id": 9,
+          "key": "Northern_Borders",
+          "name": "الحدود الشماليه",
+          "mapStyleUrl": "https://tiles.suhail.ai/northern_borders/",
+          "mapZoomLevel": 10,
+          "metricsUrl": "/northern_borders/mobile-metrics",
+          "defaultTransactionsDateRange": "-1/y",
+          "centroid": {
+            "x": 41.027417444038136,
+            "y": 30.97156581394864
+          },
+          "restrictBoundaryBox": {
+            "southwest": {
+              "x": 37.955253,
+              "y": 27.831761
+            },
+            "northeast": {
+              "x": 45.464141,
+              "y": 32.153962
+            }
+          },
+          "provinces": [
+            {
+              "id": 91000,
+              "name": "عرعر",
+              "centroid": {
+                "x": 40.9678093410463,
+                "y": 30.98960922384898
+              }
+            },
+            {
+              "id": 91002,
+              "name": "طريف",
+              "centroid": {
+                "x": 38.65499453290945,
+                "y": 31.664196214020752
+              }
+            },
+            {
+              "id": 91001,
+              "name": "رفحاء",
+              "centroid": {
+                "x": 43.5293616629359,
+                "y": 29.644792096538175
+              }
+            },
+            {
+              "id": 91003,
+              "name": "العويقيلة",
+              "centroid": {
+                "x": 42.25704811586929,
+                "y": 30.357165313035562
+              }
+            }
+          ],
+          "image": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/region_asir.png",
+          "mapKey": "northern_borders"
+        },
+        {
+          "orderIndex": 10,
+          "id": 11,
+          "key": "Najran",
+          "name": "نجران",
+          "mapStyleUrl": "https://tiles.suhail.ai/najran/",
+          "mapZoomLevel": 10,
+          "metricsUrl": "/najran/mobile-metrics",
+          "defaultTransactionsDateRange": "-1/y",
+          "centroid": {
+            "x": 44.3440073133832,
+            "y": 17.551953704242568
+          },
+          "restrictBoundaryBox": {
+            "southwest": {
+              "x": 43.59569,
+              "y": 16.95
+            },
+            "northeast": {
+              "x": 52.001753,
+              "y": 19.448889
+            }
+          },
+          "provinces": [
+            {
+              "id": 111003,
+              "name": "بدر الجنوب",
+              "centroid": {
+                "x": 43.7160905,
+                "y": 17.920384
+              }
+            },
+            {
+              "id": 111002,
+              "name": "حبونا",
+              "centroid": {
+                "x": 44.03995496657999,
+                "y": 17.853508774330376
+              }
+            },
+            {
+              "id": 111006,
+              "name": "خباش",
+              "centroid": {
+                "x": 45.76316739398078,
+                "y": 18.043890107398482
+              }
+            },
+            {
+              "id": 111001,
+              "name": "شرورة",
+              "centroid": {
+                "x": 47.110595319765615,
+                "y": 17.486947637153918
+              }
+            },
+            {
+              "id": 111005,
+              "name": "ثار",
+              "centroid": {
+                "x": 44.10606544834801,
+                "y": 17.97590597058463
+              }
+            },
+            {
+              "id": 111004,
+              "name": "يدمه",
+              "centroid": {
+                "x": 44.22198058430397,
+                "y": 18.581691532585744
+              }
+            },
+            {
+              "id": 111000,
+              "name": "نجران",
+              "centroid": {
+                "x": 44.19306708534653,
+                "y": 17.5244436577356
+              }
+            }
+          ],
+          "image": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/region_asir.png",
+          "mapKey": "najran"
+        },
+        {
+          "orderIndex": 11,
+          "id": 12,
+          "key": "Al_Bahah",
+          "name": "الباحة",
+          "mapStyleUrl": "https://tiles.suhail.ai/bahah/",
+          "mapZoomLevel": 10,
+          "metricsUrl": "/bahah/mobile-metrics",
+          "defaultTransactionsDateRange": "-1/y",
+          "centroid": {
+            "x": 41.464232148061186,
+            "y": 20.02593462771641
+          },
+          "restrictBoundaryBox": {
+            "southwest": {
+              "x": 40.829164,
+              "y": 19.44581
+            },
+            "northeast": {
+              "x": 42.129716,
+              "y": 20.82938
+            }
+          },
+          "provinces": [
+            {
+              "id": 121004,
+              "name": "العقيق",
+              "centroid": {
+                "x": 41.646822460764284,
+                "y": 20.257462945219757
+              }
+            },
+            {
+              "id": 121006,
+              "name": "القرى",
+              "centroid": {
+                "x": 41.36807751961936,
+                "y": 20.273898326750476
+              }
+            },
+            {
+              "id": 121002,
+              "name": "المندق",
+              "centroid": {
+                "x": 41.302872770021345,
+                "y": 20.157605998565842
+              }
+            },
+            {
+              "id": 121009,
+              "name": "الحجرة",
+              "centroid": {
+                "x": 41.07889422235841,
+                "y": 20.203198335521904
+              }
+            },
+            {
+              "id": 121005,
+              "name": "قلوة",
+              "centroid": {
+                "x": 41.238302558558864,
+                "y": 19.942758872627127
+              }
+            },
+            {
+              "id": 121000,
+              "name": "الباحة",
+              "centroid": {
+                "x": 41.464232148061186,
+                "y": 20.02593462771641
+              }
+            },
+            {
+              "id": 121001,
+              "name": "بلجرشي",
+              "centroid": {
+                "x": 41.583743988060505,
+                "y": 19.88923812003347
+              }
+            },
+            {
+              "id": 121003,
+              "name": "المخواة",
+              "centroid": {
+                "x": 41.4215861725123,
+                "y": 19.76801799923247
+              }
+            },
+            {
+              "id": 121008,
+              "name": "فرعة غامد الزناد",
+              "centroid": {
+                "x": 41.55353073568331,
+                "y": 19.67415984632521
+              }
+            },
+            {
+              "id": 121007,
+              "name": "بني حسن",
+              "centroid": {
+                "x": 41.36295240312482,
+                "y": 20.072541496848913
+              }
+            }
+          ],
+          "image": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/region_asir.png",
+          "mapKey": "bahah"
+        },
+        {
+          "orderIndex": 12,
+          "id": 14,
+          "key": "Jazan",
+          "name": "جازان",
+          "mapStyleUrl": "https://tiles.suhail.ai/jazan/",
+          "mapZoomLevel": 10,
+          "metricsUrl": "/jazan/mobile-metrics",
+          "defaultTransactionsDateRange": "-1/y",
+          "centroid": {
+            "x": 42.58500358308977,
+            "y": 16.897199694154573
+          },
+          "restrictBoundaryBox": {
+            "southwest": {
+              "x": 41.38948,
+              "y": 16.08843
+            },
+            "northeast": {
+              "x": 43.3365,
+              "y": 18.060398
+            }
+          },
+          "provinces": [
+            {
+              "id": 141012,
+              "name": "العارضة",
+              "centroid": {
+                "x": 43.114194499999996,
+                "y": 16.937821499999995
+              }
+            },
+            {
+              "id": 141007,
+              "name": "بيش",
+              "centroid": {
+                "x": 42.49249708442299,
+                "y": 17.377022481142557
+              }
+            },
+            {
+              "id": 141000,
+              "name": "جازان",
+              "centroid": {
+                "x": 42.58500358308977,
+                "y": 16.897199694154573
+              }
+            },
+            {
+              "id": 141004,
+              "name": "الحرث",
+              "centroid": {
+                "x": 43.141599637627436,
+                "y": 16.812003280506644
+              }
+            },
+            {
+              "id": 141003,
+              "name": "صامطة",
+              "centroid": {
+                "x": 42.95180465241114,
+                "y": 16.62018126613816
+              }
+            },
+            {
+              "id": 141002,
+              "name": "ابو عريش",
+              "centroid": {
+                "x": 42.81415083449986,
+                "y": 16.965814097274002
+              }
+            },
+            {
+              "id": 141011,
+              "name": "العيدابي",
+              "centroid": {
+                "x": 43.025211500000005,
+                "y": 17.249993000000003
+              }
+            },
+            {
+              "id": 141009,
+              "name": "الدائر",
+              "centroid": {
+                "x": 43.13836719047619,
+                "y": 17.332664542857145
+              }
+            },
+            {
+              "id": 141001,
+              "name": "صبيا",
+              "centroid": {
+                "x": 42.75116137352931,
+                "y": 17.15508399778257
+              }
+            },
+            {
+              "id": 141015,
+              "name": "هروب",
+              "centroid": {
+                "x": 42.88615891838771,
+                "y": 17.362284283847153
+              }
+            },
+            {
+              "id": 141006,
+              "name": "الريث",
+              "centroid": {
+                "x": 42.707976,
+                "y": 17.663274
+              }
+            },
+            {
+              "id": 141014,
+              "name": "الطوال",
+              "centroid": {
+                "x": 42.894743000000005,
+                "y": 16.4548305
+              }
+            },
+            {
+              "id": 141010,
+              "name": "احد المسارحة",
+              "centroid": {
+                "x": 42.96521968961733,
+                "y": 16.703645038957486
+              }
+            },
+            {
+              "id": 141016,
+              "name": "فيفاء",
+              "centroid": {
+                "x": 43.07931106749507,
+                "y": 17.313763009884216
+              }
+            },
+            {
+              "id": 141013,
+              "name": "الدرب",
+              "centroid": {
+                "x": 42.216780052949744,
+                "y": 17.725161436784678
+              }
+            },
+            {
+              "id": 141005,
+              "name": "ضمد",
+              "centroid": {
+                "x": 42.74983642491161,
+                "y": 17.11062934737523
+              }
+            },
+            {
+              "id": 141008,
+              "name": "فرسان",
+              "centroid": {
+                "x": 42.12070190012882,
+                "y": 16.696307743297094
+              }
+            }
+          ],
+          "image": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/region_asir.png",
+          "mapKey": "jazan"
+        },
+        {
+          "orderIndex": 13,
+          "id": 15,
+          "key": "Al_Jawf",
+          "name": "الجوف",
+          "mapStyleUrl": "https://tiles.suhail.ai/jawf/",
+          "mapZoomLevel": 10,
+          "metricsUrl": "/jawf/mobile-metrics",
+          "defaultTransactionsDateRange": "-1/y",
+          "centroid": {
+            "x": 40.203656830089905,
+            "y": 29.949845524050016
+          },
+          "restrictBoundaryBox": {
+            "southwest": {
+              "x": 37.005875,
+              "y": 28.36794
+            },
+            "northeast": {
+              "x": 41.99684,
+              "y": 31.749873
+            }
+          },
+          "provinces": [
+            {
+              "id": 151000,
+              "name": "سكاكا",
+              "centroid": {
+                "x": 40.23630832398995,
+                "y": 29.988216049720492
+              }
+            },
+            {
+              "id": 151003,
+              "name": "طبرجل",
+              "centroid": {
+                "x": 38.190265696126765,
+                "y": 30.494012618844177
+              }
+            },
+            {
+              "id": 151001,
+              "name": "القريات",
+              "centroid": {
+                "x": 37.33710356706453,
+                "y": 31.31739936265569
+              }
+            },
+            {
+              "id": 151002,
+              "name": "دومة الجندل",
+              "centroid": {
+                "x": 39.87360533717283,
+                "y": 29.814014711960713
+              }
+            }
+          ],
+          "image": "https://suhailapp.obs.me-east-1.myhuaweicloud.com/static-files/region_asir.png",
+          "mapKey": "jawf"
+        }
+      ],
+      "message": null,
+      "status": true,
+      "meta": null
+    }
+  }
+]
