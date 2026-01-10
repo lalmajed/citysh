@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './RiyadhMap.css';
 
 const typeColors = {
@@ -10,176 +10,145 @@ const typeColors = {
 };
 
 function RiyadhMap({ locations, selectedLocation, onLocationClick }) {
-  const mapRef = useRef(null);
-  const [map, setMap] = useState(null);
-  const [markers, setMarkers] = useState([]);
-  const [infoWindow, setInfoWindow] = useState(null);
+  const mapContainerRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const markersRef = useRef([]);
+  const infoWindowRef = useRef(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const initializeMap = useCallback(() => {
-    if (!mapRef.current || map) return;
-
-    try {
-      const googleMap = new window.google.maps.Map(mapRef.current, {
-        center: { lat: 24.7136, lng: 46.6753 },
-        zoom: 12,
-        mapTypeControl: true,
-        streetViewControl: true,
-        fullscreenControl: true,
-        zoomControl: true
-      });
-
-      const iw = new window.google.maps.InfoWindow();
-      setInfoWindow(iw);
-      setMap(googleMap);
-      setIsLoaded(true);
-    } catch (error) {
-      console.error('Error initializing map:', error);
-    }
-  }, [map]);
-
-  // Load Google Maps script
+  // Load Google Maps and initialize
   useEffect(() => {
-    // Define global initMap function that Google Maps expects
-    window.initMap = () => {
-      initializeMap();
+    let checkInterval;
+
+    const initializeMap = () => {
+      if (!mapContainerRef.current || mapInstanceRef.current) return;
+
+      try {
+        mapInstanceRef.current = new window.google.maps.Map(mapContainerRef.current, {
+          center: { lat: 24.7136, lng: 46.6753 },
+          zoom: 12,
+          mapTypeControl: true,
+          streetViewControl: true,
+          fullscreenControl: true
+        });
+
+        infoWindowRef.current = new window.google.maps.InfoWindow();
+        setIsLoaded(true);
+      } catch (error) {
+        console.error('Error initializing map:', error);
+      }
     };
 
-    // Check if already loaded
-    if (window.google && window.google.maps && window.google.maps.Map) {
-      initializeMap();
-      return;
-    }
+    // Set global initMap
+    window.initMap = initializeMap;
 
-    // Check if script already exists
-    const existingScript = document.querySelector('script[src*="Keyless-Google-Maps-API"]');
-    if (existingScript) {
-      const checkReady = setInterval(() => {
-        if (window.google && window.google.maps && window.google.maps.Map) {
-          clearInterval(checkReady);
+    // Check if Google Maps is already loaded
+    if (window.google?.maps?.Map) {
+      initializeMap();
+    } else {
+      // Load script if not already loading
+      if (!document.querySelector('script[src*="Keyless-Google-Maps-API"]')) {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js';
+        script.async = true;
+        document.head.appendChild(script);
+      }
+
+      // Poll for Google Maps to be ready
+      checkInterval = setInterval(() => {
+        if (window.google?.maps?.Map) {
+          clearInterval(checkInterval);
           initializeMap();
         }
-      }, 100);
-      return () => clearInterval(checkReady);
+      }, 200);
     }
 
-    // Load the script
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js';
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
-
-    const checkGoogleMaps = setInterval(() => {
-      if (window.google && window.google.maps && window.google.maps.Map) {
-        clearInterval(checkGoogleMaps);
-        initializeMap();
-      }
-    }, 200);
-
     return () => {
-      clearInterval(checkGoogleMaps);
+      if (checkInterval) clearInterval(checkInterval);
     };
-  }, [initializeMap]);
+  }, []);
 
-  const createMarkerIcon = (color) => {
-    if (!window.google || !window.google.maps) return null;
-    return {
-      path: window.google.maps.SymbolPath.CIRCLE,
-      fillColor: color,
-      fillOpacity: 1,
-      strokeColor: '#ffffff',
-      strokeWeight: 2,
-      scale: 10
-    };
-  };
-
-  // Update markers when locations or map changes
+  // Update markers when locations change
   useEffect(() => {
-    if (!map || !window.google || !window.google.maps || !isLoaded) return;
+    if (!mapInstanceRef.current || !isLoaded) return;
 
-    // Clear existing markers
-    markers.forEach(marker => {
-      if (marker && marker.setMap) {
-        marker.setMap(null);
-      }
-    });
+    // Clear old markers
+    markersRef.current.forEach(marker => marker.setMap(null));
+    markersRef.current = [];
 
-    // Create new markers
-    const newMarkers = locations.map(location => {
-      const icon = createMarkerIcon(typeColors[location.type] || typeColors.custom);
-      
+    // Add new markers
+    locations.forEach(location => {
       const marker = new window.google.maps.Marker({
         position: { lat: location.lat, lng: location.lng },
-        map: map,
+        map: mapInstanceRef.current,
         title: location.name,
-        icon: icon
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          fillColor: typeColors[location.type] || typeColors.custom,
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 2,
+          scale: 10
+        }
       });
 
       marker.addListener('click', () => {
-        if (infoWindow) {
-          infoWindow.setContent(`
+        if (infoWindowRef.current) {
+          infoWindowRef.current.setContent(`
             <div style="padding: 10px; min-width: 150px;">
-              <h3 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px;">${location.name}</h3>
-              <p style="margin: 4px 0; color: #7f8c8d; font-size: 13px;"><strong>Type:</strong> ${location.type}</p>
-              <p style="margin: 4px 0; color: #7f8c8d; font-size: 13px;"><strong>Lat:</strong> ${location.lat.toFixed(4)}</p>
-              <p style="margin: 4px 0; color: #7f8c8d; font-size: 13px;"><strong>Lng:</strong> ${location.lng.toFixed(4)}</p>
+              <h3 style="margin: 0 0 8px 0; color: #2c3e50;">${location.name}</h3>
+              <p style="margin: 4px 0; color: #7f8c8d;"><strong>Type:</strong> ${location.type}</p>
+              <p style="margin: 4px 0; color: #7f8c8d;"><strong>Lat:</strong> ${location.lat.toFixed(4)}</p>
+              <p style="margin: 4px 0; color: #7f8c8d;"><strong>Lng:</strong> ${location.lng.toFixed(4)}</p>
             </div>
           `);
-          infoWindow.open(map, marker);
+          infoWindowRef.current.open(mapInstanceRef.current, marker);
         }
-        if (onLocationClick) {
-          onLocationClick(location);
-        }
+        if (onLocationClick) onLocationClick(location);
       });
 
-      return marker;
+      markersRef.current.push(marker);
     });
-
-    setMarkers(newMarkers);
-  }, [map, locations, infoWindow, onLocationClick, isLoaded]);
+  }, [locations, isLoaded, onLocationClick]);
 
   // Pan to selected location
   useEffect(() => {
-    if (!map || !selectedLocation || !isLoaded) return;
+    if (!mapInstanceRef.current || !selectedLocation || !isLoaded) return;
 
-    map.panTo({ lat: selectedLocation.lat, lng: selectedLocation.lng });
-    map.setZoom(15);
+    mapInstanceRef.current.panTo({ 
+      lat: selectedLocation.lat, 
+      lng: selectedLocation.lng 
+    });
+    mapInstanceRef.current.setZoom(15);
 
-    // Find and highlight the selected marker
-    const selectedMarker = markers.find(marker => 
-      marker && marker.getTitle && marker.getTitle() === selectedLocation.name
+    // Bounce the selected marker
+    const selectedMarker = markersRef.current.find(
+      marker => marker.getTitle() === selectedLocation.name
     );
-    
-    if (selectedMarker && selectedMarker.setAnimation) {
+    if (selectedMarker) {
       selectedMarker.setAnimation(window.google.maps.Animation.BOUNCE);
-      setTimeout(() => {
-        if (selectedMarker.setAnimation) {
-          selectedMarker.setAnimation(null);
-        }
-      }, 2000);
+      setTimeout(() => selectedMarker.setAnimation(null), 2000);
     }
-  }, [selectedLocation, map, markers, isLoaded]);
+  }, [selectedLocation, isLoaded]);
 
   return (
     <div className="map-wrapper">
-      <div ref={mapRef} className="map-container">
-        {!isLoaded && (
-          <div className="map-loading">
-            <div className="loader"></div>
-            <p>Loading Google Maps...</p>
-          </div>
-        )}
-      </div>
-      
+      {!isLoaded && (
+        <div className="map-loading">
+          <div className="loader"></div>
+          <p>Loading Google Maps...</p>
+        </div>
+      )}
+      <div 
+        ref={mapContainerRef} 
+        className="map-container"
+        style={{ visibility: isLoaded ? 'visible' : 'hidden' }}
+      />
       <div className="map-legend">
         <h4>Legend</h4>
         {Object.entries(typeColors).map(([type, color]) => (
           <div key={type} className="legend-item">
-            <span 
-              className="legend-color" 
-              style={{ backgroundColor: color }}
-            ></span>
+            <span className="legend-color" style={{ backgroundColor: color }}></span>
             <span className="legend-label">{type.charAt(0).toUpperCase() + type.slice(1)}</span>
           </div>
         ))}
