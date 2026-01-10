@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps Matrix Builder - Config-Based OD Pairs</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; background: #f5f5f5; color: #333; padding: 20px; }
+        h1 { color: #4285f4; margin-bottom: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 450px 1fr; gap: 20px; }
+        .panel { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .panel h2 { font-size: 1rem; color: #4285f4; margin-bottom: 15px; border-bottom: 2px solid #4285f4; padding-bottom: 10px; }
+        select { width: 100%; padding: 12px; font-size: 1rem; border: 2px solid #ddd; border-radius: 6px; margin-bottom: 15px; }
+        .btn { width: 100%; padding: 15px; font-size: 1rem; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 10px; }
+        .btn-start { background: #4285f4; color: white; }
+        .btn-start:hover { background: #3367d6; }
+        .btn-start:disabled { background: #ccc; }
+        .btn-stop { background: #ea4335; color: white; }
+        .btn-download { background: #34a853; color: white; padding: 10px; font-size: 0.9rem; }
+        .btn-upload { background: #9c27b0; color: white; }
+        .progress-bar { height: 30px; background: #e0e0e0; border-radius: 15px; overflow: hidden; margin: 15px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #4285f4, #34a853); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; transition: width 0.3s; }
+        .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 15px 0; }
+        .stat { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-value { font-size: 1.5rem; font-weight: bold; color: #4285f4; }
+        .stat-label { font-size: 0.8rem; color: #666; }
+        .current { background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center; font-size: 1.1rem; color: #1565c0; margin: 15px 0; }
+        .log { background: #1e1e1e; color: #0f0; padding: 15px; font-family: monospace; font-size: 0.8rem; height: 250px; overflow-y: auto; border-radius: 8px; }
+        #map { height: 450px; border-radius: 10px; }
+        .downloads { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .config-indicator { background: #9c27b0; color: white; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 15px; font-weight: bold; }
+        .file-info { background: #e8f5e9; padding: 10px; border-radius: 6px; margin: 10px 0; font-size: 0.85rem; }
+        .file-info.error { background: #ffebee; color: #c62828; }
+        .preview { background: #f5f5f5; padding: 10px; border-radius: 6px; margin: 10px 0; font-size: 0.8rem; max-height: 150px; overflow-y: auto; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>Google Maps Matrix Builder - Config-Based OD Pairs</h1>
+    
+    <div class="container">
+        <div class="sidebar">
+            <div class="panel">
+                <div class="config-indicator">📁 Upload OD Config File (JSONL)</div>
+                <h2>1. LOAD CONFIGURATIONS</h2>
+                
+                <input type="file" id="configUpload" accept=".jsonl,.json,.txt" style="display:none;" onchange="loadConfigFile(this)">
+                <button class="btn btn-upload" onclick="document.getElementById('configUpload').click()">
+                    📂 Upload od_configs_44k_with_geo.jsonl
+                </button>
+                
+                <div id="fileInfo" class="file-info" style="display:none;"></div>
+                <div id="preview" class="preview" style="display:none;"></div>
+            </div>
+            
+            <div class="panel">
+                <h2>2. RUN EXTRACTION</h2>
+                <div id="mapStatus" style="background:#fff3e0;color:#e65100;padding:8px;border-radius:4px;margin-bottom:10px;font-size:0.85rem;text-align:center;">
+                    ⏳ Loading Google Maps...
+                </div>
+                <div style="background:#e8f5e9;padding:8px;border-radius:4px;margin-bottom:10px;font-size:0.75rem;color:#2e7d32;">
+                    ✅ <b>Fully Automatic:</b> Rate limits handled automatically with smart cooldowns (10s → 30s → 60s → 2min). Just let it run!
+                </div>
+                <div style="margin-bottom:10px;">
+                    <label>Workers: </label>
+                    <select id="workerCount" style="width:70px;padding:5px;">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3" selected>3</option>
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                    </select>
+                    <label style="margin-left:10px;">Limit: </label>
+                    <select id="limitCount" style="width:100px;padding:5px;">
+                        <option value="100">100 (test)</option>
+                        <option value="500">500</option>
+                        <option value="1000">1000</option>
+                        <option value="5000">5000</option>
+                        <option value="0" selected>All (42k)</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-start" id="startBtn" onclick="startParallelExtraction()" disabled>
+                    🚀 START EXTRACTION
+                </button>
+                
+                <button class="btn btn-stop" id="stopBtn" onclick="stopExtraction()" style="display:none;">
+                    ⏹️ STOP
+                </button>
+            </div>
+            
+            <div class="panel">
+                <h2>PROGRESS</h2>
+                <div class="current" id="currentCalc">Load config file to begin</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width:0%">0%</div>
+                </div>
+                <div class="stats">
+                    <div class="stat"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total Configs</div></div>
+                    <div class="stat"><div class="stat-value" id="statDone">0</div><div class="stat-label">Completed</div></div>
+                    <div class="stat"><div class="stat-value" id="statErrors" style="color:#ea4335;">0</div><div class="stat-label">Errors</div></div>
+                    <div class="stat"><div class="stat-value" id="statWaypoints">0</div><div class="stat-label">With Waypoints</div></div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>DOWNLOAD / UPLOAD RESULTS</h2>
+                <div class="downloads">
+                    <button class="btn btn-download" onclick="downloadDistCSV()">Distance CSV</button>
+                    <button class="btn btn-download" onclick="downloadTimeCSV()">Time CSV</button>
+                    <button class="btn btn-download" onclick="downloadJSON()">Full JSON</button>
+                    <button class="btn btn-download" onclick="downloadJSONL()">Results JSONL</button>
+                </div>
+                <div style="margin-top:10px;">
+                    <input type="file" id="resultsUpload" accept=".json,.jsonl" onchange="uploadResults(this)" style="display:none;">
+                    <button class="btn btn-download" onclick="document.getElementById('resultsUpload').click()" style="background:#1565c0;width:100%;">
+                        📥 Upload Previous Results to Merge
+                    </button>
+                </div>
+                <div style="margin-top:10px;">
+                    <button class="btn btn-download" onclick="clearCache()" style="background:#ea4335;width:100%;">🗑️ Clear Cache</button>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>LOG</h2>
+                <div class="log" id="log"></div>
+            </div>
+        </div>
+        
+        <div class="map-area">
+            <div class="panel">
+                <div id="map"></div>
+            </div>
+            
+            <div class="panel" style="margin-top:15px;">
+                <h2>🔍 SANITY CHECK - View Route Details</h2>
+                <div style="display:flex;gap:10px;margin-bottom:10px;">
+                    <select id="routeSelect" style="flex:1;padding:8px;">
+                        <option value="">-- Select completed route --</option>
+                    </select>
+                    <button class="btn btn-start" onclick="viewRoute()" style="width:auto;padding:8px 20px;">View Route</button>
+                </div>
+                <div id="routeDetails" style="display:none;background:#f8f9fa;padding:15px;border-radius:8px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-bottom:15px;">
+                        <div style="text-align:center;padding:10px;background:white;border-radius:6px;">
+                            <div style="font-size:1.5rem;font-weight:bold;color:#4285f4;" id="detailDist">-</div>
+                            <div style="font-size:0.8rem;color:#666;">Distance (km)</div>
+                        </div>
+                        <div style="text-align:center;padding:10px;background:white;border-radius:6px;">
+                            <div style="font-size:1.5rem;font-weight:bold;color:#34a853;" id="detailTime">-</div>
+                            <div style="font-size:0.8rem;color:#666;">Time (min)</div>
+                        </div>
+                        <div style="text-align:center;padding:10px;background:white;border-radius:6px;">
+                            <div style="font-size:1.5rem;font-weight:bold;color:#ea4335;" id="detailWaypoints">-</div>
+                            <div style="font-size:0.8rem;color:#666;">Waypoints</div>
+                        </div>
+                    </div>
+                    <div id="waypointList" style="font-size:0.85rem;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+// ============================================================
+// CONFIGURATION-BASED OD PAIR EXTRACTOR
+// Accepts JSONL files with format:
+// {"config_id": "RUHSM105__RUHTE319", "origin": {...}, "destination": {...}}
+// ============================================================
+
+const STORAGE_KEY = 'riyadh_od_configs_cache';
+
+// Loaded configs from file
+let CONFIGS = [];
+let SITES_MAP = {}; // site_id -> site object
+
+// Cache storage - keyed by config_id
+let CACHE = { 
+    results: {},  // config_id -> {distance_km, time_min, waypoints: [site_ids]}
+};
+
+let map, markers = {}, directionsService;
+let running = false;
+
+// ============================================================
+// FILE LOADING
+// ============================================================
+
+function loadConfigFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    log('Loading file: ' + file.name + ' (' + (file.size/1024/1024).toFixed(2) + ' MB)');
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const content = e.target.result.trim();
+            
+            CONFIGS = [];
+            SITES_MAP = {};
+            let errors = 0;
+            let lines;
+            
+            // Check if it's a JSON array or JSONL
+            if (content.startsWith('[')) {
+                // It's a JSON array
+                log('Detected JSON array format');
+                try {
+                    const arr = JSON.parse(content);
+                    lines = arr.map(obj => JSON.stringify(obj));
+                    log('Parsed JSON array with ' + arr.length + ' items');
+                } catch(jsonErr) {
+                    log('Failed to parse as JSON array: ' + jsonErr.message);
+                    lines = content.split('\n');
+                }
+            } else {
+                // It's JSONL (one JSON per line)
+                log('Detected JSONL format');
+                lines = content.split('\n');
+            }
+            
+            log('Processing ' + lines.length + ' lines...');
+            
+            // Show first line for debugging
+            if (lines.length > 0) {
+                const firstLine = lines[0].substring(0, 200);
+                log('First line preview: ' + firstLine + (lines[0].length > 200 ? '...' : ''));
+            }
+            
+            lines.forEach((line, idx) => {
+                if (!line.trim()) return;
+                try {
+                    const config = JSON.parse(line);
+                    
+                    // Validate required fields
+                    if (!config.config_id || !config.origin || !config.destination) {
+                        errors++;
+                        if (errors <= 5) log('⚠️ Line ' + (idx+1) + ': Missing required fields. Keys found: ' + Object.keys(config).join(', '));
+                        return;
+                    }
+                    
+                    // Validate origin has lat/lon
+                    if (config.origin.lat === undefined || config.origin.lon === undefined) {
+                        errors++;
+                        if (errors <= 5) log('⚠️ Line ' + (idx+1) + ': Origin missing lat/lon');
+                        return;
+                    }
+                    
+                    // Validate destination has lat/lon
+                    if (config.destination.lat === undefined || config.destination.lon === undefined) {
+                        errors++;
+                        if (errors <= 5) log('⚠️ Line ' + (idx+1) + ': Destination missing lat/lon');
+                        return;
+                    }
+                    
+                    // Add to configs
+                    CONFIGS.push(config);
+                    
+                    // Build sites map
+                    if (config.origin.site_id) {
+                        SITES_MAP[config.origin.site_id] = config.origin;
+                    }
+                    if (config.destination.site_id) {
+                        SITES_MAP[config.destination.site_id] = config.destination;
+                    }
+                    
+                } catch(parseErr) {
+                    errors++;
+                    if (errors <= 5) {
+                        log('⚠️ Line ' + (idx+1) + ': Parse error - ' + parseErr.message);
+                        log('   Content: ' + line.substring(0, 100) + '...');
+                    }
+                }
+            });
+            
+            // Update UI
+            const fileInfo = document.getElementById('fileInfo');
+            fileInfo.style.display = 'block';
+            
+            if (CONFIGS.length > 0) {
+                fileInfo.className = 'file-info';
+                fileInfo.innerHTML = '✓ Loaded <b>' + CONFIGS.length.toLocaleString() + '</b> OD configs<br>' +
+                                     '✓ Found <b>' + Object.keys(SITES_MAP).length + '</b> unique sites' +
+                                     (errors > 0 ? '<br>⚠️ ' + errors + ' lines skipped (errors)' : '');
+            } else {
+                fileInfo.className = 'file-info error';
+                fileInfo.innerHTML = '❌ No valid configs found!<br>' +
+                                     '⚠️ ' + errors + ' errors<br>' +
+                                     'Check the log below for details';
+            }
+            
+            // Show preview
+            const preview = document.getElementById('preview');
+            preview.style.display = 'block';
+            preview.innerHTML = '<b>Sample configs:</b><br>' + 
+                CONFIGS.slice(0, 5).map(c => c.config_id).join('<br>') +
+                (CONFIGS.length > 5 ? '<br>... and ' + (CONFIGS.length - 5) + ' more' : '');
+            
+            // Update stats
+            document.getElementById('statTotal').textContent = CONFIGS.length.toLocaleString();
+            document.getElementById('currentCalc').textContent = 'Ready: ' + CONFIGS.length.toLocaleString() + ' configs';
+            
+            // Enable start button
+            document.getElementById('startBtn').disabled = false;
+            
+            // Add markers to map (safely - don't fail if maps not loaded)
+            try {
+                updateMapMarkers();
+            } catch(mapErr) {
+                log('Map not ready - markers skipped');
+            }
+            
+            log('═══════════════════════════════════');
+            log('LOADED: ' + file.name);
+            log('Configs: ' + CONFIGS.length.toLocaleString());
+            log('Unique sites: ' + Object.keys(SITES_MAP).length);
+            log('═══════════════════════════════════');
+            
+        } catch(err) {
+            log('ERROR: ' + err.message);
+            const fileInfo = document.getElementById('fileInfo');
+            fileInfo.style.display = 'block';
+            fileInfo.className = 'file-info error';
+            fileInfo.textContent = 'Error loading file: ' + err.message;
+        }
+    };
+    
+    reader.readAsText(file);
+    input.value = '';
+}
+
+let mapsReady = false;
+
+function updateMapMarkers() {
+    // Check if Google Maps is loaded using a flag
+    if (!mapsReady || !map) {
+        log('Map not ready yet - markers will be added when map loads');
+        return;
+    }
+    
+    try {
+        // Clear existing markers
+        Object.values(markers).forEach(m => m.setMap(null));
+        markers = {};
+        
+        // Add markers for unique sites
+        const bounds = new google.maps.LatLngBounds();
+        
+        Object.entries(SITES_MAP).forEach(([siteId, site]) => {
+            const marker = new google.maps.Marker({
+                position: { lat: site.lat, lng: site.lon },
+                map: map,
+                title: siteId + ' (' + (site.site_direction || '?') + ')'
+            });
+            markers[siteId] = marker;
+            bounds.extend({ lat: site.lat, lng: site.lon });
+        });
+        
+        if (Object.keys(markers).length > 0) {
+            map.fitBounds(bounds);
+        }
+        
+        log('Added ' + Object.keys(markers).length + ' markers to map');
+    } catch(e) {
+        log('Error updating markers: ' + e.message);
+    }
+}
+
+// ============================================================
+// WAYPOINT DETECTION
+// ============================================================
+
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function getLocalRouteDirection(path, pathIdx) {
+    const i = Math.max(0, Math.min(pathIdx, path.length - 2));
+    const p1 = path[i];
+    const p2 = path[i + 1];
+    const dLat = p2.lat() - p1.lat();
+    const dLon = p2.lng() - p1.lng();
+    if (Math.abs(dLat) > Math.abs(dLon)) {
+        return dLat > 0 ? 'N' : 'S';
+    } else {
+        return dLon > 0 ? 'E' : 'W';
+    }
+}
+
+function findCandidatesNearPath(path, originId, destId) {
+    const candidates = [];
+    const THRESHOLD = 0.30; // 300 meters
+    
+    Object.entries(SITES_MAP).forEach(([siteId, site]) => {
+        if (siteId === originId || siteId === destId) return;
+        
+        let minDist = Infinity, pathIdx = 0;
+        for (let i = 0; i < path.length; i++) {
+            const d = haversine(site.lat, site.lon, path[i].lat(), path[i].lng());
+            if (d < minDist) { minDist = d; pathIdx = i; }
+        }
+        
+        if (minDist < THRESHOLD) {
+            candidates.push({ siteId, site, pathIdx, dist: minDist });
+        }
+    });
+    
+    candidates.sort((a, b) => a.pathIdx - b.pathIdx);
+    return candidates;
+}
+
+async function verifyWaypointWithGoogle(origin, waypoint, destination, directDist) {
+    return new Promise(resolve => {
+        directionsService.route({
+            origin: { lat: origin.lat, lng: origin.lon },
+            destination: { lat: destination.lat, lng: destination.lon },
+            waypoints: [{
+                location: { lat: waypoint.lat, lng: waypoint.lon },
+                stopover: true
+            }],
+            travelMode: 'DRIVING'
+        }, (res, status) => {
+            if (status === 'OK') {
+                let totalDist = 0;
+                res.routes[0].legs.forEach(leg => totalDist += leg.distance.value);
+                totalDist = totalDist / 1000;
+                
+                const increase = (totalDist - directDist) / directDist;
+                resolve(increase < 0.005); // 0.5% threshold
+            } else {
+                resolve(false);
+            }
+        });
+    });
+}
+
+function filterNearbyDuplicates(waypointSiteIds, path) {
+    if (waypointSiteIds.length < 2) return waypointSiteIds;
+    
+    const dominated = new Set();
+    
+    for (let i = 0; i < waypointSiteIds.length; i++) {
+        if (dominated.has(i)) continue;
+        
+        for (let j = i + 1; j < waypointSiteIds.length; j++) {
+            if (dominated.has(j)) continue;
+            
+            const siteA = SITES_MAP[waypointSiteIds[i]];
+            const siteB = SITES_MAP[waypointSiteIds[j]];
+            
+            const dist = haversine(siteA.lat, siteA.lon, siteB.lat, siteB.lon);
+            if (dist < 0.1) { // 100m
+                // Find path indices
+                let pathIdxA = 0, pathIdxB = 0;
+                let minDistA = Infinity, minDistB = Infinity;
+                
+                for (let p = 0; p < path.length; p++) {
+                    const dA = haversine(siteA.lat, siteA.lon, path[p].lat(), path[p].lng());
+                    const dB = haversine(siteB.lat, siteB.lon, path[p].lat(), path[p].lng());
+                    if (dA < minDistA) { minDistA = dA; pathIdxA = p; }
+                    if (dB < minDistB) { minDistB = dB; pathIdxB = p; }
+                }
+                
+                const avgIdx = Math.floor((pathIdxA + pathIdxB) / 2);
+                const routeDir = getLocalRouteDirection(path, avgIdx);
+                
+                if (siteA.site_direction === routeDir && siteB.site_direction !== routeDir) {
+                    dominated.add(j);
+                } else if (siteB.site_direction === routeDir && siteA.site_direction !== routeDir) {
+                    dominated.add(i);
+                } else {
+                    if (minDistA <= minDistB) dominated.add(j);
+                    else dominated.add(i);
+                }
+            }
+        }
+    }
+    
+    return waypointSiteIds.filter((_, idx) => !dominated.has(idx));
+}
+
+async function findWaypointsOnPath(path, origin, destination, directDist) {
+    // Step 1: Find candidates
+    let candidates = findCandidatesNearPath(path, origin.site_id, destination.site_id);
+    
+    if (candidates.length === 0) return [];
+    
+    // Step 2: Filter by direction
+    candidates = candidates.filter(c => {
+        const localDir = getLocalRouteDirection(path, c.pathIdx);
+        return c.site.site_direction === localDir;
+    });
+    
+    if (candidates.length === 0) return [];
+    
+    // Step 3: Verify with Google in parallel
+    const verifyPromises = candidates.map(c => 
+        verifyWaypointWithGoogle(origin, c.site, destination, directDist)
+    );
+    const results = await Promise.all(verifyPromises);
+    const verified = candidates.filter((c, i) => results[i]).map(c => c.siteId);
+    
+    // Step 4: Filter nearby duplicates
+    return filterNearbyDuplicates(verified, path);
+}
+
+// ============================================================
+// ROUTE FETCHING
+// ============================================================
+
+// FULLY AUTOMATIC rate limiting - no manual intervention needed
+let minDelayMs = 300;
+let consecutiveErrors = 0;
+let cooldownUntil = 0;
+
+async function fetchRouteForConfig(config, retries = 10) {
+    const origin = config.origin;
+    const dest = config.destination;
+    
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        // Check if in cooldown period
+        const now = Date.now();
+        if (cooldownUntil > now) {
+            const waitTime = cooldownUntil - now;
+            document.getElementById('currentCalc').textContent = '⏳ Cooldown: ' + Math.ceil(waitTime/1000) + 's remaining...';
+            await new Promise(r => setTimeout(r, waitTime));
+        }
+        
+        // Small delay between requests
+        await new Promise(r => setTimeout(r, minDelayMs));
+        
+        const result = await new Promise(async (resolve) => {
+            directionsService.route({
+                origin: { lat: origin.lat, lng: origin.lon },
+                destination: { lat: dest.lat, lng: dest.lon },
+                travelMode: 'DRIVING'
+            }, async (res, status) => {
+                if (status === 'OK') {
+                    // Success - reduce delay and reset errors
+                    consecutiveErrors = 0;
+                    if (minDelayMs > 200) minDelayMs = Math.max(200, minDelayMs - 20);
+                    
+                    const leg = res.routes[0].legs[0];
+                    const dist = leg.distance.value / 1000;
+                    const time = leg.duration.value / 60;
+                    const path = res.routes[0].overview_path;
+                    
+                    // Find waypoints
+                    const waypoints = await findWaypointsOnPath(path, origin, dest, dist);
+                    
+                    resolve({ 
+                        distance_km: dist, 
+                        time_min: time, 
+                        waypoints: waypoints 
+                    });
+                } else if (status === 'OVER_QUERY_LIMIT') {
+                    consecutiveErrors++;
+                    
+                    // Progressive cooldown based on consecutive errors
+                    let cooldownSecs;
+                    if (consecutiveErrors >= 10) {
+                        cooldownSecs = 120; // 2 minutes
+                    } else if (consecutiveErrors >= 5) {
+                        cooldownSecs = 60;  // 1 minute
+                    } else if (consecutiveErrors >= 3) {
+                        cooldownSecs = 30;  // 30 seconds
+                    } else {
+                        cooldownSecs = 10;  // 10 seconds
+                    }
+                    
+                    cooldownUntil = Date.now() + cooldownSecs * 1000;
+                    minDelayMs = Math.min(2000, minDelayMs + 100);
+                    
+                    if (consecutiveErrors <= 3 || consecutiveErrors % 5 === 0) {
+                        log('⏳ Rate limited (' + consecutiveErrors + 'x) - auto-waiting ' + cooldownSecs + 's...');
+                    }
+                    
+                    resolve({ error: status, retryable: true });
+                } else {
+                    resolve({ 
+                        error: status, 
+                        retryable: status === 'UNKNOWN_ERROR'
+                    });
+                }
+            });
+        });
+        
+        if (!result.error) return result;
+        if (!result.retryable || attempt === retries) return result;
+        
+        // Wait before retry (cooldown already set above)
+        await new Promise(r => setTimeout(r, 1000));
+    }
+}
+
+// ============================================================
+// PARALLEL EXTRACTION
+// ============================================================
+
+let activeWorkers = 0;
+
+async function startParallelExtraction() {
+    if (running) return;
+    if (CONFIGS.length === 0) {
+        alert('Load a config file first!');
+        return;
+    }
+    if (!mapsReady || !directionsService) {
+        alert('Google Maps is still loading. Please wait for the green "✓ Google Maps Ready" indicator and try again.');
+        return;
+    }
+    
+    running = true;
+    consecutiveErrors = 0;
+    cooldownUntil = 0;
+    minDelayMs = 300;
+    document.getElementById('startBtn').style.display = 'none';
+    document.getElementById('stopBtn').style.display = 'block';
+    
+    const workerCount = parseInt(document.getElementById('workerCount').value);
+    
+    log('═══════════════════════════════════');
+    log('STARTING ' + workerCount + ' PARALLEL WORKERS');
+    log('Processing ' + CONFIGS.length + ' OD configs');
+    log('═══════════════════════════════════');
+    
+    // Build list of incomplete configs
+    let incompleteConfigs = CONFIGS.filter(c => !CACHE.results[c.config_id]);
+    
+    // Apply limit
+    const limit = parseInt(document.getElementById('limitCount').value);
+    if (limit > 0 && incompleteConfigs.length > limit) {
+        incompleteConfigs = incompleteConfigs.slice(0, limit);
+        log('Limited to first ' + limit + ' configs');
+    }
+    
+    log('Incomplete: ' + incompleteConfigs.length + ' / Cached: ' + (CONFIGS.length - incompleteConfigs.length));
+    
+    if (incompleteConfigs.length === 0) {
+        log('ALL CONFIGS COMPLETE!');
+        running = false;
+        document.getElementById('startBtn').style.display = 'block';
+        document.getElementById('stopBtn').style.display = 'none';
+        return;
+    }
+    
+    let configIdx = 0;
+    let completed = 0;
+    let errorCount = 0;
+    let fromCache = CONFIGS.length - incompleteConfigs.length;
+    let withWaypoints = Object.values(CACHE.results).filter(r => r.waypoints && r.waypoints.length > 0).length;
+    
+    // Update initial stats
+    document.getElementById('statDone').textContent = fromCache;
+    document.getElementById('statErrors').textContent = '0';
+    document.getElementById('statWaypoints').textContent = withWaypoints;
+    
+    async function worker(workerId) {
+        while (running && configIdx < incompleteConfigs.length) {
+            const config = incompleteConfigs[configIdx++];
+            if (!config) break;
+            
+            // Skip if already cached
+            if (CACHE.results[config.config_id]) continue;
+            
+            const result = await fetchRouteForConfig(config);
+            
+            if (!result.error) {
+                CACHE.results[config.config_id] = result;
+                completed++;
+                
+                if (result.waypoints && result.waypoints.length > 0) {
+                    withWaypoints++;
+                }
+                
+                // Log every 50
+                if (completed % 50 === 0) {
+                    const wpInfo = result.waypoints.length > 0 ? ' [' + result.waypoints.length + ' wp]' : '';
+                    log('[W' + workerId + '] ' + config.config_id + wpInfo + ' (' + completed + ' done)');
+                }
+            } else {
+                errorCount++;
+                document.getElementById('statErrors').textContent = errorCount;
+                if (errorCount <= 20 || errorCount % 50 === 0) {
+                    log('[W' + workerId + '] ERROR: ' + config.config_id + ' - ' + result.error);
+                }
+            }
+            
+            // Update UI
+            const total = fromCache + completed;
+            const pct = ((total / CONFIGS.length) * 100).toFixed(1);
+            
+            document.getElementById('statDone').textContent = total;
+            document.getElementById('statWaypoints').textContent = withWaypoints;
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('progressFill').textContent = pct + '%';
+            document.getElementById('currentCalc').textContent = config.config_id;
+            
+            // Save periodically
+            if (completed % 50 === 0) {
+                saveCache();
+            }
+        }
+        
+        activeWorkers--;
+        
+        if (activeWorkers === 0) {
+            saveCache();
+            running = false;
+            document.getElementById('startBtn').style.display = 'block';
+            document.getElementById('stopBtn').style.display = 'none';
+            
+            log('═══════════════════════════════════');
+            log('EXTRACTION COMPLETE!');
+            log('Total: ' + Object.keys(CACHE.results).length + ' results');
+            log('With waypoints: ' + withWaypoints);
+            log('═══════════════════════════════════');
+            
+            document.getElementById('currentCalc').textContent = 'COMPLETE! ' + Object.keys(CACHE.results).length + ' results';
+        }
+    }
+    
+    // Start all workers
+    activeWorkers = workerCount;
+    for (let w = 0; w < workerCount; w++) {
+        worker(w + 1);
+    }
+}
+
+function stopExtraction() {
+    running = false;
+    log('Stopping...');
+}
+
+// ============================================================
+// CACHE MANAGEMENT
+// ============================================================
+
+function loadCache() {
+    try {
+        const s = localStorage.getItem(STORAGE_KEY);
+        if (s) {
+            const loaded = JSON.parse(s);
+            CACHE.results = loaded.results || {};
+        }
+        log('Loaded ' + Object.keys(CACHE.results).length + ' cached results');
+        updateCacheStats();
+        // Update route select if it exists
+        if (document.getElementById('routeSelect')) {
+            updateRouteSelect();
+        }
+    } catch(e) { 
+        console.log('Cache load error: ' + e); 
+    }
+}
+
+function saveCache() {
+    try {
+        const cacheStr = JSON.stringify(CACHE);
+        if (cacheStr.length < 5 * 1024 * 1024) { // 5MB limit
+            localStorage.setItem(STORAGE_KEY, cacheStr);
+        } else {
+            log('⚠️ Cache too large for localStorage');
+        }
+    } catch(e) {
+        log('⚠️ Cache save error: ' + e.message);
+    }
+    updateCacheStats();
+    updateRouteSelect();
+}
+
+function updateCacheStats() {
+    try {
+        const n = Object.keys(CACHE.results).length;
+        const wp = Object.values(CACHE.results).filter(r => r.waypoints && r.waypoints.length > 0).length;
+        const cachedEl = document.getElementById('statCached');
+        const wpEl = document.getElementById('statWaypoints');
+        if (cachedEl) cachedEl.textContent = n;
+        if (wpEl) wpEl.textContent = wp;
+    } catch(e) {
+        // Ignore if DOM not ready
+    }
+}
+
+function clearCache() {
+    if (confirm('Clear all cached results?')) {
+        CACHE = { results: {} };
+        localStorage.removeItem(STORAGE_KEY);
+        updateCacheStats();
+        log('Cache cleared');
+    }
+}
+
+// ============================================================
+// UPLOAD PREVIOUS RESULTS
+// ============================================================
+
+function uploadResults(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const content = e.target.result;
+            let merged = 0;
+            
+            // Try JSONL first
+            if (file.name.endsWith('.jsonl') || content.trim().startsWith('{') && !content.trim().startsWith('{"results"')) {
+                const lines = content.trim().split('\n');
+                lines.forEach(line => {
+                    if (!line.trim()) return;
+                    try {
+                        const result = JSON.parse(line);
+                        if (result.config_id && !CACHE.results[result.config_id]) {
+                            CACHE.results[result.config_id] = {
+                                distance_km: result.distance_km,
+                                time_min: result.time_min,
+                                waypoints: result.waypoints || []
+                            };
+                            merged++;
+                        }
+                    } catch(e) {}
+                });
+            } else {
+                // Try JSON
+                const json = JSON.parse(content);
+                const results = json.results || json;
+                
+                if (typeof results === 'object') {
+                    Object.entries(results).forEach(([configId, result]) => {
+                        if (!CACHE.results[configId]) {
+                            CACHE.results[configId] = result;
+                            merged++;
+                        }
+                    });
+                }
+            }
+            
+            saveCache();
+            log('═══════════════════════════════════');
+            log('MERGED: ' + file.name);
+            log('New results: ' + merged);
+            log('Total cached: ' + Object.keys(CACHE.results).length);
+            log('═══════════════════════════════════');
+            
+            alert('Merged ' + merged + ' new results!\nTotal: ' + Object.keys(CACHE.results).length);
+            
+        } catch(err) {
+            alert('Error: ' + err.message);
+            log('Upload error: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+    input.value = '';
+}
+
+// ============================================================
+// DOWNLOADS
+// ============================================================
+
+function downloadDistCSV() {
+    if (CONFIGS.length === 0) { alert('Load configs first!'); return; }
+    
+    let csv = 'config_id,origin_site_id,destination_site_id,distance_km\n';
+    CONFIGS.forEach(config => {
+        const result = CACHE.results[config.config_id];
+        const dist = result ? result.distance_km.toFixed(3) : '';
+        csv += config.config_id + ',' + config.origin.site_id + ',' + config.destination.site_id + ',' + dist + '\n';
+    });
+    download(csv, 'od_distances.csv', 'text/csv');
+}
+
+function downloadTimeCSV() {
+    if (CONFIGS.length === 0) { alert('Load configs first!'); return; }
+    
+    let csv = 'config_id,origin_site_id,destination_site_id,time_min\n';
+    CONFIGS.forEach(config => {
+        const result = CACHE.results[config.config_id];
+        const time = result ? result.time_min.toFixed(1) : '';
+        csv += config.config_id + ',' + config.origin.site_id + ',' + config.destination.site_id + ',' + time + '\n';
+    });
+    download(csv, 'od_times.csv', 'text/csv');
+}
+
+function downloadJSON() {
+    const data = {
+        source: 'Google Maps OD Config Extractor',
+        timestamp: new Date().toISOString(),
+        total_configs: CONFIGS.length,
+        completed: Object.keys(CACHE.results).length,
+        sites: SITES_MAP,
+        results: CACHE.results
+    };
+    download(JSON.stringify(data, null, 2), 'od_results_' + Date.now() + '.json', 'application/json');
+}
+
+function downloadJSONL() {
+    if (CONFIGS.length === 0) { alert('Load configs first!'); return; }
+    
+    let jsonl = '';
+    CONFIGS.forEach(config => {
+        const result = CACHE.results[config.config_id];
+        if (result) {
+            const row = {
+                config_id: config.config_id,
+                origin_site_id: config.origin.site_id,
+                destination_site_id: config.destination.site_id,
+                distance_km: result.distance_km,
+                time_min: result.time_min,
+                waypoints: result.waypoints || []
+            };
+            jsonl += JSON.stringify(row) + '\n';
+        }
+    });
+    download(jsonl, 'od_results_' + Date.now() + '.jsonl', 'application/jsonl');
+}
+
+function download(content, filename, type) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([content], { type }));
+    a.download = filename;
+    a.click();
+}
+
+// ============================================================
+// SANITY CHECK - ROUTE VIEWER
+// ============================================================
+
+let directionsRenderer = null;
+let routeMarkers = [];
+
+function updateRouteSelect() {
+    const select = document.getElementById('routeSelect');
+    select.innerHTML = '<option value="">-- Select completed route (' + Object.keys(CACHE.results).length + ' available) --</option>';
+    
+    // Add completed routes
+    Object.entries(CACHE.results).slice(0, 200).forEach(([configId, result]) => {
+        const wpCount = result.waypoints ? result.waypoints.length : 0;
+        const wpText = wpCount > 0 ? ' [' + wpCount + ' wp]' : '';
+        select.innerHTML += '<option value="' + configId + '">' + configId + ' - ' + result.distance_km.toFixed(1) + 'km' + wpText + '</option>';
+    });
+}
+
+function viewRoute() {
+    const configId = document.getElementById('routeSelect').value;
+    if (!configId) {
+        alert('Select a route first!');
+        return;
+    }
+    
+    const result = CACHE.results[configId];
+    const config = CONFIGS.find(c => c.config_id === configId);
+    
+    if (!result || !config) {
+        alert('Route not found!');
+        return;
+    }
+    
+    // Update details panel
+    document.getElementById('routeDetails').style.display = 'block';
+    document.getElementById('detailDist').textContent = result.distance_km.toFixed(2);
+    document.getElementById('detailTime').textContent = result.time_min.toFixed(1);
+    document.getElementById('detailWaypoints').textContent = result.waypoints ? result.waypoints.length : 0;
+    
+    // Show waypoint list
+    let wpHtml = '<b>Route:</b> ' + config.origin.site_id + ' → ' + config.destination.site_id + '<br>';
+    if (result.waypoints && result.waypoints.length > 0) {
+        wpHtml += '<b>Waypoints:</b> ' + result.waypoints.join(' → ') + '<br>';
+    }
+    wpHtml += '<b>Origin:</b> ' + config.origin.lat.toFixed(5) + ', ' + config.origin.lon.toFixed(5);
+    wpHtml += ' (' + (config.origin.road_name || 'N/A') + ')<br>';
+    wpHtml += '<b>Destination:</b> ' + config.destination.lat.toFixed(5) + ', ' + config.destination.lon.toFixed(5);
+    wpHtml += ' (' + (config.destination.road_name || 'N/A') + ')';
+    document.getElementById('waypointList').innerHTML = wpHtml;
+    
+    // Clear previous route display
+    if (directionsRenderer) {
+        directionsRenderer.setMap(null);
+    }
+    routeMarkers.forEach(m => m.setMap(null));
+    routeMarkers = [];
+    
+    // Create new directions renderer
+    directionsRenderer = new google.maps.DirectionsRenderer({
+        map: map,
+        suppressMarkers: true,
+        polylineOptions: {
+            strokeColor: '#4285f4',
+            strokeWeight: 5,
+            strokeOpacity: 0.8
+        }
+    });
+    
+    // Build waypoints for request
+    const waypoints = (result.waypoints || []).map(siteId => {
+        const site = SITES_MAP[siteId];
+        if (site) {
+            return {
+                location: { lat: site.lat, lng: site.lon },
+                stopover: true
+            };
+        }
+        return null;
+    }).filter(w => w !== null);
+    
+    // Request route with waypoints
+    directionsService.route({
+        origin: { lat: config.origin.lat, lng: config.origin.lon },
+        destination: { lat: config.destination.lat, lng: config.destination.lon },
+        waypoints: waypoints,
+        travelMode: 'DRIVING'
+    }, (response, status) => {
+        if (status === 'OK') {
+            directionsRenderer.setDirections(response);
+            
+            // Add origin marker (green)
+            routeMarkers.push(new google.maps.Marker({
+                position: { lat: config.origin.lat, lng: config.origin.lon },
+                map: map,
+                icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                title: 'Origin: ' + config.origin.site_id,
+                zIndex: 100
+            }));
+            
+            // Add destination marker (red)
+            routeMarkers.push(new google.maps.Marker({
+                position: { lat: config.destination.lat, lng: config.destination.lon },
+                map: map,
+                icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                title: 'Destination: ' + config.destination.site_id,
+                zIndex: 100
+            }));
+            
+            // Add waypoint markers (orange)
+            (result.waypoints || []).forEach((siteId, i) => {
+                const site = SITES_MAP[siteId];
+                if (site) {
+                    routeMarkers.push(new google.maps.Marker({
+                        position: { lat: site.lat, lng: site.lon },
+                        map: map,
+                        icon: 'http://maps.google.com/mapfiles/ms/icons/orange-dot.png',
+                        title: 'Waypoint ' + (i+1) + ': ' + siteId,
+                        zIndex: 99
+                    }));
+                }
+            });
+            
+            // Calculate totals from response
+            let totalDist = 0, totalTime = 0;
+            response.routes[0].legs.forEach((leg, i) => {
+                totalDist += leg.distance.value / 1000;
+                totalTime += leg.duration.value / 60;
+                log('Leg ' + (i+1) + ': ' + (leg.distance.value/1000).toFixed(2) + ' km, ' + (leg.duration.value/60).toFixed(1) + ' min');
+            });
+            
+            log('═══════════════════════════════════');
+            log('ROUTE: ' + configId);
+            log('Cached: ' + result.distance_km.toFixed(2) + ' km, ' + result.time_min.toFixed(1) + ' min');
+            log('Live: ' + totalDist.toFixed(2) + ' km, ' + totalTime.toFixed(1) + ' min');
+            log('Waypoints: ' + (result.waypoints || []).join(', '));
+            log('═══════════════════════════════════');
+            
+            // Fit map to route
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend({ lat: config.origin.lat, lng: config.origin.lon });
+            bounds.extend({ lat: config.destination.lat, lng: config.destination.lon });
+            (result.waypoints || []).forEach(siteId => {
+                const site = SITES_MAP[siteId];
+                if (site) bounds.extend({ lat: site.lat, lng: site.lon });
+            });
+            map.fitBounds(bounds, 50);
+            
+        } else {
+            log('Error displaying route: ' + status);
+        }
+    });
+}
+
+// ============================================================
+// LOGGING & INIT
+// ============================================================
+
+function log(msg) {
+    console.log('[LOG] ' + msg);
+    try {
+        const el = document.getElementById('log');
+        if (el) {
+            el.innerHTML += '[' + new Date().toLocaleTimeString() + '] ' + msg + '\n';
+            el.scrollTop = el.scrollHeight;
+        }
+    } catch(e) {
+        // Ignore DOM errors
+    }
+}
+
+function initMap() {
+    try {
+        map = new google.maps.Map(document.getElementById('map'), { 
+            center: { lat: 24.7, lng: 46.7 }, 
+            zoom: 10 
+        });
+        directionsService = new google.maps.DirectionsService();
+        
+        // Set flag that maps is ready
+        mapsReady = true;
+        
+        // Update map status indicator
+        const mapStatus = document.getElementById('mapStatus');
+        if (mapStatus) {
+            mapStatus.style.background = '#e8f5e9';
+            mapStatus.style.color = '#2e7d32';
+            mapStatus.innerHTML = '✓ Google Maps Ready';
+        }
+        
+        // If configs were loaded before map, add markers now
+        if (Object.keys(SITES_MAP).length > 0) {
+            updateMapMarkers();
+        }
+        
+        log('✓ Map ready!');
+        log('Upload od_configs_44k_with_geo.jsonl to begin');
+        log('Expected format: {"config_id": "...", "origin": {...}, "destination": {...}}');
+    } catch(e) {
+        log('Error initializing map: ' + e.message);
+    }
+}
+
+// Load cache immediately (doesn't need Google Maps)
+try {
+    loadCache();
+} catch(e) {
+    console.log('Cache load skipped: ' + e.message);
+}
+
+// Wait for Google Maps to load
+function waitForMaps() {
+    if (typeof google !== 'undefined' && google.maps) {
+        initMap();
+    } else {
+        setTimeout(waitForMaps, 100);
+    }
+}
+waitForMaps();
+    </script>
+    <script src="https://cdn.jsdelivr.net/gh/somanchiu/Keyless-Google-Maps-API@v7.1/mapsJavaScriptAPI.js" async defer></script>
+</body>
+</html>
